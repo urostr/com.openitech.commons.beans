@@ -16,7 +16,7 @@ import junit.framework.*;
  * @author uros
  */
 public class RegExTest extends TestCase {
-  private static final Pattern column = Pattern.compile("\\$C\\{(.*)\\}");
+  private static final Pattern column = Pattern.compile("(\\$.\\{([^\\}]*)\\})");
   
   public RegExTest(String testName) {
     super(testName);
@@ -31,12 +31,12 @@ public class RegExTest extends TestCase {
   // TODO add test methods here. The name must begin with 'test'. For example:
   // public void testHello() {}
   public void testMatch() {
-     Matcher match = column.matcher("$C{TEST}");
+     Matcher match = column.matcher("$C{NAZIV}$S{-}$C{KRAJ}");
     assertTrue(match.find());
     
-   
-    assertEquals("TEST", match.group(1));
-    assertTrue(match.hitEnd());
+    System.out.println(match.group(2));
+    assertEquals("NAZIV", match.group(2));
+    //assertTrue(match.hitEnd());
   }
 
 }

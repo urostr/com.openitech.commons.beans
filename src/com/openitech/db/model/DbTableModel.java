@@ -45,7 +45,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   private static final Pattern separatorPattern = Pattern.compile("\\$S\\{(.*)\\}");
   private static final Pattern rendererPattern = Pattern.compile("\\$R\\{(.*)\\}");
   private static final Pattern editorPattern = Pattern.compile("\\$E\\{(.*)\\}");
-  private static final Pattern anyPattern = Pattern.compile("\\$?\\{(.*)\\}");
+  private static final Pattern anyPattern = Pattern.compile("(\\$.\\{([^\\}]*)\\})");
   
   private String[][] columns = new String[][] {};
   private String[] rowColumnNames = new String[] {};
@@ -121,45 +121,53 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   public void setColumns(String[][] headers) {
     this.columns = headers==null?new String[][] {}:headers;
     List<String> columnList = new ArrayList<String>();
+    List<String> parameters = new ArrayList<String>();
     columnDescriptors = new ColumnDescriptor[columns.length];
     
     for (int h=0; h<columns.length; h++) {
       ColumnDescriptor descriptor = new ColumnDescriptor(this);
       
       for (int c=1; c<columns[h].length; c++) {
-        Matcher matcher = functionPattern.matcher(columns[h][c]);
-        
-        if (descriptor.getFunctionKey()==null)
-          descriptor.setFunctionKey(matcher.lookingAt()?matcher.group(1):null);
-        
-        matcher = rendererPattern.matcher(columns[h][c]);
-        
-        if (descriptor.getRendererKey()==null)
-          descriptor.setRendererKey(matcher.lookingAt()?matcher.group(1):null);
-        
-        matcher = editorPattern.matcher(columns[h][c]);
-        
-        if (descriptor.getEditorKey()==null)
-          descriptor.setEditorKey(matcher.lookingAt()?matcher.group(1):null);
-        
-        matcher = columnPattern.matcher(columns[h][c]);
-        if (matcher.lookingAt()) {
+        parameters.clear();
+        Matcher matcher = anyPattern.matcher(columns[h][c]);
+        String column = columns[h][c];
+        if (matcher.find()) {
           do {
-            descriptor.getColumnNames().add(matcher.group(1));
-            columnList.add(matcher.group(1));
+            parameters.add(matcher.group(0));
           } while (matcher.find());
-        } else {
-          matcher = anyPattern.matcher(columns[h][c]);
-          String column = (matcher.lookingAt())?matcher.replaceAll(""):columns[h][c];
-          columnList.add(column);
-          descriptor.getColumnNames().add(column);
+          column = matcher.replaceAll("");
+        }
+        for (String parameter:parameters) {
+          matcher = functionPattern.matcher(parameter);
+          
+          if (descriptor.getFunctionKey()==null)
+            descriptor.setFunctionKey(matcher.lookingAt()?matcher.group(1):null);
+
+          matcher = rendererPattern.matcher(parameter);
+
+          if (descriptor.getRendererKey()==null)
+            descriptor.setRendererKey(matcher.lookingAt()?matcher.group(1):null);
+
+          matcher = editorPattern.matcher(parameter);
+
+          if (descriptor.getEditorKey()==null)
+            descriptor.setEditorKey(matcher.lookingAt()?matcher.group(1):null);
+
+          matcher = columnPattern.matcher(parameter);
+          if (matcher.lookingAt()) {
+              descriptor.getColumnNames().add(matcher.group(1));
+              columnList.add(matcher.group(1));
+            }
+          
+          matcher = separatorPattern.matcher(parameter);
+          if (matcher.lookingAt()) {
+             descriptor.getSeparators().add(matcher.group(1));
+          }
         }
         
-        matcher = separatorPattern.matcher(columns[h][c]);
-        if (matcher.lookingAt()) {
-          do {
-            descriptor.getSeparators().add(matcher.group(1));
-          } while (matcher.find());
+        if (column.length()>0) {
+          columnList.add(column);
+          descriptor.getColumnNames().add(column);
         }
       }
       
