@@ -36,8 +36,9 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
   private transient DocumentWeakListener documentWeakListener;
   
   private boolean encrypted = true;
+  private boolean savePassword = true;
   
- 
+  
   /** Creates a new instance of JDbTextField */
   public JDbPasswordField() {
     try {
@@ -56,7 +57,7 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
   }
-
+  
   public DbFieldObserver getDbFieldObserver() {
     return dbFieldObserver;
   }
@@ -81,14 +82,16 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
     return dbFieldObserverToolTip.getColumnName();
   }
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
-    documentWeakListener.setEnabled(false);
-    try {
-    if (isEncrypted())
-      setText(new String(Encoder.decrypt(dbFieldObserver.getValueAsByteArray())));
-    else
-      setText(dbFieldObserver.getValueAsText());
-    } finally {
-      documentWeakListener.setEnabled(true);
+    if (isSavePassword()) {
+      documentWeakListener.setEnabled(false);
+      try {
+        if (isEncrypted())
+          setText(new String(Encoder.decrypt(dbFieldObserver.getValueAsByteArray())));
+        else
+          setText(dbFieldObserver.getValueAsText());
+      } finally {
+        documentWeakListener.setEnabled(true);
+      }
     }
   }
   
@@ -101,16 +104,18 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
   }
   
   private void updateColumn() {
-    activeRowChangeWeakListener.setEnabled(false);
-    try {
-      if (isEncrypted())
-        dbFieldObserver.updateValue(Encoder.encrypt( (new String(this.getPassword())).getBytes()));
-      else
-        dbFieldObserver.updateValue(new String(this.getPassword()));
-    } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
-    } finally {
-      activeRowChangeWeakListener.setEnabled(true);
+    if (isSavePassword()) {
+      activeRowChangeWeakListener.setEnabled(false);
+      try {
+        if (isEncrypted())
+          dbFieldObserver.updateValue(Encoder.encrypt( (new String(this.getPassword())).getBytes()));
+        else
+          dbFieldObserver.updateValue(new String(this.getPassword()));
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+      } finally {
+        activeRowChangeWeakListener.setEnabled(true);
+      }
     }
   }
   
@@ -146,13 +151,20 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
   public void changedUpdate(DocumentEvent e) {
     updateColumn();
   }
-
+  
   public void setEncrypted(boolean encrypted) {
     this.encrypted = encrypted;
   }
-
+  
   public boolean isEncrypted() {
     return encrypted;
   }
   
+  public void setSavePassword(boolean savePassword) {
+    this.savePassword = savePassword;
+  }
+  
+  public boolean isSavePassword() {
+    return savePassword;
+  }
 }

@@ -67,9 +67,9 @@ public abstract class AbstractConnection implements DbConnection {
           try {
             if (settings.containsKey("db.startup.net")) {
               String dbStartupNetCommand = settings.getProperty("db.startup.net.command").
-                      replaceAll("{user.dir}", System.getProperty("user.dir")).
-                      replaceAll("{file.separator}", System.getProperty("file.separator")).
-                      replaceAll("{path.separator}", System.getProperty("path.separator"));
+                      replaceAll("\\{user.dir\\}", System.getProperty("user.dir")).
+                      replaceAll("\\{file.separator\\}", System.getProperty("file.separator")).
+                      replaceAll("\\{path.separator\\}", System.getProperty("path.separator"));
               String exec = MessageFormat.format(dbStartupNetCommand, settings.getProperty("db.jdbc.net.port"));
               Logger.getLogger(Settings.LOGGER).info("Executing:\n"+exec);
               Runtime.getRuntime().exec(exec);
