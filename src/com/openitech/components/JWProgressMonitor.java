@@ -6,6 +6,7 @@
 
 package com.openitech.components;
 
+import java.awt.EventQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -114,14 +115,11 @@ public class JWProgressMonitor extends javax.swing.JDialog {
   }
 
   public void setVisible(final boolean b) {
-    if (b) {
-      tpes.submit(new Runnable() {
-        public void run() {
-          inheritedVisible(b);
-        }
-      });
-    } else
-      super.setVisible(b);
+    EventQueue.invokeLater(new Runnable() {
+      public void run() {
+        inheritedVisible(b);
+      }
+    });
   }
   
   private final void inheritedVisible(boolean b) {
