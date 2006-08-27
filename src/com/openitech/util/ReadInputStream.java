@@ -2,6 +2,8 @@ package com.openitech.util;
 
 import com.openitech.Settings;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,7 +14,7 @@ import java.util.logging.Logger;
  * <p>Copyright: Copyright (c) 2003</p>
  * <p>Company: Prosoft-Consulting d.o.o.</p>
  * @author Uroš Trojar
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  */
 public class ReadInputStream {
   public static String getResourceAsString(Class clazz, String resourceName) {
@@ -30,8 +32,6 @@ public class ReadInputStream {
     st.whitespaceChars('\t', '\t');
     if (!batch)
       st.whitespaceChars(';',';');
-    else
-      st.commentChar('-');
 
 
     StringBuffer sb = new StringBuffer(108);
@@ -51,7 +51,14 @@ public class ReadInputStream {
       
       bis.close();
       
-      return sb.toString().split(";");
+      String[] sqls = sb.toString().split(";");
+      List<String> result = new ArrayList<String>(sqls.length);
+      
+      for (String sql:sqls) {
+        if (sql.trim().length()>0 && !sql.startsWith("--"))
+          result.add(sql.trim());
+      }
+      return result.toArray(new String[result.size()]);
     }
     catch (IOException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reading the file.", ex);

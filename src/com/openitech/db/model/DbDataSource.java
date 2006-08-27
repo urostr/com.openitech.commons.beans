@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  */
 
 package com.openitech.db.model;
@@ -3181,12 +3181,15 @@ public class DbDataSource implements ResultSet {
                   ResultSet.CONCUR_READ_ONLY,
                   ResultSet.HOLD_CURSORS_OVER_COMMIT);
           preparedSelectSql = sql;
-          primaryKeys=PrimaryKey.getPrimaryKeys(this.selectStatement);
+          this.metaData = null;
           this.columnMapping.clear();
+
           this.metaData = selectStatement.getMetaData();
           int columnCount = this.metaData.getColumnCount();
           for (int c=1; c<=columnCount; c++)
             this.columnMapping.put(this.metaData.getColumnName(c), c);
+          primaryKeys=PrimaryKey.getPrimaryKeys(this.selectStatement);
+
           setName();
           Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Successfully prepared the selectSql '"+sql+"'");
         }
@@ -3196,7 +3199,7 @@ public class DbDataSource implements ResultSet {
       this.count = 0;
       this.selectResultSet = null;
     } catch (InterruptedException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '"+selectSql+"'", ex);;;
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '"+selectSql+"'", ex);
     } finally {
       semaphore.release();
       if (countSql==null || countSql.length()==0) {
@@ -4549,6 +4552,7 @@ public class DbDataSource implements ResultSet {
     protected int type = Types.NULL;
     protected T value = null;
     private PropertyChangeSupport changeSupport;
+    protected boolean automaticReload = false;
     
     public SqlParameter() {
     }
@@ -4576,6 +4580,10 @@ public class DbDataSource implements ResultSet {
       T oldValue = this.value;
       this.value = value;
       firePropertyChange("value", oldValue, value);
+    }
+
+    public boolean isAutomaticReload() {
+      return automaticReload;
     }
     
     /**
@@ -4925,8 +4933,10 @@ public class DbDataSource implements ResultSet {
   }
   
   public static class SubstSqlParameter extends SqlParameter<String> {
+    public static final String ALIAS = "<%table_alias%>";
     protected List<Object> parameters = new ArrayList<Object>();
     protected String replace = "";
+    protected String alias = "";
     
     public SubstSqlParameter() {
       super(Types.SUBST_FIRST, "");
@@ -4939,6 +4949,22 @@ public class DbDataSource implements ResultSet {
     
     public String getReplace() {
       return replace;
+    }
+
+    public void setAlias(String alias) {
+      if (!this.alias.equals(alias)) {
+        String oldValue = this.alias;
+        this.alias = alias;
+        firePropertyChange("alias",oldValue, alias);
+      }
+    }
+
+    public String getAlias() {
+      return alias;
+    }
+
+    public String getValue() {
+      return super.getValue().replaceAll(ALIAS, getAlias().length()>0?getAlias()+".":"");
     }
     
     public void setReplace(String replace) {
@@ -4977,6 +5003,7 @@ public class DbDataSource implements ResultSet {
       parameters.remove(parameter);
       firePropertyChange("parameters", size, parameters.size());
     }
+
   }
   
   private final static class RunnableEvents implements Runnable {

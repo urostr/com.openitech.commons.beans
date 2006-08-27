@@ -61,7 +61,7 @@ public abstract class AbstractConnection implements DbConnection {
         
         java.sql.Connection result = null;
         
-        if (server) {
+        if (server && settings.containsKey(ConnectionManager.DB_DRIVER_NET)) {
           Class.forName(settings.getProperty(ConnectionManager.DB_DRIVER_NET));
           DB_URL = settings.getProperty(ConnectionManager.DB_JDBC_NET);
           try {
@@ -76,8 +76,10 @@ public abstract class AbstractConnection implements DbConnection {
             }
             
             Properties connect = new Properties();
-            connect.put("user",DB_USER);
-            connect.put("password",DB_PASS);
+            if (DB_USER!=null) {
+              connect.put("user",DB_USER);
+              connect.put("password",DB_PASS);
+            }
             
             for (Iterator<Map.Entry<Object,Object>> s=settings.entrySet().iterator(); s.hasNext(); ) {
               Map.Entry<Object,Object> entry = s.next();
@@ -104,8 +106,11 @@ public abstract class AbstractConnection implements DbConnection {
           DB_URL = settings.getProperty(ConnectionManager.DB_JDBC_EMBEDDED);
           
           Properties connect = new Properties();
-          connect.put("user",DB_USER);
-          connect.put("password",DB_PASS);
+          
+          if (DB_USER!=null) {
+            connect.put("user",DB_USER);
+            connect.put("password",DB_PASS);
+          }
           
           for (Iterator<Map.Entry<Object,Object>> s=settings.entrySet().iterator(); s.hasNext(); ) {
             Map.Entry<Object,Object> entry = s.next();
