@@ -94,7 +94,8 @@ public abstract class AbstractConnection implements DbConnection {
             
             result = DriverManager.getConnection(DB_URL, connect);
 
-            createSchema(result);
+            if (result!=null)
+              createSchema(result);
           
             if (settings.containsKey("db.shutdown.net")) {
               try {
@@ -128,7 +129,8 @@ public abstract class AbstractConnection implements DbConnection {
           
           result = DriverManager.getConnection(DB_URL, connect);
           
-          createSchema(result);
+          if (result!=null)
+            createSchema(result);
           
           if (settings.containsKey(ConnectionManager.DB_SHUTDOWN_HOOK))
             try {
