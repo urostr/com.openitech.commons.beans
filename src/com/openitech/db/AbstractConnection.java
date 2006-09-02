@@ -10,6 +10,7 @@
 package com.openitech.db;
 
 import com.openitech.Settings;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -27,6 +28,9 @@ import java.util.logging.Logger;
 public abstract class AbstractConnection implements DbConnection {
   
   private static boolean server = true;
+  private static final String fileSeparator = File.separatorChar=='\\'?"\\\\":File.separator;
+  private static final String userDir = System.getProperty("user.dir").replaceAll(fileSeparator,fileSeparator+fileSeparator);
+  private Process databaseProcess = null;
   
   /**
    * Creates a new instance of AbstractConnection
@@ -67,12 +71,12 @@ public abstract class AbstractConnection implements DbConnection {
           try {
             if (settings.containsKey("db.startup.net")) {
               String dbStartupNetCommand = settings.getProperty("db.startup.net.command").
-                      replaceAll("\\{user.dir\\}", System.getProperty("user.dir")).
-                      replaceAll("\\{file.separator\\}", System.getProperty("file.separator")).
+                      replaceAll("\\{user.dir\\}", userDir).
+                      replaceAll("\\{file.separator\\}", fileSeparator).
                       replaceAll("\\{path.separator\\}", System.getProperty("path.separator"));
               String exec = MessageFormat.format(dbStartupNetCommand, settings.getProperty("db.jdbc.net.port"));
               Logger.getLogger(Settings.LOGGER).info("Executing:\n"+exec);
-              Runtime.getRuntime().exec(exec);
+              databaseProcess = Runtime.getRuntime().exec(exec);
             }
             
             Properties connect = new Properties();
@@ -89,6 +93,9 @@ public abstract class AbstractConnection implements DbConnection {
             }
             
             result = DriverManager.getConnection(DB_URL, connect);
+
+            createSchema(result);
+          
             if (settings.containsKey("db.shutdown.net")) {
               try {
                 Runtime.getRuntime().addShutdownHook((Thread) Class.forName(settings.getProperty(ConnectionManager.DB_SHUTDOWN_HOOK),true, this.getClass().getClassLoader()).newInstance());
