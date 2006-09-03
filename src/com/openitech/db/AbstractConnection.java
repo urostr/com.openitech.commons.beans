@@ -77,6 +77,7 @@ public abstract class AbstractConnection implements DbConnection {
               String exec = MessageFormat.format(dbStartupNetCommand, settings.getProperty("db.jdbc.net.port"));
               Logger.getLogger(Settings.LOGGER).info("Executing:\n"+exec);
               databaseProcess = Runtime.getRuntime().exec(exec);
+              Thread.currentThread().sleep(3000);
             }
             
             Properties connect = new Properties();
