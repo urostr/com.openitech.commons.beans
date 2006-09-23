@@ -36,6 +36,7 @@
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
               <Connection type="value" value="java.awt.event.KeyEvent.VK_HOME" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Alt+HOME"/>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
               <Insets value="[2, 2, 2, 2]"/>
@@ -52,8 +53,9 @@
               <Image iconType="3" name="/com/openitech/icons/1leftarrow.png"/>
             </Property>
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection type="value" value="java.awt.event.KeyEvent.VK_LEFT" valueType="int"/>
+              <Connection type="value" value="java.awt.event.KeyEvent.VK_UP" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Alt+UP"/>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
               <Insets value="[2, 2, 2, 2]"/>
@@ -70,8 +72,9 @@
               <Image iconType="3" name="/com/openitech/icons/1rightarrow.png"/>
             </Property>
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection type="value" value="java.awt.event.KeyEvent.VK_RIGHT" valueType="int"/>
+              <Connection type="value" value="java.awt.event.KeyEvent.VK_DOWN" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Alt+DOWN"/>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
               <Insets value="[2, 2, 2, 2]"/>
@@ -90,6 +93,7 @@
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
               <Connection type="value" value="java.awt.event.KeyEvent.VK_END" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Alt+END"/>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
               <Insets value="[2, 2, 2, 2]"/>
@@ -108,6 +112,7 @@
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
               <Connection type="value" value="java.awt.event.KeyEvent.VK_INSERT" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Alt+Insert"/>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="multiClickThreshhold" type="long" value="27"/>
           </Properties>
@@ -123,6 +128,7 @@
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
               <Connection type="value" value="java.awt.event.KeyEvent.VK_DELETE" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Alt+Delete"/>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="multiClickThreshhold" type="long" value="27"/>
           </Properties>
@@ -138,6 +144,7 @@
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
               <Connection type="value" value="java.awt.event.KeyEvent.VK_ENTER" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Alt+ENTER"/>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="multiClickThreshhold" type="long" value="27"/>
           </Properties>
@@ -153,6 +160,7 @@
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
               <Connection type="value" value="java.awt.event.KeyEvent.VK_BACK_SPACE" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Alt+Backspace"/>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="multiClickThreshhold" type="long" value="27"/>
           </Properties>
@@ -168,7 +176,9 @@
             <Property name="mnemonic" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
               <Connection type="value" value="java.awt.event.KeyEvent.VK_F5" valueType="int"/>
             </Property>
+            <Property name="toolTipText" type="java.lang.String" value="F5"/>
             <Property name="enabled" type="boolean" value="false"/>
+            <Property name="mask" type="int" value="0"/>
             <Property name="multiClickThreshhold" type="long" value="27"/>
           </Properties>
           <Events>

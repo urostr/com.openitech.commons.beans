@@ -76,6 +76,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
     jbFirst.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/2leftarrow.png")));
     jbFirst.setMnemonic(java.awt.event.KeyEvent.VK_HOME);
+    jbFirst.setToolTipText("Alt+HOME");
     jbFirst.setEnabled(false);
     jbFirst.setMargin(new java.awt.Insets(2, 2, 2, 2));
     jbFirst.setMultiClickThreshhold(27L);
@@ -88,7 +89,8 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     jpInternal.add(jbFirst);
 
     jbPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/1leftarrow.png")));
-    jbPrev.setMnemonic(java.awt.event.KeyEvent.VK_LEFT);
+    jbPrev.setMnemonic(java.awt.event.KeyEvent.VK_UP);
+    jbPrev.setToolTipText("Alt+UP");
     jbPrev.setEnabled(false);
     jbPrev.setMargin(new java.awt.Insets(2, 2, 2, 2));
     jbPrev.setMultiClickThreshhold(27L);
@@ -101,7 +103,8 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     jpInternal.add(jbPrev);
 
     jbNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/1rightarrow.png")));
-    jbNext.setMnemonic(java.awt.event.KeyEvent.VK_RIGHT);
+    jbNext.setMnemonic(java.awt.event.KeyEvent.VK_DOWN);
+    jbNext.setToolTipText("Alt+DOWN");
     jbNext.setEnabled(false);
     jbNext.setMargin(new java.awt.Insets(2, 2, 2, 2));
     jbNext.setMultiClickThreshhold(27L);
@@ -115,6 +118,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
     jbLast.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/2rightarrow.png")));
     jbLast.setMnemonic(java.awt.event.KeyEvent.VK_END);
+    jbLast.setToolTipText("Alt+END");
     jbLast.setEnabled(false);
     jbLast.setMargin(new java.awt.Insets(2, 2, 2, 2));
     jbLast.setMultiClickThreshhold(27L);
@@ -128,6 +132,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
     jbAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/edit_add.png")));
     jbAdd.setMnemonic(java.awt.event.KeyEvent.VK_INSERT);
+    jbAdd.setToolTipText("Alt+Insert");
     jbAdd.setEnabled(false);
     jbAdd.setMultiClickThreshhold(27L);
     jbAdd.addActionListener(new java.awt.event.ActionListener() {
@@ -140,6 +145,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
     jbDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/edit_remove.png")));
     jbDelete.setMnemonic(java.awt.event.KeyEvent.VK_DELETE);
+    jbDelete.setToolTipText("Alt+Delete");
     jbDelete.setEnabled(false);
     jbDelete.setMultiClickThreshhold(27L);
     jbDelete.addActionListener(new java.awt.event.ActionListener() {
@@ -152,6 +158,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
     jbConfirm.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/button_ok.png")));
     jbConfirm.setMnemonic(java.awt.event.KeyEvent.VK_ENTER);
+    jbConfirm.setToolTipText("Alt+ENTER");
     jbConfirm.setEnabled(false);
     jbConfirm.setMultiClickThreshhold(27L);
     jbConfirm.addActionListener(new java.awt.event.ActionListener() {
@@ -164,6 +171,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
     jbCancel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/button_cancel1.png")));
     jbCancel.setMnemonic(java.awt.event.KeyEvent.VK_BACK_SPACE);
+    jbCancel.setToolTipText("Alt+Backspace");
     jbCancel.setEnabled(false);
     jbCancel.setMultiClickThreshhold(27L);
     jbCancel.addActionListener(new java.awt.event.ActionListener() {
@@ -176,7 +184,9 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
     jbReload.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/reload_k.png")));
     jbReload.setMnemonic(java.awt.event.KeyEvent.VK_F5);
+    jbReload.setToolTipText("F5");
     jbReload.setEnabled(false);
+    jbReload.setMask(0);
     jbReload.setMultiClickThreshhold(27L);
     jbReload.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {

@@ -45,6 +45,7 @@ import javax.swing.text.NumberFormatter;
 public class JDbFormattedTextField extends JFormattedTextField  implements DocumentListener,PropertyChangeListener {
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
+  private Validator validator = null;
   
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
@@ -129,6 +130,14 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public String getToolTipColumnName() {
     return dbFieldObserverToolTip.getColumnName();
   }
+
+  public void setValidator(Validator validator) {
+    this.validator = validator;
+  }
+
+  public Validator getValidator() {
+    return validator;
+  }
   
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     documentWeakListener.setEnabled(false);
@@ -185,7 +194,8 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   private void updateColumn() {
     activeRowChangeWeakListener.setEnabled(false);
     try {
-      dbFieldObserver.updateValue(getFormatter()==null?this.getText():this.getValue());
+      if ((validator==null)||(validator!=null&&validator.isValid(getFormatter()==null?this.getText():this.getValue())))
+        dbFieldObserver.updateValue(getFormatter()==null?this.getText():this.getValue());
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
     } finally {

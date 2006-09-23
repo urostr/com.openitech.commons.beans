@@ -29,6 +29,7 @@ import javax.swing.JComboBox;
 public class JDbComboBox extends JComboBox {
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
+  private Validator validator = null;
   
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
@@ -75,6 +76,14 @@ public class JDbComboBox extends JComboBox {
   public String getToolTipColumnName() {
     return dbFieldObserverToolTip.getColumnName();
   }
+
+  public void setValidator(Validator validator) {
+    this.validator = validator;
+  }
+
+  public Validator getValidator() {
+    return validator;
+  }
   
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     actionWeakListener.setEnabled(false);
@@ -104,10 +113,18 @@ public class JDbComboBox extends JComboBox {
     activeRowChangeWeakListener.setEnabled(false);
     try {
       if (getModel() instanceof DbComboBoxModel) {
-        if (this.getSelectedItem()!=null)
-          dbFieldObserver.updateValue(((DbComboBoxModel.DbComboBoxEntry) this.getSelectedItem()).getKey());
-      } else
-        dbFieldObserver.updateValue(this.getSelectedIndex());
+        if (this.getSelectedItem()!=null) {
+          Object value = (((DbComboBoxModel.DbComboBoxEntry) this.getSelectedItem()).getKey());
+          if ((validator==null)||(validator!=null&&validator.isValid(value))) {
+            dbFieldObserver.updateValue(value);
+          }
+        }
+      } else {
+        int value = this.getSelectedIndex();
+        if ((validator==null)||(validator!=null&&validator.isValid(value))) {
+          dbFieldObserver.updateValue(value);
+        }
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
     } finally {
