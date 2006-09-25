@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComboBox;
+import javax.swing.event.ListDataEvent;
 
 /**
  *
@@ -137,5 +138,15 @@ public class JDbComboBox extends JComboBox {
    */
   public void actionPerformed(ActionEvent e) {
     updateColumn();
+  }
+
+  public void contentsChanged(ListDataEvent e) {
+    boolean enabled = actionWeakListener.isEnabled();
+    actionWeakListener.setEnabled(false);
+    try {
+      super.contentsChanged(e);
+    } finally {
+      actionWeakListener.setEnabled(enabled);
+    }
   }
 }
