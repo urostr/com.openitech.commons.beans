@@ -258,7 +258,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
       if (navigatorFor!=null)
         navigatorFor.requestFocus();
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error storing updated the record.", ex);
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error storing the updated record.", ex);
       StringBuffer message = new StringBuffer();
       message.append("Napaka pri potrjevanju vnosa!\n\n");
       message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());

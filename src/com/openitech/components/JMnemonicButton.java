@@ -80,6 +80,7 @@ public class JMnemonicButton extends JButton implements ActionListener {
   }
 
   public void actionPerformed(ActionEvent e) {
+    this.requestFocus(true);
     doClick(1);
   }
 

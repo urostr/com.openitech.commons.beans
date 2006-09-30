@@ -277,6 +277,15 @@ public class DbFieldObserver {
     return result;
   }
   
+  public void startUpdate() {
+    if (this.dataSource!=null)
+      try {
+        this.dataSource.startUpdate();
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).warning("can't start updating the row");
+      }
+  }
+  
   public void setDataSource(DbDataSource dataSource) {
     if (this.dataSource!=null)
       this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);

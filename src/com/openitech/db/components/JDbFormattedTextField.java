@@ -13,8 +13,10 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbFieldObserver;
+import com.openitech.ref.events.ActionWeakListener;
 import com.openitech.ref.events.DocumentWeakListener;
 import com.openitech.ref.events.PropertyChangeWeakListener;
+import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
@@ -47,6 +49,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;
   
+  private transient ActionWeakListener actionWeakListener;
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
   private transient DocumentWeakListener documentWeakListener;
@@ -55,6 +58,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   /** Creates a new instance of JDbFormattedTextField */
   public JDbFormattedTextField() {
     try {
+      actionWeakListener = new ActionWeakListener(this, "dataSource_actionPerformed");
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null);
       tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null);
       documentWeakListener = new DocumentWeakListener(this);
@@ -137,6 +141,11 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
 
   public Validator getValidator() {
     return validator;
+  }
+  
+  public void dataSource_actionPerformed(ActionEvent event) throws ParseException {
+    if (event.getActionCommand().equals("update"))
+      commitEdit();
   }
   
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
@@ -307,7 +316,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     try {
       super.commitEdit();
     } catch (ParseException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error updating the value.", ex);
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error updating the value. ["+ex.getMessage()+"]");
       StringBuffer message = new StringBuffer();
       message.append("Napaka pri vnosu podatkov!\n");
       message.append(getText().substring(0,ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n");
