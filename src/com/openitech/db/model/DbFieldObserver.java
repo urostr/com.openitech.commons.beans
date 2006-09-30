@@ -74,7 +74,7 @@ public class DbFieldObserver {
     if (dataSource!=null && columnName!=null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       try {
-        if (!dataSource.rowInserted() && dataSource.getRowCount()>0)
+        if (dataSource.getRowCount()>0)
           result = dataSource.getInt(columnName);
       } catch (Exception ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '"+columnName+"' from the dataSource '"+dataSource.getSelectSql()+"'.  ["+ex.getMessage()+"]");

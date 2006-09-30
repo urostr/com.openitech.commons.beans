@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  */
 
 package com.openitech.db.model;
@@ -4493,8 +4493,8 @@ public class DbDataSource implements ResultSet {
         boolean indexed = values.keySet().iterator().next() instanceof Integer;
         for (Iterator<String> c=getColumnNames().iterator();equals && c.hasNext();) {
           columnName = c.next();
-          if (indexed) {
-            columnIndex = columnMapping.get(columnName);
+          columnIndex = columnMapping.get(columnName);
+          if (indexed&&columnIndex!=null) {
             if (values.containsKey(columnIndex) && values.get(columnIndex)!=null)
               equals = equals && (values.get(columnIndex).equals(resultSet.getObject(columnIndex)));
             else {

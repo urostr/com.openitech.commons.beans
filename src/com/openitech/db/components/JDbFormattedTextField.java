@@ -16,9 +16,12 @@ import com.openitech.db.model.DbFieldObserver;
 import com.openitech.ref.events.ActionWeakListener;
 import com.openitech.ref.events.DocumentWeakListener;
 import com.openitech.ref.events.PropertyChangeWeakListener;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -48,6 +51,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;
+  private FocusLostHandler focusLostHandler = new FocusLostHandler();
   
   private transient ActionWeakListener actionWeakListener;
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
@@ -143,6 +147,17 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     return validator;
   }
   
+  /**
+   * FOCUS_LOST behavior implementation
+   */
+  private class FocusLostHandler implements Runnable,Serializable {
+      public void run() {
+        if (validator!=null) {
+          validator.isValid(getFormatter()==null?getText():getValue());
+        }
+      }
+  }
+
   public void dataSource_actionPerformed(ActionEvent event) throws ParseException {
     if (event.getActionCommand().equals("update"))
       commitEdit();
@@ -323,5 +338,10 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
       message.append(ex.getMessage());
       JOptionPane.showMessageDialog(this, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);
     }
+  }
+
+  protected void processFocusEvent(FocusEvent e) {
+    super.processFocusEvent(e);
+    EventQueue.invokeLater(focusLostHandler);
   }
 }
