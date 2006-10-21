@@ -91,7 +91,7 @@ public class JDbComboBox extends JComboBox {
     try {
       if (getModel() instanceof DbComboBoxModel) {
         this.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object,Object>(dbFieldObserver.getValue(),null));
-      } else
+      } else if (dbFieldObserver.getValueAsInt()<getModel().getSize())
         this.setSelectedIndex(dbFieldObserver.getValueAsInt());
     } finally {
       actionWeakListener.setEnabled(true);

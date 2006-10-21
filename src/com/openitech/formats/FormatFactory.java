@@ -12,9 +12,16 @@ package com.openitech.formats;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.Format;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import javax.swing.JFormattedTextField;
+import javax.swing.text.DateFormatter;
+import javax.swing.text.DefaultFormatter;
+import javax.swing.text.DefaultFormatterFactory;
+import javax.swing.text.InternationalFormatter;
+import javax.swing.text.NumberFormatter;
 
 /**
  *
@@ -50,5 +57,18 @@ public class FormatFactory {
     return DATE_FORMAT;
   }
     
-    
+  public static JFormattedTextField.AbstractFormatterFactory getFormatFactory(Format format) {
+    JFormattedTextField.AbstractFormatterFactory af;
+    if (format instanceof DateFormat) {
+      af = new DefaultFormatterFactory(new DateFormatter((DateFormat) format));
+    } else if (format instanceof NumberFormat) {
+      af = new DefaultFormatterFactory(new NumberFormatter(
+              (NumberFormat)format));
+    } else if (format instanceof Format) {
+      af = new DefaultFormatterFactory(new InternationalFormatter(
+              (Format)format));
+    } else
+      af = new DefaultFormatterFactory(new DefaultFormatter());
+    return af;
+  }
 }

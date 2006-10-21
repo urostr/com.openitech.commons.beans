@@ -230,6 +230,9 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   private void documentUpdated() {
     if (getFormatter()==null)
       updateColumn();
+    else if ((dbFieldObserver!=null)&&!dbFieldObserver.isUpdatingFieldValue()) {
+      dbFieldObserver.startUpdate();
+    }
     /*else
       try {
         commitEdit();
@@ -311,9 +314,15 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    *              AbstractFormatter that can format the current value.
    */
   public void setFormatterFactory(JFormattedTextField.AbstractFormatterFactory tf) {
-    super.setFormatterFactory(tf);
-    if (getDataSource()!=null&&getColumnName()!=null) {
-      dataSource_fieldValueChanged(new ActiveRowChangeEvent(getDataSource(),getColumnName(), -1));
+    boolean wasEnabled = documentWeakListener.isEnabled();
+    try {
+      documentWeakListener.setEnabled(false);
+      super.setFormatterFactory(tf);
+      if (getDataSource()!=null&&getColumnName()!=null) {
+        dataSource_fieldValueChanged(new ActiveRowChangeEvent(getDataSource(),getColumnName(), -1));
+      }
+    } finally {
+      documentWeakListener.setEnabled(wasEnabled);
     }
   }
   
@@ -341,7 +350,13 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   }
 
   protected void processFocusEvent(FocusEvent e) {
-    super.processFocusEvent(e);
+    boolean wasEnabled = documentWeakListener.isEnabled();
+    try {
+      documentWeakListener.setEnabled(false);
+      super.processFocusEvent(e);
+    } finally {
+      documentWeakListener.setEnabled(wasEnabled);
+    }
     EventQueue.invokeLater(focusLostHandler);
   }
 }

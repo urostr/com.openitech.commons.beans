@@ -323,6 +323,10 @@ public class DbFieldObserver {
       }
     }
   }
+
+  public boolean isUpdatingFieldValue() {
+    return updatingFieldValue;
+  }
   
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     if (!updatingFieldValue) {

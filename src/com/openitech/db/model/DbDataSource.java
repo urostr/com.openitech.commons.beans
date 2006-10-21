@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.4 $
+ * $Revision: 1.5 $
  */
 
 package com.openitech.db.model;
@@ -23,12 +23,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.ref.SoftReference;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
@@ -49,6 +46,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,7 +59,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
@@ -2233,12 +2230,14 @@ public class DbDataSource implements ResultSet {
    * @since 1.2
    */
   public void updateRow() throws SQLException {
+    boolean storeUpdates = true;
     try {
       fireActionPerformed(new ActionEvent(this,1,"updateRow"));
     } catch (Exception err) {
-      throw (SQLException) (new SQLException()).initCause(err);
+      storeUpdates = false;
     }
-    storeUpdates(rowInserted());
+    if (storeUpdates)
+      storeUpdates(rowInserted());
   }
   
   /**
@@ -2859,24 +2858,28 @@ public class DbDataSource implements ResultSet {
       if (loadData()) {
         if (rowUpdated())
           updateRow();
+        
+        boolean moveToInsertRow = true;
         try {
           fireActionPerformed(new ActionEvent(this,1,"moveToInsertRow"));
         } catch (Exception err) {
-          throw (SQLException) (new SQLException()).initCause(err);
+          moveToInsertRow = false;
         }
-        int oldRow = getOpenSelectResultSet().getRow();
-        inserting = true;
-        ResultSetMetaData metaData = getMetaData();
-        int columnCount = metaData.getColumnCount();
-        String columnName;
-        storedUpdates.remove(new Integer(getRow()));
-        for (int c=1; c<=columnCount; c++) {
-          columnName = metaData.getColumnName(c);
-          storeUpdate(columnName, defaultValues.containsKey(columnName)?defaultValues.get(columnName):null, false);
+        if (moveToInsertRow) {
+          int oldRow = getOpenSelectResultSet().getRow();
+          inserting = true;
+          ResultSetMetaData metaData = getMetaData();
+          int columnCount = metaData.getColumnCount();
+          String columnName;
+          storedUpdates.remove(new Integer(getRow()));
+          for (int c=1; c<=columnCount; c++) {
+            columnName = metaData.getColumnName(c);
+            storeUpdate(columnName, defaultValues.containsKey(columnName)?defaultValues.get(columnName):null, false);
+          }
+
+          fireIntervalAdded(new ListDataEvent(this, ListDataEvent.INTERVAL_ADDED, getRowCount()-1, getRowCount()-1));
+          fireActiveRowChange(new ActiveRowChangeEvent(this, getRow(), oldRow));
         }
-        
-        fireIntervalAdded(new ListDataEvent(this, ListDataEvent.INTERVAL_ADDED, getRowCount()-1, getRowCount()-1));
-        fireActiveRowChange(new ActiveRowChangeEvent(this, getRow(), oldRow));
       } else
         throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -3030,7 +3033,8 @@ public class DbDataSource implements ResultSet {
   public void startUpdate() throws SQLException {
     if (isDataLoaded()) {
       if ((getRowCount()>0)&&!rowUpdated()) {
-        storedUpdates.put(new Integer(getRow()),new HashMap<String,Object>());        
+        storedUpdates.put(new Integer(getRow()),new HashMap<String,Object>());
+        fireFieldValueChanged(new ActiveRowChangeEvent(this, "", -1));
       }
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -3231,10 +3235,13 @@ public class DbDataSource implements ResultSet {
       String sql = substParameters(selectSql, parameters);
       if (sql!=null && sql.length()>0 && getConnection()!=null) {
         if ( (this.selectStatement == null) || (!sql.equals(preparedSelectSql))) {
+          if (this.selectStatement!=null)
+            this.selectStatement.close();
           this.selectStatement = getConnection().prepareStatement(sql,
                   ResultSet.TYPE_SCROLL_INSENSITIVE,
                   ResultSet.CONCUR_READ_ONLY,
                   ResultSet.HOLD_CURSORS_OVER_COMMIT);
+          this.selectStatement.setFetchSize(1008);
           preparedSelectSql = sql;
           this.metaData = null;
           this.columnMapping.clear();
@@ -3272,8 +3279,11 @@ public class DbDataSource implements ResultSet {
       String sql = substParameters(countSql, parameters);
       if (sql!=null && sql.length()>0 && getConnection()!=null) {
         if ( (this.countStatement == null) || (!sql.equals(preparedCountSql))) {
+          if (this.countStatement!=null)
+            this.countStatement.close();
           countStatement = getConnection().prepareStatement(sql,
                   ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,ResultSet.HOLD_CURSORS_OVER_COMMIT);
+          countStatement.setFetchSize(1);
           preparedCountSql = sql;
         }
       } else
@@ -3445,12 +3455,13 @@ public class DbDataSource implements ResultSet {
       
       setParameters((PreparedStatement) statement, parameters, 1, false);
       
-      if (((PreparedStatement) statement).execute()) {
+      /*if (((PreparedStatement) statement).execute()) {
         rs = statement.getResultSet();
-      }
+      }//*/
+      rs = ((PreparedStatement) statement).executeQuery();
       
-      if (rs!=null)
-        rs.setFetchSize(27);
+      /*if (rs!=null)
+        rs.setFetchSize(27);//*/
     } finally {
       semaphore.release();
     }
@@ -3622,6 +3633,7 @@ public class DbDataSource implements ResultSet {
   }
   private void storeUpdate(String columnName, Object value, boolean notify) throws SQLException {
     if (getRow()>0 && !readOnly) {
+      columnName = columnName.toUpperCase();
       Integer row = new Integer(getRow());
       if (inserting || storedUpdates.containsKey(row) || !Equals.equals(value, getOpenSelectResultSet().getObject(columnName))) {
         Map<String,Object> columnValues;
@@ -3674,7 +3686,7 @@ public class DbDataSource implements ResultSet {
     boolean result = false;
     Integer r = new Integer(row);
     if (storedUpdates.containsKey(r))
-      result =  storedUpdates.get(r).containsKey(columnName);
+      result =  storedUpdates.get(r).containsKey(columnName.toUpperCase());
     
     if (!result)
       storedResult[0] = false;
@@ -3695,6 +3707,7 @@ public class DbDataSource implements ResultSet {
   }
   
   private <T> T getStoredValue(int row, String columnName, T nullValue, Class<? extends T> type) throws SQLException {
+    columnName = columnName.toUpperCase();
     Object result = nullValue;
     Integer r = new Integer(row);
     if (storedUpdates.containsKey(r)) {
@@ -3831,9 +3844,9 @@ public class DbDataSource implements ResultSet {
             for (Iterator<Map.Entry<String,Object>> i=columnValues.entrySet().iterator();i.hasNext();) {
               entry = i.next();
               if (skipValues.indexOf(entry.getKey())==-1) {
-                if (entry.getValue()==null)
+                /*if (entry.getValue()==null)
                   insertStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                else
+                else//*/
                   insertStatement.setObject(p++, entry.getValue());
                 oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(),entry.getValue());
               }
@@ -3952,8 +3965,12 @@ public class DbDataSource implements ResultSet {
         cache.clear();        
         inserting = false;
         
+        int selectedrow = selectResultSet.getRow();
         selectResultSet = executeSql(selectStatement, parameters);
-        selectResultSet.absolute(row.intValue());
+        if (selectedrow>0)
+          selectResultSet.absolute(selectedrow);
+        else
+          selectResultSet.first();
         
         if (!compareValues(selectResultSet, oldValues)) {
           selectResultSet.first();
@@ -4490,23 +4507,45 @@ public class DbDataSource implements ResultSet {
       if (equals) {
         String columnName;
         Integer columnIndex;
+        boolean columnValuesScan = false;
         boolean indexed = values.keySet().iterator().next() instanceof Integer;
-        for (Iterator<String> c=getColumnNames().iterator();equals && c.hasNext();) {
-          columnName = c.next();
-          columnIndex = columnMapping.get(columnName);
-          if (indexed&&columnIndex!=null) {
-            if (values.containsKey(columnIndex) && values.get(columnIndex)!=null)
-              equals = equals && (values.get(columnIndex).equals(resultSet.getObject(columnIndex)));
-            else {
-              resultSet.getObject(columnIndex);
-              equals = equals && resultSet.wasNull();
-            }
-          } else {
-            if (values.containsKey(columnName) && values.get(columnName)!=null)
-              equals = equals && (values.get(columnName).equals(resultSet.getObject(columnName)));
-            else {
-              resultSet.getObject(columnName);
-              equals = equals && resultSet.wasNull();
+        boolean[] primarysChecked = new boolean[getColumnNames().size()];
+        Arrays.fill(primarysChecked, false);
+        for (int  c=0;equals && c<primarysChecked.length; c++) {
+          if (!primarysChecked[c]) {
+            columnName  = getColumnNames().get(c);
+            columnIndex = columnMapping.get(columnName);
+            if (indexed&&columnIndex!=null) {
+              if (values.containsKey(columnIndex) && values.get(columnIndex)!=null)
+                equals = equals && (values.get(columnIndex).equals(resultSet.getObject(columnIndex)));
+              else {
+                resultSet.getObject(columnIndex);
+                equals = equals && resultSet.wasNull();
+              }
+            } else if (indexed&&!columnValuesScan) {
+              columnValuesScan = true;
+              ResultSetMetaData metaData = resultSet.getMetaData();
+              for (Iterator<Map.Entry<K,Object>> iterator=values.entrySet().iterator();iterator.hasNext()&&equals;) {
+                Map.Entry<K,Object> entry = iterator.next();
+                columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue());
+                int index = getColumnNames().indexOf(columnName);
+                if (index>=0) {
+                  primarysChecked[index] = true;
+                  if (entry.getValue()!=null) {
+                    equals = equals && (entry.getValue().equals(resultSet.getObject(columnName)));
+                  } else {
+                    resultSet.getObject(columnName);
+                    equals = equals && resultSet.wasNull();
+                  }
+                }
+              }
+            } else {
+              if (values.containsKey(columnName) && values.get(columnName)!=null)
+                equals = equals && (values.get(columnName).equals(resultSet.getObject(columnName)));
+              else {
+                resultSet.getObject(columnName);
+                equals = equals && resultSet.wasNull();
+              }
             }
           }
         }
@@ -5043,6 +5082,7 @@ public class DbDataSource implements ResultSet {
     protected List<Object> parameters = new ArrayList<Object>();
     protected String replace = "";
     protected String alias = "";
+    protected String operator = "";
     
     public SubstSqlParameter() {
       super(Types.SUBST_FIRST, "");
@@ -5070,7 +5110,16 @@ public class DbDataSource implements ResultSet {
     }
 
     public String getValue() {
-      return super.getValue().replaceAll(ALIAS, getAlias().length()>0?getAlias()+".":"");
+      String value = super.getValue().replaceAll(ALIAS, getAlias().length()>0?getAlias()+".":"");
+      return (value.length()>0)&&(operator.length()>0)?" "+operator+" ("+value+") ":value;
+    }
+
+    public void setOperator(String operator) {
+      this.operator = operator;
+    }
+
+    public String getOperator() {
+      return operator;
     }
     
     public void setReplace(String replace) {
