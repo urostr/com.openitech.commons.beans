@@ -145,6 +145,7 @@ public class JDbComboBox extends JComboBox {
     actionWeakListener.setEnabled(false);
     try {
       super.contentsChanged(e);
+      dataSource_fieldValueChanged(null);
     } finally {
       actionWeakListener.setEnabled(enabled);
     }

@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.5 $
+ * $Revision: 1.6 $
  */
 
 package com.openitech.db.model;
@@ -18,6 +18,7 @@ import com.openitech.db.model.concurrent.DataSourceListDataEvent;
 import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
 import com.openitech.ref.WeakListenerList;
+import com.openitech.util.OwnerFrame;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -59,6 +60,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JOptionPane;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
@@ -555,7 +557,8 @@ public class DbDataSource implements ResultSet {
    */
   public long getLong(String columnName) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnName,0l, Long.class);
+      Number value = getStoredValue(getRow(),columnName,0l, Number.class);
+      return value==null?null:value.longValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -572,7 +575,8 @@ public class DbDataSource implements ResultSet {
    */
   public int getInt(String columnName) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnName,0, Integer.class);
+      Number value = getStoredValue(getRow(),columnName,0, Number.class);
+      return value==null?null:value.intValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -589,7 +593,8 @@ public class DbDataSource implements ResultSet {
    */
   public float getFloat(String columnName) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnName,0f, Float.class);
+      Number value = getStoredValue(getRow(),columnName,0f, Number.class);
+      return value==null?null:value.floatValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -606,7 +611,8 @@ public class DbDataSource implements ResultSet {
    */
   public double getDouble(String columnName) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnName,0d, Double.class);
+      Number value = getStoredValue(getRow(),columnName,0d, Number.class);
+      return value==null?null:value.doubleValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -824,7 +830,8 @@ public class DbDataSource implements ResultSet {
    */
   public byte getByte(String columnName) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnName,(byte) 0, Byte.class);
+      Number value = getStoredValue(getRow(),columnName,(byte) 0, Number.class);
+      return value==null?null:value.byteValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -892,7 +899,8 @@ public class DbDataSource implements ResultSet {
    */
   public short getShort(String columnName) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnName,(short) 0, Short.class);
+      Number value = getStoredValue(getRow(),columnName,(short) 0, Number.class);
+      return value==null?null:value.shortValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -1106,7 +1114,8 @@ public class DbDataSource implements ResultSet {
    */
   public long getLong(int columnIndex) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnIndex,0l, Long.class);
+      Number value = getStoredValue(getRow(),columnIndex,0l, Number.class);
+      return value==null?null:value.longValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -1123,7 +1132,8 @@ public class DbDataSource implements ResultSet {
    */
   public int getInt(int columnIndex) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnIndex,0, Integer.class);
+      Number value = getStoredValue(getRow(),columnIndex,0, Number.class);
+      return value==null?null:value.intValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -1140,7 +1150,8 @@ public class DbDataSource implements ResultSet {
    */
   public float getFloat(int columnIndex) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnIndex,0f, Float.class);
+      Number value = getStoredValue(getRow(),columnIndex,0f, Number.class);
+      return value==null?null:value.floatValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -1157,7 +1168,8 @@ public class DbDataSource implements ResultSet {
    */
   public double getDouble(int columnIndex) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnIndex,0d, Double.class);
+      Number value = getStoredValue(getRow(),columnIndex,0d, Number.class);
+      return value==null?null:value.doubleValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -1336,8 +1348,12 @@ public class DbDataSource implements ResultSet {
    */
   public boolean absolute(int row) throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();
       boolean res = selectResultSet.absolute(row);
       if (res) {
@@ -1443,7 +1459,8 @@ public class DbDataSource implements ResultSet {
    */
   public byte getByte(int columnIndex) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnIndex,(byte) 0, Byte.class);
+      Number value = getStoredValue(getRow(),columnIndex,(byte) 0, Number.class);
+      return value==null?null:value.byteValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -1478,7 +1495,8 @@ public class DbDataSource implements ResultSet {
    */
   public short getShort(int columnIndex) throws SQLException {
     if (loadData()) {
-      return getStoredValue(getRow(),columnIndex,(short) 0, Short.class);
+      Number value = getStoredValue(getRow(),columnIndex,(short) 0, Number.class);
+      return value==null?null:value.shortValue();
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -1612,8 +1630,12 @@ public class DbDataSource implements ResultSet {
    */
   public boolean relative(int rows) throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();
       boolean res = selectResultSet.relative(rows);
       if (res) {
@@ -2220,6 +2242,17 @@ public class DbDataSource implements ResultSet {
       throw new SQLException("Ni pripravljenih podatkov.");
   }
   
+  public boolean canUpdateRow() {
+   return (JOptionPane.showOptionDialog(OwnerFrame.getInstance().getOwner(),
+              "Ali naj shranim spremembe ?",
+              "Preveri",
+              JOptionPane.YES_NO_OPTION,
+              JOptionPane.QUESTION_MESSAGE,
+              null,
+              new Object[] {"Da","Ne"},
+              "Ne")==JOptionPane.YES_OPTION);
+  }
+  
   /**
    * Updates the underlying database with the new contents of the
    * current row of this <code>ResultSet</code> object.
@@ -2238,6 +2271,11 @@ public class DbDataSource implements ResultSet {
     }
     if (storeUpdates)
       storeUpdates(rowInserted());
+    try {
+      fireActionPerformed(new ActionEvent(this,1,"rowUpdated"));
+    } catch (Exception err) {
+      //
+    }
   }
   
   /**
@@ -2429,8 +2467,12 @@ public class DbDataSource implements ResultSet {
    */
   public boolean first() throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();
       boolean res = selectResultSet.first();
       if (res) {
@@ -2466,15 +2508,7 @@ public class DbDataSource implements ResultSet {
             delete.execute();
           }
           
-          selectResultSet.close();
-          selectResultSet = executeSql(selectStatement, parameters);
-          
-          count=0; //reset row count
-          
-          selectResultSet.absolute(Math.min(oldRow,getRowCount()));
-          
-          fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-          fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), -1));
+          reload(oldRow);
         }
       } else
         throw new SQLException("Ni pripravljenih podatkov.");
@@ -2538,12 +2572,20 @@ public class DbDataSource implements ResultSet {
    */
   public void cancelRowUpdates() throws SQLException {
     if(isDataLoaded()) {
-      storedUpdates.remove(new Integer(getOpenSelectResultSet().getRow()));
-      if (inserting) {
-        inserting = false;
-        fireIntervalRemoved(new ListDataEvent(this, ListDataEvent.INTERVAL_REMOVED, getRowCount(), getRowCount()));
+      boolean cancelUpdates = true;
+      try {
+        fireActionPerformed(new ActionEvent(this,1,"cancelUpdates"));
+      } catch (Exception err) {
+        cancelUpdates = false;
       }
-      fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), selectResultSet.getRow()));
+      if (cancelUpdates) {
+        storedUpdates.remove(new Integer(getRow()));
+        if (inserting) {
+          inserting = false;
+          fireIntervalRemoved(new ListDataEvent(this, ListDataEvent.INTERVAL_REMOVED, getRowCount(), getRowCount()));
+        }
+        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), selectResultSet.getRow()));
+      }
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -2559,8 +2601,12 @@ public class DbDataSource implements ResultSet {
    */
   public void beforeFirst() throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();;
       selectResultSet.beforeFirst();
       fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
@@ -2579,8 +2625,12 @@ public class DbDataSource implements ResultSet {
    */
   public void afterLast() throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();;
       selectResultSet.afterLast();
       fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
@@ -2799,8 +2849,12 @@ public class DbDataSource implements ResultSet {
    */
   public boolean last() throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();
       boolean res = selectResultSet.last();
       if (res) {
@@ -2822,8 +2876,12 @@ public class DbDataSource implements ResultSet {
    */
   public void moveToCurrentRow() throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();
       selectResultSet.moveToCurrentRow();
       if (selectResultSet.getRow()!=oldRow)
@@ -2856,8 +2914,12 @@ public class DbDataSource implements ResultSet {
   public void moveToInsertRow() throws SQLException {
     if (canAddRows) {
       if (loadData()) {
-        if (rowUpdated())
+      if (rowUpdated()) {
+        if (canUpdateRow())
           updateRow();
+        else
+          cancelRowUpdates();
+      }
         
         boolean moveToInsertRow = true;
         try {
@@ -2903,8 +2965,12 @@ public class DbDataSource implements ResultSet {
    */
   public boolean next() throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();;
       boolean res = selectResultSet.next();
       if (res) {
@@ -2927,8 +2993,12 @@ public class DbDataSource implements ResultSet {
    */
   public boolean previous() throws SQLException {
     if (loadData()) {
-      if (rowUpdated())
-        updateRow();
+      if (rowUpdated()) {
+        if (canUpdateRow())
+          updateRow();
+        else
+          cancelRowUpdates();
+      }
       int oldRow = getOpenSelectResultSet().getRow();;
       boolean res = selectResultSet.previous();
       if (res) {
@@ -3344,6 +3414,10 @@ public class DbDataSource implements ResultSet {
   }
   
   private boolean loadData(boolean reload) {
+    return loadData(reload, Integer.MIN_VALUE);
+  }
+  
+  private boolean loadData(boolean reload, int oldRow) {
     boolean reloaded = false;
     available.lock();
     try {
@@ -3372,6 +3446,13 @@ public class DbDataSource implements ResultSet {
           reloaded = true;
           getRowCount();
         }
+        if (oldRow>0&&getRowCount()>0) {
+          try {
+            selectResultSet.absolute(Math.min(oldRow,getRowCount()));
+          } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+          }
+        }
       }
     } finally {
       available.unlock();
@@ -3396,6 +3477,10 @@ public class DbDataSource implements ResultSet {
   
   public boolean reload() {
     return loadData(true);
+  }
+  
+  public boolean reload(int oldRow) {
+    return loadData(true, oldRow);
   }
   
   private String substParameters(String sql, List<?> parameters) {
@@ -3716,6 +3801,9 @@ public class DbDataSource implements ResultSet {
         storedResult[0] = true;
         if (storedResult[1] = (result == null))
           result = nullValue;
+        else if (type.equals(String.class))
+          result = result.toString();
+
         return (T) result;
       }
     }
@@ -5169,7 +5257,15 @@ public class DbDataSource implements ResultSet {
     public void run() {
       Logger.getLogger(Settings.LOGGER).fine("Firing events '"+owner.selectSql+"'");
       owner.fireContentsChanged(new ListDataEvent(owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, owner.getRowCount()>0?1:0, -1));
+      int pos=0;
+      if (owner.getRowCount()>0) {
+        try {
+          pos = owner.selectResultSet.getRow();
+        } catch (SQLException err) {
+          pos = 0;
+        }
+      }
+      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, pos, -1));
     }
   };
   

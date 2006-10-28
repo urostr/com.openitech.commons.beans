@@ -42,11 +42,15 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   public JDbNavigator() {
     initComponents();
     layout = (GridLayout) jpInternal.getLayout();
+    jbAdd.addMnemonic(java.awt.event.KeyEvent.VK_INSERT);
+    jbDelete.addMnemonic(java.awt.event.KeyEvent.VK_DELETE);
   }
   
   public JDbNavigator(Operation... e) {
     this();
     setButtons(e);
+    jbAdd.addMnemonic(java.awt.event.KeyEvent.VK_INSERT);
+    jbDelete.addMnemonic(java.awt.event.KeyEvent.VK_DELETE);
   }
 
   /** This method is called from within the constructor to
@@ -131,8 +135,8 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     jpInternal.add(jbLast);
 
     jbAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/edit_add.png")));
-    jbAdd.setMnemonic(java.awt.event.KeyEvent.VK_INSERT);
-    jbAdd.setToolTipText("Alt+Insert");
+    jbAdd.setMnemonic(java.awt.event.KeyEvent.VK_ADD);
+    jbAdd.setToolTipText("Alt+'+'");
     jbAdd.setEnabled(false);
     jbAdd.setMultiClickThreshhold(27L);
     jbAdd.addActionListener(new java.awt.event.ActionListener() {
@@ -144,8 +148,8 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     jpInternal.add(jbAdd);
 
     jbDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/edit_remove.png")));
-    jbDelete.setMnemonic(java.awt.event.KeyEvent.VK_DELETE);
-    jbDelete.setToolTipText("Alt+Delete");
+    jbDelete.setMnemonic(java.awt.event.KeyEvent.VK_SUBTRACT);
+    jbDelete.setToolTipText("Alt+'-'");
     jbDelete.setEnabled(false);
     jbDelete.setMultiClickThreshhold(27L);
     jbDelete.addActionListener(new java.awt.event.ActionListener() {
@@ -236,16 +240,12 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   private void jbReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbReloadActionPerformed
     if (dataSource!=null)
       dataSource.reload();
-    if (navigatorFor!=null)
-        navigatorFor.requestFocus();
   }//GEN-LAST:event_jbReloadActionPerformed
 
   private void jbCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbCancelActionPerformed
     try {
       if (dataSource!=null)
         dataSource.cancelRowUpdates();
-      if (navigatorFor!=null)
-          navigatorFor.requestFocus();
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error cancelling updates on the record.", ex);
     }
@@ -255,8 +255,6 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     try {
       if (dataSource!=null)
         dataSource.updateRow();
-      if (navigatorFor!=null)
-        navigatorFor.requestFocus();
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error storing the updated record.", ex);
       StringBuffer message = new StringBuffer();

@@ -15,6 +15,7 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.ref.events.ActionWeakListener;
 import com.openitech.ref.events.DocumentWeakListener;
+import com.openitech.ref.events.FocusWeakListener;
 import com.openitech.ref.events.PropertyChangeWeakListener;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -28,7 +29,6 @@ import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFormattedTextField;
@@ -52,12 +52,14 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;
   private FocusLostHandler focusLostHandler = new FocusLostHandler();
+  private final Selector selector = new Selector(this);
   
   private transient ActionWeakListener actionWeakListener;
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
   private transient DocumentWeakListener documentWeakListener;
   private transient PropertyChangeWeakListener propertyChangeWeakListener;
+  private transient FocusWeakListener focusWeakListener;
   
   /** Creates a new instance of JDbFormattedTextField */
   public JDbFormattedTextField() {
@@ -65,6 +67,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
       actionWeakListener = new ActionWeakListener(this, "dataSource_actionPerformed");
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null);
       tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null);
+      focusWeakListener = new FocusWeakListener(this,"this_focusGained", null);
       documentWeakListener = new DocumentWeakListener(this);
       propertyChangeWeakListener = new PropertyChangeWeakListener(this);
     } catch (NoSuchMethodException ex) {
@@ -72,8 +75,13 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     }
     dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
+    this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
     this.addPropertyChangeListener("value", propertyChangeWeakListener);
+  }
+  
+  public void this_focusGained(FocusEvent e) {
+    EventQueue.invokeLater(selector);
   }
   
   public void setFormat(Format format) {
