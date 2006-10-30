@@ -470,7 +470,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           return function.invoke(owner, new Object[] { this });
         } catch (Exception ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't invoke function "+function.getName()+"("+this.getClass().getName()+"). ["+ex.getMessage()+"]");
-          return getValue();
+          return "";
         }
       }
       
@@ -492,6 +492,14 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
               }
               
               result.append(value==null?"":value);
+            }
+            if (function!=null) {
+              Object value = getFunctionValue();
+              if (value!=null) {
+                if (result.length()>0)
+                  result.append(separator.hasNext()?separator.next():lastSeparator);
+                result.append(value==null?"":value);
+              }
             }
             return result.toString();
           }

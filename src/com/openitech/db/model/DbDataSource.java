@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.6 $
+ * $Revision: 1.7 $
  */
 
 package com.openitech.db.model;
@@ -69,6 +69,11 @@ import javax.swing.event.ListDataListener;
  * @author uros
  */
 public class DbDataSource implements ResultSet {
+  public final static String MOVE_TO_INSERT_ROW="moveToInsertRow";
+  public final static String UPDATE_ROW="updateRow";
+  public final static String ROW_UPDATED="rowUpdated";
+  public final static String CANCEL_UPDATES="cancelUpdates";
+  
   private String selectSql;
   private String countSql;
   
@@ -122,6 +127,8 @@ public class DbDataSource implements ResultSet {
   
   private final Runnable events = new RunnableEvents(this);
   private long queuedDelay = 108;
+  
+  private Connection connection = null;
   
   
   /** Creates a new instance of DbDataSource */
@@ -2265,14 +2272,14 @@ public class DbDataSource implements ResultSet {
   public void updateRow() throws SQLException {
     boolean storeUpdates = true;
     try {
-      fireActionPerformed(new ActionEvent(this,1,"updateRow"));
+      fireActionPerformed(new ActionEvent(this,1,UPDATE_ROW));
     } catch (Exception err) {
       storeUpdates = false;
     }
     if (storeUpdates)
       storeUpdates(rowInserted());
     try {
-      fireActionPerformed(new ActionEvent(this,1,"rowUpdated"));
+      fireActionPerformed(new ActionEvent(this,1,ROW_UPDATED));
     } catch (Exception err) {
       //
     }
@@ -2574,7 +2581,7 @@ public class DbDataSource implements ResultSet {
     if(isDataLoaded()) {
       boolean cancelUpdates = true;
       try {
-        fireActionPerformed(new ActionEvent(this,1,"cancelUpdates"));
+        fireActionPerformed(new ActionEvent(this,1,CANCEL_UPDATES));
       } catch (Exception err) {
         cancelUpdates = false;
       }
@@ -2923,7 +2930,7 @@ public class DbDataSource implements ResultSet {
         
         boolean moveToInsertRow = true;
         try {
-          fireActionPerformed(new ActionEvent(this,1,"moveToInsertRow"));
+          fireActionPerformed(new ActionEvent(this,1,MOVE_TO_INSERT_ROW));
         } catch (Exception err) {
           moveToInsertRow = false;
         }
@@ -3317,7 +3324,7 @@ public class DbDataSource implements ResultSet {
           this.columnMapping.clear();
 
           this.metaData = selectStatement.getMetaData();
-          int columnCount = this.metaData.getColumnCount();
+          int columnCount = this.metaData!=null?this.metaData.getColumnCount():0;
           for (int c=1; c<=columnCount; c++)
             this.columnMapping.put(this.metaData.getColumnName(c), c);
           primaryKeys=PrimaryKey.getPrimaryKeys(this.selectStatement);
@@ -3334,7 +3341,7 @@ public class DbDataSource implements ResultSet {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '"+selectSql+"'", ex);
     } finally {
       semaphore.release();
-      if (countSql==null || countSql.length()==0) {
+      if (countSql==null) {
         setCountSql("SELECT COUNT(*) FROM ("+this.selectSql+") c");
       }
     }
@@ -3375,19 +3382,54 @@ public class DbDataSource implements ResultSet {
   }
   
   public Connection getConnection() {
-    return ConnectionManager.getInstance()!=null?ConnectionManager.getInstance().getConnection():null;
+    if (this.connection==null)
+      return ConnectionManager.getInstance()!=null?ConnectionManager.getInstance().getConnection():null;
+    else
+      return this.connection;
+  }
+
+  public void setConnection(Connection connection) throws SQLException {
+    this.connection = connection;
+    if (selectStatement!=null&&!selectStatement.getConnection().equals(connection)) {
+      if (this.selectStatement!=null) {
+        this.selectStatement.close();
+        this.selectStatement = null;
+      }
+      setSelectSql(this.selectSql);
+    }
   }
   
   public int getRowCount() {
     int newCount = this.count;
     
-    if (this.count==0 && countStatement!=null) {
+    if (this.count==0) {
       available.lock();
       try {
-        if (this.count==0 && countStatement!=null) {
-          ResultSet rs=executeSql(countStatement, parameters);
-          if (rs.first())
-            newCount = rs.getInt(1);
+        if (this.count==0) {
+          if (countStatement!=null) {
+            ResultSet rs=executeSql(countStatement, parameters);
+            if (rs.first())
+              newCount = rs.getInt(1);
+          } else if (selectStatement!=null) {
+            if (selectResultSet==null) {
+              try {
+                Logger.getLogger(Settings.LOGGER).fine("Executing '"+selectSql+"'");
+                selectResultSet = executeSql(selectStatement, parameters);
+                selectResultSet.first();
+              } catch (SQLException ex) {
+                Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result for '"+selectSql+"'", ex);
+                selectResultSet = null;
+              }
+            }
+            
+            if (selectResultSet!=null) {
+              int row = selectResultSet.getRow();
+              selectResultSet.last();
+              newCount = selectResultSet.getRow();
+              if (row>0)
+                selectResultSet.absolute(row);
+            }
+          }
         }
       } catch (SQLException ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count from '"+countSql+"'", ex);
@@ -3484,17 +3526,19 @@ public class DbDataSource implements ResultSet {
   }
   
   private String substParameters(String sql, List<?> parameters) {
-    Object value;
-    Integer type;
-    
-    for (Iterator values = parameters.iterator(); values.hasNext(); ) {
-      value = values.next();
-      if (value instanceof SubstSqlParameter) {
-        type = ((SubstSqlParameter) value).getType();
-        if (type.equals(Types.SUBST_ALL)) {
-          sql = sql.replaceAll(((SubstSqlParameter) value).getReplace(), ((SubstSqlParameter) value).getValue());
-        } else if (type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST)) {
-          sql = sql.replaceFirst(((SubstSqlParameter) value).getReplace(), ((SubstSqlParameter) value).getValue());
+    if (sql!=null&&sql.length()>0) {
+      Object value;
+      Integer type;
+
+      for (Iterator values = parameters.iterator(); values.hasNext(); ) {
+        value = values.next();
+        if (value instanceof SubstSqlParameter) {
+          type = ((SubstSqlParameter) value).getType();
+          if (type.equals(Types.SUBST_ALL)) {
+            sql = sql.replaceAll(((SubstSqlParameter) value).getReplace(), ((SubstSqlParameter) value).getValue());
+          } else if (type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST)) {
+            sql = sql.replaceFirst(((SubstSqlParameter) value).getReplace(), ((SubstSqlParameter) value).getValue());
+          }
         }
       }
     }
@@ -4501,15 +4545,17 @@ public class DbDataSource implements ResultSet {
     Map<String,Integer> columnMapping = new HashMap<String,Integer>();
     int hashcode;
     boolean updateFailed = false;
+    Connection connection;
     
-    public PrimaryKey(String table) throws SQLException {
+    public PrimaryKey(Connection connection, String table) throws SQLException {
       this.table = table;
+      this.connection = connection;
       hashcode = table.hashCode();
     }
     
     public List<String> getColumnNames() throws SQLException {
       if (this.columnNames.size()==0) {
-        DatabaseMetaData metaData = ConnectionManager.getInstance().getConnection().getMetaData();
+        DatabaseMetaData metaData = connection.getMetaData();
         try {
           
           ResultSet rs = metaData.getPrimaryKeys(null,null,table);
@@ -4536,7 +4582,7 @@ public class DbDataSource implements ResultSet {
         
         sql.insert(0,"DELETE FROM "+table+" WHERE ");
         
-        delete =  ConnectionManager.getInstance().getConnection().prepareStatement(sql.toString());
+        delete =  connection.prepareStatement(sql.toString());
       }
       
       delete.clearParameters();
@@ -4559,7 +4605,7 @@ public class DbDataSource implements ResultSet {
         sql.insert(0,"SELECT * FROM "+table+" WHERE ");
         sql.append(" FOR UPDATE");
         
-        update =  ConnectionManager.getInstance().getConnection().prepareStatement(sql.toString(),ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+        update =  connection.prepareStatement(sql.toString(),ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
         
         this.columnMapping.clear();
         ResultSetMetaData metaData = update.getMetaData();
@@ -4643,34 +4689,36 @@ public class DbDataSource implements ResultSet {
     
     
     public static List<PrimaryKey> getPrimaryKeys(PreparedStatement statement) throws SQLException {
-      ResultSetMetaData metaData = statement.getMetaData();
-      int columnCount = metaData.getColumnCount();
-      
-      List<PrimaryKey> keys = new ArrayList<PrimaryKey>();
-      Map<String,String> columnTables = new HashMap<String,String>();
-      String table;
-      PrimaryKey key;
-      
-      for (int c=1; c<=columnCount; c++) {
-        table = metaData.getTableName(c);
-        if (table!=null) {
-          columnTables.put(metaData.getColumnName(c).toUpperCase(), table);
-          if (keys.indexOf(key=new PrimaryKey(table))<0)
-            keys.add(key);
-        }
-      }
-      
       List<PrimaryKey> result = new ArrayList<PrimaryKey>();
-      
-      for (Iterator<PrimaryKey> pk=keys.iterator(); pk.hasNext();) {
-        key = pk.next();
-        boolean valid=!key.getColumnNames().isEmpty();
-        for (Iterator<String> c=key.getColumnNames().iterator(); valid && c.hasNext();) {
-          String columnName=c.next();
-          valid=columnTables.containsKey(columnName)&&columnTables.get(columnName).equals(key.table);
+      ResultSetMetaData metaData = statement.getMetaData();
+      if (metaData!=null) {
+        int columnCount = metaData.getColumnCount();
+
+        List<PrimaryKey> keys = new ArrayList<PrimaryKey>();
+        Map<String,String> columnTables = new HashMap<String,String>();
+        String table;
+        PrimaryKey key;
+
+        for (int c=1; c<=columnCount; c++) {
+          table = metaData.getTableName(c);
+          if (table!=null) {
+            columnTables.put(metaData.getColumnName(c).toUpperCase(), table);
+            if (keys.indexOf(key=new PrimaryKey(statement.getConnection(), table))<0)
+              keys.add(key);
+          }
         }
-        if (valid)
-          result.add(key);
+
+
+        for (Iterator<PrimaryKey> pk=keys.iterator(); pk.hasNext();) {
+          key = pk.next();
+          boolean valid=!key.getColumnNames().isEmpty();
+          for (Iterator<String> c=key.getColumnNames().iterator(); valid && c.hasNext();) {
+            String columnName=c.next();
+            valid=columnTables.containsKey(columnName)&&columnTables.get(columnName).equals(key.table);
+          }
+          if (valid)
+            result.add(key);
+        }
       }
       
       return result;

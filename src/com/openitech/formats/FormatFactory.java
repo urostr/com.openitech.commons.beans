@@ -28,6 +28,7 @@ import javax.swing.text.NumberFormatter;
  * @author tomaz
  */
 public class FormatFactory {
+  public static final DateFormat DATETIME_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
   public static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy");
   public static final DateFormat JDBC_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
   private static final DecimalFormatSymbols sl_SI_DECIMAL_FORMAT_SYMBOLS = new DecimalFormatSymbols(new Locale("sl","SI"));
