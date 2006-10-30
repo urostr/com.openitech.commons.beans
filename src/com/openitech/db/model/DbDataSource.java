@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.7 $
+ * $Revision: 1.8 $
  */
 
 package com.openitech.db.model;
@@ -2771,7 +2771,7 @@ public class DbDataSource implements ResultSet {
    * @since 1.2
    */
   public void insertRow() throws SQLException {
-    storeUpdates(true);
+    updateRow();
   }
   
   /**
@@ -3298,6 +3298,7 @@ public class DbDataSource implements ResultSet {
 
   public void setUpdateTableName(String updateTableName) {
     this.updateTableName = updateTableName;
+
   }
 
   public String getUpdateTableName() {
