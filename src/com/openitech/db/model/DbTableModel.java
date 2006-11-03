@@ -14,9 +14,11 @@ import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.formats.FormatFactory;
 import com.openitech.ref.WeakListenerList;
+import com.openitech.ref.WeakObjectReference;
 import com.openitech.ref.events.ListDataWeakListener;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.security.acl.Owner;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,7 +53,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   private String[][] columns = new String[][] {};
   private String[] rowColumnNames = new String[] {};
   private transient DbDataSource dataSource = null;
-  private Map<String,Method> functionsMap = new HashMap<String,Method>();
+  private Map<String,DbTableModel.ColumnDescriptor.ValueMethod.Method> functionsMap = new HashMap<String,DbTableModel.ColumnDescriptor.ValueMethod.Method>();
   private Map<String,Class<? extends TableCellRenderer>> renderersMap = new HashMap<String,Class<? extends TableCellRenderer>>();
   private Map<String,Class<? extends TableCellEditor>> editorsMap = new HashMap<String,Class<? extends TableCellEditor>>();
   
@@ -196,15 +198,15 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     this.separator = separator;
   }
   
-  public void putAllFunctions(Map<String,Method> map) {
+  public void putAllFunctions(Map<String,DbTableModel.ColumnDescriptor.ValueMethod.Method> map) {
     functionsMap.putAll(map);
   }
   
-  public Method putFunction(String key, Method method) {
+  public DbTableModel.ColumnDescriptor.ValueMethod.Method putFunction(String key, DbTableModel.ColumnDescriptor.ValueMethod.Method method) {
     return functionsMap.put(key, method);
   }
   
-  public Method removeFunction(String key) {
+  public DbTableModel.ColumnDescriptor.ValueMethod.Method removeFunction(String key) {
     return functionsMap.remove(key);
   }
   
@@ -407,14 +409,14 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
      */
     public Object getValueAt(int rowIndex, int columnIndex) {
       if (owner.dataSource!=null) {
-        Map<String,Method> functionsMap = owner.functionsMap;
+        Map<String,DbTableModel.ColumnDescriptor.ValueMethod.Method> functionsMap = owner.functionsMap;
         
         Map<String,Class<? extends TableCellRenderer>> renderersMap = owner.renderersMap;
         Map<String,Class<? extends TableCellEditor>> editorsMap = owner.editorsMap;
         
         Class<? extends TableCellRenderer> renderer = defaultTableCellRendererClass;
         Class<? extends TableCellEditor> editor = null;
-        Method function = null;
+        DbTableModel.ColumnDescriptor.ValueMethod.Method function = null;
         
         if (rendererKey!=null && renderersMap.containsKey(rendererKey))
           renderer = renderersMap.get(rendererKey);
@@ -466,12 +468,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       }
       
       public Object getFunctionValue() {
-        try {
-          return function.invoke(owner, new Object[] { this });
-        } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't invoke function "+function.getName()+"("+this.getClass().getName()+"). ["+ex.getMessage()+"]");
-          return "";
-        }
+        return function.invoke(this);
       }
       
       public Object getValue() {
@@ -547,6 +544,25 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       
       public Object getOwner() {
         return owner;
+      }
+      
+      public static class Method {
+        private WeakObjectReference owner;
+        private java.lang.reflect.Method method;
+        
+        public Method(Object owner, java.lang.reflect.Method method) {
+          this.owner = new WeakObjectReference(owner);
+          this.method = method;
+        }
+        
+        public Object invoke(DbTableModel.ColumnDescriptor.ValueMethod value) {
+          try {
+            return method.invoke(owner.get(), new Object[] { value });
+          } catch (Exception ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't invoke function "+method.getName()+"("+owner.getClass().getName()+"). ["+ex.getMessage()+"]");
+            return "";
+          }
+        }
       }
     }
   }

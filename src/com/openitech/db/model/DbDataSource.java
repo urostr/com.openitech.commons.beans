@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.8 $
+ * $Revision: 1.9 $
  */
 
 package com.openitech.db.model;
@@ -3301,6 +3301,7 @@ public class DbDataSource implements ResultSet {
 
   }
 
+
   public String getUpdateTableName() {
     return updateTableName;
   }
@@ -3609,11 +3610,17 @@ public class DbDataSource implements ResultSet {
   }
   
   public boolean setParameters(List<Object> parameters) {
+    return setParameters(parameters, true);
+  }
+  public boolean setParameters(List<Object> parameters, boolean reload) {
     this.parameters.clear();
     if (parameters!=null)
       this.parameters.addAll(parameters);
-    
-    return reload();
+      
+    if (reload)
+      return reload();
+    else
+      return true;
   }
   
   public List<Object> getParameters() {
