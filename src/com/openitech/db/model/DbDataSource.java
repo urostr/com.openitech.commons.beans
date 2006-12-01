@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.9 $
+ * $Revision: 1.10 $
  */
 
 package com.openitech.db.model;
@@ -3302,6 +3302,7 @@ public class DbDataSource implements ResultSet {
   }
 
 
+
   public String getUpdateTableName() {
     return updateTableName;
   }
@@ -3338,6 +3339,8 @@ public class DbDataSource implements ResultSet {
         this.selectStatement = null;
       }
       this.count = 0;
+      if (this.selectResultSet!=null)
+        this.selectResultSet.close();
       this.selectResultSet = null;
     } catch (InterruptedException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '"+selectSql+"'", ex);
@@ -3476,7 +3479,7 @@ public class DbDataSource implements ResultSet {
       }
       if ((selectResultSet==null) && selectStatement!=null) {
         try {
-          Logger.getLogger(Settings.LOGGER).fine("Executing '"+selectSql+"'");
+          Logger.getLogger(Settings.LOGGER).fine("Executing '"+preparedSelectSql+"'");
           selectResultSet = executeSql(selectStatement, parameters);
           selectResultSet.first();
         } catch (SQLException ex) {
@@ -4018,40 +4021,45 @@ public class DbDataSource implements ResultSet {
             ResultSet updateResultSet = key.getUpdateResultSet(this);
             
             if (updateResultSet!=null) {
-              for (Iterator<Map.Entry<String,Object>> i=columnValues.entrySet().iterator();i.hasNext();) {
-                entry = i.next();
-                if (skipColumns.indexOf(entry.getKey())==-1) {
-                  if (key.isUpdateColumn(entry.getKey())) {
-                    if (entry.getValue() instanceof Scale) {
-                      scaledValue = (Scale) entry.getValue();
-                      if (scaledValue.method.equals("updateAsciiStream") )
-                        updateResultSet.updateAsciiStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                      else if (scaledValue.method.equals("updateBinaryStream") )
-                        updateResultSet.updateBinaryStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                      else if (scaledValue.method.equals("updateCharacterStream") )
-                        updateResultSet.updateCharacterStream(entry.getKey(), (Reader) scaledValue.x, scaledValue.scale);
-                      else if (scaledValue.method.equals("updateObject") )
-                        updateResultSet.updateObject(entry.getKey(), scaledValue.x, scaledValue.scale);
-                    } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
-                      if (entry.getValue() instanceof java.util.Date)
-                        updateResultSet.updateDate(entry.getKey(), new java.sql.Date(((java.util.Date) entry.getValue()).getTime()));
-                      else
-                        try {
-                          updateResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
-                        } catch (ParseException ex) {
+              try {
+                for (Iterator<Map.Entry<String,Object>> i=columnValues.entrySet().iterator();i.hasNext();) {
+                  entry = i.next();
+                  if (skipColumns.indexOf(entry.getKey())==-1) {
+                    if (key.isUpdateColumn(entry.getKey())) {
+                      if (entry.getValue() instanceof Scale) {
+                        scaledValue = (Scale) entry.getValue();
+                        if (scaledValue.method.equals("updateAsciiStream") )
+                          updateResultSet.updateAsciiStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
+                        else if (scaledValue.method.equals("updateBinaryStream") )
+                          updateResultSet.updateBinaryStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
+                        else if (scaledValue.method.equals("updateCharacterStream") )
+                          updateResultSet.updateCharacterStream(entry.getKey(), (Reader) scaledValue.x, scaledValue.scale);
+                        else if (scaledValue.method.equals("updateObject") )
+                          updateResultSet.updateObject(entry.getKey(), scaledValue.x, scaledValue.scale);
+                      } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
+                        if (entry.getValue() instanceof java.util.Date)
+                          updateResultSet.updateDate(entry.getKey(), new java.sql.Date(((java.util.Date) entry.getValue()).getTime()));
+                        else if (entry.getValue()==null)
                           updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                        }
-                    } else {
-                      updateResultSet.updateObject(entry.getKey(), entry.getValue());
+                        else
+                          try {
+                            updateResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
+                          } catch (ParseException ex) {
+                            updateResultSet.updateObject(entry.getKey(), entry.getValue());
+                          }
+                      } else {
+                        updateResultSet.updateObject(entry.getKey(), entry.getValue());
+                      }
+                      cache.remove(new CacheKey(row.intValue(), entry.getKey()));
+                      oldValues.put(columnMapping.checkedGet(entry.getKey()),updateResultSet.getObject(entry.getKey()));
                     }
-                    cache.remove(new CacheKey(row.intValue(), entry.getKey()));
-                    oldValues.put(columnMapping.checkedGet(entry.getKey()),updateResultSet.getObject(entry.getKey()));
                   }
                 }
+                
+                updateResultSet.updateRow();
+              } finally {
+                updateResultSet.close();
               }
-
-              updateResultSet.updateRow();
-              updateResultSet.close();
             } else {
               StringBuffer set = new StringBuffer(540);
               for (Iterator<Map.Entry<String,Object>> i=columnValues.entrySet().iterator();i.hasNext();) {
@@ -4106,6 +4114,9 @@ public class DbDataSource implements ResultSet {
         inserting = false;
         
         int selectedrow = selectResultSet.getRow();
+        
+        if (selectResultSet!=null)
+          selectResultSet.close();
         selectResultSet = executeSql(selectStatement, parameters);
         if (selectedrow>0)
           selectResultSet.absolute(selectedrow);
@@ -4575,7 +4586,7 @@ public class DbDataSource implements ResultSet {
               throw new SQLException("Couldn't retrieve primary keys for '"+table+"'");
         } catch (SQLException ex) {
           this.columnNames.clear();
-          Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Couldn't retrieve primary keys for '"+table+"'");
+          Logger.getLogger(Settings.LOGGER).log(Level.FINE, "Couldn't retrieve primary keys for '"+table+"'");
         }
       }
       return columnNames;

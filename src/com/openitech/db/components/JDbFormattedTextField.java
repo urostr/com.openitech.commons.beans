@@ -47,7 +47,7 @@ import javax.swing.text.NumberFormatter;
  *
  * @author uros
  */
-public class JDbFormattedTextField extends JFormattedTextField  implements DocumentListener,PropertyChangeListener {
+public class JDbFormattedTextField extends JFormattedTextField  implements DocumentListener {
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;
@@ -58,7 +58,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
   private transient DocumentWeakListener documentWeakListener;
-  private transient PropertyChangeWeakListener propertyChangeWeakListener;
+  //private transient PropertyChangeWeakListener propertyChangeWeakListener;
   private transient FocusWeakListener focusWeakListener;
   
   /** Creates a new instance of JDbFormattedTextField */
@@ -69,7 +69,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
       tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null);
       focusWeakListener = new FocusWeakListener(this,"this_focusGained", null);
       documentWeakListener = new DocumentWeakListener(this);
-      propertyChangeWeakListener = new PropertyChangeWeakListener(this);
+      //propertyChangeWeakListener = new PropertyChangeWeakListener(this);
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
     }
@@ -77,7 +77,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
-    this.addPropertyChangeListener("value", propertyChangeWeakListener);
+    //this.addPropertyChangeListener("value", propertyChangeWeakListener);
   }
   
   public void this_focusGained(FocusEvent e) {
@@ -171,35 +171,28 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
       commitEdit();
   }
   
-  public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
-    documentWeakListener.setEnabled(false);
-    propertyChangeWeakListener.setEnabled(false);
-    
-    try {
-      JFormattedTextField.AbstractFormatter formatter = getFormatter();
-      
-      if (formatter==null) {
-        this.setText(dbFieldObserver.getValueAsText());
-      } else {
-        Object value = dbFieldObserver.getValueAsText();
-        boolean wasNull = dbFieldObserver.wasNull();
-        
-        if (!wasNull) {
-          if ((formatter instanceof NumberFormatter)) {
-            if (((String) value).length()>0) {
-              if (((NumberFormat) ((NumberFormatter) formatter).getFormat()).getMaximumFractionDigits()==0)
-                value = dbFieldObserver.getValueAsInt();
-              else
-                value = dbFieldObserver.getValueAsDouble();
-            } else
-              wasNull = true;
-          } else if ((formatter instanceof DateFormatter) && ((String) value).length()>0)  {
-            if (((String) value).length()>0) {
-              value = dbFieldObserver.getValueAsDate();
-            } else
-              wasNull = true;
-          }
+  private Object getFieldValue(boolean update) {
+    Object value = dbFieldObserver.getValueAsText();
+    boolean wasNull = dbFieldObserver.wasNull();
+    JFormattedTextField.AbstractFormatter formatter = getFormatter();
+    if (formatter!=null) {
+      if (!wasNull) {
+        if ((formatter instanceof NumberFormatter)) {
+          if (((String) value).length()>0) {
+            if (((NumberFormat) ((NumberFormatter) formatter).getFormat()).getMaximumFractionDigits()==0)
+              value = dbFieldObserver.getValueAsInt();
+            else
+              value = dbFieldObserver.getValueAsDouble();
+          } else
+            wasNull = true;
+        } else if ((formatter instanceof DateFormatter) && ((String) value).length()>0)  {
+          if (((String) value).length()>0) {
+            value = dbFieldObserver.getValueAsDate();
+          } else
+            wasNull = true;
         }
+      }
+      if (update) {
         try {
           if (wasNull) {
             this.setText("");
@@ -209,12 +202,29 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
           Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't display the '"+dbFieldObserver.getColumnName()+"' value. ["+ex.getMessage()+"]");
         }
       }
+    }
+    
+    return value;
+  }
+  
+  public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
+    documentWeakListener.setEnabled(false);
+    //propertyChangeWeakListener.setEnabled(false);
+    
+    try {
+      JFormattedTextField.AbstractFormatter formatter = getFormatter();
+      
+      if (formatter==null) {
+        this.setText(dbFieldObserver.getValueAsText());
+      } else {
+        getFieldValue(true);
+      }
     } finally {
-      propertyChangeWeakListener.setEnabled(true);
+      //propertyChangeWeakListener.setEnabled(true);
       documentWeakListener.setEnabled(true);
     }
   }
-  
+
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     String tip  = dbFieldObserverToolTip.getValueAsText();
     if (!dbFieldObserverToolTip.wasNull()&&tip.length()>0) {
@@ -289,11 +299,11 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
       return oldValue.equals(newValue);
   }
   
-  public void propertyChange(PropertyChangeEvent evt) {
+  /*public void propertyChange(PropertyChangeEvent evt) {
     if (evt.getPropertyName().equals("value") &&
             !sameValues(evt.getOldValue(), evt.getNewValue()))
       updateColumn();
-  }
+  }//*/
   
   /**
    * Sets the <code>AbstractFormatterFactory</code>.
@@ -348,13 +358,18 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     try {
       super.commitEdit();
     } catch (ParseException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error updating the value. ["+ex.getMessage()+"]");
-      StringBuffer message = new StringBuffer();
-      message.append("Napaka pri vnosu podatkov!\n");
-      message.append(getText().substring(0,ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n");
-      message.append(ex.getMessage());
-      JOptionPane.showMessageDialog(this, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);
+      if (getText().length()>0) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error updating the value. ["+ex.getMessage()+"]");
+        StringBuffer message = new StringBuffer();
+        message.append("Napaka pri vnosu podatkov!\n");
+        message.append(getText().substring(0,ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n");
+        message.append(ex.getMessage());
+        JOptionPane.showMessageDialog(this, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);
+      } else
+        setValue(null);
     }
+    if (!sameValues(getFieldValue(false),getValue()))
+      updateColumn();
   }
 
   protected void processFocusEvent(FocusEvent e) {
