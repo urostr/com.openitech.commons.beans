@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.10 $
+ * $Revision: 1.11 $
  */
 
 package com.openitech.db.model;
@@ -73,6 +73,8 @@ public class DbDataSource implements ResultSet {
   public final static String UPDATE_ROW="updateRow";
   public final static String ROW_UPDATED="rowUpdated";
   public final static String CANCEL_UPDATES="cancelUpdates";
+  public final static String DELETE_ROW="deleteRow";
+  public final static String ROW_DELETED="rowDeleted";
   
   private String selectSql;
   private String countSql;
@@ -2506,22 +2508,34 @@ public class DbDataSource implements ResultSet {
         if (rowUpdated())
           cancelRowUpdates();
         if (!wasinserting) {
-          int oldRow = getOpenSelectResultSet().getRow();
-          PreparedStatement delete;
-          PrimaryKey key;
-          for (Iterator<PrimaryKey> pk=primaryKeys.iterator(); pk.hasNext();) {
-            key = pk.next();
-            delete = key.getDeleteStatement(this);
-            delete.execute();
+          boolean deleteRow = true;
+          try {
+            fireActionPerformed(new ActionEvent(this,1,DELETE_ROW));
+          } catch (Exception err) {
+            deleteRow = false;
           }
-          
-          reload(oldRow);
+          if (deleteRow) {
+            int oldRow = getOpenSelectResultSet().getRow();
+            PreparedStatement delete;
+            PrimaryKey key;
+            for (Iterator<PrimaryKey> pk=primaryKeys.iterator(); pk.hasNext();) {
+              key = pk.next();
+              delete = key.getDeleteStatement(this);
+              delete.execute();
+            }
+            try {
+              fireActionPerformed(new ActionEvent(this,1,ROW_DELETED));
+            } catch (Exception err) {
+              //
+            }
+            reload(oldRow);
+          }
         }
       } else
         throw new SQLException("Ni pripravljenih podatkov.");
     }
   }
-  
+ 
   /**
    * unlocks this <code>ResultSet</code> object's database and
    * JDBC resources immediately instead of waiting for
@@ -3300,6 +3314,7 @@ public class DbDataSource implements ResultSet {
     this.updateTableName = updateTableName;
 
   }
+
 
 
 
