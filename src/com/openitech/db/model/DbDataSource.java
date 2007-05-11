@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.11 $
+ * $Revision: 1.12 $
  */
 
 package com.openitech.db.model;
@@ -3652,10 +3652,12 @@ public class DbDataSource implements ResultSet {
   public Map<String,Object> addDefaultValues(Map<String,Object> values) {
     Map<String,Object> result = new HashMap<String,Object>(this.defaultValues);
     
-    Map.Entry<String,Object> entry;
-    for(Iterator<Map.Entry<String,Object>> i=values.entrySet().iterator(); i.hasNext(); ) {
-      entry = i.next();
-      this.defaultValues.put(entry.getKey().toUpperCase(), entry.getValue());
+    if (values!=null) {
+      Map.Entry<String,Object> entry;
+      for(Iterator<Map.Entry<String,Object>> i=values.entrySet().iterator(); i.hasNext(); ) {
+        entry = i.next();
+        this.defaultValues.put(entry.getKey().toUpperCase(), entry.getValue());
+      }
     }
     
     return result;
@@ -3665,10 +3667,12 @@ public class DbDataSource implements ResultSet {
     Map<String,Object> result = this.defaultValues;
     this.defaultValues = new HashMap<String,Object>();
     
-    Map.Entry<String,Object> entry;
-    for(Iterator<Map.Entry<String,Object>> i=values.entrySet().iterator(); i.hasNext(); ) {
-      entry = i.next();
-      this.defaultValues.put(entry.getKey().toUpperCase(), entry.getValue());
+    if (values!=null) {
+      Map.Entry<String,Object> entry;
+      for(Iterator<Map.Entry<String,Object>> i=values.entrySet().iterator(); i.hasNext(); ) {
+        entry = i.next();
+        this.defaultValues.put(entry.getKey().toUpperCase(), entry.getValue());
+      }
     }
     
     return result;
