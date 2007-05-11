@@ -17,24 +17,24 @@ import com.openitech.db.model.DbTableModel;
 import java.awt.Color;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
+import org.jdesktop.swingx.JXTable;
 
 /**
  *
  * @author uros
  */
-public class JDbTable extends JTable implements ListSelectionListener {
+public class JDbTable extends JXTable implements ListSelectionListener {
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = null;
   private boolean selectionChanged = false;
   private final UpdateViewRunnable updateViewRunnable = new UpdateViewRunnable();
   
   /** Creates a new instance of JDbTable */
   public JDbTable() {
-    setModel(new DbTableModel());
+    super(new DbTableModel());
     setSelectionForeground(Color.black);
     setSelectionBackground(new Color(204,204,255));
     setBackground(Color.white);

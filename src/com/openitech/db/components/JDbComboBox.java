@@ -20,6 +20,7 @@ import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.event.ListDataEvent;
 
@@ -47,6 +48,12 @@ public class JDbComboBox extends JComboBox {
     dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addActionListener(actionWeakListener);
+    try {
+      Class.forName("org.jdesktop.swingx.autocomplete.AutoCompleteDecorator");
+      org.jdesktop.swingx.autocomplete.AutoCompleteDecorator.decorate(this);
+    } catch (ClassNotFoundException ex) {
+      ex.printStackTrace();
+    }
   }
   
   public DbFieldObserver getDbFieldObserver() {
@@ -77,11 +84,11 @@ public class JDbComboBox extends JComboBox {
   public String getToolTipColumnName() {
     return dbFieldObserverToolTip.getColumnName();
   }
-
+  
   public void setValidator(Validator validator) {
     this.validator = validator;
   }
-
+  
   public Validator getValidator() {
     return validator;
   }
@@ -139,7 +146,7 @@ public class JDbComboBox extends JComboBox {
   public void actionPerformed(ActionEvent e) {
     updateColumn();
   }
-
+  
   public void contentsChanged(ListDataEvent e) {
     boolean enabled = actionWeakListener.isEnabled();
     actionWeakListener.setEnabled(false);
