@@ -78,6 +78,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     setMinimumSize(new java.awt.Dimension(200, 32));
     jpInternal.setLayout(new java.awt.GridLayout(1, 0));
 
+    jpInternal.setOpaque(false);
     jbFirst.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/2leftarrow.png")));
     jbFirst.setMnemonic(java.awt.event.KeyEvent.VK_HOME);
     jbFirst.setToolTipText("Alt+HOME");

@@ -61,6 +61,7 @@ public class JDbTable extends JXTable implements ListSelectionListener {
       ((DbTableModel) this.getModel()).removeActiveRowChangeListener(activeRowChangeWeakListener);
     if (dataModel instanceof DbTableModel) {
       super.setModel(dataModel);
+      super.setColumnModel(((DbTableModel) dataModel).getTableColumnModel());
       ((DbTableModel) this.getModel()).addActiveRowChangeListener(activeRowChangeWeakListener);
     }/* else
       throw new IllegalArgumentException("The data model for JDbTable must be a DbTableModel.");//*/

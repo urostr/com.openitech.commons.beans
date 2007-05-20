@@ -382,4 +382,17 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     }
     EventQueue.invokeLater(focusLostHandler);
   }
+  
+  public Object getPendingValue() {
+    try {
+      AbstractFormatter format = getFormatter();
+
+      if (format != null) {
+          return format.stringToValue(getText());
+      }
+    } catch (ParseException ex) {
+      //ignore it;
+    }
+    return null;
+  }
 }
