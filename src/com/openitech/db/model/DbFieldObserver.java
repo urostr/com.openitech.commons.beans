@@ -47,6 +47,57 @@ public class DbFieldObserver {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
     }
   }
+    
+  public boolean isNotEmptyValue() {
+    boolean result = false;
+    if (dataSource!=null && getColumnName()!=null) {
+      //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
+      try {
+        if (dataSource.getRowCount()>0) {
+          int type = dataSource.getType(getColumnName());
+          switch (type) {
+            case Types.BIGINT:
+            case Types.DECIMAL:
+            case Types.DOUBLE:
+            case Types.FLOAT:
+            case Types.NUMERIC:
+              BigDecimal nvalue = dataSource.getBigDecimal(getColumnName());
+              result=!dataSource.wasNull();
+              if (result) //ni bil null
+                result=!nvalue.equals(BigDecimal.ZERO);
+              break;
+            case Types.INTEGER:
+            case Types.BIT:
+              int ivalue = dataSource.getInt(getColumnName());
+              result=!dataSource.wasNull();
+              if (result) //ni bil null
+                result=ivalue!=0;
+              break;
+            case Types.BOOLEAN:
+              result=dataSource.getBoolean(getColumnName());
+              break;
+            case Types.CHAR:
+            case Types.VARCHAR:
+              String svalue = dataSource.getString(getColumnName());
+              result=!dataSource.wasNull();
+              if (result) { //ni bil null
+                svalue = svalue.trim().toUpperCase();
+                result = svalue.length()>0;
+              }
+              break;
+            default: dataSource.getObject(getColumnName());
+            result=!dataSource.wasNull();
+            break;
+          }
+        }
+      } catch (Exception ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '"+getColumnName()+"' from the dataSource '"+dataSource.getName()+"'. ["+ex.getMessage()+"]");
+        result = false;
+      }
+      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+    }
+    return result;
+  }
   
   public Object getValue() {
     Object result = null;
