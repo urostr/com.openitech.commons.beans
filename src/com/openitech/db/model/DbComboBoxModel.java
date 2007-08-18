@@ -33,12 +33,14 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
   private final Vector<DbComboBoxEntry<K,String>> entries = new Vector<DbComboBoxEntry<K,String>>();
   private String keyColumnName = null;
   private String[] valueColumnNames = null;
-  private String separator = " ";
+  private String[] separator = new String[] {" "};
   private int selectedIndex = -1;
   private transient DbDataSource dataSource = null;
   
   private transient ListDataWeakListener   listDataWeakListener       = new ListDataWeakListener(this);
   private transient PropertyChangeListener propertyChangeWeakListener = new PropertyChangeWeakListener(this);
+  
+  private boolean updatingEntries = false;
   
   /** Creates a new instance of DbComboBoxModel */
   public DbComboBoxModel() {
@@ -52,7 +54,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     this(dataSource, keyColumnName, valueColumnNames, " ");
   }
   
-  public DbComboBoxModel(DbDataSource dataSource, String keyColumnName, String[] valueColumnNames, String separator) {
+  public DbComboBoxModel(DbDataSource dataSource, String keyColumnName, String[] valueColumnNames, String... separator) {
     this.keyColumnName = keyColumnName;
     this.valueColumnNames = valueColumnNames;
     this.separator = separator;
@@ -80,15 +82,17 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     return this.valueColumnNames;
   }
   
-  public void setSeparator(String separator) {
-    String oldvalue = this.separator;
+  public void setSeparator(String... separator) {
+    if (separator.length==0)
+      throw new IllegalArgumentException("Undefined separator");
+    String[] oldvalue = this.separator;
     this.separator = separator;
-    if ((oldvalue!=null && !oldvalue.equals(separator))||(oldvalue!=separator)) {
+    if (oldvalue!=null && !java.util.Arrays.equals(oldvalue,separator)) {
       UpdateEntries();
     }
   }
   
-  public String getSeparator() {
+  public String[] getSeparator() {
     return separator;
   }
   
@@ -154,21 +158,31 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
           key = (K) dataSource.getValueAt(row, keyColumnName);
           result = new StringBuffer();
           for (int f=0; f<valueColumnNames.length; f++) {
-            if (result.length()>0)
-              result.append(separator);
             value = this.dataSource.getValueAt(row,valueColumnNames[f]);
+            if (result.length()>0&&value!=null&&value.toString().length()>0)
+              result.append(separator[Math.min(Math.max(f-1,0), separator.length-1)]);
             result.append(value==null?"":value);
           }
           entries.set(row-1,new DbComboBoxEntry<K,String>(key,result.toString()));
         }
         selectedIndex = max>0?0:-1;
-        fireContentsChanged(this,min-1,max-1);
+        
+        updatingEntries = true;
+        try {
+          fireContentsChanged(this,min-1,max-1);
+        } finally {
+          updatingEntries = false;
+        }
       } catch (SQLException ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries from the dataSource ("+dataSource.getName()+").", ex);
       } finally {
         dataSource.unlock();
       }
     }
+  }
+
+  public boolean isUpdatingEntries() {
+    return updatingEntries;
   }
   
   /**

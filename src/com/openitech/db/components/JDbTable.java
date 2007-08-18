@@ -11,10 +11,14 @@ package com.openitech.db.components;
 
 import com.openitech.Settings;
 import com.openitech.db.events.ActiveRowChangeEvent;
+import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.DbNavigatorDataSource;
 import com.openitech.db.model.DbTableModel;
 import java.awt.Color;
+import java.awt.EventQueue;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
@@ -27,7 +31,7 @@ import org.jdesktop.swingx.JXTable;
  *
  * @author uros
  */
-public class JDbTable extends JXTable implements ListSelectionListener {
+public class JDbTable extends JXTable implements ListSelectionListener, DbNavigatorDataSource {
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = null;
   private boolean selectionChanged = false;
   private final UpdateViewRunnable updateViewRunnable = new UpdateViewRunnable();
@@ -70,13 +74,12 @@ public class JDbTable extends JXTable implements ListSelectionListener {
   public void tableModel_activeRowChanged(ActiveRowChangeEvent event) {
     if (!selectionChanged) {
       DbTableModel dbTableModel = (DbTableModel) this.getModel();
-      int newPos = dbTableModel.getTableModelRow(event.getNewRowNumber());
+      int newPos = dbTableModel.getTableModelRow(convertRowIndexToView(event.getNewRowNumber()));
       if (newPos>=0 && newPos<getRowCount()) {
        try {
           if (getSelectedRow()!=newPos && newPos>=0 && newPos<dbTableModel.getRowCount())
             setRowSelectionInterval(newPos,newPos);
-          updateViewRunnable.position = getCellRect(newPos,getSelectedColumn(), true);
-          SwingUtilities.invokeLater(updateViewRunnable);
+          updateViewPosition();
         }
         catch (Exception ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't adjust the selection.", ex);
@@ -89,7 +92,7 @@ public class JDbTable extends JXTable implements ListSelectionListener {
     if (this.getModel() != null) {
       if (!e.getValueIsAdjusting()) {
         DbTableModel dbTableModel = (DbTableModel) this.getModel();
-        int newRowNumber = dbTableModel.getDataSourceRow(getSelectedRow());
+        int newRowNumber = dbTableModel.getDataSourceRow(convertRowIndexToModel(getSelectedRow()));
         try {
           selectionChanged = true;
           if ((newRowNumber>=1) &&
@@ -107,6 +110,14 @@ public class JDbTable extends JXTable implements ListSelectionListener {
     super.valueChanged(e);
   }
   
+  private void updateViewPosition() {
+    int newPos = getSelectedRow();
+    if (newPos>=0) {
+      updateViewRunnable.position = getCellRect(newPos,getSelectedColumn(), true);
+      EventQueue.invokeLater(updateViewRunnable);
+    }
+  }
+  
   public void setDataSource(DbDataSource dataSource) {
     if (this.getModel() instanceof DbTableModel)
       ((DbTableModel) this.getModel()).setDataSource(dataSource);
@@ -119,6 +130,117 @@ public class JDbTable extends JXTable implements ListSelectionListener {
       return ((DbTableModel) this.getModel()).getDataSource();
     else
       throw new IllegalArgumentException("The data model for JDbTable is not a DbTableModel.");
+  }
+
+  public void cancelRowUpdates() throws SQLException {
+    if (getDataSource()!=null)
+      getDataSource().cancelRowUpdates();
+  }
+
+  public void deleteRow() throws SQLException {
+    if (getDataSource()!=null)
+      getDataSource().deleteRow();
+  }
+
+  public boolean first() throws SQLException {
+    if (getRowCount()>0) {
+      setRowSelectionInterval(0,0);
+      updateViewPosition();
+      return true;
+    } else
+      return false;
+  }
+
+  public boolean isCanAddRows() {
+    return (getDataSource()!=null)?getDataSource().isCanAddRows():false;
+  }
+
+  public boolean isCanDeleteRows() {
+    return (getDataSource()!=null)?getDataSource().isCanDeleteRows():false;
+  }
+
+  public boolean isFirst() throws SQLException {
+    return getSelectedRow()<=0;
+  }
+
+  public boolean isLast() throws SQLException {
+    return getSelectedRow()==(getRowCount()-1);
+  }
+
+  public boolean last() throws SQLException {
+    if (getRowCount()>0) {
+      setRowSelectionInterval(getRowCount()-1,getRowCount()-1);
+      updateViewPosition();
+      return true;
+    } else
+      return false;
+  }
+
+  public void moveToInsertRow() throws SQLException {
+    if (getDataSource()!=null)
+      getDataSource().moveToInsertRow();
+  }
+
+  public boolean next() throws SQLException {
+    final int selectedRow = getSelectedRow();
+    final int selectRow = Math.min(getRowCount()-1,selectedRow+1);
+    setRowSelectionInterval(selectRow,selectRow);
+    updateViewPosition();
+    return selectRow==(selectedRow+1);
+  }
+
+  public boolean previous() throws SQLException {
+    if (getRowCount()>0) {
+      final int selectedRow = getSelectedRow();
+      final int selectRow = Math.max(0,selectedRow-1);
+      setRowSelectionInterval(selectRow,selectRow);
+      updateViewPosition();
+      return selectRow==(selectedRow-1);
+    } else
+      return false;
+  }
+
+  public boolean reload() {
+    return (getDataSource()!=null)?getDataSource().reload():false;
+  }
+
+  public boolean rowInserted() throws SQLException {
+    return (getDataSource()!=null)?getDataSource().rowInserted():false;
+  }
+
+  public boolean rowUpdated() throws SQLException {
+    return (getDataSource()!=null)?getDataSource().rowUpdated():false;
+  }
+
+  public void updateRow() throws SQLException {
+    if (getDataSource()!=null)
+      getDataSource().updateRow();
+  }
+
+  public void addActiveRowChangeListener(ActiveRowChangeListener l) {
+    if (getDataSource()!=null)
+      getDataSource().addActiveRowChangeListener(l);
+  }
+
+  public void removeActiveRowChangeListener(ActiveRowChangeListener l) {
+    if (getDataSource()!=null)
+      getDataSource().removeActiveRowChangeListener(l);
+  }
+
+  public void lock() {
+    getDataSource().lock();
+  }
+
+  public void unlock() {
+    getDataSource().unlock();
+  }
+
+  public boolean isDataLoaded() {
+    return (getDataSource()!=null)?getDataSource().isDataLoaded():false;
+  }
+
+  public boolean loadData() {
+    return (getDataSource()!=null)?getDataSource().loadData():false;
   }
   
   private class UpdateViewRunnable implements Runnable {

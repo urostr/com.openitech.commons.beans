@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.12 $
+ * $Revision: 1.13 $
  */
 
 package com.openitech.db.model;
@@ -68,7 +68,7 @@ import javax.swing.event.ListDataListener;
  *
  * @author uros
  */
-public class DbDataSource implements ResultSet {
+public class DbDataSource implements ResultSet, DbNavigatorDataSource {
   public final static String MOVE_TO_INSERT_ROW="moveToInsertRow";
   public final static String UPDATE_ROW="updateRow";
   public final static String ROW_UPDATED="rowUpdated";
@@ -2935,12 +2935,12 @@ public class DbDataSource implements ResultSet {
   public void moveToInsertRow() throws SQLException {
     if (canAddRows) {
       if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow())
-          updateRow();
-        else
-          cancelRowUpdates();
-      }
+        if (rowUpdated()) {
+          if (canUpdateRow())
+            updateRow();
+          else
+            cancelRowUpdates();
+        }
         
         boolean moveToInsertRow = true;
         try {
@@ -2959,7 +2959,7 @@ public class DbDataSource implements ResultSet {
             columnName = metaData.getColumnName(c);
             storeUpdate(columnName, defaultValues.containsKey(columnName)?defaultValues.get(columnName):null, false);
           }
-
+          
           fireIntervalAdded(new ListDataEvent(this, ListDataEvent.INTERVAL_ADDED, getRowCount()-1, getRowCount()-1));
           fireActiveRowChange(new ActiveRowChangeEvent(this, getRow(), oldRow));
         }
@@ -3968,19 +3968,21 @@ public class DbDataSource implements ResultSet {
           for (Iterator<Map.Entry<String,Object>> i=columnValues.entrySet().iterator();i.hasNext();) {
             entry = i.next();
             columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
-            if (schemaName==null)
-              schemaName=metaData.getSchemaName(columnIndex);
-            else
-              if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex)))
-                throw new SQLException("Insert on different schemas not supported.");
-            if (tableName==null)
-              tableName=metaData.getTableName(columnIndex);
-            else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
-              if (updateTableName==null)
-                throw new SQLException("Insert on different tables not supported.");
-              else {
-                skipValues.add(entry.getKey());
-                continue;
+            if (!isSingleTableSelect()) {
+              if (schemaName==null)
+                schemaName=metaData.getSchemaName(columnIndex);
+              else
+                if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex)))
+                  throw new SQLException("Insert on different schemas not supported.");
+              if (tableName==null)
+                tableName=metaData.getTableName(columnIndex);
+              else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
+                if (updateTableName==null)
+                  throw new SQLException("Insert on different tables not supported.");
+                else {
+                  skipValues.add(entry.getKey());
+                  continue;
+                }
               }
             }
             if (entry.getValue()!=null || metaData.isNullable(columnIndex)!=ResultSetMetaData.columnNoNulls) {
@@ -5454,5 +5456,26 @@ public class DbDataSource implements ResultSet {
     public void run() {
       owner.changeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }
+  }
+
+  /**
+   * Holds value of property singleTableSelect.
+   */
+  private boolean singleTableSelect;
+
+  /**
+   * Getter for property singleTableSelect.
+   * @return Value of property singleTableSelect.
+   */
+  public boolean isSingleTableSelect() {
+    return this.singleTableSelect;
+  }
+
+  /**
+   * Setter for property singleTableSelect.
+   * @param singleTableSelect New value of property singleTableSelect.
+   */
+  public void setSingleTableSelect(boolean singleTableSelect) {
+    this.singleTableSelect = singleTableSelect;
   }
 }  

@@ -27,7 +27,7 @@ import com.openitech.components.JMnemonicButton;
  * @author  uros
  */
 public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeListener {
-  DbDataSource dataSource;
+  com.openitech.db.model.DbNavigatorDataSource dataSource;
 
   private ActiveRowChangeWeakListener activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this);
   private Component navigatorFor = null;
@@ -333,7 +333,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     }
   }//GEN-LAST:event_jbFirstActionPerformed
 
-  public void setDataSource(DbDataSource dataSource) {
+  public void setDataSource(com.openitech.db.model.DbNavigatorDataSource dataSource) {
     if (this.dataSource!=null)
       this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
     this.dataSource = dataSource;
@@ -344,7 +344,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     }
   }
 
-  public DbDataSource getDataSource() {
+  public com.openitech.db.model.DbNavigatorDataSource getDataSource() {
     return dataSource;
   }
 
@@ -357,16 +357,20 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
       boolean inserting = this.dataSource.rowInserted();
       boolean canAdd = this.dataSource.isCanAddRows();
       boolean canDelete = this.dataSource.isCanDeleteRows();
+      int count = this.dataSource.getRowCount();
 
       jbFirst.setEnabled(!first);
       jbPrev.setEnabled(!first);
       jbNext.setEnabled(!last);
       jbLast.setEnabled(!last);
       jbAdd.setEnabled(canAdd&&!updating);
-      jbDelete.setEnabled(canDelete&&!(inserting||updating)&&(this.dataSource.getRowCount()>0));
+      jbDelete.setEnabled(canDelete&&!(inserting||updating)&&(count>0));
       jbConfirm.setEnabled(updating);
       jbCancel.setEnabled(updating);
       jbReload.setEnabled(this.dataSource!=null);
+      if (updating) {
+        Logger.getLogger(Settings.LOGGER).finest("Updating");
+      }
     } catch (SQLException ex) {
       jbFirst.setEnabled(false);
       jbPrev.setEnabled(false);
