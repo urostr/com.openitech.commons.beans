@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.13 $
+ * $Revision: 1.14 $
  */
 
 package com.openitech.db.model;
@@ -2992,12 +2992,15 @@ public class DbDataSource implements ResultSet, DbNavigatorDataSource {
         else
           cancelRowUpdates();
       }
-      int oldRow = getOpenSelectResultSet().getRow();;
-      boolean res = selectResultSet.next();
-      if (res) {
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-      }
-      return res;
+      if (!isLast()) {
+        int oldRow = getOpenSelectResultSet().getRow();
+        boolean res = selectResultSet.next();
+        if (res) {
+          fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
+        }
+        return res;
+      } else
+        return false;
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -3020,12 +3023,15 @@ public class DbDataSource implements ResultSet, DbNavigatorDataSource {
         else
           cancelRowUpdates();
       }
-      int oldRow = getOpenSelectResultSet().getRow();;
-      boolean res = selectResultSet.previous();
-      if (res) {
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-      }
-      return res;
+      if (!isFirst()) {
+        int oldRow = getOpenSelectResultSet().getRow();;
+        boolean res = selectResultSet.previous();
+        if (res) {
+          fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
+        }
+        return res;
+      } else
+        return false;
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
   }
@@ -3739,6 +3745,10 @@ public class DbDataSource implements ResultSet, DbNavigatorDataSource {
       return result;
     } else
       throw new SQLException("Ni pripravljenih podatkov.");
+  }
+  
+  public ResultSet getResultSet() throws SQLException {
+    return executeSql(selectStatement, parameters);
   }
   
   private ResultSet getOpenSelectResultSet() throws SQLException {
