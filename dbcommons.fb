@@ -1,0 +1,11 @@
+[Jar files]
+.\dist\db_commons.jar
+[Source dirs]
+.\src
+[Aux classpath entries]
+..\..\..\..\program files\java\jdk1.5.0_06\jre\lib\jce.jar
+..\..\..\..\program files\java\jdk1.5.0_06\jre\lib\jsse.jar
+..\..\..\..\program files\java\jdk1.5.0_06\jre\lib\rt.jar
+..\..\..\..\program files\java\jdk1.5.0_06\lib\tools.jar
+[Options]
+relative_paths=true
