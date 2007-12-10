@@ -3910,6 +3910,20 @@ public class DbDataSource implements DbNavigatorDataSource {
     return equals;
   }
   
+  public boolean hasChanged(int columnIndex) throws SQLException {
+    if (wasUpdated(columnIndex))
+      return !com.openitech.util.Equals.equals(getOpenSelectResultSet().getObject(columnIndex), getObject(columnIndex));
+    else
+      return false;
+  }
+  
+  public boolean hasChanged(String columnName) throws SQLException {
+    if (wasUpdated(columnName))
+      return !com.openitech.util.Equals.equals(getOpenSelectResultSet().getObject(columnName), getObject(columnName));
+    else
+      return false;
+  }
+  
   public boolean wasUpdated(int columnIndex) throws SQLException {
     return wasUpdated(getRow(), getMetaData().getColumnName(columnIndex));
   }

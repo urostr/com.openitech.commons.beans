@@ -25,11 +25,13 @@ public class Equals {
     if (a==null && b==null)
       return true;
     else if (a!=null && b!=null) {
-      if (a instanceof Comparable && b instanceof Comparable)
-        return ((Comparable) a).compareTo(b)==0;
-      if (a instanceof Number && b instanceof Number)
+      if (a instanceof java.util.Date && b instanceof java.util.Date)
+        return ((java.util.Date)a).getTime()==((java.util.Date)b).getTime();
+      else if (a instanceof Number && b instanceof Number)
         return BigDecimal.valueOf(((Number)a).doubleValue()).equals(BigDecimal.valueOf(((Number)b).doubleValue()));
-      else
+      else if (a instanceof Comparable && b instanceof Comparable)
+        return ((Comparable) a).compareTo(b)==0;
+      else 
         return a.equals(b);
     } else
       return false;
