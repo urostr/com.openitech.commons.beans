@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.16 $
+ * $Revision: 1.17 $
  */
 
 package com.openitech.db.model;
@@ -5629,5 +5629,26 @@ public class DbDataSource implements DbNavigatorDataSource {
    */
   public void setUniqueID(String[] uniqueID) {
     this.uniqueID = uniqueID;
+  }
+
+  /**
+   * Holds value of property busyLabel.
+   */
+  private String busyLabel = null;
+
+  /**
+   * Getter for property busyLabel.
+   * @return Value of property busyLabel.
+   */
+  public String getBusyLabel() {
+    return this.busyLabel;
+  }
+
+  /**
+   * Setter for property busyLabel.
+   * @param busyLabel New value of property busyLabel.
+   */
+  public void setBusyLabel(String busyLabel) {
+    this.busyLabel = busyLabel;
   }
 }

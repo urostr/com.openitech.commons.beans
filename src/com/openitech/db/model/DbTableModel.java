@@ -148,26 +148,26 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           
           if (descriptor.getFunctionKey()==null)
             descriptor.setFunctionKey(matcher.lookingAt()?matcher.group(1):null);
-
+          
           matcher = rendererPattern.matcher(parameter);
-
+          
           if (descriptor.getRendererKey()==null)
             descriptor.setRendererKey(matcher.lookingAt()?matcher.group(1):null);
-
+          
           matcher = editorPattern.matcher(parameter);
-
+          
           if (descriptor.getEditorKey()==null)
             descriptor.setEditorKey(matcher.lookingAt()?matcher.group(1):null);
-
+          
           matcher = columnPattern.matcher(parameter);
           if (matcher.lookingAt()) {
-              descriptor.getColumnNames().add(matcher.group(1));
-              columnList.add(matcher.group(1));
-            }
+            descriptor.getColumnNames().add(matcher.group(1));
+            columnList.add(matcher.group(1));
+          }
           
           matcher = separatorPattern.matcher(parameter);
           if (matcher.lookingAt()) {
-             descriptor.getSeparators().add(matcher.group(1));
+            descriptor.getSeparators().add(matcher.group(1));
           }
         }
         
@@ -454,6 +454,9 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     }
     
     public static class ValueMethod {
+      private static final java.text.NumberFormat DECIMAL_FORMAT = FormatFactory.getDecimalNumberFormat(0,2);
+      private static final java.text.NumberFormat INTEGER_FORMAT = FormatFactory.getIntegerNumberFormat(0);
+      
       private Method function;
       private DbDataSource dataSource;
       private int rowIndex;
@@ -500,6 +503,13 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
               
               if (value instanceof java.util.Date) {
                 value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
+              } else if (value instanceof java.lang.Number) {
+                if ((value instanceof java.math.BigDecimal)||
+                        (value instanceof java.lang.Double)||
+                        (value instanceof java.lang.Float)){
+                  value = DECIMAL_FORMAT.format((java.lang.Number) value);
+                } else
+                  value = INTEGER_FORMAT.format((java.lang.Number) value);
               }
               
               result.append(value==null?"":value);

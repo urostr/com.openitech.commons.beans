@@ -48,7 +48,7 @@ public class DbFieldObserver {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
     }
   }
-    
+  
   public boolean isNotEmptyValue() {
     boolean result = false;
     if (dataSource!=null && getColumnName()!=null) {
@@ -379,28 +379,23 @@ public class DbFieldObserver {
       }
     }
   }
-
+  
   public boolean isUpdatingFieldValue() {
     return updatingFieldValue;
   }
   
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     if (!updatingFieldValue) {
-      updatingFieldValue = true;
-      try {
-        String columnName = event.getColumnName();
-        if (columnName==null && event.getColumnIndex()!=-1) {
-          try {
-            columnName = dataSource.getColumnName(event.getColumnIndex());
-          } catch (SQLException ex) {
-            columnName = null;
-          }
+      String columnName = event.getColumnName();
+      if (columnName==null && event.getColumnIndex()!=-1) {
+        try {
+          columnName = dataSource.getColumnName(event.getColumnIndex());
+        } catch (SQLException ex) {
+          columnName = null;
         }
-        if ((columnName!=null) && (columnName.equalsIgnoreCase(this.columnName)))
-          fireFieldValueChanged(new ActiveRowChangeEvent(event.getSource(), columnName, -1));
-      } finally {
-        updatingFieldValue = false;
       }
+      if ((columnName!=null) && (columnName.equalsIgnoreCase(this.columnName)))
+        fireFieldValueChanged(new ActiveRowChangeEvent(event.getSource(), columnName, -1));
     }
   }
   
@@ -420,10 +415,15 @@ public class DbFieldObserver {
   
   protected void fireFieldValueChanged(ActiveRowChangeEvent e) {
     if (activeRowChangeListeners != null) {
-      java.util.List listeners = activeRowChangeListeners.elementsList();
-      int count = listeners.size();
-      for (int i = 0; i < count; i++)
-        ((ActiveRowChangeListener) listeners.get(i)).fieldValueChanged(e);
+      updatingFieldValue = true;
+      try {
+        java.util.List listeners = activeRowChangeListeners.elementsList();
+        int count = listeners.size();
+        for (int i = 0; i < count; i++)
+          ((ActiveRowChangeListener) listeners.get(i)).fieldValueChanged(e);
+      } finally {
+        updatingFieldValue = false;
+      }
     }
   }
   

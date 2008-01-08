@@ -1,6 +1,7 @@
 package com.openitech.db.model.concurrent;
 
 import com.openitech.Settings;
+import com.openitech.components.JXDimBusyLabel;
 import com.openitech.db.model.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -14,6 +15,8 @@ import java.util.logging.Logger;
 
 
 public final class RefreshDataSource extends DataSourceEvent {
+  public static JXDimBusyLabel busy  = null;
+  
   List<Object> parameters = new ArrayList<Object>();
   Map<String,Object> defaults = new HashMap<String,Object>();
   boolean filterChange = false;
@@ -66,7 +69,18 @@ public final class RefreshDataSource extends DataSourceEvent {
         event.dataSource.setDefaultValues(defaults);
       if (this.parameters!=null)
         event.dataSource.setParameters(parameters,false);
+      if (busy!=null) {
+        busy.setBusy(true);
+        if (event.dataSource.getBusyLabel()!=null)
+          busy.setText(event.dataSource.getBusyLabel());
+        else
+          busy.setText("Osvežujem podatke ...");
+      }
       event.dataSource.reload();
+      if (busy!=null) {
+        busy.setBusy(false);
+        busy.setText("Pripravljen...");
+      }
     } else
         Logger.getLogger(Settings.LOGGER).info("Skipped loading ["+event.dataSource.getName()+"]");
   }
