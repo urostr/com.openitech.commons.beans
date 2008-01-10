@@ -162,53 +162,52 @@ public class JDbFormattedTextFieldBeanInfo extends SimpleBeanInfo {
     private static final int METHOD_postEvent89 = 89;
     private static final int METHOD_preferredSize90 = 90;
     private static final int METHOD_prepareImage91 = 91;
-    private static final int METHOD_print92 = 92;
-    private static final int METHOD_printAll93 = 93;
-    private static final int METHOD_printComponents94 = 94;
-    private static final int METHOD_putClientProperty95 = 95;
-    private static final int METHOD_read96 = 96;
-    private static final int METHOD_registerKeyboardAction97 = 97;
-    private static final int METHOD_remove98 = 98;
-    private static final int METHOD_removeAll99 = 99;
-    private static final int METHOD_removeKeymap100 = 100;
-    private static final int METHOD_removeNotify101 = 101;
-    private static final int METHOD_removePropertyChangeListener102 = 102;
-    private static final int METHOD_removeUpdate103 = 103;
-    private static final int METHOD_repaint104 = 104;
-    private static final int METHOD_replaceSelection105 = 105;
-    private static final int METHOD_requestDefaultFocus106 = 106;
-    private static final int METHOD_requestFocus107 = 107;
-    private static final int METHOD_requestFocusInWindow108 = 108;
-    private static final int METHOD_resetKeyboardActions109 = 109;
-    private static final int METHOD_reshape110 = 110;
-    private static final int METHOD_resize111 = 111;
-    private static final int METHOD_revalidate112 = 112;
-    private static final int METHOD_scrollRectToVisible113 = 113;
-    private static final int METHOD_select114 = 114;
-    private static final int METHOD_selectAll115 = 115;
-    private static final int METHOD_setBounds116 = 116;
-    private static final int METHOD_setComponentZOrder117 = 117;
-    private static final int METHOD_setDefaultLocale118 = 118;
-    private static final int METHOD_setFormat119 = 119;
-    private static final int METHOD_show120 = 120;
-    private static final int METHOD_size121 = 121;
-    private static final int METHOD_this_focusGained122 = 122;
-    private static final int METHOD_toString123 = 123;
-    private static final int METHOD_transferFocus124 = 124;
-    private static final int METHOD_transferFocusBackward125 = 125;
-    private static final int METHOD_transferFocusDownCycle126 = 126;
-    private static final int METHOD_transferFocusUpCycle127 = 127;
-    private static final int METHOD_unregisterKeyboardAction128 = 128;
-    private static final int METHOD_update129 = 129;
-    private static final int METHOD_updateUI130 = 130;
-    private static final int METHOD_validate131 = 131;
-    private static final int METHOD_viewToModel132 = 132;
-    private static final int METHOD_write133 = 133;
+    private static final int METHOD_printAll92 = 92;
+    private static final int METHOD_printComponents93 = 93;
+    private static final int METHOD_putClientProperty94 = 94;
+    private static final int METHOD_read95 = 95;
+    private static final int METHOD_registerKeyboardAction96 = 96;
+    private static final int METHOD_remove97 = 97;
+    private static final int METHOD_removeAll98 = 98;
+    private static final int METHOD_removeKeymap99 = 99;
+    private static final int METHOD_removeNotify100 = 100;
+    private static final int METHOD_removePropertyChangeListener101 = 101;
+    private static final int METHOD_removeUpdate102 = 102;
+    private static final int METHOD_repaint103 = 103;
+    private static final int METHOD_replaceSelection104 = 104;
+    private static final int METHOD_requestDefaultFocus105 = 105;
+    private static final int METHOD_requestFocus106 = 106;
+    private static final int METHOD_requestFocusInWindow107 = 107;
+    private static final int METHOD_resetKeyboardActions108 = 108;
+    private static final int METHOD_reshape109 = 109;
+    private static final int METHOD_resize110 = 110;
+    private static final int METHOD_revalidate111 = 111;
+    private static final int METHOD_scrollRectToVisible112 = 112;
+    private static final int METHOD_select113 = 113;
+    private static final int METHOD_selectAll114 = 114;
+    private static final int METHOD_setBounds115 = 115;
+    private static final int METHOD_setComponentZOrder116 = 116;
+    private static final int METHOD_setDefaultLocale117 = 117;
+    private static final int METHOD_setFormat118 = 118;
+    private static final int METHOD_show119 = 119;
+    private static final int METHOD_size120 = 120;
+    private static final int METHOD_this_focusGained121 = 121;
+    private static final int METHOD_toString122 = 122;
+    private static final int METHOD_transferFocus123 = 123;
+    private static final int METHOD_transferFocusBackward124 = 124;
+    private static final int METHOD_transferFocusDownCycle125 = 125;
+    private static final int METHOD_transferFocusUpCycle126 = 126;
+    private static final int METHOD_unregisterKeyboardAction127 = 127;
+    private static final int METHOD_update128 = 128;
+    private static final int METHOD_updateUI129 = 129;
+    private static final int METHOD_validate130 = 130;
+    private static final int METHOD_viewToModel131 = 131;
+    private static final int METHOD_write132 = 132;
 
     // Method array 
     /*lazy MethodDescriptor*/
     private static MethodDescriptor[] getMdescriptor(){
-        MethodDescriptor[] methods = new MethodDescriptor[134];
+        MethodDescriptor[] methods = new MethodDescriptor[133];
     
         try {
             methods[METHOD_action0] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("action", new Class[] {java.awt.Event.class, java.lang.Object.class})); // NOI18N
@@ -395,91 +394,89 @@ public class JDbFormattedTextFieldBeanInfo extends SimpleBeanInfo {
             methods[METHOD_preferredSize90].setDisplayName ( "" );
             methods[METHOD_prepareImage91] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("prepareImage", new Class[] {java.awt.Image.class, java.awt.image.ImageObserver.class})); // NOI18N
             methods[METHOD_prepareImage91].setDisplayName ( "" );
-            methods[METHOD_print92] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("print", new Class[] {java.awt.Graphics.class})); // NOI18N
-            methods[METHOD_print92].setDisplayName ( "" );
-            methods[METHOD_printAll93] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("printAll", new Class[] {java.awt.Graphics.class})); // NOI18N
-            methods[METHOD_printAll93].setDisplayName ( "" );
-            methods[METHOD_printComponents94] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("printComponents", new Class[] {java.awt.Graphics.class})); // NOI18N
-            methods[METHOD_printComponents94].setDisplayName ( "" );
-            methods[METHOD_putClientProperty95] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("putClientProperty", new Class[] {java.lang.Object.class, java.lang.Object.class})); // NOI18N
-            methods[METHOD_putClientProperty95].setDisplayName ( "" );
-            methods[METHOD_read96] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("read", new Class[] {java.io.Reader.class, java.lang.Object.class})); // NOI18N
-            methods[METHOD_read96].setDisplayName ( "" );
-            methods[METHOD_registerKeyboardAction97] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("registerKeyboardAction", new Class[] {java.awt.event.ActionListener.class, java.lang.String.class, javax.swing.KeyStroke.class, Integer.TYPE})); // NOI18N
-            methods[METHOD_registerKeyboardAction97].setDisplayName ( "" );
-            methods[METHOD_remove98] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("remove", new Class[] {Integer.TYPE})); // NOI18N
-            methods[METHOD_remove98].setDisplayName ( "" );
-            methods[METHOD_removeAll99] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removeAll", new Class[] {})); // NOI18N
-            methods[METHOD_removeAll99].setDisplayName ( "" );
-            methods[METHOD_removeKeymap100] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removeKeymap", new Class[] {java.lang.String.class})); // NOI18N
-            methods[METHOD_removeKeymap100].setDisplayName ( "" );
-            methods[METHOD_removeNotify101] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removeNotify", new Class[] {})); // NOI18N
-            methods[METHOD_removeNotify101].setDisplayName ( "" );
-            methods[METHOD_removePropertyChangeListener102] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removePropertyChangeListener", new Class[] {java.lang.String.class, java.beans.PropertyChangeListener.class})); // NOI18N
-            methods[METHOD_removePropertyChangeListener102].setDisplayName ( "" );
-            methods[METHOD_removeUpdate103] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removeUpdate", new Class[] {javax.swing.event.DocumentEvent.class})); // NOI18N
-            methods[METHOD_removeUpdate103].setDisplayName ( "" );
-            methods[METHOD_repaint104] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("repaint", new Class[] {Long.TYPE, Integer.TYPE, Integer.TYPE, Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_repaint104].setDisplayName ( "" );
-            methods[METHOD_replaceSelection105] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("replaceSelection", new Class[] {java.lang.String.class})); // NOI18N
-            methods[METHOD_replaceSelection105].setDisplayName ( "" );
-            methods[METHOD_requestDefaultFocus106] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("requestDefaultFocus", new Class[] {})); // NOI18N
-            methods[METHOD_requestDefaultFocus106].setDisplayName ( "" );
-            methods[METHOD_requestFocus107] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("requestFocus", new Class[] {})); // NOI18N
-            methods[METHOD_requestFocus107].setDisplayName ( "" );
-            methods[METHOD_requestFocusInWindow108] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("requestFocusInWindow", new Class[] {})); // NOI18N
-            methods[METHOD_requestFocusInWindow108].setDisplayName ( "" );
-            methods[METHOD_resetKeyboardActions109] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("resetKeyboardActions", new Class[] {})); // NOI18N
-            methods[METHOD_resetKeyboardActions109].setDisplayName ( "" );
-            methods[METHOD_reshape110] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("reshape", new Class[] {Integer.TYPE, Integer.TYPE, Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_reshape110].setDisplayName ( "" );
-            methods[METHOD_resize111] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("resize", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_resize111].setDisplayName ( "" );
-            methods[METHOD_revalidate112] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("revalidate", new Class[] {})); // NOI18N
-            methods[METHOD_revalidate112].setDisplayName ( "" );
-            methods[METHOD_scrollRectToVisible113] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("scrollRectToVisible", new Class[] {java.awt.Rectangle.class})); // NOI18N
-            methods[METHOD_scrollRectToVisible113].setDisplayName ( "" );
-            methods[METHOD_select114] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("select", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_select114].setDisplayName ( "" );
-            methods[METHOD_selectAll115] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("selectAll", new Class[] {})); // NOI18N
-            methods[METHOD_selectAll115].setDisplayName ( "" );
-            methods[METHOD_setBounds116] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("setBounds", new Class[] {Integer.TYPE, Integer.TYPE, Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_setBounds116].setDisplayName ( "" );
-            methods[METHOD_setComponentZOrder117] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("setComponentZOrder", new Class[] {java.awt.Component.class, Integer.TYPE})); // NOI18N
-            methods[METHOD_setComponentZOrder117].setDisplayName ( "" );
-            methods[METHOD_setDefaultLocale118] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("setDefaultLocale", new Class[] {java.util.Locale.class})); // NOI18N
-            methods[METHOD_setDefaultLocale118].setDisplayName ( "" );
-            methods[METHOD_setFormat119] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("setFormat", new Class[] {java.text.Format.class})); // NOI18N
-            methods[METHOD_setFormat119].setPreferred ( true );
-            methods[METHOD_setFormat119].setDisplayName ( "format" );
-            methods[METHOD_show120] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("show", new Class[] {})); // NOI18N
-            methods[METHOD_show120].setDisplayName ( "" );
-            methods[METHOD_size121] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("size", new Class[] {})); // NOI18N
-            methods[METHOD_size121].setDisplayName ( "" );
-            methods[METHOD_this_focusGained122] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("this_focusGained", new Class[] {java.awt.event.FocusEvent.class})); // NOI18N
-            methods[METHOD_this_focusGained122].setDisplayName ( "" );
-            methods[METHOD_toString123] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("toString", new Class[] {})); // NOI18N
-            methods[METHOD_toString123].setDisplayName ( "" );
-            methods[METHOD_transferFocus124] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("transferFocus", new Class[] {})); // NOI18N
-            methods[METHOD_transferFocus124].setDisplayName ( "" );
-            methods[METHOD_transferFocusBackward125] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("transferFocusBackward", new Class[] {})); // NOI18N
-            methods[METHOD_transferFocusBackward125].setDisplayName ( "" );
-            methods[METHOD_transferFocusDownCycle126] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("transferFocusDownCycle", new Class[] {})); // NOI18N
-            methods[METHOD_transferFocusDownCycle126].setDisplayName ( "" );
-            methods[METHOD_transferFocusUpCycle127] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("transferFocusUpCycle", new Class[] {})); // NOI18N
-            methods[METHOD_transferFocusUpCycle127].setDisplayName ( "" );
-            methods[METHOD_unregisterKeyboardAction128] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("unregisterKeyboardAction", new Class[] {javax.swing.KeyStroke.class})); // NOI18N
-            methods[METHOD_unregisterKeyboardAction128].setDisplayName ( "" );
-            methods[METHOD_update129] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("update", new Class[] {java.awt.Graphics.class})); // NOI18N
-            methods[METHOD_update129].setDisplayName ( "" );
-            methods[METHOD_updateUI130] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("updateUI", new Class[] {})); // NOI18N
-            methods[METHOD_updateUI130].setDisplayName ( "" );
-            methods[METHOD_validate131] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("validate", new Class[] {})); // NOI18N
-            methods[METHOD_validate131].setDisplayName ( "" );
-            methods[METHOD_viewToModel132] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("viewToModel", new Class[] {java.awt.Point.class})); // NOI18N
-            methods[METHOD_viewToModel132].setDisplayName ( "" );
-            methods[METHOD_write133] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("write", new Class[] {java.io.Writer.class})); // NOI18N
-            methods[METHOD_write133].setDisplayName ( "" );
+            methods[METHOD_printAll92] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("printAll", new Class[] {java.awt.Graphics.class})); // NOI18N
+            methods[METHOD_printAll92].setDisplayName ( "" );
+            methods[METHOD_printComponents93] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("printComponents", new Class[] {java.awt.Graphics.class})); // NOI18N
+            methods[METHOD_printComponents93].setDisplayName ( "" );
+            methods[METHOD_putClientProperty94] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("putClientProperty", new Class[] {java.lang.Object.class, java.lang.Object.class})); // NOI18N
+            methods[METHOD_putClientProperty94].setDisplayName ( "" );
+            methods[METHOD_read95] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("read", new Class[] {java.io.Reader.class, java.lang.Object.class})); // NOI18N
+            methods[METHOD_read95].setDisplayName ( "" );
+            methods[METHOD_registerKeyboardAction96] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("registerKeyboardAction", new Class[] {java.awt.event.ActionListener.class, java.lang.String.class, javax.swing.KeyStroke.class, Integer.TYPE})); // NOI18N
+            methods[METHOD_registerKeyboardAction96].setDisplayName ( "" );
+            methods[METHOD_remove97] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("remove", new Class[] {Integer.TYPE})); // NOI18N
+            methods[METHOD_remove97].setDisplayName ( "" );
+            methods[METHOD_removeAll98] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removeAll", new Class[] {})); // NOI18N
+            methods[METHOD_removeAll98].setDisplayName ( "" );
+            methods[METHOD_removeKeymap99] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removeKeymap", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_removeKeymap99].setDisplayName ( "" );
+            methods[METHOD_removeNotify100] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removeNotify", new Class[] {})); // NOI18N
+            methods[METHOD_removeNotify100].setDisplayName ( "" );
+            methods[METHOD_removePropertyChangeListener101] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removePropertyChangeListener", new Class[] {java.lang.String.class, java.beans.PropertyChangeListener.class})); // NOI18N
+            methods[METHOD_removePropertyChangeListener101].setDisplayName ( "" );
+            methods[METHOD_removeUpdate102] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("removeUpdate", new Class[] {javax.swing.event.DocumentEvent.class})); // NOI18N
+            methods[METHOD_removeUpdate102].setDisplayName ( "" );
+            methods[METHOD_repaint103] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("repaint", new Class[] {Long.TYPE, Integer.TYPE, Integer.TYPE, Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_repaint103].setDisplayName ( "" );
+            methods[METHOD_replaceSelection104] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("replaceSelection", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_replaceSelection104].setDisplayName ( "" );
+            methods[METHOD_requestDefaultFocus105] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("requestDefaultFocus", new Class[] {})); // NOI18N
+            methods[METHOD_requestDefaultFocus105].setDisplayName ( "" );
+            methods[METHOD_requestFocus106] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("requestFocus", new Class[] {})); // NOI18N
+            methods[METHOD_requestFocus106].setDisplayName ( "" );
+            methods[METHOD_requestFocusInWindow107] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("requestFocusInWindow", new Class[] {})); // NOI18N
+            methods[METHOD_requestFocusInWindow107].setDisplayName ( "" );
+            methods[METHOD_resetKeyboardActions108] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("resetKeyboardActions", new Class[] {})); // NOI18N
+            methods[METHOD_resetKeyboardActions108].setDisplayName ( "" );
+            methods[METHOD_reshape109] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("reshape", new Class[] {Integer.TYPE, Integer.TYPE, Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_reshape109].setDisplayName ( "" );
+            methods[METHOD_resize110] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("resize", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_resize110].setDisplayName ( "" );
+            methods[METHOD_revalidate111] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("revalidate", new Class[] {})); // NOI18N
+            methods[METHOD_revalidate111].setDisplayName ( "" );
+            methods[METHOD_scrollRectToVisible112] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("scrollRectToVisible", new Class[] {java.awt.Rectangle.class})); // NOI18N
+            methods[METHOD_scrollRectToVisible112].setDisplayName ( "" );
+            methods[METHOD_select113] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("select", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_select113].setDisplayName ( "" );
+            methods[METHOD_selectAll114] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("selectAll", new Class[] {})); // NOI18N
+            methods[METHOD_selectAll114].setDisplayName ( "" );
+            methods[METHOD_setBounds115] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("setBounds", new Class[] {Integer.TYPE, Integer.TYPE, Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_setBounds115].setDisplayName ( "" );
+            methods[METHOD_setComponentZOrder116] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("setComponentZOrder", new Class[] {java.awt.Component.class, Integer.TYPE})); // NOI18N
+            methods[METHOD_setComponentZOrder116].setDisplayName ( "" );
+            methods[METHOD_setDefaultLocale117] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("setDefaultLocale", new Class[] {java.util.Locale.class})); // NOI18N
+            methods[METHOD_setDefaultLocale117].setDisplayName ( "" );
+            methods[METHOD_setFormat118] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("setFormat", new Class[] {java.text.Format.class})); // NOI18N
+            methods[METHOD_setFormat118].setPreferred ( true );
+            methods[METHOD_setFormat118].setDisplayName ( "format" );
+            methods[METHOD_show119] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("show", new Class[] {})); // NOI18N
+            methods[METHOD_show119].setDisplayName ( "" );
+            methods[METHOD_size120] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("size", new Class[] {})); // NOI18N
+            methods[METHOD_size120].setDisplayName ( "" );
+            methods[METHOD_this_focusGained121] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("this_focusGained", new Class[] {java.awt.event.FocusEvent.class})); // NOI18N
+            methods[METHOD_this_focusGained121].setDisplayName ( "" );
+            methods[METHOD_toString122] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("toString", new Class[] {})); // NOI18N
+            methods[METHOD_toString122].setDisplayName ( "" );
+            methods[METHOD_transferFocus123] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("transferFocus", new Class[] {})); // NOI18N
+            methods[METHOD_transferFocus123].setDisplayName ( "" );
+            methods[METHOD_transferFocusBackward124] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("transferFocusBackward", new Class[] {})); // NOI18N
+            methods[METHOD_transferFocusBackward124].setDisplayName ( "" );
+            methods[METHOD_transferFocusDownCycle125] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("transferFocusDownCycle", new Class[] {})); // NOI18N
+            methods[METHOD_transferFocusDownCycle125].setDisplayName ( "" );
+            methods[METHOD_transferFocusUpCycle126] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("transferFocusUpCycle", new Class[] {})); // NOI18N
+            methods[METHOD_transferFocusUpCycle126].setDisplayName ( "" );
+            methods[METHOD_unregisterKeyboardAction127] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("unregisterKeyboardAction", new Class[] {javax.swing.KeyStroke.class})); // NOI18N
+            methods[METHOD_unregisterKeyboardAction127].setDisplayName ( "" );
+            methods[METHOD_update128] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("update", new Class[] {java.awt.Graphics.class})); // NOI18N
+            methods[METHOD_update128].setDisplayName ( "" );
+            methods[METHOD_updateUI129] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("updateUI", new Class[] {})); // NOI18N
+            methods[METHOD_updateUI129].setDisplayName ( "" );
+            methods[METHOD_validate130] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("validate", new Class[] {})); // NOI18N
+            methods[METHOD_validate130].setDisplayName ( "" );
+            methods[METHOD_viewToModel131] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("viewToModel", new Class[] {java.awt.Point.class})); // NOI18N
+            methods[METHOD_viewToModel131].setDisplayName ( "" );
+            methods[METHOD_write132] = new MethodDescriptor ( com.openitech.db.components.JDbFormattedTextField.class.getMethod("write", new Class[] {java.io.Writer.class})); // NOI18N
+            methods[METHOD_write132].setDisplayName ( "" );
         }
         catch( Exception e) {}//GEN-HEADEREND:Methods
 

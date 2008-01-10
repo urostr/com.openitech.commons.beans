@@ -1,7 +1,7 @@
 /*
- * JDbTextFieldBeanInfo.java
+ * JDbIntegerTextFieldBeanInfo.java
  *
- * Created on Petek, 23 marec 2007, 15:39
+ * Created on Èetrtek, 10 januar 2008, 15:04
  */
 
 package com.openitech.db.components;
@@ -11,95 +11,77 @@ import java.beans.*;
 /**
  * @author uros
  */
-public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
-
+public class JDbIntegerTextFieldBeanInfo extends SimpleBeanInfo {
+  
     // Bean descriptor//GEN-FIRST:BeanDescriptor
     /*lazy BeanDescriptor*/
     private static BeanDescriptor getBdescriptor(){
-        BeanDescriptor beanDescriptor = new BeanDescriptor  ( com.openitech.db.components.JDbTextField.class , null ); // NOI18N//GEN-HEADEREND:BeanDescriptor
-
+        BeanDescriptor beanDescriptor = new BeanDescriptor  ( com.openitech.db.components.JDbIntegerTextField.class , null ); // NOI18N//GEN-HEADEREND:BeanDescriptor
+    
     // Here you can add code for customizing the BeanDescriptor.
-
+    
         return beanDescriptor;     }//GEN-LAST:BeanDescriptor
-
-
+  
+  
     // Property identifiers//GEN-FIRST:Properties
-    private static final int PROPERTY_background = 0;
-    private static final int PROPERTY_border = 1;
-    private static final int PROPERTY_columnName = 2;
-    private static final int PROPERTY_componentPopupMenu = 3;
-    private static final int PROPERTY_dataSource = 4;
-    private static final int PROPERTY_dbFieldObserver = 5;
-    private static final int PROPERTY_document = 6;
-    private static final int PROPERTY_foreground = 7;
-    private static final int PROPERTY_toolTipColumnName = 8;
-    private static final int PROPERTY_validator = 9;
+    private static final int PROPERTY_autosize = 0;
+    private static final int PROPERTY_length = 1;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[10];
+        PropertyDescriptor[] properties = new PropertyDescriptor[2];
     
         try {
-            properties[PROPERTY_background] = new PropertyDescriptor ( "background", com.openitech.db.components.JDbTextField.class, "getBackground", "setBackground" ); // NOI18N
-            properties[PROPERTY_border] = new PropertyDescriptor ( "border", com.openitech.db.components.JDbTextField.class, "getBorder", "setBorder" ); // NOI18N
-            properties[PROPERTY_columnName] = new PropertyDescriptor ( "columnName", com.openitech.db.components.JDbTextField.class, "getColumnName", "setColumnName" ); // NOI18N
-            properties[PROPERTY_columnName].setPreferred ( true );
-            properties[PROPERTY_componentPopupMenu] = new PropertyDescriptor ( "componentPopupMenu", com.openitech.db.components.JDbTextField.class, "getComponentPopupMenu", "setComponentPopupMenu" ); // NOI18N
-            properties[PROPERTY_dataSource] = new PropertyDescriptor ( "dataSource", com.openitech.db.components.JDbTextField.class, "getDataSource", "setDataSource" ); // NOI18N
-            properties[PROPERTY_dataSource].setPreferred ( true );
-            properties[PROPERTY_dbFieldObserver] = new PropertyDescriptor ( "dbFieldObserver", com.openitech.db.components.JDbTextField.class, "getDbFieldObserver", null ); // NOI18N
-            properties[PROPERTY_dbFieldObserver].setHidden ( true );
-            properties[PROPERTY_document] = new PropertyDescriptor ( "document", com.openitech.db.components.JDbTextField.class, "getDocument", "setDocument" ); // NOI18N
-            properties[PROPERTY_foreground] = new PropertyDescriptor ( "foreground", com.openitech.db.components.JDbTextField.class, "getForeground", "setForeground" ); // NOI18N
-            properties[PROPERTY_toolTipColumnName] = new PropertyDescriptor ( "toolTipColumnName", com.openitech.db.components.JDbTextField.class, "getToolTipColumnName", "setToolTipColumnName" ); // NOI18N
-            properties[PROPERTY_validator] = new PropertyDescriptor ( "validator", com.openitech.db.components.JDbTextField.class, "getValidator", "setValidator" ); // NOI18N
+            properties[PROPERTY_autosize] = new PropertyDescriptor ( "autosize", com.openitech.db.components.JDbIntegerTextField.class, "isAutosize", "setAutosize" ); // NOI18N
+            properties[PROPERTY_length] = new PropertyDescriptor ( "length", com.openitech.db.components.JDbIntegerTextField.class, "getLength", "setLength" ); // NOI18N
+            properties[PROPERTY_length].setPreferred ( true );
         }
         catch(IntrospectionException e) {
             e.printStackTrace();
         }//GEN-HEADEREND:Properties
-
+    
     // Here you can add code for customizing the properties array.
-
+    
         return properties;     }//GEN-LAST:Properties
-
+  
     // EventSet identifiers//GEN-FIRST:Events
 
     // EventSet array
     /*lazy EventSetDescriptor*/
     private static EventSetDescriptor[] getEdescriptor(){
         EventSetDescriptor[] eventSets = new EventSetDescriptor[0];//GEN-HEADEREND:Events
-
+    
     // Here you can add code for customizing the event sets array.
-
+    
         return eventSets;     }//GEN-LAST:Events
-
+  
     // Method identifiers//GEN-FIRST:Methods
 
     // Method array 
     /*lazy MethodDescriptor*/
     private static MethodDescriptor[] getMdescriptor(){
         MethodDescriptor[] methods = new MethodDescriptor[0];//GEN-HEADEREND:Methods
-
+    
     // Here you can add code for customizing the methods array.
-
+    
         return methods;     }//GEN-LAST:Methods
-
-
+  
+  
     private static final int defaultPropertyIndex = -1;//GEN-BEGIN:Idx
     private static final int defaultEventIndex = -1;//GEN-END:Idx
-
-
+  
+  
     public BeanInfo[] getAdditionalBeanInfo() {//GEN-FIRST:Superclass
-        Class superclass = com.openitech.db.components.JDbTextField.class.getSuperclass();
+        Class superclass = com.openitech.db.components.JDbIntegerTextField.class.getSuperclass();
         BeanInfo sbi = null;
         try {
             sbi = Introspector.getBeanInfo(superclass);//GEN-HEADEREND:Superclass
-
+  
   // Here you can add code for customizing the Superclass BeanInfo.
-
+  
             } catch(IntrospectionException ex) { }  return new BeanInfo[] { sbi }; }//GEN-LAST:Superclass
-
+  
   /**
    * Gets the bean's <code>BeanDescriptor</code>s.
    *
@@ -110,7 +92,7 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
   public BeanDescriptor getBeanDescriptor() {
     return getBdescriptor();
   }
-
+  
   /**
    * Gets the bean's <code>PropertyDescriptor</code>s.
    *
@@ -126,7 +108,7 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
   public PropertyDescriptor[] getPropertyDescriptors() {
     return getPdescriptor();
   }
-
+  
   /**
    * Gets the bean's <code>EventSetDescriptor</code>s.
    *
@@ -137,7 +119,7 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
   public EventSetDescriptor[] getEventSetDescriptors() {
     return getEdescriptor();
   }
-
+  
   /**
    * Gets the bean's <code>MethodDescriptor</code>s.
    *
@@ -148,7 +130,7 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
   public MethodDescriptor[] getMethodDescriptors() {
     return getMdescriptor();
   }
-
+  
   /**
    * A bean may have a "default" property that is the property that will
    * mostly commonly be initially chosen for update by human's who are
@@ -160,7 +142,7 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
   public int getDefaultPropertyIndex() {
     return defaultPropertyIndex;
   }
-
+  
   /**
    * A bean may have a "default" event that is the event that will
    * mostly commonly be used by human's when using the bean.

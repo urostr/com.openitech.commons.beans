@@ -29,6 +29,9 @@ public class Equals {
         return ((java.util.Date)a).getTime()==((java.util.Date)b).getTime();
       else if (a instanceof Number && b instanceof Number)
         return BigDecimal.valueOf(((Number)a).doubleValue()).equals(BigDecimal.valueOf(((Number)b).doubleValue()));
+      else if (a instanceof String || b instanceof String) {
+        return (a.toString()).equals(b.toString());
+      }
       else if (a instanceof Comparable && b instanceof Comparable)
         return ((Comparable) a).compareTo(b)==0;
       else 

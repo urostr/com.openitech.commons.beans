@@ -135,6 +135,8 @@ public class DbDataSource implements DbNavigatorDataSource {
   private long queuedDelay = 108;
   
   private Connection connection = null;
+
+  
   
   /**
    * Holds value of property uniqueID.
@@ -4067,6 +4069,9 @@ public class DbDataSource implements DbNavigatorDataSource {
           
           int columnCount = getColumnCount();
           
+          String delimiterLeft = getDelimiterLeft();
+          String delimiterRight = getDelimiterRight();
+          
           if (insert) {
             String schemaName = null;
             String tableName = updateTableName;
@@ -4093,14 +4098,14 @@ public class DbDataSource implements DbNavigatorDataSource {
                 else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
                   if (updateTableName==null)
                     throw new SQLException("Insert on different tables not supported.");
-                  else {
+                  else if (!updateColumnNames.contains(entry.getKey())) {
                     skipValues.add(entry.getKey());
                     continue;
                   }
                 }
               }
               if (entry.getValue()!=null || metaData.isNullable(columnIndex)!=ResultSetMetaData.columnNoNulls) {
-                columns.append(columns.length()>0?",":"").append(entry.getKey());
+                columns.append(columns.length()>0?",":"").append(delimiterLeft).append(entry.getKey()).append(delimiterRight);
                 values.append(values.length()>0?",":"").append("?");
               } else {
                 skipValues.add(entry.getKey());
@@ -4110,9 +4115,14 @@ public class DbDataSource implements DbNavigatorDataSource {
             
             StringBuffer sql = new StringBuffer();
             
-            sql.append("INSERT INTO ").append(schemaName).append(".").append(tableName).append(" (").append(columns).append(") ");
+            sql.append("INSERT INTO ");
+            if (schemaName.length()>0) {
+              sql.append(delimiterLeft).append(schemaName).append(delimiterRight).append(".");
+            }
+            sql.append(delimiterLeft).append(tableName).append(delimiterRight)
+               .append(" (").append(columns).append(") ");
             sql.append("VALUES (").append(values).append(")");
-            
+    
             PreparedStatement insertStatement = getConnection().prepareStatement(sql.toString());
             try {
               ParameterMetaData parameterMetaData = insertStatement.getParameterMetaData();
@@ -4138,7 +4148,7 @@ public class DbDataSource implements DbNavigatorDataSource {
             ResultSetMetaData metaData = selectResultSet.getMetaData();
             List<String> skipColumns = new ArrayList<String>();
             for (int c=1; c<=columnCount; c++)
-              if (updateTableName==null||(updateTableName!=null&&updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) {
+              if (updateTableName==null||updateColumnNames.contains(metaData.getColumnName(c))||(updateTableName!=null&&updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) {
               try {
                 Object value = selectResultSet.getObject(c);
                 oldValues.put(c,value);
@@ -4201,7 +4211,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                   entry = i.next();
                   if ((skipColumns.indexOf(entry.getKey())==-1)&&
                           (metaData.getTableName(columnMapping.checkedGet(entry.getKey()).intValue()).equalsIgnoreCase(key.table))) {
-                    set.append(set.length()>0?", ":"").append(entry.getKey()).append(" = ?");
+                    set.append(set.length()>0?", ":"").append(delimiterLeft).append(entry.getKey()).append(delimiterRight).append(" = ?");
                   }
                 }
                 StringBuffer where = new StringBuffer();
@@ -4209,7 +4219,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                 for (String c:key.getColumnNames())
                   where.append(where.length()>0?" AND ":"").append(c).append(" = ? ");
                 
-                String sql = "UPDATE "+key.table+" SET "+set.toString()+" WHERE "+where.toString();
+                String sql = "UPDATE "+delimiterLeft+key.table+delimiterRight+" SET "+set.toString()+" WHERE "+where.toString();
                 
                 PreparedStatement updateStatement = getConnection().prepareStatement(sql.toString());
                 try {
@@ -5651,4 +5661,82 @@ public class DbDataSource implements DbNavigatorDataSource {
   public void setBusyLabel(String busyLabel) {
     this.busyLabel = busyLabel;
   }
+
+  /**
+   * Holds value of property delimiterLeft.
+   */
+  private String delimiterLeft = null;
+
+  /**
+   * Getter for property leftDelimiter.
+   * @return Value of property leftDelimiter.
+   */
+  public String getDelimiterLeft() {
+    ConnectionManager cm = ConnectionManager.getInstance();
+    if ((this.delimiterLeft==null)&&(cm!=null)) {
+      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_LEFT);
+    } else
+      return this.delimiterLeft;
+  }
+
+  /**
+   * Setter for property leftDelimiter.
+   * @param leftDelimiter New value of property leftDelimiter.
+   */
+  public void setDelimiterLeft(String delimiterLeft) {
+    this.delimiterLeft = delimiterLeft;
+  }
+
+  /**
+   * Holds value of property delimiterRight.
+   */
+  private String delimiterRight;
+
+  /**
+   * Getter for property rightDelimiter.
+   * @return Value of property rightDelimiter.
+   */
+  public String getDelimiterRight() {
+    ConnectionManager cm = ConnectionManager.getInstance();
+    if ((this.delimiterLeft==null)&&(cm!=null)) {
+      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_RIGHT);
+    } else
+      return this.delimiterRight;
+  }
+
+  /**
+   * Setter for property rightDelimiter.
+   * @param rightDelimiter New value of property rightDelimiter.
+   */
+  public void setDelimiterRight(String delimiterRight) {
+    this.delimiterRight = delimiterRight;
+  }
+
+  /**
+   * Holds value of property updateColumnNames.
+   */
+  private java.util.Set<String> updateColumnNames = new java.util.HashSet<String>();
+
+  /**
+   * Getter for property updateFieldNames.
+   * @return Value of property updateFieldNames.
+   */
+  private java.util.Set<String> getUpdateColumnNames() {
+    return this.updateColumnNames;
+  }
+  
+  public void addUpdateColumnName(String... fieldNames) {
+    for (String fieldName:fieldNames) {
+      updateColumnNames.add(fieldName);
+      updateColumnNames.add(fieldName.toUpperCase());
+    }
+  }
+  
+  public void removeUpdateColumnName(String... fieldNames) {
+    for (String fieldName:fieldNames) {
+      updateColumnNames.remove(fieldName);
+      updateColumnNames.remove(fieldName.toUpperCase());
+    }
+  }
+  
 }
