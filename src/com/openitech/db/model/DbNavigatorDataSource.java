@@ -215,6 +215,17 @@ public interface DbNavigatorDataSource {
 
   public boolean loadData();
   
+  
+  /**
+   * Retrieves the current row number.  The first row is number 1, the
+   * second number 2, and so on.
+   *
+   * @return the current row number; <code>0</code> if there is no current row
+   * @exception SQLException if a database access error occurs
+   * @since 1.2
+   */
+  public int getRow() throws SQLException;
+
   public int getRowCount();
     /**
      * Adds a PropertyChangeListener to the listener list. The listener is

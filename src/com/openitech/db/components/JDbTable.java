@@ -64,8 +64,12 @@ public class JDbTable extends JXTable implements ListSelectionListener, DbNaviga
     if (this.getModel() instanceof DbTableModel)
       ((DbTableModel) this.getModel()).removeActiveRowChangeListener(activeRowChangeWeakListener);
     if (dataModel instanceof DbTableModel) {
-      super.setModel(dataModel);
-      super.setColumnModel(((DbTableModel) dataModel).getTableColumnModel());
+      try {
+        super.setModel(dataModel);
+        super.setColumnModel(((DbTableModel) dataModel).getTableColumnModel());
+      } catch (java.lang.IndexOutOfBoundsException e) {
+        //ignore it #netbeans fora
+      }
       ((DbTableModel) this.getModel()).addActiveRowChangeListener(activeRowChangeWeakListener);
     }/* else
       throw new IllegalArgumentException("The data model for JDbTable must be a DbTableModel.");//*/
@@ -242,6 +246,10 @@ public class JDbTable extends JXTable implements ListSelectionListener, DbNaviga
 
   public boolean loadData() {
     return (getDataSource()!=null)?getDataSource().loadData():false;
+  }
+
+  public int getRow() throws SQLException {
+    return (getDataSource()!=null)?getDataSource().getRow():0;
   }
   
   private class UpdateViewRunnable implements Runnable {

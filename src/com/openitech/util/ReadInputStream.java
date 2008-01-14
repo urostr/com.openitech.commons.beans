@@ -24,6 +24,9 @@ public class ReadInputStream {
     String[] result = getResourceAsString(clazz, resourceName, false, charsetName);
     return result.length>0?result[0]:null;
   }
+  public static String[] getResourceAsString(Class clazz, String resourceName, boolean batch) {
+    return getResourceAsString(clazz, resourceName, batch, "UTF-8");
+  }
   public static String[] getResourceAsString(Class clazz, String resourceName, boolean batch, String charsetName) {
     BufferedReader bis = new BufferedReader(new InputStreamReader(clazz.getResourceAsStream(resourceName)));
     StreamTokenizer st = new StreamTokenizer(bis);

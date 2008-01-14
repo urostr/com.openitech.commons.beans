@@ -3746,9 +3746,11 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
   
   public Object getValueAt(int rowIndex, String columnName) throws SQLException {
-    return getValueAt(rowIndex, columnName, new String[] {columnName});
+    String[] columns = this.getValueColumns.toArray(new String[this.getValueColumns.size()+1]);
+    columns[this.getValueColumns.size()]=columnName;
+    return getValueAt(rowIndex, columnName, columns);
   }
-  public Object getValueAt(int rowIndex, String columnName, String[] columnNames) throws SQLException {
+  public Object getValueAt(int rowIndex, String columnName, String... columnNames) throws SQLException {
     if (loadData()) {
       Object result = null;
       columnName = columnName.toUpperCase();
@@ -5673,7 +5675,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    */
   public String getDelimiterLeft() {
     ConnectionManager cm = ConnectionManager.getInstance();
-    if ((this.delimiterLeft==null)&&(cm!=null)) {
+    if ((this.delimiterLeft==null)&&(cm!=null)&&(cm.getConnection()!=null)) {
       return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_LEFT);
     } else
       return this.delimiterLeft;
@@ -5698,7 +5700,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    */
   public String getDelimiterRight() {
     ConnectionManager cm = ConnectionManager.getInstance();
-    if ((this.delimiterLeft==null)&&(cm!=null)) {
+    if ((this.delimiterLeft==null)&&(cm!=null)&&(cm.getConnection()!=null)) {
       return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_RIGHT);
     } else
       return this.delimiterRight;
@@ -5738,5 +5740,28 @@ public class DbDataSource implements DbNavigatorDataSource {
       updateColumnNames.remove(fieldName.toUpperCase());
     }
   }
-  
+
+  /**
+   * Holds value of property getValueColumns.
+   */
+  private List<String> getValueColumns = new ArrayList<String>();
+
+  /**
+   * Getter for property getValueColumns.
+   * @return Value of property getValueColumns.
+   */
+  public String[] getGetValueColumns() {
+    return getValueColumns.toArray(new String[getValueColumns.size()]);
+  }
+
+  /**
+   * Setter for property getValueColumns.
+   * @param getValueColumns New value of property getValueColumns.
+   */
+  public void setGetValueColumns(String[] columns) {
+    getValueColumns.clear();
+    for (String column:columns) {
+      getValueColumns.add(column);
+    }
+  }  
 }

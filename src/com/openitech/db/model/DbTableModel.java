@@ -60,7 +60,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   private Map<String,Class<? extends TableCellRenderer>> renderersMap = new HashMap<String,Class<? extends TableCellRenderer>>();
   private Map<String,Class<? extends TableCellEditor>> editorsMap = new HashMap<String,Class<? extends TableCellEditor>>();
   
-  private ColumnDescriptor[] columnDescriptors = new ColumnDescriptor[] {};
+  protected ColumnDescriptor[] columnDescriptors = new ColumnDescriptor[] {};
   
   private transient ListDataWeakListener listDataWeakListener = new ListDataWeakListener(this);
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this);

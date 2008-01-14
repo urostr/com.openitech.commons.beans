@@ -24,134 +24,51 @@ public class DbDataSourceBeanInfo extends SimpleBeanInfo {
   
   
     // Property identifiers//GEN-FIRST:Properties
-    private static final int PROPERTY_afterLast = 0;
-    private static final int PROPERTY_array = 1;
-    private static final int PROPERTY_asciiStream = 2;
-    private static final int PROPERTY_beforeFirst = 3;
-    private static final int PROPERTY_bigDecimal = 4;
-    private static final int PROPERTY_binaryStream = 5;
-    private static final int PROPERTY_blob = 6;
-    private static final int PROPERTY_boolean = 7;
-    private static final int PROPERTY_busyLabel = 8;
-    private static final int PROPERTY_byte = 9;
-    private static final int PROPERTY_bytes = 10;
-    private static final int PROPERTY_canAddRows = 11;
-    private static final int PROPERTY_canDeleteRows = 12;
-    private static final int PROPERTY_characterStream = 13;
-    private static final int PROPERTY_clob = 14;
-    private static final int PROPERTY_columnCount = 15;
-    private static final int PROPERTY_columnName = 16;
-    private static final int PROPERTY_concurrency = 17;
-    private static final int PROPERTY_connection = 18;
-    private static final int PROPERTY_countSql = 19;
-    private static final int PROPERTY_cursorName = 20;
-    private static final int PROPERTY_dataLoaded = 21;
-    private static final int PROPERTY_date = 22;
-    private static final int PROPERTY_defaultValues = 23;
-    private static final int PROPERTY_delimiterLeft = 24;
-    private static final int PROPERTY_delimiterRight = 25;
-    private static final int PROPERTY_double = 26;
-    private static final int PROPERTY_fetchDirection = 27;
-    private static final int PROPERTY_fetchSize = 28;
-    private static final int PROPERTY_first = 29;
-    private static final int PROPERTY_float = 30;
-    private static final int PROPERTY_int = 31;
-    private static final int PROPERTY_last = 32;
-    private static final int PROPERTY_long = 33;
-    private static final int PROPERTY_metaData = 34;
-    private static final int PROPERTY_name = 35;
-    private static final int PROPERTY_object = 36;
-    private static final int PROPERTY_parameters = 37;
-    private static final int PROPERTY_propertyChangeListeners = 38;
-    private static final int PROPERTY_queuedDelay = 39;
-    private static final int PROPERTY_readOnly = 40;
-    private static final int PROPERTY_ref = 41;
-    private static final int PROPERTY_resultSet = 42;
-    private static final int PROPERTY_row = 43;
-    private static final int PROPERTY_rowCount = 44;
-    private static final int PROPERTY_selectSql = 45;
-    private static final int PROPERTY_short = 46;
-    private static final int PROPERTY_singleTableSelect = 47;
-    private static final int PROPERTY_statement = 48;
-    private static final int PROPERTY_storedUpdates = 49;
-    private static final int PROPERTY_string = 50;
-    private static final int PROPERTY_time = 51;
-    private static final int PROPERTY_timestamp = 52;
-    private static final int PROPERTY_type = 53;
-    private static final int PROPERTY_unicodeStream = 54;
-    private static final int PROPERTY_uniqueID = 55;
-    private static final int PROPERTY_updateRowFireOnly = 56;
-    private static final int PROPERTY_updateTableName = 57;
-    private static final int PROPERTY_URL = 58;
-    private static final int PROPERTY_warnings = 59;
+    private static final int PROPERTY_busyLabel = 0;
+    private static final int PROPERTY_canAddRows = 1;
+    private static final int PROPERTY_canDeleteRows = 2;
+    private static final int PROPERTY_columnCount = 3;
+    private static final int PROPERTY_connection = 4;
+    private static final int PROPERTY_countSql = 5;
+    private static final int PROPERTY_delimiterLeft = 6;
+    private static final int PROPERTY_delimiterRight = 7;
+    private static final int PROPERTY_getValueColumns = 8;
+    private static final int PROPERTY_queuedDelay = 9;
+    private static final int PROPERTY_readOnly = 10;
+    private static final int PROPERTY_selectSql = 11;
+    private static final int PROPERTY_singleTableSelect = 12;
+    private static final int PROPERTY_updateRowFireOnly = 13;
+    private static final int PROPERTY_updateTableName = 14;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[60];
+        PropertyDescriptor[] properties = new PropertyDescriptor[15];
     
         try {
-            properties[PROPERTY_afterLast] = new PropertyDescriptor ( "afterLast", com.openitech.db.model.DbDataSource.class, "isAfterLast", null ); // NOI18N
-            properties[PROPERTY_array] = new IndexedPropertyDescriptor ( "array", com.openitech.db.model.DbDataSource.class, null, null, "getArray", null ); // NOI18N
-            properties[PROPERTY_asciiStream] = new IndexedPropertyDescriptor ( "asciiStream", com.openitech.db.model.DbDataSource.class, null, null, "getAsciiStream", null ); // NOI18N
-            properties[PROPERTY_beforeFirst] = new PropertyDescriptor ( "beforeFirst", com.openitech.db.model.DbDataSource.class, "isBeforeFirst", null ); // NOI18N
-            properties[PROPERTY_bigDecimal] = new IndexedPropertyDescriptor ( "bigDecimal", com.openitech.db.model.DbDataSource.class, null, null, "getBigDecimal", null ); // NOI18N
-            properties[PROPERTY_binaryStream] = new IndexedPropertyDescriptor ( "binaryStream", com.openitech.db.model.DbDataSource.class, null, null, "getBinaryStream", null ); // NOI18N
-            properties[PROPERTY_blob] = new IndexedPropertyDescriptor ( "blob", com.openitech.db.model.DbDataSource.class, null, null, "getBlob", null ); // NOI18N
-            properties[PROPERTY_boolean] = new IndexedPropertyDescriptor ( "boolean", com.openitech.db.model.DbDataSource.class, null, null, "getBoolean", null ); // NOI18N
             properties[PROPERTY_busyLabel] = new PropertyDescriptor ( "busyLabel", com.openitech.db.model.DbDataSource.class, "getBusyLabel", "setBusyLabel" ); // NOI18N
             properties[PROPERTY_busyLabel].setPreferred ( true );
-            properties[PROPERTY_byte] = new IndexedPropertyDescriptor ( "byte", com.openitech.db.model.DbDataSource.class, null, null, "getByte", null ); // NOI18N
-            properties[PROPERTY_bytes] = new IndexedPropertyDescriptor ( "bytes", com.openitech.db.model.DbDataSource.class, null, null, "getBytes", null ); // NOI18N
             properties[PROPERTY_canAddRows] = new PropertyDescriptor ( "canAddRows", com.openitech.db.model.DbDataSource.class, "isCanAddRows", "setCanAddRows" ); // NOI18N
             properties[PROPERTY_canDeleteRows] = new PropertyDescriptor ( "canDeleteRows", com.openitech.db.model.DbDataSource.class, "isCanDeleteRows", "setCanDeleteRows" ); // NOI18N
-            properties[PROPERTY_characterStream] = new IndexedPropertyDescriptor ( "characterStream", com.openitech.db.model.DbDataSource.class, null, null, "getCharacterStream", null ); // NOI18N
-            properties[PROPERTY_clob] = new IndexedPropertyDescriptor ( "clob", com.openitech.db.model.DbDataSource.class, null, null, "getClob", null ); // NOI18N
             properties[PROPERTY_columnCount] = new PropertyDescriptor ( "columnCount", com.openitech.db.model.DbDataSource.class, "getColumnCount", null ); // NOI18N
-            properties[PROPERTY_columnName] = new IndexedPropertyDescriptor ( "columnName", com.openitech.db.model.DbDataSource.class, null, null, "getColumnName", null ); // NOI18N
-            properties[PROPERTY_concurrency] = new PropertyDescriptor ( "concurrency", com.openitech.db.model.DbDataSource.class, "getConcurrency", null ); // NOI18N
+            properties[PROPERTY_columnCount].setHidden ( true );
             properties[PROPERTY_connection] = new PropertyDescriptor ( "connection", com.openitech.db.model.DbDataSource.class, "getConnection", "setConnection" ); // NOI18N
             properties[PROPERTY_countSql] = new PropertyDescriptor ( "countSql", com.openitech.db.model.DbDataSource.class, "getCountSql", "setCountSql" ); // NOI18N
-            properties[PROPERTY_cursorName] = new PropertyDescriptor ( "cursorName", com.openitech.db.model.DbDataSource.class, "getCursorName", null ); // NOI18N
-            properties[PROPERTY_dataLoaded] = new PropertyDescriptor ( "dataLoaded", com.openitech.db.model.DbDataSource.class, "isDataLoaded", null ); // NOI18N
-            properties[PROPERTY_date] = new IndexedPropertyDescriptor ( "date", com.openitech.db.model.DbDataSource.class, null, null, "getDate", null ); // NOI18N
-            properties[PROPERTY_defaultValues] = new PropertyDescriptor ( "defaultValues", com.openitech.db.model.DbDataSource.class, "getDefaultValues", null ); // NOI18N
+            properties[PROPERTY_countSql].setPreferred ( true );
             properties[PROPERTY_delimiterLeft] = new PropertyDescriptor ( "delimiterLeft", com.openitech.db.model.DbDataSource.class, "getDelimiterLeft", "setDelimiterLeft" ); // NOI18N
+            properties[PROPERTY_delimiterLeft].setHidden ( true );
             properties[PROPERTY_delimiterRight] = new PropertyDescriptor ( "delimiterRight", com.openitech.db.model.DbDataSource.class, "getDelimiterRight", "setDelimiterRight" ); // NOI18N
-            properties[PROPERTY_double] = new IndexedPropertyDescriptor ( "double", com.openitech.db.model.DbDataSource.class, null, null, "getDouble", null ); // NOI18N
-            properties[PROPERTY_fetchDirection] = new PropertyDescriptor ( "fetchDirection", com.openitech.db.model.DbDataSource.class, "getFetchDirection", "setFetchDirection" ); // NOI18N
-            properties[PROPERTY_fetchSize] = new PropertyDescriptor ( "fetchSize", com.openitech.db.model.DbDataSource.class, "getFetchSize", "setFetchSize" ); // NOI18N
-            properties[PROPERTY_first] = new PropertyDescriptor ( "first", com.openitech.db.model.DbDataSource.class, "isFirst", null ); // NOI18N
-            properties[PROPERTY_float] = new IndexedPropertyDescriptor ( "float", com.openitech.db.model.DbDataSource.class, null, null, "getFloat", null ); // NOI18N
-            properties[PROPERTY_int] = new IndexedPropertyDescriptor ( "int", com.openitech.db.model.DbDataSource.class, null, null, "getInt", null ); // NOI18N
-            properties[PROPERTY_last] = new PropertyDescriptor ( "last", com.openitech.db.model.DbDataSource.class, "isLast", null ); // NOI18N
-            properties[PROPERTY_long] = new IndexedPropertyDescriptor ( "long", com.openitech.db.model.DbDataSource.class, null, null, "getLong", null ); // NOI18N
-            properties[PROPERTY_metaData] = new PropertyDescriptor ( "metaData", com.openitech.db.model.DbDataSource.class, "getMetaData", null ); // NOI18N
-            properties[PROPERTY_name] = new PropertyDescriptor ( "name", com.openitech.db.model.DbDataSource.class, "getName", null ); // NOI18N
-            properties[PROPERTY_object] = new IndexedPropertyDescriptor ( "object", com.openitech.db.model.DbDataSource.class, null, null, "getObject", null ); // NOI18N
-            properties[PROPERTY_parameters] = new PropertyDescriptor ( "parameters", com.openitech.db.model.DbDataSource.class, "getParameters", null ); // NOI18N
-            properties[PROPERTY_propertyChangeListeners] = new PropertyDescriptor ( "propertyChangeListeners", com.openitech.db.model.DbDataSource.class, "getPropertyChangeListeners", null ); // NOI18N
+            properties[PROPERTY_delimiterRight].setHidden ( true );
+            properties[PROPERTY_getValueColumns] = new PropertyDescriptor ( "getValueColumns", com.openitech.db.model.DbDataSource.class, "getGetValueColumns", "setGetValueColumns" ); // NOI18N
+            properties[PROPERTY_getValueColumns].setPreferred ( true );
             properties[PROPERTY_queuedDelay] = new PropertyDescriptor ( "queuedDelay", com.openitech.db.model.DbDataSource.class, "getQueuedDelay", "setQueuedDelay" ); // NOI18N
             properties[PROPERTY_readOnly] = new PropertyDescriptor ( "readOnly", com.openitech.db.model.DbDataSource.class, "isReadOnly", "setReadOnly" ); // NOI18N
-            properties[PROPERTY_ref] = new IndexedPropertyDescriptor ( "ref", com.openitech.db.model.DbDataSource.class, null, null, "getRef", null ); // NOI18N
-            properties[PROPERTY_resultSet] = new PropertyDescriptor ( "resultSet", com.openitech.db.model.DbDataSource.class, "getResultSet", null ); // NOI18N
-            properties[PROPERTY_row] = new PropertyDescriptor ( "row", com.openitech.db.model.DbDataSource.class, "getRow", null ); // NOI18N
-            properties[PROPERTY_rowCount] = new PropertyDescriptor ( "rowCount", com.openitech.db.model.DbDataSource.class, "getRowCount", null ); // NOI18N
             properties[PROPERTY_selectSql] = new PropertyDescriptor ( "selectSql", com.openitech.db.model.DbDataSource.class, "getSelectSql", "setSelectSql" ); // NOI18N
-            properties[PROPERTY_short] = new IndexedPropertyDescriptor ( "short", com.openitech.db.model.DbDataSource.class, null, null, "getShort", null ); // NOI18N
+            properties[PROPERTY_selectSql].setPreferred ( true );
             properties[PROPERTY_singleTableSelect] = new PropertyDescriptor ( "singleTableSelect", com.openitech.db.model.DbDataSource.class, "isSingleTableSelect", "setSingleTableSelect" ); // NOI18N
-            properties[PROPERTY_statement] = new PropertyDescriptor ( "statement", com.openitech.db.model.DbDataSource.class, "getStatement", null ); // NOI18N
-            properties[PROPERTY_storedUpdates] = new PropertyDescriptor ( "storedUpdates", com.openitech.db.model.DbDataSource.class, "getStoredUpdates", null ); // NOI18N
-            properties[PROPERTY_string] = new IndexedPropertyDescriptor ( "string", com.openitech.db.model.DbDataSource.class, null, null, "getString", null ); // NOI18N
-            properties[PROPERTY_time] = new IndexedPropertyDescriptor ( "time", com.openitech.db.model.DbDataSource.class, null, null, "getTime", null ); // NOI18N
-            properties[PROPERTY_timestamp] = new IndexedPropertyDescriptor ( "timestamp", com.openitech.db.model.DbDataSource.class, null, null, "getTimestamp", null ); // NOI18N
-            properties[PROPERTY_type] = new PropertyDescriptor ( "type", com.openitech.db.model.DbDataSource.class, "getType", null ); // NOI18N
-            properties[PROPERTY_unicodeStream] = new IndexedPropertyDescriptor ( "unicodeStream", com.openitech.db.model.DbDataSource.class, null, null, "getUnicodeStream", null ); // NOI18N
-            properties[PROPERTY_uniqueID] = new PropertyDescriptor ( "uniqueID", com.openitech.db.model.DbDataSource.class, "getUniqueID", "setUniqueID" ); // NOI18N
             properties[PROPERTY_updateRowFireOnly] = new PropertyDescriptor ( "updateRowFireOnly", com.openitech.db.model.DbDataSource.class, "isUpdateRowFireOnly", "setUpdateRowFireOnly" ); // NOI18N
             properties[PROPERTY_updateTableName] = new PropertyDescriptor ( "updateTableName", com.openitech.db.model.DbDataSource.class, "getUpdateTableName", "setUpdateTableName" ); // NOI18N
-            properties[PROPERTY_URL] = new IndexedPropertyDescriptor ( "URL", com.openitech.db.model.DbDataSource.class, null, null, "getURL", null ); // NOI18N
-            properties[PROPERTY_warnings] = new PropertyDescriptor ( "warnings", com.openitech.db.model.DbDataSource.class, "getWarnings", null ); // NOI18N
+            properties[PROPERTY_updateTableName].setPreferred ( true );
         }
         catch(IntrospectionException e) {
             e.printStackTrace();
