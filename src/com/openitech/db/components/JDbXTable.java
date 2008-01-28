@@ -21,22 +21,23 @@ import java.awt.EventQueue;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
+import org.jdesktop.swingx.JXTable;
 
 /**
  *
  * @author uros
  */
-public class JDbTable extends JTable implements ListSelectionListener, DbNavigatorDataSource {
+public class JDbXTable extends JXTable implements ListSelectionListener, DbNavigatorDataSource {
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = null;
   private boolean selectionChanged = false;
   private final UpdateViewRunnable updateViewRunnable = new UpdateViewRunnable();
   
   /** Creates a new instance of JDbTable */
-  public JDbTable() {
+  public JDbXTable() {
     super(new DbTableModel());
     setSelectionForeground(Color.black);
     setSelectionBackground(new Color(204,204,255));
@@ -77,7 +78,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   public void tableModel_activeRowChanged(ActiveRowChangeEvent event) {
     if (!selectionChanged) {
       DbTableModel dbTableModel = (DbTableModel) this.getModel();
-      int newPos = dbTableModel.getTableModelRow(event.getNewRowNumber());
+      int newPos = dbTableModel.getTableModelRow(convertRowIndexToView(event.getNewRowNumber()));
       if (newPos>=0 && newPos<getRowCount()) {
        try {
           if (getSelectedRow()!=newPos && newPos>=0 && newPos<dbTableModel.getRowCount())
@@ -95,7 +96,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     if (this.getModel() != null) {
       if (!e.getValueIsAdjusting()) {
         DbTableModel dbTableModel = (DbTableModel) this.getModel();
-        int newRowNumber = dbTableModel.getDataSourceRow(getSelectedRow());
+        int newRowNumber = dbTableModel.getDataSourceRow(convertRowIndexToModel(getSelectedRow()));
         try {
           selectionChanged = true;
           if ((newRowNumber>=1) &&

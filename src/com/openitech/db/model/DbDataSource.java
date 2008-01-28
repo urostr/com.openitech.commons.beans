@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.18 $
+ * $Revision: 1.19 $
  */
 
 package com.openitech.db.model;
@@ -3802,7 +3802,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     java.sql.PreparedStatement resultStatement = getConnection().prepareStatement(preparedSelectSql,
             ResultSet.TYPE_SCROLL_INSENSITIVE,
             ResultSet.CONCUR_READ_ONLY,
-            ResultSet.CLOSE_CURSORS_AT_COMMIT);
+            ResultSet.HOLD_CURSORS_OVER_COMMIT);
     resultStatement.setFetchSize(1008);
     
     return executeSql(resultStatement, parameters);

@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  * <p>Copyright: Copyright (c) 2003</p>
  * <p>Company: Prosoft-Consulting d.o.o.</p>
  * @author Uroš Trojar
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  */
 public class ReadInputStream {
   public static String getResourceAsString(Class clazz, String resourceName) {
