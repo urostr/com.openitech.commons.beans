@@ -54,6 +54,7 @@ public class JDbTextField extends JTextField implements DocumentListener {
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
+    this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2,2,2,2));
   }
   
   public void this_focusGained(FocusEvent e) {
@@ -157,5 +158,27 @@ public class JDbTextField extends JTextField implements DocumentListener {
    */
   public void changedUpdate(DocumentEvent e) {
     updateColumn();
+  }
+
+  /**
+   * Holds value of property searchField.
+   */
+  private boolean searchField;
+
+  /**
+   * Getter for property searchField.
+   * @return Value of property searchField.
+   */
+  public boolean isSearchField() {
+    return this.searchField;
+  }
+
+  /**
+   * Setter for property searchField.
+   * @param searchField New value of property searchField.
+   */
+  public void setSearchField(boolean searchField) {
+    this.searchField = searchField;
+    this.putClientProperty("Quaqua.TextField.style", searchField?"search":"normal");
   }
 }

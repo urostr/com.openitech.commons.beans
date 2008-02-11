@@ -3367,10 +3367,26 @@ public class DbDataSource implements DbNavigatorDataSource {
   
   public void setUpdateTableName(String updateTableName) {
     this.updateTableName = updateTableName;
-    
+    if ((getUniqueID()!=null)&&(getUniqueID().length>0)&&(getUpdateTableName()!=null)&&(getUpdateTableName().length()>0)) {
+      this.primaryKeys = this.getPrimaryKeys();
+    }
   }
   
-  
+  private List<PrimaryKey> getPrimaryKeys() {
+    List<PrimaryKey> result = new ArrayList<PrimaryKey>();
+    if (this.selectStatement!=null) {
+      try {
+        result = PrimaryKey.getPrimaryKeys(this.selectStatement);
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getPrimaryKeys from '"+selectSql+"'", ex);;
+        result = new ArrayList<PrimaryKey>();
+      }
+    }
+    if ((getUniqueID()!=null)&&(getUniqueID().length>0)&&(getUpdateTableName()!=null)&&(getUpdateTableName().length()>0)) {
+      result.add(new PrimaryKey(getUniqueID(), getUpdateTableName()));
+    }
+    return result;
+  }
   
   
   public String getUpdateTableName() {
@@ -3400,7 +3416,7 @@ public class DbDataSource implements DbNavigatorDataSource {
           int columnCount = this.metaData!=null?this.metaData.getColumnCount():0;
           for (int c=1; c<=columnCount; c++)
             this.columnMapping.put(this.metaData.getColumnName(c), c);
-          primaryKeys=PrimaryKey.getPrimaryKeys(this.selectStatement);
+          primaryKeys=this.getPrimaryKeys();
           
           setName();
           Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Successfully prepared the selectSql '"+sql+"'");
@@ -4219,7 +4235,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                 StringBuffer where = new StringBuffer();
                 
                 for (String c:key.getColumnNames())
-                  where.append(where.length()>0?" AND ":"").append(c).append(" = ? ");
+                  where.append(where.length()>0?" AND ":"").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
                 
                 String sql = "UPDATE "+delimiterLeft+key.table+delimiterRight+" SET "+set.toString()+" WHERE "+where.toString();
                 
@@ -4714,6 +4730,15 @@ public class DbDataSource implements DbNavigatorDataSource {
     boolean updateFailed = false;
     Connection connection;
     
+    public PrimaryKey(String[] uniqueID, String table) {
+      this.table = table;
+      this.connection = null;
+      for (String s:uniqueID) {
+        columnNames.add(s);
+      }
+      hashcode = table.hashCode();
+    }
+    
     public PrimaryKey(Connection connection, String table) throws SQLException {
       this.table = table;
       this.connection = connection;
@@ -4763,38 +4788,41 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
     
     public ResultSet getUpdateResultSet(ResultSet data) throws SQLException {
-      if (update==null) {
-        StringBuffer sql = new StringBuffer();
-        
-        for (String c:columnNames)
-          sql.append(sql.length()>0?" AND ":"").append(c).append("=? ");
-        
-        sql.insert(0,"SELECT * FROM "+table+" WHERE ");
-        sql.append(" FOR UPDATE");
-        
-        update =  connection.prepareStatement(sql.toString(),ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-        
-        this.columnMapping.clear();
-        ResultSetMetaData metaData = update.getMetaData();
-        int columnCount = metaData.getColumnCount();
-        for (int c=1; c<=columnCount; c++)
-          this.columnMapping.put(metaData.getColumnName(c).toUpperCase(), c);
-      }
-      
-      update.clearParameters();
-      int p=1;
-      for (String c:columnNames) {
-        update.setObject(p++, data.getObject(c));
-      }
       ResultSet result = null;
-      if (!updateFailed)
-        try {
-          result = update.executeQuery();
-          result.next();
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.INFO, "The table '"+table+"' can't be updated with through a resulSet");
-          updateFailed = true;
+      if (connection!=null) {
+        if (update==null) {
+          StringBuffer sql = new StringBuffer();
+
+          for (String c:columnNames)
+            sql.append(sql.length()>0?" AND ":"").append(c).append("=? ");
+
+          sql.insert(0,"SELECT * FROM "+table+" WHERE ");
+          sql.append(" FOR UPDATE");
+
+          update =  connection.prepareStatement(sql.toString(),ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+
+          this.columnMapping.clear();
+          ResultSetMetaData metaData = update.getMetaData();
+          int columnCount = metaData.getColumnCount();
+          for (int c=1; c<=columnCount; c++)
+            this.columnMapping.put(metaData.getColumnName(c).toUpperCase(), c);
         }
+
+        update.clearParameters();
+        int p=1;
+        for (String c:columnNames) {
+          update.setObject(p++, data.getObject(c));
+        }
+
+        if (!updateFailed)
+          try {
+            result = update.executeQuery();
+            result.next();
+          } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.INFO, "The table '"+table+"' can't be updated with through a resulSet");
+            updateFailed = true;
+          }
+      }
       
       return result;
     }
@@ -5641,6 +5669,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    */
   public void setUniqueID(String[] uniqueID) {
     this.uniqueID = uniqueID;
+    if ((getUniqueID()!=null)&&(getUniqueID().length>0)&&(getUpdateTableName()!=null)&&(getUpdateTableName().length()>0)) {
+      this.primaryKeys = this.getPrimaryKeys();
+    }
   }
 
   /**

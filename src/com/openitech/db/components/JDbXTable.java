@@ -42,6 +42,7 @@ public class JDbXTable extends JXTable implements ListSelectionListener, DbNavig
     setSelectionForeground(Color.black);
     setSelectionBackground(new Color(204,204,255));
     setBackground(Color.white);
+    putClientProperty("Quaqua.Table.style","striped");
     try {
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, null, "tableModel_activeRowChanged");
     } catch (NoSuchMethodException ex) {

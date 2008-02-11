@@ -32,13 +32,14 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
     private static final int PROPERTY_dbFieldObserver = 5;
     private static final int PROPERTY_document = 6;
     private static final int PROPERTY_foreground = 7;
-    private static final int PROPERTY_toolTipColumnName = 8;
-    private static final int PROPERTY_validator = 9;
+    private static final int PROPERTY_searchField = 8;
+    private static final int PROPERTY_toolTipColumnName = 9;
+    private static final int PROPERTY_validator = 10;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[10];
+        PropertyDescriptor[] properties = new PropertyDescriptor[11];
     
         try {
             properties[PROPERTY_background] = new PropertyDescriptor ( "background", com.openitech.db.components.JDbTextField.class, "getBackground", "setBackground" ); // NOI18N
@@ -52,6 +53,7 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_dbFieldObserver].setHidden ( true );
             properties[PROPERTY_document] = new PropertyDescriptor ( "document", com.openitech.db.components.JDbTextField.class, "getDocument", "setDocument" ); // NOI18N
             properties[PROPERTY_foreground] = new PropertyDescriptor ( "foreground", com.openitech.db.components.JDbTextField.class, "getForeground", "setForeground" ); // NOI18N
+            properties[PROPERTY_searchField] = new PropertyDescriptor ( "searchField", com.openitech.db.components.JDbTextField.class, "isSearchField", "setSearchField" ); // NOI18N
             properties[PROPERTY_toolTipColumnName] = new PropertyDescriptor ( "toolTipColumnName", com.openitech.db.components.JDbTextField.class, "getToolTipColumnName", "setToolTipColumnName" ); // NOI18N
             properties[PROPERTY_validator] = new PropertyDescriptor ( "validator", com.openitech.db.components.JDbTextField.class, "getValidator", "setValidator" ); // NOI18N
         }

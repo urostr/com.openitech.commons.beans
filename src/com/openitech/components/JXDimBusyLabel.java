@@ -62,11 +62,11 @@ public class JXDimBusyLabel extends JXLabel {
    */
   public void setBusy(boolean busy) {
     boolean old = isBusy();
-    if (!old && busy) {
-      startAnimation();
-      firePropertyChange("busy", old, isBusy());
-    } else if (old && !busy) {
-      stopAnimation();
+    if (old!=busy) {
+      if (busy)
+        startAnimation();
+      else
+        stopAnimation();
       firePropertyChange("busy", old, isBusy());
     }
   }

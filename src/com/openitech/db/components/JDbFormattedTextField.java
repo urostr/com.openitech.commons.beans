@@ -33,6 +33,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.DateFormatter;
@@ -78,6 +79,8 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
+    this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2,2,2,2));
+    this.setFont((java.awt.Font)UIManager.getDefaults().get("TextField.font"));
     //this.addPropertyChangeListener("value", propertyChangeWeakListener);
   }
   
@@ -412,5 +415,27 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public void setColumns(int columns) {
     super.setColumns(columns);
     setMinimumSize(new Dimension(Math.min(MINIMUM_SIZE.width*columns,MINIMUM_SIZE.width),MINIMUM_SIZE.height));
+  }
+
+  /**
+   * Holds value of property searchField.
+   */
+  private boolean searchField;
+
+  /**
+   * Getter for property searchField.
+   * @return Value of property searchField.
+   */
+  public boolean isSearchField() {
+    return this.searchField;
+  }
+
+  /**
+   * Setter for property searchField.
+   * @param searchField New value of property searchField.
+   */
+  public void setSearchField(boolean searchField) {
+    this.searchField = searchField;
+    this.putClientProperty("Quaqua.TextField.style", searchField?"search":"normal");
   }
 }
