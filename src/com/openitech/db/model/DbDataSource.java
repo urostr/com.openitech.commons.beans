@@ -3616,7 +3616,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     return loadData(true, oldRow);
   }
   
-  private String substParameters(String sql, List<?> parameters) {
+  public static String substParameters(String sql, List<?> parameters) {
     if (sql!=null&&sql.length()>0) {
       Object value;
       Integer type;
@@ -3636,7 +3636,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     return sql;
   }
   
-  private int setParameters(PreparedStatement statement, List<?> parameters, int pos, boolean subset) throws SQLException {
+  private static int setParameters(PreparedStatement statement, List<?> parameters, int pos, boolean subset) throws SQLException {
     if (!subset)
       statement.clearParameters();
     
@@ -3673,21 +3673,25 @@ public class DbDataSource implements DbNavigatorDataSource {
     try {
       semaphore.acquireUninterruptibly();
       
-      setParameters((PreparedStatement) statement, parameters, 1, false);
-      
-      /*if (((PreparedStatement) statement).execute()) {
-        rs = statement.getResultSet();
-      }//*/
-      rs = ((PreparedStatement) statement).executeQuery();
-      
-      /*if (rs!=null)
-        rs.setFetchSize(27);//*/
+      rs = executeQuery(statement, parameters);
     } finally {
       semaphore.release();
     }
     
     
     return rs;
+  }
+  
+  public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
+    setParameters(statement, parameters, 1, false);
+      
+    return statement.executeQuery();
+  }
+  
+  public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
+    setParameters(statement, parameters, 1, false);
+      
+    return statement.executeUpdate();
   }
   
   public boolean setParameters(Map<String,Object> parametersMap) {

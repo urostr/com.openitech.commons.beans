@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
 
 /**
  *
@@ -53,7 +54,7 @@ public class JDbTextArea extends JTextArea implements DocumentListener {
     dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
-    this.getDocument().addDocumentListener(documentWeakListener);
+    //this.getDocument().addDocumentListener(documentWeakListener);
   }
   
   public void this_focusGained(FocusEvent e) {
@@ -157,5 +158,26 @@ public class JDbTextArea extends JTextArea implements DocumentListener {
    */
   public void changedUpdate(DocumentEvent e) {
     updateColumn();
+  }
+
+  /**
+   * Associates the editor with a text document.
+   * The currently registered factory is used to build a view for
+   * the document, which gets displayed by the editor after revalidation.
+   * A PropertyChange event ("document") is propagated to each listener.
+   * 
+   * 
+   * @param doc  the document to display/edit
+   * @see #getDocument
+   * @beaninfo description: the text document model
+   *        bound: true
+   *       expert: true
+   */
+  public void setDocument(Document doc) {
+    if (getDocument()!=null)
+      getDocument().removeDocumentListener(documentWeakListener);
+    super.setDocument(doc);
+    if (getDocument()!=null)
+      getDocument().addDocumentListener(documentWeakListener);
   }
 }

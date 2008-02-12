@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
 /**
@@ -53,7 +54,7 @@ public class JDbTextField extends JTextField implements DocumentListener {
     dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
-    this.getDocument().addDocumentListener(documentWeakListener);
+    //this.getDocument().addDocumentListener(documentWeakListener);
     this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2,2,2,2));
   }
   
@@ -180,5 +181,26 @@ public class JDbTextField extends JTextField implements DocumentListener {
   public void setSearchField(boolean searchField) {
     this.searchField = searchField;
     this.putClientProperty("Quaqua.TextField.style", searchField?"search":"normal");
+  }
+
+  /**
+   * Associates the editor with a text document.
+   * The currently registered factory is used to build a view for
+   * the document, which gets displayed by the editor after revalidation.
+   * A PropertyChange event ("document") is propagated to each listener.
+   * 
+   * 
+   * @param doc  the document to display/edit
+   * @see #getDocument
+   * @beaninfo description: the text document model
+   *        bound: true
+   *       expert: true
+   */
+  public void setDocument(Document doc) {
+    if (getDocument()!=null)
+      getDocument().removeDocumentListener(documentWeakListener);
+    super.setDocument(doc);
+    if (getDocument()!=null)
+      getDocument().addDocumentListener(documentWeakListener);
   }
 }
