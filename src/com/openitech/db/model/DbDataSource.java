@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.19 $
+ * $Revision: 1.20 $
  */
 
 package com.openitech.db.model;
@@ -3399,6 +3399,10 @@ public class DbDataSource implements DbNavigatorDataSource {
       semaphore.acquire();
       this.selectSql = selectSql;
       String sql = substParameters(selectSql, parameters);
+      Logger.getLogger(Settings.LOGGER).finest(
+              "\n################# SELECT SQL #################\n"+ 
+              sql+
+              "\n################# ########## #################");
       if (sql!=null && sql.length()>0 && getConnection()!=null) {
         if ( (this.selectStatement == null) || (!sql.equals(preparedSelectSql))) {
           if (this.selectStatement!=null)
@@ -3419,7 +3423,7 @@ public class DbDataSource implements DbNavigatorDataSource {
           primaryKeys=this.getPrimaryKeys();
           
           setName();
-          Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Successfully prepared the selectSql '"+sql+"'");
+          Logger.getLogger(Settings.LOGGER).info("Successfully prepared the selectSql.");
         }
       } else {
         this.selectStatement = null;
@@ -3445,6 +3449,10 @@ public class DbDataSource implements DbNavigatorDataSource {
       semaphore.acquire();
       this.countSql = countSql;
       String sql = substParameters(countSql, parameters);
+      Logger.getLogger(Settings.LOGGER).finest(
+              "\n################# COUNT SQL #################\n"+ 
+              sql+
+              "\n################# ######### #################");
       if (sql!=null && sql.length()>0 && getConnection()!=null) {
         if ( (this.countStatement == null) || (!sql.equals(preparedCountSql))) {
           if (this.countStatement!=null)
@@ -3508,7 +3516,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                 selectResultSet = executeSql(selectStatement, parameters);
                 selectResultSet.first();
               } catch (SQLException ex) {
-                Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result for '"+selectSql+"'", ex);
+                Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:"+preparedSelectSql, ex);
                 selectResultSet = null;
               }
             }
@@ -3523,7 +3531,7 @@ public class DbDataSource implements DbNavigatorDataSource {
           }
         }
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count from '"+countSql+"'", ex);
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count from \n:"+preparedCountSql, ex);
         newCount = this.count;
       } finally {
         available.unlock();
@@ -3569,7 +3577,7 @@ public class DbDataSource implements DbNavigatorDataSource {
           selectResultSet = executeSql(selectStatement, parameters);
           selectResultSet.first();
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result for '"+selectSql+"'", ex);
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:"+preparedSelectSql, ex);
           selectResultSet = null;
         } finally {
           inserting = false;

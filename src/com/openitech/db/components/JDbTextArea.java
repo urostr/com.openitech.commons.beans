@@ -54,7 +54,7 @@ public class JDbTextArea extends JTextArea implements DocumentListener {
     dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
-    //this.getDocument().addDocumentListener(documentWeakListener);
+    this.getDocument().addDocumentListener(documentWeakListener);
   }
   
   public void this_focusGained(FocusEvent e) {
@@ -174,10 +174,10 @@ public class JDbTextArea extends JTextArea implements DocumentListener {
    *       expert: true
    */
   public void setDocument(Document doc) {
-    if (getDocument()!=null)
+    if (getDocument()!=null&&documentWeakListener!=null)
       getDocument().removeDocumentListener(documentWeakListener);
     super.setDocument(doc);
-    if (getDocument()!=null)
+    if (getDocument()!=null&&documentWeakListener!=null)
       getDocument().addDocumentListener(documentWeakListener);
   }
 }

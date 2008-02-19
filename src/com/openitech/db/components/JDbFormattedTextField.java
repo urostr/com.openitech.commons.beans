@@ -79,7 +79,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
-    //this.getDocument().addDocumentListener(documentWeakListener);
+    this.getDocument().addDocumentListener(documentWeakListener);
     this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2,2,2,2));
     this.setFont((java.awt.Font)UIManager.getDefaults().get("TextField.font"));
     //this.addPropertyChangeListener("value", propertyChangeWeakListener);
@@ -454,10 +454,10 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    *       expert: true
    */
   public void setDocument(Document doc) {
-    if (getDocument()!=null)
+    if (getDocument()!=null&&documentWeakListener!=null)
       getDocument().removeDocumentListener(documentWeakListener);
     super.setDocument(doc);
-    if (getDocument()!=null)
+    if (getDocument()!=null&&documentWeakListener!=null)
       getDocument().addDocumentListener(documentWeakListener);
   }
 }

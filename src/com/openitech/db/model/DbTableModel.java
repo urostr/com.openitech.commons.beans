@@ -59,6 +59,9 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   private Map<String,DbTableModel.ColumnDescriptor.ValueMethod.Method> functionsMap = new HashMap<String,DbTableModel.ColumnDescriptor.ValueMethod.Method>();
   private Map<String,Class<? extends TableCellRenderer>> renderersMap = new HashMap<String,Class<? extends TableCellRenderer>>();
   private Map<String,Class<? extends TableCellEditor>> editorsMap = new HashMap<String,Class<? extends TableCellEditor>>();
+
+  private Map<String,TableCellRenderer> rendererInstances = new HashMap<String,TableCellRenderer>();
+  private Map<String,TableCellEditor> editorInstances = new HashMap<String,TableCellEditor>();
   
   protected ColumnDescriptor[] columnDescriptors = new ColumnDescriptor[] {};
   
@@ -194,7 +197,10 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     ColumnFactory factory = ColumnFactory.getInstance();
     
     for (int column=0; column<columns.length; column++) {
-      model.addColumn(factory.createAndConfigureTableColumn(this, column));
+      javax.swing.table.TableColumn c = factory.createAndConfigureTableColumn(this, column);
+      c.setCellRenderer(columnDescriptors[column].getRenderer());
+      c.setCellEditor(columnDescriptors[column].getCellEditor());
+      model.addColumn(c);
     }
     
     return model;
@@ -348,7 +354,33 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   }
   
   public static class ColumnDescriptor {
-    private static final Class<? extends TableCellRenderer> defaultTableCellRendererClass = DefaultTableCellRenderer.class;
+    private static class TooltipTableCellRenderer extends DefaultTableCellRenderer {
+      /**
+       * Defines the single line of text this component will display.  If
+       * the value of text is null or empty string, nothing is displayed.
+       * <p>
+       * The default value of this property is null.
+       * <p>
+       * This is a JavaBeans bound property.  
+       * 
+       * 
+       * @see #setVerticalTextPosition
+       * @see #setHorizontalTextPosition
+       * @see #setIcon
+       * @beaninfo preferred: true
+       *        bound: true
+       *    attribute: visualUpdate true
+       *  description: Defines the single line of text this component will display.
+       */
+      public void setText(String text) {
+        super.setText(text);
+        if (text!=null && text.length()>12)
+          super.setToolTipText(text);
+      }
+      
+    }
+    private static final TableCellRenderer defaultTableCellRenderer = new TooltipTableCellRenderer();
+    private static final Class<? extends TableCellRenderer> defaultTableCellRendererClass = defaultTableCellRenderer.getClass();
     
     private final List<String> columnNames = new ArrayList<String>();
     private final List<String> separators = new ArrayList<String>();
@@ -397,12 +429,53 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       return rendererKey;
     }
     
+    public TableCellRenderer getRenderer() {
+      TableCellRenderer renderer = null;
+      String rendererKey = getRendererKey();
+      if (rendererKey==null) {
+        renderer = defaultTableCellRenderer;
+      } else {
+        Map<String,Class<? extends TableCellRenderer>> renderersMap = owner.renderersMap;
+        Map<String,TableCellRenderer> rendererInstances = owner.rendererInstances;
+        
+        if (rendererInstances.containsKey(rendererKey))
+          renderer = rendererInstances.get(rendererInstances);
+        else if (renderersMap.containsKey(rendererKey)) {
+          try {
+            renderer = renderersMap.get(rendererKey).newInstance();
+          } catch (Exception err) {
+            renderer = null;
+          }
+        }
+      }
+      return renderer;
+    }
+    
     public void setEditorKey(String editorKey) {
       this.editorKey = editorKey;
     }
     
     public String getEditorKey() {
       return editorKey;
+    }
+    
+    public TableCellEditor getCellEditor() {
+      TableCellEditor renderer = null;
+      String editorKey = getEditorKey();
+      
+      Map<String,Class<? extends TableCellEditor>> editorsMap = owner.editorsMap;
+      Map<String,TableCellEditor> editorInstances = owner.editorInstances;
+
+      if (editorInstances.containsKey(editorKey))
+        renderer = editorInstances.get(editorInstances);
+      else if (editorsMap.containsKey(editorKey)) {
+        try {
+          renderer = editorsMap.get(editorKey).newInstance();
+        } catch (Exception err) {
+          renderer = null;
+        }
+      }
+      return renderer;
     }
     
     public void setEditable(boolean editable) {
@@ -412,7 +485,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     public boolean isEditable() {
       return editable;
     }
-    
+   
     /**
      * Returns the value for the cell at <code>columnIndex</code> and
      * <code>rowIndex</code>.
