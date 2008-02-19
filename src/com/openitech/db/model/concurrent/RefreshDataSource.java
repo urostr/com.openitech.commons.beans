@@ -82,7 +82,7 @@ public final class RefreshDataSource extends DataSourceEvent {
         busy.setText("Pripravljen...");
       }
     } else
-        Logger.getLogger(Settings.LOGGER).info("Skipped loading ["+event.dataSource.getName().substring(1,27)+"...]");
+        Logger.getLogger(Settings.LOGGER).info("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
   }
   
   public static void timestamp(DbDataSource dataSource) {
