@@ -76,7 +76,11 @@ public final class RefreshDataSource extends DataSourceEvent {
         else
           busy.setText("Osvežujem podatke ...");
       }
-      event.dataSource.reload();
+      try {
+        event.dataSource.reload(event.dataSource.getRow());
+      } catch (SQLException ex) {
+        event.dataSource.reload();
+      }
       if (busy!=null) {
         busy.setBusy(false);
         busy.setText("Pripravljen...");

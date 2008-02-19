@@ -198,7 +198,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     
     for (int column=0; column<columns.length; column++) {
       javax.swing.table.TableColumn c = factory.createAndConfigureTableColumn(this, column);
-      c.setCellRenderer(columnDescriptors[column].getRenderer());
+      c.setCellRenderer(columnDescriptors[column].getCellRenderer());
       c.setCellEditor(columnDescriptors[column].getCellEditor());
       model.addColumn(c);
     }
@@ -429,7 +429,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       return rendererKey;
     }
     
-    public TableCellRenderer getRenderer() {
+    public TableCellRenderer getCellRenderer() {
       TableCellRenderer renderer = null;
       String rendererKey = getRendererKey();
       if (rendererKey==null) {
@@ -495,7 +495,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
      * @return the value Object at the specified cell
      */
     public Object getValueAt(int rowIndex, int columnIndex) {
-      if (owner.dataSource!=null) {
+      if (owner.dataSource!=null&&rowIndex<owner.dataSource.getRowCount()) {
         Map<String,DbTableModel.ColumnDescriptor.ValueMethod.Method> functionsMap = owner.functionsMap;
         
         Map<String,Class<? extends TableCellRenderer>> renderersMap = owner.renderersMap;

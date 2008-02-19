@@ -29,6 +29,14 @@ import org.jdesktop.swingx.painter.PainterIcon;
 public class JXDimBusyLabel extends JXLabel {
   private SimpleBusyPainter busyPainter;
   private Timer busy;
+  private final ActionListener l = new ActionListener() {
+      int frame = 8;
+      public void actionPerformed(ActionEvent e) {
+        frame = (frame+1)%8;
+        busyPainter.setFrame(frame);
+        repaint();
+      }
+    };
   
   /** Creates a new instance of JXDimBusyLabel */
   public JXDimBusyLabel() {
@@ -73,26 +81,22 @@ public class JXDimBusyLabel extends JXLabel {
     }
   }
   
-  private void startAnimation() {
+  private synchronized void startAnimation() {
     if(busy != null) {
       stopAnimation();
     }
     
-    busy = new Timer(100, new ActionListener() {
-      int frame = 8;
-      public void actionPerformed(ActionEvent e) {
-        frame = (frame+1)%8;
-        busyPainter.setFrame(frame);
-        repaint();
-      }
-    });
+    busy = new Timer(100, l);
     busy.start();
   }
   
-  private void stopAnimation() {
-    busy.stop();
-    busyPainter.setFrame(-1);
-    repaint();
+  private synchronized void stopAnimation() {
+    if (busy!=null) {
+      busy.stop();
+      busy.removeActionListener(l);
+      busyPainter.setFrame(-1);
+      repaint();
+    }
     busy = null;
   }
   

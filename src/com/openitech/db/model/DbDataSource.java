@@ -133,6 +133,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   
   private final Runnable events = new RunnableEvents(this);
   private long queuedDelay = 108;
+  private int fetchFize = 54;
   
   private Connection connection = null;
 
@@ -1709,10 +1710,10 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @since 1.2
    */
   public void setFetchSize(int rows) throws SQLException {
+    this.fetchFize = rows;
     if (isDataLoaded()) {
       selectResultSet.setFetchSize(rows);
-    } else
-      throw new SQLException("Ni pripravljenih podatkov.");
+    }
   }
   
   /**
@@ -2405,10 +2406,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @since 1.2
    */
   public int getFetchSize() throws SQLException {
-    if (loadData()) {
-      return getOpenSelectResultSet().getFetchSize();
-    } else
-      throw new SQLException("Ni pripravljenih podatkov.");
+    return this.fetchFize;
   }
   
   /**
@@ -3514,6 +3512,7 @@ public class DbDataSource implements DbNavigatorDataSource {
               try {
                 Logger.getLogger(Settings.LOGGER).fine("Executing '"+selectSql+"'");
                 selectResultSet = executeSql(selectStatement, parameters);
+                selectResultSet.setFetchSize(getFetchSize());
                 selectResultSet.first();
               } catch (SQLException ex) {
                 Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:"+preparedSelectSql, ex);
@@ -3575,6 +3574,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         try {
           Logger.getLogger(Settings.LOGGER).fine("Executing '"+preparedSelectSql+"'");
           selectResultSet = executeSql(selectStatement, parameters);
+          selectResultSet.setFetchSize(getFetchSize());
           selectResultSet.first();
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:"+preparedSelectSql, ex);
@@ -3853,6 +3853,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. ["+ex.getMessage()+"]");
           selectResultSet = executeSql(selectStatement, parameters);
+          selectResultSet.setFetchSize(getFetchSize());
           selectResultSet.absolute(oldRow);
         } finally {
           available.unlock();
@@ -4294,15 +4295,22 @@ public class DbDataSource implements DbNavigatorDataSource {
         if (selectResultSet!=null)
           selectResultSet.close();
         selectResultSet = executeSql(selectStatement, parameters);
+        selectResultSet.setFetchSize(getFetchSize());
         if (selectedrow>0)
-          selectResultSet.absolute(selectedrow);
+          try {
+            selectResultSet.absolute(selectedrow);
+          } catch (SQLException ex) {
+            selectResultSet.first();
+          }
         else
           selectResultSet.first();
         
-        if (!compareValues(selectResultSet, oldValues)) {
-          selectResultSet.first();
-          while (!compareValues(selectResultSet, oldValues)  && !selectResultSet.isLast()) {
-            selectResultSet.next();
+        if (isSeekUpdatedRow()) {
+          if (!compareValues(selectResultSet, oldValues)) {
+            selectResultSet.first();
+            while (!compareValues(selectResultSet, oldValues)  && !selectResultSet.isLast()) {
+              selectResultSet.next();
+            }
           }
         }
         
@@ -5515,7 +5523,8 @@ public class DbDataSource implements DbNavigatorDataSource {
       int pos=0;
       if (owner.getRowCount()>0) {
         try {
-          pos = owner.selectResultSet.getRow();
+          if (owner.selectResultSet!=null)
+            pos = owner.selectResultSet.getRow();
         } catch (SQLException err) {
           pos = 0;
         }
@@ -5807,4 +5816,27 @@ public class DbDataSource implements DbNavigatorDataSource {
       getValueColumns.add(column);
     }
   }  
+
+  /**
+   * Holds value of property seekUpdatedRow.
+   */
+  private boolean seekUpdatedRow = true;
+
+  /**
+   * Getter for property seekUpdatedRow.
+   * 
+   * @return Value of property seekUpdatedRow.
+   */
+  public boolean isSeekUpdatedRow() {
+    return this.seekUpdatedRow;
+  }
+
+  /**
+   * Setter for property seekUpdatedRow.
+   * 
+   * @param seekUpdatedRow New value of property seekUpdatedRow.
+   */
+  public void setSeekUpdatedRow(boolean seekUpdatedRow) {
+    this.seekUpdatedRow = seekUpdatedRow;
+  }
 }
