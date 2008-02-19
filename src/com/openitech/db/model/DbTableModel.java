@@ -51,6 +51,9 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   private static final Pattern separatorPattern = Pattern.compile("\\$S\\{(.*)\\}");
   private static final Pattern rendererPattern = Pattern.compile("\\$R\\{(.*)\\}");
   private static final Pattern editorPattern = Pattern.compile("\\$E\\{(.*)\\}");
+  private static final Pattern widthPattern = Pattern.compile("\\$W\\{(.*)\\}");
+  private static final Pattern maxWidthPattern = Pattern.compile("\\$X\\{(.*)\\}");
+  private static final Pattern minWidthPattern = Pattern.compile("\\$N\\{(.*)\\}");
   private static final Pattern anyPattern = Pattern.compile("(\\$.\\{([^\\}]*)\\})");
   
   private String[][] columns = new String[][] {};
@@ -172,6 +175,21 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           if (matcher.lookingAt()) {
             descriptor.getSeparators().add(matcher.group(1));
           }
+
+          matcher = widthPattern.matcher(parameter);
+          if (matcher.lookingAt()) {
+            descriptor.setWidth(Integer.parseInt(matcher.group(1)));
+          }
+
+          matcher = maxWidthPattern.matcher(parameter);
+          if (matcher.lookingAt()) {
+            descriptor.setMaxWidth(Integer.parseInt(matcher.group(1)));
+          }
+
+          matcher = minWidthPattern.matcher(parameter);
+          if (matcher.lookingAt()) {
+            descriptor.setMinWidth(Integer.parseInt(matcher.group(1)));
+          }
         }
         
         if (column.length()>0) {
@@ -200,6 +218,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       javax.swing.table.TableColumn c = factory.createAndConfigureTableColumn(this, column);
       c.setCellRenderer(columnDescriptors[column].getCellRenderer());
       c.setCellEditor(columnDescriptors[column].getCellEditor());
+      if (columnDescriptors[column].getWidth()>0)
+        c.setWidth(columnDescriptors[column].getWidth());
+      if (columnDescriptors[column].getMaxWidth()>0)
+        c.setMaxWidth(columnDescriptors[column].getMaxWidth());
+      if (columnDescriptors[column].getMinWidth()>0)
+        c.setMinWidth(columnDescriptors[column].getMinWidth());
       model.addColumn(c);
     }
     
@@ -375,7 +399,9 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       public void setText(String text) {
         super.setText(text);
         if (text!=null && text.length()>12)
-          super.setToolTipText(text);
+          setToolTipText(text);
+        else 
+          setToolTipText(null);
       }
       
     }
@@ -661,6 +687,69 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           }
         }
       }
+    }
+
+    /**
+     * Holds value of property maxWidth.
+     */
+    private int maxWidth;
+
+    /**
+     * Getter for property maxWidth.
+     * @return Value of property maxWidth.
+     */
+    public int getMaxWidth() {
+      return this.maxWidth;
+    }
+
+    /**
+     * Setter for property maxWidth.
+     * @param maxWidth New value of property maxWidth.
+     */
+    public void setMaxWidth(int maxWidth) {
+      this.maxWidth = maxWidth;
+    }
+
+    /**
+     * Holds value of property minWidth.
+     */
+    private int minWidth;
+
+    /**
+     * Getter for property minWidth.
+     * @return Value of property minWidth.
+     */
+    public int getMinWidth() {
+      return this.minWidth;
+    }
+
+    /**
+     * Setter for property minWidth.
+     * @param minWidth New value of property minWidth.
+     */
+    public void setMinWidth(int minWidth) {
+      this.minWidth = minWidth;
+    }
+
+    /**
+     * Holds value of property width.
+     */
+    private int width;
+
+    /**
+     * Getter for property width.
+     * @return Value of property width.
+     */
+    public int getWidth() {
+      return this.width;
+    }
+
+    /**
+     * Setter for property width.
+     * @param width New value of property width.
+     */
+    public void setWidth(int width) {
+      this.width = width;
     }
   }
 }
