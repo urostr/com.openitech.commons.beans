@@ -58,6 +58,14 @@ public final class RefreshDataSource extends DataSourceEvent {
     } catch (InterruptedException ex) {
       Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
     }
+    final Event suspend = new Event(event.dataSource, Event.Type.SUSPEND);
+    while (timestamps.containsKey(suspend)&&timestamps.get(event).longValue()<=timestamp.longValue()) {
+      try {
+        Thread.sleep(108);
+      } catch (InterruptedException ex) {
+        Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
+      }
+    }
     if (timestamps.get(event).longValue()<=timestamp.longValue()) {
       if (filterChange)
         try {
@@ -86,7 +94,7 @@ public final class RefreshDataSource extends DataSourceEvent {
         busy.setText("Pripravljen...");
       }
     } else
-        Logger.getLogger(Settings.LOGGER).info("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
+        Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
   }
   
   public static void timestamp(DbDataSource dataSource) {

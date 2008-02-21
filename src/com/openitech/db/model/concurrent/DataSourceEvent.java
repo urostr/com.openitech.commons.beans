@@ -43,6 +43,14 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
     pool.submit(event);
   }
   
+  public static void suspend(DbDataSource dataSource) {
+    timestamp(new Event(dataSource, Event.Type.SUSPEND));
+  }
+  
+  public static void resume(DbDataSource dataSource) {
+    timestamps.remove(new Event(dataSource, Event.Type.SUSPEND));
+  }
+  
   protected static void timestamp(Event event) {
     timestamps.put(event, new Long((new Date()).getTime()));
   }
@@ -55,7 +63,8 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
     public enum Type {
       ACTIVE_ROW_CHANGE_LISTENER,
       LIST_DATA_LISTENER,
-      REFRESH;
+      REFRESH,
+      SUSPEND;
     }
     
     protected DbDataSource dataSource;

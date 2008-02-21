@@ -9,12 +9,17 @@
 
 package com.openitech.components;
 
+import com.openitech.Settings;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.RoundRectangle2D;
+import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Timer;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.color.ColorUtil;
@@ -68,20 +73,32 @@ public class JXDimBusyLabel extends JXLabel {
    * @param busy whether this <code>JXBusyLabel</code> instance should
    *        consider itself busy
    */
-  public void setBusy(boolean busy) {
-    boolean old = isBusy();
+  public void setBusy(final boolean busy) {
+    if (EventQueue.isDispatchThread()) {
+      boolean old = isBusy();
     
-    if (busy)
-      startAnimation();
-    else
-      stopAnimation();
-    
-    if (old!=busy) {
-      firePropertyChange("busy", old, isBusy());
+      if (busy)
+        startAnimation();
+      else
+        stopAnimation();
+
+      if (old!=busy) {
+        firePropertyChange("busy", old, isBusy());
+      }
+    } else {
+      try {
+        EventQueue.invokeAndWait(new Runnable() {
+          public void run() {
+            setBusy(busy);
+          }
+        });
+      } catch (Exception ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING,"couldn't set the busy label.", ex);
+      }
     }
   }
   
-  private synchronized void startAnimation() {
+  private void startAnimation() {
     if(busy != null) {
       stopAnimation();
     }
@@ -90,7 +107,7 @@ public class JXDimBusyLabel extends JXLabel {
     busy.start();
   }
   
-  private synchronized void stopAnimation() {
+  private void stopAnimation() {
     if (busy!=null) {
       busy.stop();
       busy.removeActionListener(l);
