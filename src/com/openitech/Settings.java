@@ -14,5 +14,5 @@ package com.openitech;
  * @author uros
  */
 public interface Settings {
-  public static final String LOGGER = "sankukai.reports";
+  public static final String LOGGER = "com.openitech";
 }

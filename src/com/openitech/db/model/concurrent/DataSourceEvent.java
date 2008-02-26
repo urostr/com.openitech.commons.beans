@@ -26,9 +26,11 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   
   protected final Long timestamp = new Long((new Date()).getTime());
   protected Event event;
+  protected Event suspend;
   
   protected DataSourceEvent(DataSourceEvent object) {
     this.event = object.event;
+    this.suspend = object.suspend;
   }
 
   /**
@@ -36,6 +38,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
    */
   public DataSourceEvent(Event event) {
     this.event = event;
+    this.suspend = new Event(event.dataSource, Event.Type.SUSPEND);
   }
   
   public static void submit(DataSourceEvent event) {
@@ -49,6 +52,10 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   
   public static void resume(DbDataSource dataSource) {
     timestamps.remove(new Event(dataSource, Event.Type.SUSPEND));
+  }
+  
+  protected boolean isSuspended() {
+    return timestamps.containsKey(suspend);
   }
   
   protected static void timestamp(Event event) {

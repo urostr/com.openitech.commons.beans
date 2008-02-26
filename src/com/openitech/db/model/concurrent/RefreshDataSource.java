@@ -30,6 +30,7 @@ public final class RefreshDataSource extends DataSourceEvent {
   
   public RefreshDataSource(DbDataSource dataSource) {
     super(new Event(dataSource, Event.Type.REFRESH));
+    this.suspend = new Event(dataSource, Event.Type.SUSPEND);
   }
   
   public RefreshDataSource(DbDataSource dataSource, boolean filterChange) {
@@ -53,48 +54,51 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
   
   public void run() {
-    try {
-      Thread.sleep(event.dataSource.getQueuedDelay());
-    } catch (InterruptedException ex) {
-      Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
-    }
-    final Event suspend = new Event(event.dataSource, Event.Type.SUSPEND);
-    while (timestamps.containsKey(suspend)&&timestamps.get(event).longValue()<=timestamp.longValue()) {
+    if (isSuspended()) {
       try {
-        Thread.sleep(108);
+        Thread.sleep(27);
       } catch (InterruptedException ex) {
         Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
       }
     }
-    if (timestamps.get(event).longValue()<=timestamp.longValue()) {
-      if (filterChange)
-        try {
-          event.dataSource.filterChanged();
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting ["+event.dataSource.getName()+"]", ex);
-        }
-      if (this.defaults!=null)
-        event.dataSource.setDefaultValues(defaults);
-      if (this.parameters!=null)
-        event.dataSource.setParameters(parameters,false);
-      if (busy!=null) {
-        busy.setBusy(true);
-        if (event.dataSource.getBusyLabel()!=null)
-          busy.setText(event.dataSource.getBusyLabel());
-        else
-          busy.setText("Osvežujem podatke ...");
-      }
+    if (isSuspended()) { //re-queue
+      DataSourceEvent.submit(this);
+    } else {
       try {
-        event.dataSource.reload(event.dataSource.getRow());
-      } catch (SQLException ex) {
-        event.dataSource.reload();
+        Thread.sleep(event.dataSource.getQueuedDelay());
+      } catch (InterruptedException ex) {
+        Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
       }
-      if (busy!=null) {
-        busy.setBusy(false);
-        busy.setText("Pripravljen...");
-      }
-    } else
-        Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
+      if (timestamps.get(event).longValue()<=timestamp.longValue()) {
+        if (filterChange)
+          try {
+            event.dataSource.filterChanged();
+          } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting ["+event.dataSource.getName()+"]", ex);
+          }
+        if (this.defaults!=null)
+          event.dataSource.setDefaultValues(defaults);
+        if (this.parameters!=null)
+          event.dataSource.setParameters(parameters,false);
+        if (busy!=null) {
+          busy.setBusy(true);
+          if (event.dataSource.getBusyLabel()!=null)
+            busy.setText(event.dataSource.getBusyLabel());
+          else
+            busy.setText("Osvežujem podatke ...");
+        }
+        try {
+          event.dataSource.reload(event.dataSource.getRow());
+        } catch (SQLException ex) {
+          event.dataSource.reload();
+        }
+        if (busy!=null) {
+          busy.setBusy(false);
+          busy.setText("Pripravljen...");
+        }
+      } else
+          Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
+    }
   }
   
   public static void timestamp(DbDataSource dataSource) {
