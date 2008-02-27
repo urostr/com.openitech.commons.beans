@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.21 $
+ * $Revision: 1.22 $
  */
 
 package com.openitech.db.model;
@@ -4954,7 +4954,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         return Equals.equals(this.table,obj);
     }
     
-    /**
+    /**
      * Returns a hash code value for the object. This method is
      * supported for the benefit of hashtables such as those provided by
      * <code>java.util.Hashtable</code>.
