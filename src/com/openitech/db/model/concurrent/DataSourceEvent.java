@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
  * @author uros
  */
 public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
-  private   static final ExecutorService pool = Executors.newFixedThreadPool(3);
+  private   static final ExecutorService pool = Executors.newFixedThreadPool(9);
   protected static final Map<Event, Long> timestamps = new ConcurrentHashMap<Event, Long>();
   
   protected final Long timestamp = new Long((new Date()).getTime());

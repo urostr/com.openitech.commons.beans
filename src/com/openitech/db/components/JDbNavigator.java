@@ -388,7 +388,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
       jbConfirm.setEnabled(false);
       jbCancel.setEnabled(false);
       jbReload.setEnabled(false);
-      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error setting navigator properties.", ex);
+      Logger.getLogger(Settings.LOGGER).warning("Error setting navigator properties. ["+ex.getMessage()+"]");
     } finally {
       dataSource.unlock();
     }

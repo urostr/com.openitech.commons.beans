@@ -78,6 +78,8 @@ public class DbDataSource implements DbNavigatorDataSource {
   public final static String DELETE_ROW="deleteRow";
   public final static String ROW_DELETED="rowDeleted";
   public final static String STORE_UPDATES="storeUpdates";
+  public final static String LOAD_DATA="loadData";
+  public final static String DATA_LOADED="dataLoaded";
   
   private String selectSql;
   private String countSql;
@@ -3571,6 +3573,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         selectResultSet=null;
       }
       if ((selectResultSet==null) && selectStatement!=null) {
+        fireActionPerformed(new ActionEvent(this, 1, LOAD_DATA ));
         try {
           Logger.getLogger(Settings.LOGGER).fine("Executing '"+preparedSelectSql+"'");
 //          System.out.println("##############");
@@ -3597,6 +3600,7 @@ public class DbDataSource implements DbNavigatorDataSource {
             Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
           }
         }
+        fireActionPerformed(new ActionEvent(this, 1, DATA_LOADED ));
       }
     } finally {
       available.unlock();
@@ -4954,7 +4958,8 @@ public class DbDataSource implements DbNavigatorDataSource {
         return Equals.equals(this.table,obj);
     }
     
-    /**
+    /**
+
      * Returns a hash code value for the object. This method is
      * supported for the benefit of hashtables such as those provided by
      * <code>java.util.Hashtable</code>.
