@@ -18,6 +18,8 @@ import com.openitech.db.model.DbNavigatorDataSource;
 import com.openitech.db.model.DbTableModel;
 import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,12 +44,24 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     setSelectionBackground(new Color(204,204,255));
     setBackground(Color.white);
     putClientProperty("Quaqua.Table.style","striped");
+    javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
+    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke","RELOAD");
+    aReload.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        if (getDataSource()!=null) {
+          getDataSource().reload();
+        }
+      }
+    });
+    menu.add(aReload);
+    setComponentPopupMenu(menu);
     try {
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, null, "tableModel_activeRowChanged");
     } catch (NoSuchMethodException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
     }
   }
+  
 
   /**
    * Sets the data model for this table to <code>newModel</code> and registers

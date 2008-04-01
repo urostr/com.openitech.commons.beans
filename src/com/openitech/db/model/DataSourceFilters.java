@@ -17,7 +17,8 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       new MessageFormat(" (UPPER({0}) like (?+''%'')) "), 
       new MessageFormat(" (UPPER({0}) like (''%''+?)) "), 
       new MessageFormat(" (UPPER({0}) like (''%''+?+''%'')) "), 
-      new MessageFormat(" ({0} = ?) "), new MessageFormat(" ({0} >= ?) "), 
+      new MessageFormat(" ({0} = ?) "), 
+      new MessageFormat(" ({0} >= ?) "), 
       new MessageFormat(" ({0} <= ?) ")};
     
     private String field;
