@@ -159,7 +159,11 @@ public class DbFieldObserver {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       try {
         if (dataSource.getRowCount()>0)
-          result = FormatFactory.JDBC_DATE_FORMAT.parse(dataSource.getString(columnName));
+          try {
+            result = dataSource.getTimestamp(columnName);
+          } catch (Exception ex) {
+            result = FormatFactory.JDBC_DATE_FORMAT.parse(dataSource.getString(columnName));
+          }
       } catch (Exception ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '"+columnName+"' from the dataSource '"+dataSource.getSelectSql()+"'.  ["+ex.getMessage()+"]");
         result = null;

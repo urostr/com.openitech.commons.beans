@@ -71,6 +71,7 @@ import javax.swing.event.ListDataListener;
  * @author uros
  */
 public class DbDataSource implements DbNavigatorDataSource {
+  private final static boolean DUMP_SQL=false;
   public final static String MOVE_TO_INSERT_ROW="moveToInsertRow";
   public final static String UPDATE_ROW="updateRow";
   public final static String ROW_UPDATED="rowUpdated";
@@ -3576,10 +3577,14 @@ public class DbDataSource implements DbNavigatorDataSource {
         fireActionPerformed(new ActionEvent(this, 1, LOAD_DATA ));
         try {
           Logger.getLogger(Settings.LOGGER).fine("Executing '"+preparedSelectSql+"'");
-          System.out.println("##############");
-          System.out.println(preparedSelectSql);
+          if (DUMP_SQL) {
+            System.out.println("##############");
+            System.out.println(preparedSelectSql);
+          }
           selectResultSet = executeSql(selectStatement, parameters);
-          System.out.println("##############");
+          if (DUMP_SQL) {
+            System.out.println("##############");
+          }
           selectResultSet.setFetchSize(getFetchSize());
           selectResultSet.first();
         } catch (SQLException ex) {
@@ -3667,18 +3672,24 @@ public class DbDataSource implements DbNavigatorDataSource {
         if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
           statement.setObject(pos++, ( (SqlParameter) value).getValue(),
                   ( (SqlParameter) value).getType());
-          System.out.println("--["+(pos-1)+"]="+((SqlParameter) value).getValue().toString());
+          if (DUMP_SQL) {
+            System.out.println("--["+(pos-1)+"]="+((SqlParameter) value).getValue().toString());
+          }
         } else if ((value instanceof SubstSqlParameter) && (((SubstSqlParameter) value).getParameters().size()>0)) {
           pos = setParameters(statement, ((SubstSqlParameter) value).getParameters(), pos, true);
         }
       } else {
         if (value==null) {
           statement.setNull(pos, metaData.getParameterType(pos++));
-          System.out.println("--["+(pos-1)+"]=null");
+          if (DUMP_SQL) {
+            System.out.println("--["+(pos-1)+"]=null");
+          }
         }  
         else {
           statement.setObject(pos++, value);
-          System.out.println("--["+(pos-1)+"]="+value.toString());
+          if (DUMP_SQL) {
+            System.out.println("--["+(pos-1)+"]="+value.toString());
+          } 
         }
       }
     }

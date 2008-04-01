@@ -16,6 +16,7 @@ import com.openitech.formats.FormatFactory;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.ref.WeakObjectReference;
 import com.openitech.ref.events.ListDataWeakListener;
+import java.awt.Component;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.security.acl.Owner;
@@ -62,7 +63,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   private Map<String,DbTableModel.ColumnDescriptor.ValueMethod.Method> functionsMap = new HashMap<String,DbTableModel.ColumnDescriptor.ValueMethod.Method>();
   private Map<String,Class<? extends TableCellRenderer>> renderersMap = new HashMap<String,Class<? extends TableCellRenderer>>();
   private Map<String,Class<? extends TableCellEditor>> editorsMap = new HashMap<String,Class<? extends TableCellEditor>>();
-
+  
   private Map<String,TableCellRenderer> rendererInstances = new HashMap<String,TableCellRenderer>();
   private Map<String,TableCellEditor> editorInstances = new HashMap<String,TableCellEditor>();
   
@@ -77,6 +78,8 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   
   /** Creates a new instance of DbTableModel */
   public DbTableModel() {
+    renderersMap.put("DATE_TIME", DbTableModel.DateTimeRenderer.class);
+    //rendererInstances.put("DATE_TIME", new DbTableModel.DateTimeRenderer());
   }
   
   /**
@@ -175,17 +178,17 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           if (matcher.lookingAt()) {
             descriptor.getSeparators().add(matcher.group(1));
           }
-
+          
           matcher = widthPattern.matcher(parameter);
           if (matcher.lookingAt()) {
             descriptor.setWidth(Integer.parseInt(matcher.group(1)));
           }
-
+          
           matcher = maxWidthPattern.matcher(parameter);
           if (matcher.lookingAt()) {
             descriptor.setMaxWidth(Integer.parseInt(matcher.group(1)));
           }
-
+          
           matcher = minWidthPattern.matcher(parameter);
           if (matcher.lookingAt()) {
             descriptor.setMinWidth(Integer.parseInt(matcher.group(1)));
@@ -377,6 +380,55 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     return ColumnDescriptor.class;
   }
   
+  public static class DateTimeRenderer extends javax.swing.table.DefaultTableCellRenderer {
+    /**
+     *
+     * Returns the default table cell renderer.
+     *
+     *
+     * @param table  the <code>JTable</code>
+     * @param value  the value to assign to the cell at
+     * 			<code>[row, column]</code>
+     * @param isSelected true if cell is selected
+     * @param hasFocus true if cell has focus
+     * @param row  the row of the cell to render
+     * @param column the column of the cell to render
+     * @return the default table cell renderer
+     */
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+      if (value instanceof java.util.Date) {
+        value = FormatFactory.DATETIME_FORMAT.format((java.util.Date) value);
+      } else if (value!=null)
+        value = value.toString();
+      
+      return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+    }
+    /**
+     * Defines the single line of text this component will display.  If
+     * the value of text is null or empty string, nothing is displayed.
+     * <p>
+     * The default value of this property is null.
+     * <p>
+     * This is a JavaBeans bound property.
+     *
+     *
+     * @see #setVerticalTextPosition
+     * @see #setHorizontalTextPosition
+     * @see #setIcon
+     * @beaninfo preferred: true
+     *        bound: true
+     *    attribute: visualUpdate true
+     *  description: Defines the single line of text this component will display.
+     */
+    public void setText(String text) {
+      super.setText(text);
+      if (text!=null && text.length()>12)
+        setToolTipText(text);
+      else
+        setToolTipText(null);
+    }
+  }
+  
   public static class ColumnDescriptor {
     private static class TooltipTableCellRenderer extends DefaultTableCellRenderer {
       /**
@@ -385,9 +437,9 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
        * <p>
        * The default value of this property is null.
        * <p>
-       * This is a JavaBeans bound property.  
-       * 
-       * 
+       * This is a JavaBeans bound property.
+       *
+       *
        * @see #setVerticalTextPosition
        * @see #setHorizontalTextPosition
        * @see #setIcon
@@ -400,7 +452,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         super.setText(text);
         if (text!=null && text.length()>12)
           setToolTipText(text);
-        else 
+        else
           setToolTipText(null);
       }
       
@@ -491,7 +543,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       
       Map<String,Class<? extends TableCellEditor>> editorsMap = owner.editorsMap;
       Map<String,TableCellEditor> editorInstances = owner.editorInstances;
-
+      
       if (editorInstances.containsKey(editorKey))
         renderer = editorInstances.get(editorInstances);
       else if (editorsMap.containsKey(editorKey)) {
@@ -511,7 +563,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     public boolean isEditable() {
       return editable;
     }
-   
+    
     /**
      * Returns the value for the cell at <code>columnIndex</code> and
      * <code>rowIndex</code>.
@@ -527,7 +579,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         Map<String,Class<? extends TableCellRenderer>> renderersMap = owner.renderersMap;
         Map<String,Class<? extends TableCellEditor>> editorsMap = owner.editorsMap;
         
-        Class<? extends TableCellRenderer> renderer = defaultTableCellRendererClass;
+        Class<? extends TableCellRenderer> renderer = null; //defaultTableCellRendererClass;
         Class<? extends TableCellEditor> editor = null;
         DbTableModel.ColumnDescriptor.ValueMethod.Method function = null;
         
@@ -590,39 +642,52 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       public Object getValue() {
         try {
           if (dataSource!=null) {
-            StringBuffer result = new StringBuffer();
-            String lastSeparator = separators.size()>0?separators.get(separators.size()-1):" ";
-            Iterator<String> separator = separators.iterator();
-            
-            for (String columnName:columnNames) {
-              if (result.length()>0)
-                result.append(separator.hasNext()?separator.next():lastSeparator);
+            if (renderer==null) {
+              StringBuffer result = new StringBuffer();
+              String lastSeparator = separators.size()>0?separators.get(separators.size()-1):" ";
+              Iterator<String> separator = separators.iterator();
               
-              Object value = dataSource.getValueAt(rowIndex+1,columnName, rowColumnNames);
-              
-              if (value instanceof java.util.Date) {
-                value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
-              } else if (value instanceof java.lang.Number) {
-                if ((value instanceof java.math.BigDecimal)||
-                        (value instanceof java.lang.Double)||
-                        (value instanceof java.lang.Float)){
-                  value = DECIMAL_FORMAT.format((java.lang.Number) value);
-                } else
-                  value = INTEGER_FORMAT.format((java.lang.Number) value);
-              }
-              
-              result.append(value==null?"":value);
-            }
-            if (function!=null) {
-              Object value = getFunctionValue();
-              if (value!=null) {
+              for (String columnName:columnNames) {
                 if (result.length()>0)
                   result.append(separator.hasNext()?separator.next():lastSeparator);
+                
+                Object value = dataSource.getValueAt(rowIndex+1,columnName, rowColumnNames);
+                
+                if (value instanceof java.util.Date) {
+                  value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
+                } else if (value instanceof java.lang.Number) {
+                  if ((value instanceof java.math.BigDecimal)||
+                          (value instanceof java.lang.Double)||
+                          (value instanceof java.lang.Float)){
+                    value = DECIMAL_FORMAT.format((java.lang.Number) value);
+                  } else
+                    value = INTEGER_FORMAT.format((java.lang.Number) value);
+                }
+                
                 result.append(value==null?"":value);
               }
-            }
-            return result.toString();
-          }
+              if (function!=null) {
+                Object value = getFunctionValue();
+                if (value!=null) {
+                  if (result.length()>0)
+                    result.append(separator.hasNext()?separator.next():lastSeparator);
+                  result.append(value==null?"":value);
+                }
+              }
+              return result.toString();
+            } else {
+              java.util.List result = new java.util.ArrayList();
+              for (String columnName:columnNames) {
+                result.add(dataSource.getValueAt(rowIndex+1,columnName, rowColumnNames));
+              }
+              
+              if (result.size()==0)
+                return null;
+              else if (result.size()==1)
+                return result.get(0);
+              else
+                return result;
+            }          }
         } catch (Exception ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt("+Integer.toString(rowIndex)+","+Integer.toString(columnIndex)+") from the dataSource. ["+ex.getMessage()+"]");
         }
@@ -688,12 +753,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         }
       }
     }
-
+    
     /**
      * Holds value of property maxWidth.
      */
     private int maxWidth;
-
+    
     /**
      * Getter for property maxWidth.
      * @return Value of property maxWidth.
@@ -701,7 +766,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     public int getMaxWidth() {
       return this.maxWidth;
     }
-
+    
     /**
      * Setter for property maxWidth.
      * @param maxWidth New value of property maxWidth.
@@ -709,12 +774,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     public void setMaxWidth(int maxWidth) {
       this.maxWidth = maxWidth;
     }
-
+    
     /**
      * Holds value of property minWidth.
      */
     private int minWidth;
-
+    
     /**
      * Getter for property minWidth.
      * @return Value of property minWidth.
@@ -722,7 +787,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     public int getMinWidth() {
       return this.minWidth;
     }
-
+    
     /**
      * Setter for property minWidth.
      * @param minWidth New value of property minWidth.
@@ -730,12 +795,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     public void setMinWidth(int minWidth) {
       this.minWidth = minWidth;
     }
-
+    
     /**
      * Holds value of property width.
      */
     private int width;
-
+    
     /**
      * Getter for property width.
      * @return Value of property width.
@@ -743,7 +808,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     public int getWidth() {
       return this.width;
     }
-
+    
     /**
      * Setter for property width.
      * @param width New value of property width.
