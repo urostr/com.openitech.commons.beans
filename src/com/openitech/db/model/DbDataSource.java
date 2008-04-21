@@ -71,7 +71,7 @@ import javax.swing.event.ListDataListener;
  * @author uros
  */
 public class DbDataSource implements DbNavigatorDataSource {
-  private final static boolean DUMP_SQL=false;
+  public static boolean DUMP_SQL=false;
   public final static String MOVE_TO_INSERT_ROW="moveToInsertRow";
   public final static String UPDATE_ROW="updateRow";
   public final static String ROW_UPDATED="rowUpdated";

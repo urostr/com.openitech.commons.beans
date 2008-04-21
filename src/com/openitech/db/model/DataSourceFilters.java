@@ -12,6 +12,14 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   private static final String EMPTY = " 0=1 ";
   
   public class SeekType {
+    public static final int UPPER_EQUALS = 0;
+    public static final int UPPER_BEGINS_WITH = 1;
+    public static final int UPPER_END_WITH = 2;
+    public static final int UPPER_CONTAINS = 3;
+    public static final int EQUALS = 4;
+    public static final int GREATER_OR_EQUALS = 5;
+    public static final int LESS_OR_EQUALS = 6;
+    
     private MessageFormat[] formati = new MessageFormat[] {
       new MessageFormat(" (UPPER({0}) = ?) "), 
       new MessageFormat(" (UPPER({0}) like (?+''%'')) "), 
