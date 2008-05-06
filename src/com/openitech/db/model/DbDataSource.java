@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.24 $
+ * $Revision: 1.26 $
  */
 
 package com.openitech.db.model;
@@ -3295,7 +3295,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         ((StoreUpdatesListener) listeners.get(i)).deleteRow(e);
     }
   }
-  
+  
   public synchronized void removeActiveRowChangeListener(ActiveRowChangeListener l) {
     if (activeRowChangeListeners != null && activeRowChangeListeners.contains(l)) {
       activeRowChangeListeners.removeElement(l);
