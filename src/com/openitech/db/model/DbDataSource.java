@@ -3295,7 +3295,8 @@ public class DbDataSource implements DbNavigatorDataSource {
         ((StoreUpdatesListener) listeners.get(i)).deleteRow(e);
     }
   }
-  
+  
+
   public synchronized void removeActiveRowChangeListener(ActiveRowChangeListener l) {
     if (activeRowChangeListeners != null && activeRowChangeListeners.contains(l)) {
       activeRowChangeListeners.removeElement(l);
@@ -4773,9 +4774,11 @@ public class DbDataSource implements DbNavigatorDataSource {
     Map<String,Integer> columnMapping = new HashMap<String,Integer>();
     int hashcode;
     boolean updateFailed = false;
+    boolean virtual = false;
     Connection connection;
     
     public PrimaryKey(String[] uniqueID, String table) {
+      this.virtual = true;
       this.table = table;
       this.connection = null;
       for (String s:uniqueID) {
@@ -4785,6 +4788,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
     
     public PrimaryKey(Connection connection, String table) throws SQLException {
+      this.virtual = false;
       this.table = table;
       this.connection = connection;
       hashcode = table.hashCode();
@@ -4834,7 +4838,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     
     public ResultSet getUpdateResultSet(ResultSet data) throws SQLException {
       ResultSet result = null;
-      if (connection!=null) {
+      if (connection!=null&&!virtual) {
         if (update==null) {
           StringBuffer sql = new StringBuffer();
 
