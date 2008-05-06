@@ -3384,7 +3384,9 @@ public class DbDataSource implements DbNavigatorDataSource {
       }
     }
     if ((getUniqueID()!=null)&&(getUniqueID().length>0)&&(getUpdateTableName()!=null)&&(getUpdateTableName().length()>0)) {
-      result.add(new PrimaryKey(getUniqueID(), getUpdateTableName()));
+      PrimaryKey pk = new PrimaryKey(getUniqueID(), getUpdateTableName());
+      pk.connection = this.getConnection();
+      result.add(pk);
     }
     return result;
   }
