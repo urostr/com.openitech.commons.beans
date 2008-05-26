@@ -220,7 +220,11 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   }
   
   public boolean addRequired(AbstractSeekType field) {
-    return required.add(new RequiredFields(field,1));
+    return addRequired(field, 1);
+  }
+  
+  public boolean addRequired(AbstractSeekType field, int no_fields) {
+    return required.add(new RequiredFields(field, no_fields));
   }
   
   public boolean addRequired(RequiredFields field) {

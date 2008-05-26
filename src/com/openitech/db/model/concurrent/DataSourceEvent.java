@@ -10,11 +10,13 @@
 package com.openitech.db.model.concurrent;
 
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.DbNavigatorDataSource;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  *
@@ -23,6 +25,7 @@ import java.util.concurrent.Executors;
 public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   private   static final ExecutorService pool = Executors.newFixedThreadPool(9);
   protected static final Map<Event, Long> timestamps = new ConcurrentHashMap<Event, Long>();
+  protected static final Map<Event, Future> tasks = new ConcurrentHashMap<Event, Future>();
   
   protected final Long timestamp = new Long((new Date()).getTime());
   protected Event event;
@@ -43,7 +46,10 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   
   public static void submit(DataSourceEvent event) {
     timestamps.put(event.event, event.timestamp);
-    pool.submit(event);
+    tasks.put(event.event, pool.submit(event));
+    if (event.event.type.equals(Event.Type.REFRESH)) {
+      event.event.dataSource.updateRefreshPending();
+    }
   }
   
   public static void suspend(DbDataSource dataSource) {
@@ -52,6 +58,15 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   
   public static void resume(DbDataSource dataSource) {
     timestamps.remove(new Event(dataSource, Event.Type.SUSPEND));
+  }
+  
+  public static boolean isRefreshing(DbNavigatorDataSource dataSource) {
+    return isRefreshing(dataSource.getDataSource());
+  }
+  
+  public static boolean isRefreshing(DbDataSource dataSource) {
+    Future task = tasks.get(new Event(dataSource, Event.Type.REFRESH));
+    return !(task==null||task.isDone()||task.isCancelled());
   }
   
   protected boolean isSuspended() {

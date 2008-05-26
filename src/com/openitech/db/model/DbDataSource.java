@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.27 $
+ * $Revision: 1.29 $
  */
 
 package com.openitech.db.model;
@@ -16,6 +16,7 @@ import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.events.StoreUpdatesListener;
 import com.openitech.db.model.concurrent.ConcurrentEvent;
 import com.openitech.db.model.concurrent.DataSourceActiveRowChangeEvent;
+import com.openitech.db.model.concurrent.DataSourceEvent;
 import com.openitech.db.model.concurrent.DataSourceListDataEvent;
 import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
@@ -24,6 +25,7 @@ import com.openitech.util.OwnerFrame;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.InputStream;
@@ -139,7 +141,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   private int fetchFize = 54;
   
   private Connection connection = null;
-
+  private boolean refreshPending = false;
   
   
   /**
@@ -3295,7 +3297,8 @@ public class DbDataSource implements DbNavigatorDataSource {
         ((StoreUpdatesListener) listeners.get(i)).deleteRow(e);
     }
   }
-  
+  
+
 
   public synchronized void removeActiveRowChangeListener(ActiveRowChangeListener l) {
     if (activeRowChangeListeners != null && activeRowChangeListeners.contains(l)) {
@@ -3902,7 +3905,20 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
   
   public boolean isReadOnly() {
-    return readOnly;
+    return readOnly||DataSourceEvent.isRefreshing(this);
+  }
+
+  public void updateRefreshPending() {
+    boolean refreshPending=DataSourceEvent.isRefreshing(this);
+    if (this.refreshPending!=refreshPending) {
+      this.refreshPending = refreshPending;
+      try {
+        int row = getRow();
+        fireActiveRowChange(new ActiveRowChangeEvent(this, row, row));
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).warning("Couldn't update pending refresh.");
+      }
+    }
   }
   
   public Map<Integer,Map<String,Object>> getStoredUpdates() {
@@ -4351,11 +4367,11 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
 
   public boolean isCanAddRows() {
-    return canAddRows;
+    return canAddRows&&!DataSourceEvent.isRefreshing(this);
   }
   
   public boolean isCanDeleteRows() {
-    return canDeleteRows;
+    return canDeleteRows&&!DataSourceEvent.isRefreshing(this);
   }
   
   public void setCanAddRows(boolean canAddRows) {
@@ -5465,13 +5481,47 @@ public class DbDataSource implements DbNavigatorDataSource {
     protected String alias = "";
     protected String operator = "";
     
+    private java.util.List<DbDataSource> dataSources = new ArrayList<DbDataSource>();
+    
+    private final PropertyChangeListener queryChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent evt) {
+        reloadDataSources();
+      }
+    };
+    
     public SubstSqlParameter() {
       super(Types.SUBST_FIRST, "");
+      addPropertyChangeListener("query", queryChangeListener);
     }
     
     public SubstSqlParameter(String replace) {
       this();
       this.replace = replace;
+    }
+    
+    public void reloadDataSources() {
+      for (DbDataSource dataSource:dataSources) {
+        com.openitech.db.model.concurrent.RefreshDataSource.timestamp(dataSource);
+
+        dataSource.lock();
+        try {
+          com.openitech.db.model.concurrent.DataSourceEvent.submit(new com.openitech.db.model.concurrent.RefreshDataSource(dataSource, true));
+        } finally {
+          dataSource.unlock();
+        }
+      }
+    }
+    
+    public void addDataSource(DbDataSource... dataSources) {
+      for (DbDataSource dataSource:dataSources) {
+        this.dataSources.add(dataSource);
+      }
+    }
+    
+    public void removeDataSource(DbDataSource... dataSources) {
+      for (DbDataSource dataSource:dataSources) {
+        this.dataSources.remove(dataSource);
+      }
     }
     
     public String getReplace() {
@@ -5549,6 +5599,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
     public void run() {
       Logger.getLogger(Settings.LOGGER).fine("Firing events '"+owner.selectSql+"'");
+      owner.refreshPending = DataSourceEvent.isRefreshing(owner);
       owner.fireContentsChanged(new ListDataEvent(owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
       int pos=0;
       if (owner.getRowCount()>0) {
@@ -5758,7 +5809,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   public String getDelimiterLeft() {
     ConnectionManager cm = ConnectionManager.getInstance();
     if ((this.delimiterLeft==null)&&(cm!=null)&&(cm.getConnection()!=null)) {
-      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_LEFT);
+      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_LEFT,"");
     } else
       return this.delimiterLeft;
   }
@@ -5783,7 +5834,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   public String getDelimiterRight() {
     ConnectionManager cm = ConnectionManager.getInstance();
     if ((this.delimiterLeft==null)&&(cm!=null)&&(cm.getConnection()!=null)) {
-      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_RIGHT);
+      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_RIGHT,"");
     } else
       return this.delimiterRight;
   }
@@ -5869,4 +5920,10 @@ public class DbDataSource implements DbNavigatorDataSource {
   public void setSeekUpdatedRow(boolean seekUpdatedRow) {
     this.seekUpdatedRow = seekUpdatedRow;
   }
+
+  public DbDataSource getDataSource() {
+    return this;
+  }
+  
+  
 }

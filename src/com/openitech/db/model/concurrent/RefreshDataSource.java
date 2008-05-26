@@ -87,6 +87,7 @@ public final class RefreshDataSource extends DataSourceEvent {
           else
             busy.setText("Osvežujem podatke ...");
         }
+        tasks.remove(event);
         try {
           event.dataSource.reload(event.dataSource.getRow());
         } catch (SQLException ex) {

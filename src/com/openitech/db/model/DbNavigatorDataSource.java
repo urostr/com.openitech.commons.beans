@@ -329,4 +329,7 @@ public interface DbNavigatorDataSource {
      */
     public void removePropertyChangeListener(String propertyName,
                                              PropertyChangeListener listener);
+    
+    
+    public DbDataSource getDataSource();
 }

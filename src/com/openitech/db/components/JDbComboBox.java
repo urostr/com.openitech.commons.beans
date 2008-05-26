@@ -182,5 +182,7 @@ public class JDbComboBox extends JComboBox {
       if (actionWeakListener!=null)
         actionWeakListener.setEnabled(true);
     }
+    if (dbFieldObserver!=null)
+      dataSource_fieldValueChanged(null);
   }
 }
