@@ -3,6 +3,7 @@ package com.openitech.db.model.concurrent;
 import com.openitech.Settings;
 import com.openitech.components.JXDimBusyLabel;
 import com.openitech.db.model.*;
+import java.awt.EventQueue;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -53,6 +54,31 @@ public final class RefreshDataSource extends DataSourceEvent {
     this.filterChange = filterChange;
   }
   
+  private void setBusy(final String label) {
+    if (busy!=null) {
+      EventQueue.invokeLater(new Runnable() {
+        public void run() {
+          busy.setBusy(true);
+          if (event.dataSource.getBusyLabel()!=null)
+            busy.setText(label);
+          else
+            busy.setText("Osvežujem podatke ...");
+        }
+      });
+    }
+  }
+  
+  private void setReady() {
+    if (busy!=null) {
+      EventQueue.invokeLater(new Runnable() {
+        public void run() {
+          busy.setBusy(false);
+          busy.setText("Pripravljen...");
+        }
+      });
+    }
+  }
+  
   public void run() {
     if (isSuspended()) {
       try {
@@ -70,32 +96,34 @@ public final class RefreshDataSource extends DataSourceEvent {
         Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
       }
       if (timestamps.get(event).longValue()<=timestamp.longValue()) {
-        if (filterChange)
+        if (event.dataSource.lock(false)) {
           try {
-            event.dataSource.filterChanged();
-          } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting ["+event.dataSource.getName()+"]", ex);
+            if (filterChange)
+              try {
+                event.dataSource.filterChanged();
+              } catch (SQLException ex) {
+                Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting ["+event.dataSource.getName()+"]", ex);
+              }
+            if (this.defaults!=null)
+              event.dataSource.setDefaultValues(defaults);
+            if (this.parameters!=null)
+              event.dataSource.setParameters(parameters,false);
+          } finally {
+            event.dataSource.unlock();
           }
-        if (this.defaults!=null)
-          event.dataSource.setDefaultValues(defaults);
-        if (this.parameters!=null)
-          event.dataSource.setParameters(parameters,false);
-        if (busy!=null) {
-          busy.setBusy(true);
-          if (event.dataSource.getBusyLabel()!=null)
-            busy.setText(event.dataSource.getBusyLabel());
-          else
-            busy.setText("Osvežujem podatke ...");
-        }
-        tasks.remove(event);
-        try {
-          event.dataSource.reload(event.dataSource.getRow());
-        } catch (SQLException ex) {
-          event.dataSource.reload();
-        }
-        if (busy!=null) {
-          busy.setBusy(false);
-          busy.setText("Pripravljen...");
+          setBusy(event.dataSource.getBusyLabel());
+          tasks.remove(event);
+          try {
+            if (event.dataSource.isDataLoaded())
+              event.dataSource.reload(event.dataSource.getRow());
+            else
+              event.dataSource.reload();
+          } catch (SQLException ex) {
+            event.dataSource.reload();
+          }
+          setReady();
+        } else {
+          DataSourceEvent.submit(this);
         }
       } else
           Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");

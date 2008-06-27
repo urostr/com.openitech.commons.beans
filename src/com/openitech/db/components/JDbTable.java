@@ -246,8 +246,12 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       getDataSource().removeActiveRowChangeListener(l);
   }
 
-  public void lock() {
-    getDataSource().lock();
+  public boolean lock() {
+    return getDataSource().lock();
+  }
+
+  public boolean lock(boolean fatal) {
+    return getDataSource().lock(fatal);
   }
 
   public void unlock() {

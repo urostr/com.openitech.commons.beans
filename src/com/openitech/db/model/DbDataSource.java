@@ -59,6 +59,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -3361,12 +3362,12 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
   
   public void filterChanged() throws SQLException {
-    available.lock();
+    lock();
     try {
       setSelectSql(this.selectSql);
       setCountSql(this.countSql);
     } finally {
-      available.unlock();
+      unlock();
     }
   }
   
@@ -3507,51 +3508,84 @@ public class DbDataSource implements DbNavigatorDataSource {
   
   public int getRowCount() {
     int newCount = this.count;
-    
-    if (this.count==-1) {
-      available.lock();
-      try {
-        if (this.count==-1) {
-          if (countStatement!=null) {
-            ResultSet rs=executeSql(countStatement, parameters);
-            if (rs.first())
-              newCount = rs.getInt(1);
-          } else if (selectStatement!=null) {
-            if (selectResultSet==null) {
-              try {
-                Logger.getLogger(Settings.LOGGER).fine("Executing '"+selectSql+"'");
-                selectResultSet = executeSql(selectStatement, parameters);
-                selectResultSet.setFetchSize(getFetchSize());
-                selectResultSet.first();
-              } catch (SQLException ex) {
-                Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:"+preparedSelectSql, ex);
-                selectResultSet = null;
+    if (!isDataLoaded()&&refreshPending)
+      return -1;
+    else {
+      if (this.count==-1) {
+        if (lock(false)) {
+          try {
+            if (this.count==-1) {
+              if (countStatement!=null) {
+                Logger.getLogger(Settings.LOGGER).fine("Executing '"+preparedCountSql+"'");
+                if (DUMP_SQL) {
+                  System.out.println("############## count(*) ");
+                  //              System.out.println(preparedCountSql);
+                }
+                ResultSet rs=executeSql(countStatement, parameters);
+                if (DUMP_SQL) {
+                  System.out.println("##############");
+                }
+                if (rs.first())
+                  newCount = rs.getInt(1);
+              } else if (selectStatement!=null) {
+                if (selectResultSet==null) {
+                  try {
+                    Logger.getLogger(Settings.LOGGER).fine("Executing '"+preparedSelectSql+"'");
+                    if (DUMP_SQL) {
+                      System.out.println("##############");
+                      System.out.println(preparedSelectSql);
+                    }
+                    selectResultSet = executeSql(selectStatement, parameters);
+                    if (DUMP_SQL) {
+                      System.out.println("##############");
+                    }
+                    selectResultSet.setFetchSize(getFetchSize());
+                    selectResultSet.first();
+                  } catch (SQLException ex) {
+                    Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:"+preparedSelectSql, ex);
+                    selectResultSet = null;
+                  }
+                }
+                
+                if (selectResultSet!=null) {
+                  int row = selectResultSet.getRow();
+                  selectResultSet.last();
+                  newCount = selectResultSet.getRow();
+                  if (row>0)
+                    selectResultSet.absolute(row);
+                }
               }
             }
-            
-            if (selectResultSet!=null) {
-              int row = selectResultSet.getRow();
-              selectResultSet.last();
-              newCount = selectResultSet.getRow();
-              if (row>0)
-                selectResultSet.absolute(row);
-            }
+          } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count from \n:"+preparedCountSql, ex);
+            newCount = this.count;
+          } finally {
+            unlock();
+            this.count = newCount;
           }
-        }
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count from \n:"+preparedCountSql, ex);
-        newCount = this.count;
-      } finally {
-        available.unlock();
-        this.count = newCount;
+        } else
+          return -1;
       }
+
+      return newCount+(inserting?1:0);
     }
-    
-    return newCount+(inserting?1:0);
   }
   
-  public void lock() {
-    available.lock();
+  public boolean lock() {
+    return lock(true);
+  }
+  
+  public boolean lock(boolean fatal) {
+    boolean result = false;
+    try {
+      if (!(result = (available.tryLock() || available.tryLock(10L, TimeUnit.SECONDS)))) {
+        if (fatal)
+          throw new IllegalStateException("Can't obtain lock");
+      }
+    } catch (InterruptedException ex) {
+      throw (IllegalStateException) (new IllegalStateException("Can't obtain lock")).initCause(ex);
+    }
+    return result;
   }
   
   public void unlock() {
@@ -3568,18 +3602,18 @@ public class DbDataSource implements DbNavigatorDataSource {
   
   private boolean loadData(boolean reload, int oldRow) {
     boolean reloaded = false;
-    available.lock();
-    try {
-      if (reload) {
-        try {
-          if (selectResultSet!=null)
-            selectResultSet.close();
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '"+selectSql+"'", ex);
-        }
-        selectResultSet=null;
+    if (reload) {
+      try {
+        if (selectResultSet!=null)
+          selectResultSet.close();
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '"+selectSql+"'", ex);
       }
-      if ((selectResultSet==null) && selectStatement!=null) {
+      selectResultSet=null;
+    }
+    if ((selectResultSet==null) && selectStatement!=null) {
+      lock();
+      try {
         fireActionPerformed(new ActionEvent(this, 1, LOAD_DATA ));
         try {
           Logger.getLogger(Settings.LOGGER).fine("Executing '"+preparedSelectSql+"'");
@@ -3604,18 +3638,18 @@ public class DbDataSource implements DbNavigatorDataSource {
           reloaded = true;
           getRowCount();
         }
-        if (oldRow>0&&getRowCount()>0) {
-          try {
-            selectResultSet.absolute(Math.min(oldRow,getRowCount()));
-          } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
-          }
-        }
-        fireActionPerformed(new ActionEvent(this, 1, DATA_LOADED ));
+      } finally {
+        unlock();
+        Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '"+selectSql+"'");
       }
-    } finally {
-      available.unlock();
-      Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '"+selectSql+"'");
+      if (oldRow>0&&getRowCount()>0) {
+        try {
+          selectResultSet.absolute(Math.min(oldRow,getRowCount()));
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+        }
+      }
+      fireActionPerformed(new ActionEvent(this, 1, DATA_LOADED ));
     }
     if (reloaded && selectResultSet!=null) {
       if (EventQueue.isDispatchThread()) {
@@ -3808,15 +3842,17 @@ public class DbDataSource implements DbNavigatorDataSource {
     return getValueAt(rowIndex, columnName, columns);
   }
   public Object getValueAt(int rowIndex, String columnName, String... columnNames) throws SQLException {
-    if (loadData()) {
+    if (!isDataLoaded()&&refreshPending) {
+      return null;
+    } else if (loadData()) {
       Object result = null;
       columnName = columnName.toUpperCase();
       
-      available.lock();
-      try {
-        if (wasUpdated(rowIndex, columnName))
-          result = getStoredValue(rowIndex, columnName, null, Object.class);
-        else {
+      if (wasUpdated(rowIndex, columnName))
+        result = getStoredValue(rowIndex, columnName, null, Object.class);
+      else {
+        lock();
+        try {
           CacheKey ck = new CacheKey(rowIndex, columnName);
           CacheEntry ce;
           if (cache.containsKey(ck) && ((ce=cache.get(ck))!=null)) {
@@ -3846,9 +3882,9 @@ public class DbDataSource implements DbNavigatorDataSource {
             }
             selectResultSet.absolute(oldRow);
           }
+        } finally {
+          unlock();
         }
-      } finally {
-        available.unlock();
       }
       return result;
     } else
@@ -3876,7 +3912,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         check = true;
       }
       if (check) {
-        available.lock();
+        lock();
         try {
           selectResultSet.relative(0);
         } catch (SQLException ex) {
@@ -3885,7 +3921,7 @@ public class DbDataSource implements DbNavigatorDataSource {
           selectResultSet.setFetchSize(getFetchSize());
           selectResultSet.absolute(oldRow);
         } finally {
-          available.unlock();
+          unlock();
         }
       }
     }
@@ -3913,8 +3949,10 @@ public class DbDataSource implements DbNavigatorDataSource {
     if (this.refreshPending!=refreshPending) {
       this.refreshPending = refreshPending;
       try {
-        int row = getRow();
-        fireActiveRowChange(new ActiveRowChangeEvent(this, row, row));
+        if (isDataLoaded()) {
+          int row = getRow();
+          fireActiveRowChange(new ActiveRowChangeEvent(this, row, row));
+        }
       } catch (SQLException ex) {
         Logger.getLogger(Settings.LOGGER).warning("Couldn't update pending refresh.");
       }
@@ -5503,12 +5541,12 @@ public class DbDataSource implements DbNavigatorDataSource {
       for (DbDataSource dataSource:dataSources) {
         com.openitech.db.model.concurrent.RefreshDataSource.timestamp(dataSource);
 
-        dataSource.lock();
-        try {
+//        dataSource.lock();
+//        try {
           com.openitech.db.model.concurrent.DataSourceEvent.submit(new com.openitech.db.model.concurrent.RefreshDataSource(dataSource, true));
-        } finally {
-          dataSource.unlock();
-        }
+//        } finally {
+//          dataSource.unlock();
+//        }
       }
     }
     

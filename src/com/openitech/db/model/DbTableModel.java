@@ -307,38 +307,39 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   }
   
   public void contentsChanged(ListDataEvent e) {
-    dataSource.lock();
-    try {
+//    dataSource.lock();
+//    try {
       if (e.getIndex0()==-1 ||
               e.getIndex1()==-1) {
         fireTableDataChanged();
       } else {
         fireTableRowsUpdated(e.getIndex0(), e.getIndex1());
       }
-    } finally {
-      dataSource.unlock();
-    }
+//    } finally {
+//      dataSource.unlock();
+//    }
   }
   
   public void activeRowChanged(ActiveRowChangeEvent event) {
-    dataSource.lock();
-    try {
+//    dataSource.lock();
+//    try {
       fireActiveRowChange(event);
-    } finally {
-      dataSource.unlock();
-    }
+//    } finally {
+//      dataSource.unlock();
+//    }
   }
   
   public void fieldValueChanged(ActiveRowChangeEvent event) {
-    dataSource.lock();
+//    dataSource.lock();
     try {
       int row = dataSource.getRow();
       fireTableRowsUpdated(row, row);
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't read from the dataSource.", ex);
-    } finally {
-      dataSource.unlock();
-    }
+    } 
+//    finally {
+//      dataSource.unlock();
+//    }
   }
   
   public int getDataSourceRow(int selectedRow) {

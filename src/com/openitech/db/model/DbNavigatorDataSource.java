@@ -207,7 +207,9 @@ public interface DbNavigatorDataSource {
   
   public void removeActiveRowChangeListener(ActiveRowChangeListener l);
   
-  public void lock();
+  public boolean lock();
+  
+  public boolean lock(boolean fatal);
   
   public void unlock();
   
