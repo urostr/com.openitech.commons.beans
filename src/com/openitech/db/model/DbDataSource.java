@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.30 $
+ * $Revision: 1.32 $
  */
 
 package com.openitech.db.model;
@@ -3578,7 +3578,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   public boolean lock(boolean fatal) {
     boolean result = false;
     try {
-      if (!(result = (available.tryLock() || available.tryLock(10L, TimeUnit.SECONDS)))) {
+      if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
         if (fatal)
           throw new IllegalStateException("Can't obtain lock");
       }

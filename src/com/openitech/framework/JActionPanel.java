@@ -107,6 +107,10 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
       } else  {
         Component selected = getSelectedComponent();
         
+        if (filterPanelContainer!=null&&getFilterPanelContainer()==null) {
+          setFilterPanelContainer(filterPanelContainer);
+        }
+        
         filterPanelContainer = filterPanelContainer==null?getFilterPanelContainer():filterPanelContainer;
 
 
@@ -125,6 +129,10 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
           filterPanelContainer.repaint(500);
         }
 
+        if (taskPaneContainer!=null&&getTaskPaneContainer()==null) {
+          setTaskPaneContainer(taskPaneContainer);
+        }
+        
         taskPaneContainer = taskPaneContainer==null?getTaskPaneContainer():taskPaneContainer;
 
         if (taskPaneContainer!=null){
