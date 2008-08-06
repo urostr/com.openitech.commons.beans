@@ -3898,7 +3898,17 @@ public class DbDataSource implements DbNavigatorDataSource {
             ResultSet.HOLD_CURSORS_OVER_COMMIT);
     resultStatement.setFetchSize(1008);
     
-    return executeSql(resultStatement, parameters);
+    
+    if (DUMP_SQL) {
+      System.out.println("##############");
+      System.out.println(preparedSelectSql);
+    }
+    ResultSet result = executeSql(resultStatement, parameters);
+    if (DUMP_SQL) {
+      System.out.println("##############");
+    }
+    
+    return result;
   }
   
   private ResultSet getOpenSelectResultSet() throws SQLException {
