@@ -105,7 +105,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       if (value.length()<min_length)
         value = "";
       else
-        value=value.toUpperCase();
+        value=caseSensitive?value:value.toUpperCase();
       if (!Equals.equals(getValue(), value)) {
         this.value = value;
         return true;
@@ -115,6 +115,27 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     public boolean hasValue() {
       return value!=null && value.length()>0;
+    }
+
+    /**
+     * Holds value of property caseSensitive.
+     */
+    private boolean caseSensitive = false;
+
+    /**
+     * Getter for property caseSensitive.
+     * @return Value of property caseSensitive.
+     */
+    public boolean isCaseSensitive() {
+      return this.caseSensitive;
+    }
+
+    /**
+     * Setter for property caseSensitive.
+     * @param caseSensitive New value of property caseSensitive.
+     */
+    public void setCaseSensitive(boolean caseSensitive) {
+      this.caseSensitive = caseSensitive;
     }
   }
   

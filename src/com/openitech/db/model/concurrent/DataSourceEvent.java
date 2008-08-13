@@ -45,10 +45,17 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   }
   
   public static void submit(DataSourceEvent event) {
-    timestamps.put(event.event, event.timestamp);
-    tasks.put(event.event, pool.submit(event));
-    if (event.event.type.equals(Event.Type.REFRESH)) {
-      event.event.dataSource.updateRefreshPending();
+    if ((event instanceof RefreshDataSource)&&
+        event.event.dataSource.getQueuedDelay()<=0) {
+        if (event.event.dataSource.lock()) {
+         ((RefreshDataSource) event).loadData();
+        }      
+    } else {
+      timestamps.put(event.event, event.timestamp);
+      tasks.put(event.event, pool.submit(event));
+      if (event.event.type.equals(Event.Type.REFRESH)) {
+        event.event.dataSource.updateRefreshPending();
+      }
     }
   }
   

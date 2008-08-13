@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.32 $
+ * $Revision: 1.34 $
  */
 
 package com.openitech.db.model;
@@ -4947,49 +4947,54 @@ public class DbDataSource implements DbNavigatorDataSource {
     public <K> boolean compareValues(ResultSet resultSet, Map<K,Object> values) throws SQLException {
       boolean equals = values!=null && (values.size()>=getColumnNames().size());
       if (equals) {
-        String columnName;
-        Integer columnIndex;
-        boolean columnValuesScan = false;
-        boolean indexed = values.keySet().iterator().next() instanceof Integer;
-        boolean[] primarysChecked = new boolean[getColumnNames().size()];
-        Arrays.fill(primarysChecked, false);
-        for (int  c=0;equals && c<primarysChecked.length; c++) {
-          if (!primarysChecked[c]) {
-            columnName  = getColumnNames().get(c);
-            columnIndex = columnMapping.get(columnName);
-            if (indexed&&columnIndex!=null) {
-              if (values.containsKey(columnIndex) && values.get(columnIndex)!=null)
-                equals = equals && (values.get(columnIndex).equals(resultSet.getObject(columnIndex)));
-              else {
-                resultSet.getObject(columnIndex);
-                equals = equals && resultSet.wasNull();
-              }
-            } else if (indexed&&!columnValuesScan) {
-              columnValuesScan = true;
-              ResultSetMetaData metaData = resultSet.getMetaData();
-              for (Iterator<Map.Entry<K,Object>> iterator=values.entrySet().iterator();iterator.hasNext()&&equals;) {
-                Map.Entry<K,Object> entry = iterator.next();
-                columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue());
-                int index = getColumnNames().indexOf(columnName);
-                if (index>=0) {
-                  primarysChecked[index] = true;
-                  if (entry.getValue()!=null) {
-                    equals = equals && (entry.getValue().equals(resultSet.getObject(columnName)));
-                  } else {
-                    resultSet.getObject(columnName);
-                    equals = equals && resultSet.wasNull();
+        try {
+          String columnName;
+          Integer columnIndex;
+          boolean columnValuesScan = false;
+          boolean indexed = values.keySet().iterator().next() instanceof Integer;
+          boolean[] primarysChecked = new boolean[getColumnNames().size()];
+          Arrays.fill(primarysChecked, false);
+          for (int  c=0;equals && c<primarysChecked.length; c++) {
+            if (!primarysChecked[c]) {
+              columnName  = getColumnNames().get(c);
+              columnIndex = columnMapping.get(columnName);
+              if (indexed&&columnIndex!=null) {
+                if (values.containsKey(columnIndex) && values.get(columnIndex)!=null)
+                  equals = equals && (values.get(columnIndex).equals(resultSet.getObject(columnIndex)));
+                else {
+                  resultSet.getObject(columnIndex);
+                  equals = equals && resultSet.wasNull();
+                }
+              } else if (indexed&&!columnValuesScan) {
+                columnValuesScan = true;
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                for (Iterator<Map.Entry<K,Object>> iterator=values.entrySet().iterator();iterator.hasNext()&&equals;) {
+                  Map.Entry<K,Object> entry = iterator.next();
+                  columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue());
+                  int index = getColumnNames().indexOf(columnName);
+                  if (index>=0) {
+                    primarysChecked[index] = true;
+                    if (entry.getValue()!=null) {
+                      equals = equals && (entry.getValue().equals(resultSet.getObject(columnName)));
+                    } else {
+                      resultSet.getObject(columnName);
+                      equals = equals && resultSet.wasNull();
+                    }
                   }
                 }
-              }
-            } else {
-              if (values.containsKey(columnName) && values.get(columnName)!=null)
-                equals = equals && (values.get(columnName).equals(resultSet.getObject(columnName)));
-              else {
-                resultSet.getObject(columnName);
-                equals = equals && resultSet.wasNull();
+              } else {
+                if (values.containsKey(columnName) && values.get(columnName)!=null)
+                  equals = equals && (values.get(columnName).equals(resultSet.getObject(columnName)));
+                else {
+                  resultSet.getObject(columnName);
+                  equals = equals && resultSet.wasNull();
+                }
               }
             }
           }
+        } catch (SQLException ex) {
+          equals = false;
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error comparing the primary key values.", ex);
         }
       }
       return equals;

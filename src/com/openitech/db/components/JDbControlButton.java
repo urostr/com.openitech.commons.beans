@@ -67,12 +67,12 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
   }
   
   private void checkButton() {
-    dataSource.lock();
-    try {
+//    dataSource.lock();
+//    try {
       setEnabled(operation.isEnabled(dataSource));
-    } finally {
-      dataSource.unlock();
-    }
+//    } finally {
+//      dataSource.unlock();
+//    }
   }
   
   public void setOperation(JDbControlButton.Operation operation) {

@@ -97,43 +97,47 @@ public final class RefreshDataSource extends DataSourceEvent {
       }
       if (timestamps.get(event).longValue()<=timestamp.longValue()) {
         if (event.dataSource.lock(false)) {
-          try {
-            if (filterChange)
-              try {
-                event.dataSource.filterChanged();
-              } catch (SQLException ex) {
-                Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting ["+event.dataSource.getName()+"]", ex);
-              }
-            if (this.defaults!=null)
-              event.dataSource.setDefaultValues(defaults);
-            if (this.parameters!=null)
-              event.dataSource.setParameters(parameters,false);
-          } finally {
-            event.dataSource.unlock();
-          }
-          setBusy(event.dataSource.getBusyLabel());
-          tasks.remove(event);
-          try {
-            if (event.dataSource.isDataLoaded())
-              event.dataSource.reload(event.dataSource.getRow());
-            else
-              event.dataSource.reload();
-          } catch (SQLException ex) {
-            event.dataSource.reload();
-          }
-          setReady();
+          loadData();
         } else {
           DataSourceEvent.submit(this);
         }
       } else
-          Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
+        Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
     }
+  }
+  
+  protected void loadData() {
+    try {
+      if (filterChange)
+        try {
+          event.dataSource.filterChanged();
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting ["+event.dataSource.getName()+"]", ex);
+        }
+      if (this.defaults!=null)
+        event.dataSource.setDefaultValues(defaults);
+      if (this.parameters!=null)
+        event.dataSource.setParameters(parameters,false);
+    } finally {
+      event.dataSource.unlock();
+    }
+    setBusy(event.dataSource.getBusyLabel());
+    tasks.remove(event);
+    try {
+      if (event.dataSource.isDataLoaded())
+        event.dataSource.reload(event.dataSource.getRow());
+      else
+        event.dataSource.reload();
+    } catch (SQLException ex) {
+      event.dataSource.reload();
+    }
+    setReady();
   }
   
   public static void timestamp(DbDataSource dataSource) {
     DataSourceEvent.timestamp(new Event(dataSource, Event.Type.REFRESH));
   }
-
+  
   public final Object clone() {
     return new RefreshDataSource(this);
   }
