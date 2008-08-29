@@ -143,6 +143,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   
   private Connection connection = null;
   private boolean refreshPending = false;
+  private boolean reloadsOnEventQueue = false;
   
   
   /**
@@ -3591,7 +3592,15 @@ public class DbDataSource implements DbNavigatorDataSource {
   public void unlock() {
     available.unlock();
   }
-  
+
+  public boolean isReloadsOnEventQueue() {
+    return reloadsOnEventQueue;
+  }
+
+  public void setReloadsOnEventQueue(boolean reloadsOnEventQueue) {
+    this.reloadsOnEventQueue = reloadsOnEventQueue;
+  }
+ 
   public boolean isDataLoaded() {
     return selectResultSet!=null;
   }

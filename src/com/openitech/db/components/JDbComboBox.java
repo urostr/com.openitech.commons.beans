@@ -58,12 +58,7 @@ public class JDbComboBox extends JComboBox {
     dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addActionListener(actionWeakListener);
-    try {
-      Class.forName("org.jdesktop.swingx.autocomplete.AutoCompleteDecorator");
-      org.jdesktop.swingx.autocomplete.AutoCompleteDecorator.decorate(this);
-    } catch (ClassNotFoundException ex) {
-      ex.printStackTrace();
-    }
+    com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
   }
   
   public DbFieldObserver getDbFieldObserver() {

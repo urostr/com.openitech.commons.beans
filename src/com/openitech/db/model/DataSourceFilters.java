@@ -3,9 +3,12 @@ package com.openitech.db.model;
 import com.openitech.util.Equals;
 import java.text.MessageFormat;
 import java.util.HashSet;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 
 
 public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
@@ -18,14 +21,18 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public static final int PREFORMATTED = 7;
     
     protected final MessageFormat[] formati = new MessageFormat[] {
-      new MessageFormat(" (UPPER({0}) = ?) "), 
-      new MessageFormat(" (UPPER({0}) like (?+''%'')) "), 
-      new MessageFormat(" (UPPER({0}) like (''%''+?)) "), 
-      new MessageFormat(" (UPPER({0}) like (''%''+?+''%'')) "), 
-      new MessageFormat(" ({0} = ?) "), 
-      new MessageFormat(" ({0} >= ?) "), 
-      new MessageFormat(" ({0} <= ?) "),
-      new MessageFormat(" ({0}) ")};
+      new MessageFormat(" (UPPER({0}) = ?) "),                    //-0
+      new MessageFormat(" (UPPER({0}) like (?+''%'')) "),         //-1
+      new MessageFormat(" (UPPER({0}) like (''%''+?)) "),         //-2
+      new MessageFormat(" (UPPER({0}) like (''%''+?+''%'')) "),   //-3
+      new MessageFormat(" ({0} = ?) "),                           //-4
+      new MessageFormat(" ({0} >= ?) "),                          //-5
+      new MessageFormat(" ({0} <= ?) "),                          //-6
+      new MessageFormat(" ({0}) "),                               //-7
+      new MessageFormat(" ({0} like (?+''%'')) "),                //-8
+      new MessageFormat(" ({0} like (''%''+?)) "),                //-9
+      new MessageFormat(" ({0} like (''%''+?+''%'')) "),          //-10
+   };
     
     protected String field;
     protected E value = null;
@@ -226,6 +233,41 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
     public void removeUpdate(DocumentEvent e) {
       filter.setSeekValue(seek_type, getText(e));
+    }
+  }
+  
+  public static class FilterDocumentCaretListener implements CaretListener {
+    Document document;
+    DataSourceFilters filter;
+    SeekType seek_type;
+    
+    public FilterDocumentCaretListener(Document document, DataSourceFilters filter, SeekType seek_type) {
+      this.document = document;
+      this.filter = filter;
+      this.seek_type = seek_type;
+    }
+    
+    private static String getText(Document document, CaretEvent e) {
+      String txt;
+      try {
+        txt = document.getText(e.getDot()==e.getMark()?0:e.getDot(), e.getMark());
+      } catch (BadLocationException err) {
+        txt = null;
+      }
+      return txt;
+    }
+    
+//    private static boolean isFullTextSearch(Document document, CaretEvent e) {
+//      return (e.getDot()!=e.getMark())&&(e.getDot()!=0 || e.getMark()!=document.getLength());
+//    }
+    
+    public void caretUpdate(CaretEvent e) {
+      caretUpdate(e, document, filter, seek_type);
+    }
+    
+    public static void caretUpdate(CaretEvent e, Document document, DataSourceFilters filter, SeekType seek_type) {
+//      filter.setSeekType(seek_type, isFullTextSearch(document, e)?8:10);
+      filter.setSeekValue(seek_type, getText(document,e));
     }
   }
 

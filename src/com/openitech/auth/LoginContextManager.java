@@ -30,7 +30,7 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-import org.jdesktop.swingx.JXLoginPanel;
+import org.jdesktop.swingx.JXLoginPane;
 import org.jdesktop.swingx.auth.LoginService;
 import com.openitech.auth.jaas.LocalGroupPrincipal;
 import com.openitech.auth.jaas.callback.LocalCommitCallback;
@@ -109,7 +109,7 @@ public class LoginContextManager extends PropertyChanges {
     if (name==null||
         password==null) {
       java.awt.Component owner = (source instanceof java.awt.Component)?((java.awt.Component) source):null;
-      JXLoginPanel.showLoginDialog(owner, new LocalLoginService());
+      JXLoginPane.showLoginDialog(owner, new LocalLoginService());
     } else {
       contextLogin();
     }

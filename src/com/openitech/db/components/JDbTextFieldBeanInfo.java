@@ -24,24 +24,27 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
 
 
     // Property identifiers//GEN-FIRST:Properties
-    private static final int PROPERTY_background = 0;
-    private static final int PROPERTY_border = 1;
-    private static final int PROPERTY_columnName = 2;
-    private static final int PROPERTY_componentPopupMenu = 3;
-    private static final int PROPERTY_dataSource = 4;
-    private static final int PROPERTY_dbFieldObserver = 5;
-    private static final int PROPERTY_document = 6;
-    private static final int PROPERTY_foreground = 7;
-    private static final int PROPERTY_searchField = 8;
-    private static final int PROPERTY_toolTipColumnName = 9;
-    private static final int PROPERTY_validator = 10;
+    private static final int PROPERTY_autoCompleteModel = 0;
+    private static final int PROPERTY_background = 1;
+    private static final int PROPERTY_border = 2;
+    private static final int PROPERTY_columnName = 3;
+    private static final int PROPERTY_componentPopupMenu = 4;
+    private static final int PROPERTY_dataSource = 5;
+    private static final int PROPERTY_dbFieldObserver = 6;
+    private static final int PROPERTY_document = 7;
+    private static final int PROPERTY_foreground = 8;
+    private static final int PROPERTY_searchField = 9;
+    private static final int PROPERTY_toolTipColumnName = 10;
+    private static final int PROPERTY_validator = 11;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[11];
+        PropertyDescriptor[] properties = new PropertyDescriptor[12];
     
         try {
+            properties[PROPERTY_autoCompleteModel] = new PropertyDescriptor ( "autoCompleteModel", com.openitech.db.components.JDbTextField.class, "getAutoCompleteModel", "setAutoCompleteModel" ); // NOI18N
+            properties[PROPERTY_autoCompleteModel].setPreferred ( true );
             properties[PROPERTY_background] = new PropertyDescriptor ( "background", com.openitech.db.components.JDbTextField.class, "getBackground", "setBackground" ); // NOI18N
             properties[PROPERTY_border] = new PropertyDescriptor ( "border", com.openitech.db.components.JDbTextField.class, "getBorder", "setBorder" ); // NOI18N
             properties[PROPERTY_columnName] = new PropertyDescriptor ( "columnName", com.openitech.db.components.JDbTextField.class, "getColumnName", "setColumnName" ); // NOI18N

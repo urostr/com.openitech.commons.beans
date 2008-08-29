@@ -4,6 +4,7 @@ import com.openitech.Settings;
 import com.openitech.components.JXDimBusyLabel;
 import com.openitech.db.model.*;
 import java.awt.EventQueue;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,19 +31,20 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
   
   public RefreshDataSource(DbDataSource dataSource) {
-    super(new Event(dataSource, Event.Type.REFRESH));
+    super(new Event(dataSource, Event.Type.REFRESH, dataSource.isReloadsOnEventQueue()));
     this.suspend = new Event(dataSource, Event.Type.SUSPEND);
   }
   
   public RefreshDataSource(DbDataSource dataSource, boolean filterChange) {
-    this(dataSource,null,null,filterChange);
+    this(dataSource,null,null,filterChange, dataSource.isReloadsOnEventQueue());
   }
+
   public RefreshDataSource(DbDataSource dataSource, List<Object> parameters, Map<String,Object> defaults) {
-    this(dataSource, parameters, defaults, false);
+    this(dataSource, parameters, defaults, false, dataSource.isReloadsOnEventQueue());
   }
   
-  public RefreshDataSource(DbDataSource dataSource, List<Object> parameters, Map<String,Object> defaults, boolean filterChange) {
-    super(new Event(dataSource, Event.Type.REFRESH));
+  public RefreshDataSource(DbDataSource dataSource, List<Object> parameters, Map<String,Object> defaults, boolean filterChange, boolean onEventQueue) {
+    super(new Event(dataSource, Event.Type.REFRESH, onEventQueue));
     if (parameters!=null)
       this.parameters.addAll(parameters);
     else
@@ -88,7 +90,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       }
     }
     if (isSuspended()) { //re-queue
-      DataSourceEvent.submit(this);
+      resubmit();
     } else {
       try {
         Thread.sleep(event.dataSource.getQueuedDelay());
@@ -96,17 +98,37 @@ public final class RefreshDataSource extends DataSourceEvent {
         Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
       }
       if (timestamps.get(event).longValue()<=timestamp.longValue()) {
-        if (event.dataSource.lock(false)) {
-          loadData();
+        if (event.isOnEventQueue()) {
+          try {
+            EventQueue.invokeAndWait(new Runnable() {
+              public void run() {
+                lockAndLoad();
+              }
+            });
+          } catch (Exception ex) {
+            Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
+          }
         } else {
-          DataSourceEvent.submit(this);
+          lockAndLoad();
         }
       } else
         Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
     }
   }
   
-  protected void loadData() {
+  private void resubmit() {
+    DataSourceEvent.submit(this);
+  }
+  
+  private void lockAndLoad() {
+    if (event.dataSource.lock(false)) {
+      load();
+    } else {
+      resubmit();
+    }
+  }
+  
+  protected void load() {
     try {
       if (filterChange)
         try {

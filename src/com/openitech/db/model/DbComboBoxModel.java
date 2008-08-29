@@ -116,6 +116,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     }
     this.dataSource = dataSource;
     if (dataSource!=null) {
+      dataSource.setReloadsOnEventQueue(true);
       dataSource.addListDataListener(listDataWeakListener);
       dataSource.addPropertyChangeListener("selectSql", propertyChangeWeakListener);
     }

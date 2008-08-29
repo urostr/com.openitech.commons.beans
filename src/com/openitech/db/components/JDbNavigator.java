@@ -257,6 +257,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   }//GEN-LAST:event_jbCancelActionPerformed
 
   private void jbConfirmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbConfirmActionPerformed
+//        dataSource.updateRow();
     try {
       if (dataSource!=null)
         dataSource.updateRow();

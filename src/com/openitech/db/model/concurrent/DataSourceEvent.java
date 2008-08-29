@@ -48,7 +48,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
     if ((event instanceof RefreshDataSource)&&
         event.event.dataSource.getQueuedDelay()<=0) {
         if (event.event.dataSource.lock()) {
-         ((RefreshDataSource) event).loadData();
+         ((RefreshDataSource) event).load();
         }      
     } else {
       timestamps.put(event.event, event.timestamp);
@@ -98,14 +98,19 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
     
     protected DbDataSource dataSource;
     protected Type type;
+    protected boolean onEventQueue = false;
     
     protected int hash = 17;
     
     public Event(DbDataSource dataSource, Type type) {
+      this(dataSource, type, false);
+    }
+    public Event(DbDataSource dataSource, Type type, boolean onEventQueue) {
       if (dataSource==null)
         throw new IllegalArgumentException("DataSource can't be null");
       this.dataSource = dataSource;
       this.type = type;
+      this.onEventQueue = onEventQueue;
       this.hash = dataSource.hashCode()+type.hashCode();
     }
     
@@ -129,6 +134,15 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
       }
       return result;
     }
+    
+    public boolean isOnEventQueue() {
+      return onEventQueue;
+    }
+
+    public void setOnEventQueue(boolean onEventQueue) {
+      this.onEventQueue = onEventQueue;
+    }
+
   }
   
 }

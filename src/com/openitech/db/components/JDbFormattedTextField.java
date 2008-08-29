@@ -9,6 +9,9 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
+import com.openitech.autocomplete.AutoCompleteComboBoxModelAdaptor;
+import com.openitech.autocomplete.AutoCompleteDecorator;
+import com.openitech.autocomplete.AutoCompleteDocument;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
@@ -29,6 +32,7 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ComboBoxModel;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.JOptionPane;
@@ -459,5 +463,35 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     super.setDocument(doc);
     if (getDocument()!=null&&documentWeakListener!=null)
       getDocument().addDocumentListener(documentWeakListener);
+  }
+  
+  /**
+   * Holds value of property autoCompleteModel.
+   */
+  private ComboBoxModel autoCompleteModel;
+
+  /**
+   * Getter for property autoCompleteModel.
+   * @return Value of property autoCompleteModel.
+   */
+  public ComboBoxModel getAutoCompleteModel() {
+    return this.autoCompleteModel;
+  }
+
+  /**
+   * Setter for property autoCompleteModel.
+   * @param autoCompleteModel New value of property autoCompleteModel.
+   */
+  public void setAutoCompleteModel(ComboBoxModel autoCompleteModel) {
+    if (autoCompleteModel!=null) {
+      ComboBoxModel old = autoCompleteModel;
+      this.autoCompleteModel = autoCompleteModel;
+      
+      AutoCompleteComboBoxModelAdaptor adapter = new AutoCompleteComboBoxModelAdaptor(this, autoCompleteModel);
+      AutoCompleteDocument document = new AutoCompleteDocument(adapter, false, com.openitech.autocomplete.ObjectToStringConverter.DEFAULT_IMPLEMENTATION, getDocument());
+      AutoCompleteDecorator.decorate(this, document, adapter);
+      
+      firePropertyChange("autoCompleteModel", old, autoCompleteModel);
+    }
   }
 }

@@ -24,21 +24,24 @@ public class JDbFormattedTextFieldBeanInfo extends SimpleBeanInfo {
 
 
     // Property identifiers//GEN-FIRST:Properties
-    private static final int PROPERTY_columnName = 0;
-    private static final int PROPERTY_dataSource = 1;
-    private static final int PROPERTY_dbFieldObserver = 2;
-    private static final int PROPERTY_format = 3;
-    private static final int PROPERTY_formatterFactory = 4;
-    private static final int PROPERTY_searchField = 5;
-    private static final int PROPERTY_toolTipColumnName = 6;
-    private static final int PROPERTY_validator = 7;
+    private static final int PROPERTY_autoCompleteModel = 0;
+    private static final int PROPERTY_columnName = 1;
+    private static final int PROPERTY_dataSource = 2;
+    private static final int PROPERTY_dbFieldObserver = 3;
+    private static final int PROPERTY_format = 4;
+    private static final int PROPERTY_formatterFactory = 5;
+    private static final int PROPERTY_searchField = 6;
+    private static final int PROPERTY_toolTipColumnName = 7;
+    private static final int PROPERTY_validator = 8;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[8];
+        PropertyDescriptor[] properties = new PropertyDescriptor[9];
     
         try {
+            properties[PROPERTY_autoCompleteModel] = new PropertyDescriptor ( "autoCompleteModel", com.openitech.db.components.JDbFormattedTextField.class, "getAutoCompleteModel", "setAutoCompleteModel" ); // NOI18N
+            properties[PROPERTY_autoCompleteModel].setPreferred ( true );
             properties[PROPERTY_columnName] = new PropertyDescriptor ( "columnName", com.openitech.db.components.JDbFormattedTextField.class, "getColumnName", "setColumnName" ); // NOI18N
             properties[PROPERTY_columnName].setPreferred ( true );
             properties[PROPERTY_dataSource] = new PropertyDescriptor ( "dataSource", com.openitech.db.components.JDbFormattedTextField.class, "getDataSource", "setDataSource" ); // NOI18N
