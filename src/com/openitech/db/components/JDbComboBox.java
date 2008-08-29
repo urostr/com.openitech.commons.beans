@@ -102,7 +102,7 @@ public class JDbComboBox extends JComboBox {
     actionWeakListener.setEnabled(false);
     try {
       if (getModel() instanceof DbComboBoxModel) {
-        this.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object,Object>(dbFieldObserver.getValue(),null));
+        this.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object,Object>(dbFieldObserver.getValue(),null, null));
       } else if (dbFieldObserver.getValueAsInt()<getModel().getSize())
         this.setSelectedIndex(dbFieldObserver.getValueAsInt());
       if (getEditor()!=null) {

@@ -16,6 +16,8 @@ import com.openitech.ref.events.PropertyChangeWeakListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -144,6 +146,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
       try {
         int size = dataSource.getRowCount();
         StringBuffer result;
+        List values;
         K key;
         Object value;
         int min;
@@ -162,13 +165,15 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
         for (int row=min; row<=max; row++) {
           key = (K) dataSource.getValueAt(row, keyColumnName);
           result = new StringBuffer();
+          values = new ArrayList();
           for (int f=0; f<valueColumnNames.length; f++) {
             value = this.dataSource.getValueAt(row,valueColumnNames[f]);
+            values.add(value);
             if (result.length()>0&&value!=null&&value.toString().length()>0)
               result.append(separator[Math.min(Math.max(f-1,0), separator.length-1)]);
             result.append(value==null?"":value);
           }
-          entries.set(row-1,new DbComboBoxEntry<K,String>(key,result.toString()));
+          entries.set(row-1,new DbComboBoxEntry<K,String>(key,values,result.toString().trim()));
         }
         selectedIndex = max>0?0:-1;
         
@@ -290,9 +295,11 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
   public static class DbComboBoxEntry<K,V> {
     K key;
     V value;
+    List values;
     
-    public DbComboBoxEntry(K key,V value) {
+    public DbComboBoxEntry(K key, List values, V value) {
       this.key = key;
+      this.values = values;
       this.value = value;
     }
     
@@ -312,6 +319,10 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     
     public K getKey() {
       return key;
+    }
+    
+    public List getValues() {
+      return Collections.unmodifiableList(values);
     }
   }
   
