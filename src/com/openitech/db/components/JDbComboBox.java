@@ -16,6 +16,7 @@ import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.ref.events.ActionWeakListener;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -23,6 +24,7 @@ import java.util.logging.Logger;
 import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.event.ListDataEvent;
+import javax.swing.text.JTextComponent;
 
 /**
  *
@@ -130,7 +132,7 @@ public class JDbComboBox extends JComboBox {
     try {
       if (getModel() instanceof DbComboBoxModel) {
         if (!((DbComboBoxModel) getModel()).isUpdatingEntries()) {
-          if (this.getSelectedItem()!=null) {
+          if ((this.getSelectedItem()!=null)&&(this.getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
             Object value = (((DbComboBoxModel.DbComboBoxEntry) this.getSelectedItem()).getKey());
             if ((validator==null)||(validator!=null&&validator.isValid(value))) {
               dbFieldObserver.updateValue(value);
@@ -161,8 +163,15 @@ public class JDbComboBox extends JComboBox {
     boolean enabled = actionWeakListener.isEnabled();
     actionWeakListener.setEnabled(false);
     try {
-      super.contentsChanged(e);
-      dataSource_fieldValueChanged(null);
+      if (!(getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
+        //final Object oldValue = getSelectedItem();
+        super.contentsChanged(e);
+        //setSelectedItem(oldValue);
+        //((JTextComponent) this.getEditor().getEditorComponent()).setText(oldValue.toString());
+      } else {
+        super.contentsChanged(e);
+        dataSource_fieldValueChanged(null);
+      }
     } finally {
       actionWeakListener.setEnabled(enabled);
     }

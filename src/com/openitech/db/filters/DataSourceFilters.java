@@ -1,5 +1,6 @@
-package com.openitech.db.model;
+package com.openitech.db.filters;
 
+import com.openitech.db.model.*;
 import com.openitech.util.Equals;
 import java.text.MessageFormat;
 import java.util.HashSet;
@@ -16,8 +17,7 @@ import javax.swing.text.Document;
 
 
 public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
-  private static final ScheduledExecutorService schedule = Executors.newSingleThreadScheduledExecutor();
-  private static final long DELAY = 9;
+  private static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(1);
 
   private static final String EMPTY = " 0=1 ";
   
@@ -210,96 +210,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public RequiredFields(AbstractSeekType field, int no_fields) {
       this.field = field;
       this.no_fields = no_fields;
-    }
-  }
-  
-  public static class FilterDocumentListener implements DocumentListener {
-    DataSourceFilters filter;
-    SeekType seek_type;
-    
-    public FilterDocumentListener(DataSourceFilters filter, SeekType seek_type) {
-      this.filter = filter;
-      this.seek_type = seek_type;
-    }
-    
-    public String getText(DocumentEvent e) {
-      String txt;
-      try {
-        txt = e.getDocument().getText(0, e.getDocument().getLength());
-      } catch (BadLocationException err) {
-        txt = null;
-      }
-      return txt;
-    }
-    
-    public void changedUpdate(DocumentEvent e) {
-      filter.setSeekValue(seek_type, getText(e));
-    }
-    public void insertUpdate(DocumentEvent e) {
-      filter.setSeekValue(seek_type, getText(e));
-    }
-    public void removeUpdate(DocumentEvent e) {
-      filter.setSeekValue(seek_type, getText(e));
-    }
-  }
-  
-  public static class FilterDocumentCaretListener implements CaretListener {
-    private Future event = null;
-
-
-    Document document;
-    DataSourceFilters filter;
-    SeekType seek_type;
-    
-    public FilterDocumentCaretListener(Document document, DataSourceFilters filter, SeekType seek_type) {
-      this.document = document;
-      this.filter = filter;
-      this.seek_type = seek_type;
-    }
-    
-    private String getText(CaretEvent e) {
-      String txt;
-      try {
-        //int min = Math.min(e.getDot(), e.getMark());
-        int max = Math.max(e.getDot(), e.getMark());
-        //txt = document.getText(min==max?0:min, max);
-        txt = document.getText(0, max);
-      } catch (BadLocationException err) {
-        txt = null;
-      }
-      return txt;
-    }
-    
-//    private static boolean isFullTextSearch(Document document, CaretEvent e) {
-//      return (e.getDot()!=e.getMark())&&(e.getDot()!=0 || e.getMark()!=document.getLength());
-//    }
-    public void caretUpdate(CaretEvent e) {
-      caretUpdate(e, DELAY);
-    }
-    
-    public void caretUpdate(CaretEvent e, long delay) {
-      if (!(event==null||event.isDone()||event.isCancelled())) {
-        event.cancel(false);
-      }
-
-      event = schedule.schedule(new SeekValueUpdateRunnable<String>(filter, seek_type, getText(e)), delay, TimeUnit.MILLISECONDS);
-    }
-  }
-
-    
-  private static class SeekValueUpdateRunnable<E> implements Runnable {
-    DataSourceFilters filter;
-    AbstractSeekType<E> seek_type; 
-    E value;
-    
-    public SeekValueUpdateRunnable(DataSourceFilters filter, AbstractSeekType<E> seek_type, E value) {
-      this.filter = filter;
-      this.seek_type = seek_type;
-      this.value = value;
-    }
-    
-    public void run() {
-      filter.setSeekValue(seek_type, value);
     }
   }
   private HashSet<AbstractSeekType> seek_types = new HashSet<AbstractSeekType>();

@@ -1,5 +1,5 @@
 /*
- * $Id: AutoCompleteDocument.java,v 1.1 2008/08/29 12:44:13 uros Exp $
+ * $Id: AutoCompleteDocument.java,v 1.2 2008/09/03 05:39:14 uros Exp $
  *
  * Copyright 2004 Sun Microsystems, Inc., 4150 Network Circle,
  * Santa Clara, California 95054, U.S.A. All rights reserved.
@@ -260,92 +260,136 @@ public class AutoCompleteDocument implements StyledDocument {
     return base.regionMatches(true, 0, prefix, 0, prefix.length());
   }
   
-  public Document getDelegate() {
+  protected Document getDelegate() {
     return delegate;
+  }
+
+  protected void setDelegate(Document delegate) {
+    this.delegate = delegate;
   }
   
   /**
    * {@inheritDoc}
    */
   public Style addStyle(String nm, Style parent) {
-    return ((StyledDocument) delegate).addStyle(nm, parent);
+    if (delegate instanceof StyledDocument) {
+      return ((StyledDocument) delegate).addStyle(nm, parent);
+    } else {
+      return null;
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public Color getBackground(AttributeSet attr) {
-    return ((StyledDocument) delegate).getBackground(attr);
+    if (delegate instanceof StyledDocument) {
+      return ((StyledDocument) delegate).getBackground(attr);
+    } else {
+      return null;
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public Element getCharacterElement(int pos) {
-    return ((StyledDocument) delegate).getCharacterElement(pos);
+    if (delegate instanceof StyledDocument) {
+      return ((StyledDocument) delegate).getCharacterElement(pos);
+    } else {
+      return null;
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public Font getFont(AttributeSet attr) {
-    return ((StyledDocument) delegate).getFont(attr);
+    if (delegate instanceof StyledDocument) {
+      return ((StyledDocument) delegate).getFont(attr);
+    } else {
+      return null;
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public Color getForeground(AttributeSet attr) {
-    return ((StyledDocument) delegate).getForeground(attr);
+    if (delegate instanceof StyledDocument) {
+      return ((StyledDocument) delegate).getForeground(attr);
+    } else {
+      return null;
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public Style getLogicalStyle(int p) {
-    return ((StyledDocument) delegate).getLogicalStyle(p);
+    if (delegate instanceof StyledDocument) {
+      return ((StyledDocument) delegate).getLogicalStyle(p);
+    } else {
+      return null;
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public Element getParagraphElement(int pos) {
-    return ((StyledDocument) delegate).getParagraphElement(pos);
+    if (delegate instanceof StyledDocument) {
+      return ((StyledDocument) delegate).getParagraphElement(pos);
+    } else {
+      return null;
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public Style getStyle(String nm) {
-    return ((StyledDocument) delegate).getStyle(nm);
+    if (delegate instanceof StyledDocument) {
+      return ((StyledDocument) delegate).getStyle(nm);
+    } else {
+      return null;
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public void removeStyle(String nm) {
-    ((StyledDocument) delegate).removeStyle(nm);
+    if (delegate instanceof StyledDocument) {
+      ((StyledDocument) delegate).removeStyle(nm);
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public void setCharacterAttributes(int offset, int length, AttributeSet s, boolean replace) {
-    ((StyledDocument) delegate).setCharacterAttributes(offset, length, s, replace);
+    if (delegate instanceof StyledDocument) {
+      ((StyledDocument) delegate).setCharacterAttributes(offset, length, s, replace);
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public void setLogicalStyle(int pos, Style s) {
-    ((StyledDocument) delegate).setLogicalStyle(pos, s);
+    if (delegate instanceof StyledDocument) {
+      ((StyledDocument) delegate).setLogicalStyle(pos, s);
+    }
   }
   
   /**
    * {@inheritDoc}
    */
   public void setParagraphAttributes(int offset, int length, AttributeSet s, boolean replace) {
-    ((StyledDocument) delegate).setParagraphAttributes(offset, length, s, replace);
+    if (delegate instanceof StyledDocument) {
+      ((StyledDocument) delegate).setParagraphAttributes(offset, length, s, replace);
+    }
   }
   
   /**

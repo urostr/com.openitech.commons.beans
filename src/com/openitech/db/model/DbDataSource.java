@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.35 $
+ * $Revision: 1.36 $
  */
 
 package com.openitech.db.model;
@@ -144,6 +144,9 @@ public class DbDataSource implements DbNavigatorDataSource {
   private Connection connection = null;
   private boolean refreshPending = false;
   private boolean reloadsOnEventQueue = false;
+  private boolean cacheStatements = true;
+  
+  private transient Map<String, PreparedStatement>  cachedStatements = new HashMap<String, PreparedStatement>();
   
   
   /**
@@ -3413,9 +3416,16 @@ public class DbDataSource implements DbNavigatorDataSource {
               sql+
               "\n################# ########## #################");
       if (sql!=null && sql.length()>0 && getConnection()!=null) {
-        if ( (this.selectStatement == null) || (!sql.equals(preparedSelectSql))) {
-          if (this.selectStatement!=null)
-            this.selectStatement.close();
+        if (cachedStatements.containsKey(sql)) {
+          selectStatement = cachedStatements.get(sql);
+          preparedSelectSql = sql;
+        } else if ( (this.selectStatement == null) || (!sql.equals(preparedSelectSql))) {
+          if (this.selectStatement!=null) {
+            if (isCacheStatements()) {
+              cachedStatements.put(preparedSelectSql, selectStatement);
+            } else
+              selectStatement.close();
+          }
           this.selectStatement = getConnection().prepareStatement(sql,
                   ResultSet.TYPE_SCROLL_INSENSITIVE,
                   ResultSet.CONCUR_READ_ONLY,
@@ -3451,7 +3461,15 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
     firePropertyChange("selectSql", oldvalue, this.selectSql);
   }
-  
+
+  public void setCacheStatements(boolean cacheStatements) {
+    this.cacheStatements = cacheStatements;
+  }
+
+  public boolean isCacheStatements() {
+    return cacheStatements;
+  }
+
   public void setCountSql(String countSql) throws SQLException {
     String oldvalue = this.countSql;
     try {
@@ -3463,9 +3481,16 @@ public class DbDataSource implements DbNavigatorDataSource {
               sql+
               "\n################# ######### #################");
       if (sql!=null && sql.length()>0 && getConnection()!=null) {
-        if ( (this.countStatement == null) || (!sql.equals(preparedCountSql))) {
-          if (this.countStatement!=null)
-            this.countStatement.close();
+        if (cachedStatements.containsKey(sql)) {
+          countStatement = cachedStatements.get(sql);
+          preparedCountSql = sql;
+        } else if ((this.countStatement == null) || (!sql.equals(preparedCountSql))) {
+          if (this.countStatement!=null) {
+            if (isCacheStatements()) {
+              cachedStatements.put(preparedCountSql, countStatement);
+            } else
+              countStatement.close();
+          }
           countStatement = getConnection().prepareStatement(sql,
                   ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,ResultSet.HOLD_CURSORS_OVER_COMMIT);
           countStatement.setFetchSize(1);

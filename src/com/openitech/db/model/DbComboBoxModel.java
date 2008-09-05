@@ -37,6 +37,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
   private String[] valueColumnNames = null;
   private String[] separator = new String[] {" "};
   private int selectedIndex = -1;
+  private Object selectedItem;
   private transient DbDataSource dataSource = null;
   
   private transient ListDataWeakListener   listDataWeakListener       = new ListDataWeakListener(this);
@@ -175,7 +176,12 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
           }
           entries.set(row-1,new DbComboBoxEntry<K,String>(key,values,result.toString().trim()));
         }
-        selectedIndex = max>0?0:-1;
+        if ((selectedItem instanceof DbComboBoxEntry)||(selectedItem==null)) {
+          selectedIndex = max>0?0:-1;
+          selectedItem  = max>0?entries.elementAt(0):null;
+        } else {
+          selectedIndex = -1;
+        }
         
         updatingEntries = true;
         try {
@@ -206,6 +212,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    *        to clear the selection
    */
   public void setSelectedItem(Object anItem) {
+    selectedItem = anItem;
     selectedIndex = entries.indexOf(anItem);
   }
   
@@ -216,7 +223,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    * @return The selected item or <code>null</code> if there is no selection
    */
   public Object getSelectedItem() {
-    return ((selectedIndex<0)||(selectedIndex>=entries.size()))?null:entries.get(selectedIndex);
+    return ((selectedIndex<0)||(selectedIndex>=entries.size()))?selectedItem:entries.get(selectedIndex);
   }
   
   /**
@@ -314,7 +321,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     }
     
     public String toString() {
-      return value.toString();
+      return value==null?"":value.toString();
     }
     
     public K getKey() {

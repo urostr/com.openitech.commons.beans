@@ -51,8 +51,8 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     super.setDataSource(dsSifrant);
   }
   
-  private static class SifrantiDataSourceDescriptionFilter extends com.openitech.db.model.DataSourceFilters {
-    public final com.openitech.db.model.DataSourceFilters.SeekType I_TYPE_NOT_DEFINED = new com.openitech.db.model.DataSourceFilters.SeekType("cast(? as varchar)", com.openitech.db.model.DataSourceFilters.SeekType.PREFORMATTED, 1);
+  private static class SifrantiDataSourceDescriptionFilter extends com.openitech.db.filters.DataSourceFilters {
+    public final com.openitech.db.filters.DataSourceFilters.SeekType I_TYPE_NOT_DEFINED = new com.openitech.db.filters.DataSourceFilters.SeekType("cast(? as varchar)", com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED, 1);
     
     public SifrantiDataSourceDescriptionFilter() {
       super("<%DbSifrantModelDescription%>");
@@ -66,9 +66,9 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   }
   
   
-  private static class SifrantiDataSourceFilters extends com.openitech.db.model.DataSourceFilters {
-    public final com.openitech.db.model.DataSourceFilters.SeekType I_TYPE_SKUPINA_SIFRANTA = new com.openitech.db.model.DataSourceFilters.SeekType("SeznamSifrantov.Skupina", com.openitech.db.model.DataSourceFilters.SeekType.UPPER_EQUALS, 1);
-    public final com.openitech.db.model.DataSourceFilters.SeekType I_TYPE_OPIS_SIFRANTA    = new com.openitech.db.model.DataSourceFilters.SeekType("SeznamSifrantov.Opis", com.openitech.db.model.DataSourceFilters.SeekType.UPPER_EQUALS, 1);
+  private static class SifrantiDataSourceFilters extends com.openitech.db.filters.DataSourceFilters {
+    public final com.openitech.db.filters.DataSourceFilters.SeekType I_TYPE_SKUPINA_SIFRANTA = new com.openitech.db.filters.DataSourceFilters.SeekType("SeznamSifrantov.Skupina", com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS, 1);
+    public final com.openitech.db.filters.DataSourceFilters.SeekType I_TYPE_OPIS_SIFRANTA    = new com.openitech.db.filters.DataSourceFilters.SeekType("SeznamSifrantov.Opis", com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS, 1);
     
     public SifrantiDataSourceFilters() {
       super("<%DbSifrantModelFilter%>");
