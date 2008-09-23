@@ -93,12 +93,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   public Object getValueAt(int rowIndex, int columnIndex) {
     try {
       if (this.dataSource!=null) {
-        dataSource.lock();
-        try {
+//        dataSource.lock();
+//        try {
           return columnDescriptors[columnIndex].getValueAt(rowIndex, columnIndex);
-        } finally {
-          dataSource.unlock();
-        }
+//        } finally {
+//          dataSource.unlock();
+//        }
       }
     } catch (Exception ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt("+Integer.toString(rowIndex)+","+Integer.toString(columnIndex)+") from the dataSource. ["+ex.getMessage()+"]");

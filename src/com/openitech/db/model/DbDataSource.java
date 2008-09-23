@@ -92,6 +92,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   private String preparedCountSql;
   
   private String updateTableName;
+  private String componentName;
   
   
   private transient WeakListenerList activeRowChangeListeners;
@@ -129,7 +130,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   private boolean canAddRows = true;
   private boolean canDeleteRows = true;
   
-  private Pattern namePattern = Pattern.compile(".*from (.*)\\s[where|for]?.*");
+  private Pattern namePattern = Pattern.compile(".*from\\W*(\\w*)\\W.*");
   private String name = "";
   private boolean[] storedResult = new boolean[] { false, false };
   
@@ -3356,13 +3357,24 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
   
   private void setName() {
-    Matcher matcher = namePattern.matcher(selectSql);
-    String name = selectSql;
-    
-    if (matcher.matches()) {
-      name = matcher.group(1);
+    if (componentName==null || componentName.length()==0) {
+      if (selectSql!=null) {
+        Matcher matcher = namePattern.matcher(selectSql.toLowerCase().replaceAll("[\\r|\\n]"," "));
+        String name = selectSql.substring(0,Math.min(selectSql.length(),9));
+
+        if (matcher.matches()) {
+          name = matcher.group(1);
+        }
+        this.name = name;
+      }
+    } else {
+      this.name = componentName;
     }
-    this.name = name;
+  }
+  
+  public void setName(String name) {
+    componentName = name;
+    setName();
   }
   
   public void filterChanged() throws SQLException {
@@ -3604,6 +3616,10 @@ public class DbDataSource implements DbNavigatorDataSource {
   public boolean lock(boolean fatal) {
     boolean result = false;
     try {
+      System.out.println(getName()+":locking:["+Thread.currentThread().getName()+"]:"+(available.isHeldByCurrentThread()?"owner:current:"+available.getHoldCount():"queued:"+available.getQueueLength()));
+      
+      StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
+      System.out.println(getName()+":locking:["+Thread.currentThread().getName()+"]:"+stackTrace.getClassName()+"."+stackTrace.getMethodName()+":"+stackTrace.getLineNumber());
       if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
         if (fatal)
           throw new IllegalStateException("Can't obtain lock");
@@ -3616,6 +3632,9 @@ public class DbDataSource implements DbNavigatorDataSource {
   
   public void unlock() {
     available.unlock();
+    StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
+    System.out.println(getName()+":unlocking:["+Thread.currentThread().getName()+"]:"+stackTrace.getClassName()+"."+stackTrace.getMethodName()+":"+stackTrace.getLineNumber());
+    System.out.println(getName()+":unlocking:["+Thread.currentThread().getName()+"]:"+available.getHoldCount());
   }
 
   public boolean isReloadsOnEventQueue() {
@@ -3655,7 +3674,9 @@ public class DbDataSource implements DbNavigatorDataSource {
             System.out.println("##############");
             System.out.println(preparedSelectSql);
           }
+          long timer = System.currentTimeMillis();
           selectResultSet = executeSql(selectStatement, parameters);
+          System.out.println(getName()+":select:"+(System.currentTimeMillis()-timer)+"ms");
           if (DUMP_SQL) {
             System.out.println("##############");
           }
@@ -3885,13 +3906,13 @@ public class DbDataSource implements DbNavigatorDataSource {
       if (wasUpdated(rowIndex, columnName))
         result = getStoredValue(rowIndex, columnName, null, Object.class);
       else {
-        lock();
-        try {
-          CacheKey ck = new CacheKey(rowIndex, columnName);
-          CacheEntry ce;
-          if (cache.containsKey(ck) && ((ce=cache.get(ck))!=null)) {
-            result = ce.value;
-          } else {
+        CacheKey ck = new CacheKey(rowIndex, columnName);
+        CacheEntry ce;
+        if (cache.containsKey(ck) && ((ce=cache.get(ck))!=null)) {
+          result = ce.value;
+        } else {
+          lock();
+          try {
             int oldRow = getOpenSelectResultSet().getRow();
             
             int max = Math.min(rowIndex+getFetchSize(), getRowCount());
@@ -3915,9 +3936,9 @@ public class DbDataSource implements DbNavigatorDataSource {
               selectResultSet.next();
             }
             selectResultSet.absolute(oldRow);
+          } finally {
+            unlock();
           }
-        } finally {
-          unlock();
         }
       }
       return result;

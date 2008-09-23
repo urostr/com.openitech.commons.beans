@@ -18,7 +18,9 @@ import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -147,6 +149,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
       try {
         int size = dataSource.getRowCount();
         StringBuffer result;
+        Set<String> columns;
         List values;
         K key;
         Object value;
@@ -163,12 +166,22 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
             max=size;
         }
         entries.setSize(size);
+        
+        columns = new HashSet<String>();
+        columns.add(keyColumnName);
+        for (String column:valueColumnNames) {
+          columns.add(column);
+        }
+      
+        String[] valueColumns = new String[columns.size()];
+        columns.toArray(valueColumns);
+        
         for (int row=min; row<=max; row++) {
-          key = (K) dataSource.getValueAt(row, keyColumnName);
+          key = (K) dataSource.getValueAt(row, keyColumnName, valueColumns);
           result = new StringBuffer();
           values = new ArrayList();
           for (int f=0; f<valueColumnNames.length; f++) {
-            value = this.dataSource.getValueAt(row,valueColumnNames[f]);
+            value = this.dataSource.getValueAt(row,valueColumnNames[f], valueColumns);
             values.add(value);
             if (result.length()>0&&value!=null&&value.toString().length()>0)
               result.append(separator[Math.min(Math.max(f-1,0), separator.length-1)]);
