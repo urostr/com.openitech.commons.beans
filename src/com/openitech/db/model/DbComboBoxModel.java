@@ -37,6 +37,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
   private final Vector<DbComboBoxEntry<K,String>> entries = new Vector<DbComboBoxEntry<K,String>>();
   private String keyColumnName = null;
   private String[] valueColumnNames = null;
+  private String[] extendedValueColumnNames = null;
   private String[] separator = new String[] {" "};
   private int selectedIndex = -1;
   private Object selectedItem;
@@ -85,6 +86,15 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
   
   public String[] getValueColumnNames() {
     return this.valueColumnNames;
+  }
+
+  public void setExtendedValueColumnNames(String[] extendedValueColumnNames) {
+    this.extendedValueColumnNames = extendedValueColumnNames;
+    UpdateEntries();
+  }
+
+  public String[] getExtendedValueColumnNames() {
+    return extendedValueColumnNames;
   }
   
   public void setSeparator(String... separator) {
@@ -150,6 +160,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
         int size = dataSource.getRowCount();
         StringBuffer result;
         Set<String> columns;
+        java.util.Map<String,Integer> columnIndex;
         List values;
         K key;
         Object value;
@@ -165,12 +176,17 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
           if (max<1)
             max=size;
         }
-        entries.setSize(size);
+        entries.setSize(Math.max(0,size));
         
         columns = new HashSet<String>();
         columns.add(keyColumnName);
         for (String column:valueColumnNames) {
           columns.add(column);
+        }
+        if (extendedValueColumnNames!=null) {
+          for (String column:extendedValueColumnNames) {
+            columns.add(column);
+          }
         }
       
         String[] valueColumns = new String[columns.size()];
@@ -180,14 +196,23 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
           key = (K) dataSource.getValueAt(row, keyColumnName, valueColumns);
           result = new StringBuffer();
           values = new ArrayList();
+          columnIndex = new java.util.HashMap<String,Integer>();
+          
           for (int f=0; f<valueColumnNames.length; f++) {
             value = this.dataSource.getValueAt(row,valueColumnNames[f], valueColumns);
             values.add(value);
+            columnIndex.put(valueColumnNames[f].toUpperCase(), values.size()-1);
             if (result.length()>0&&value!=null&&value.toString().length()>0)
               result.append(separator[Math.min(Math.max(f-1,0), separator.length-1)]);
             result.append(value==null?"":value);
           }
-          entries.set(row-1,new DbComboBoxEntry<K,String>(key,values,result.toString().trim()));
+          if (extendedValueColumnNames!=null) {
+            for (String column:extendedValueColumnNames) {
+              values.add(this.dataSource.getValueAt(row,column, valueColumns));
+              columnIndex.put(column.toUpperCase(), values.size()-1);
+            }
+          }
+          entries.set(row-1,new DbComboBoxEntry<K,String>(key,values,columnIndex,result.toString().trim()));
         }
         if ((selectedItem instanceof DbComboBoxEntry)||(selectedItem==null)) {
           selectedIndex = max>0?0:-1;
@@ -316,13 +341,20 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     K key;
     V value;
     List values;
+    java.util.Map<String,Integer> columnIndex;
     
     public DbComboBoxEntry(K key, List values, V value) {
+      this(key, values, null, value);
+    }
+    
+    public DbComboBoxEntry(K key, List values, java.util.Map<String,Integer> columnIndex, V value) {
       this.key = key;
       this.values = values;
       this.value = value;
+      this.columnIndex = columnIndex==null?new java.util.HashMap<String,Integer>():columnIndex;
     }
     
+    @Override
     public boolean equals(Object obj) {
       if (obj!=null && (obj instanceof DbComboBoxEntry)) {
         if ((key!=null) && (key instanceof Number) && (((DbComboBoxEntry) obj).key instanceof Number))
@@ -332,13 +364,29 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
       } else
         return Equals.equals(this.key,obj);
     }
+
+    @Override
+    public int hashCode() {
+      int hash = 5;
+      hash = 79 * hash + (this.key != null ? this.key.hashCode() : 0);
+      return hash;
+    }
     
+    @Override
     public String toString() {
       return value==null?"":value.toString();
     }
     
     public K getKey() {
       return key;
+    }
+    
+    public Object getValue(String column) {
+      column = column.toUpperCase();
+      if (columnIndex.containsKey(column)) {
+        return values.get(columnIndex.get(column));
+      } else
+        return null;
     }
     
     public List getValues() {

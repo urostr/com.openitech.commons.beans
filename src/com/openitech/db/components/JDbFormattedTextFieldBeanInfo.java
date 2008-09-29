@@ -50,7 +50,7 @@ public class JDbFormattedTextFieldBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_dbFieldObserver].setHidden ( true );
             properties[PROPERTY_format] = new PropertyDescriptor ( "format", com.openitech.db.components.JDbFormattedTextField.class, null, "setFormat" ); // NOI18N
             properties[PROPERTY_format].setPreferred ( true );
-            properties[PROPERTY_formatterFactory] = new PropertyDescriptor ( "formatterFactory", com.openitech.db.components.JDbFormattedTextField.class, "getFormatterFactory", "setFormatterFactory" ); // NOI18N
+            properties[PROPERTY_formatterFactory] = new PropertyDescriptor ( "formatterFactory", com.openitech.db.components.JDbFormattedTextField.class, null, "setFormatterFactory" ); // NOI18N
             properties[PROPERTY_searchField] = new PropertyDescriptor ( "searchField", com.openitech.db.components.JDbFormattedTextField.class, "isSearchField", "setSearchField" ); // NOI18N
             properties[PROPERTY_toolTipColumnName] = new PropertyDescriptor ( "toolTipColumnName", com.openitech.db.components.JDbFormattedTextField.class, "getToolTipColumnName", "setToolTipColumnName" ); // NOI18N
             properties[PROPERTY_validator] = new PropertyDescriptor ( "validator", com.openitech.db.components.JDbFormattedTextField.class, "getValidator", "setValidator" ); // NOI18N
@@ -75,11 +75,18 @@ public class JDbFormattedTextFieldBeanInfo extends SimpleBeanInfo {
         return eventSets;     }//GEN-LAST:Events
 
     // Method identifiers//GEN-FIRST:Methods
+    private static final int METHOD_setFormat0 = 0;
 
     // Method array 
     /*lazy MethodDescriptor*/
     private static MethodDescriptor[] getMdescriptor(){
-        MethodDescriptor[] methods = new MethodDescriptor[0];//GEN-HEADEREND:Methods
+        MethodDescriptor[] methods = new MethodDescriptor[1];
+    
+        try {
+            methods[METHOD_setFormat0] = new MethodDescriptor(com.openitech.db.components.JDbFormattedTextField.class.getMethod("setFormat", new Class[] {java.text.Format.class})); // NOI18N
+            methods[METHOD_setFormat0].setDisplayName ( "" );
+        }
+        catch( Exception e) {}//GEN-HEADEREND:Methods
 
     // Here you can add code for customizing the methods array.
 

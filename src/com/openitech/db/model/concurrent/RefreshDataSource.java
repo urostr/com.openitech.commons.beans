@@ -43,6 +43,10 @@ public final class RefreshDataSource extends DataSourceEvent {
     this(dataSource, parameters, defaults, false, dataSource.isReloadsOnEventQueue());
   }
   
+  public RefreshDataSource(DbDataSource dataSource, List<Object> parameters, Map<String,Object> defaults, boolean filterChange) {
+    this(dataSource, parameters, defaults, filterChange, dataSource.isReloadsOnEventQueue());
+  }
+  
   public RefreshDataSource(DbDataSource dataSource, List<Object> parameters, Map<String,Object> defaults, boolean filterChange, boolean onEventQueue) {
     super(new Event(dataSource, Event.Type.REFRESH, onEventQueue));
     if (parameters!=null)

@@ -20,10 +20,11 @@ import java.io.IOException;
 public class PdfViewer {
   private static PdfViewer instance = null;
 
-  private static boolean canViewPDFs;
-  private static boolean jdic;
-  private static Method open;
-  private static String acroread = System.getProperty("acroread.bin","");
+  private boolean canViewPDFs;
+  private boolean jdic;
+  private Object manager;
+  private Method open;
+  private String acroread = System.getProperty("acroread.bin","");
 
   private PdfViewer() {
     try {
@@ -31,8 +32,21 @@ public class PdfViewer {
           File.class
       };
 
-      Class desktop = Class.forName("org.jdesktop.jdic.desktop.Desktop");
-      open = desktop.getMethod("open", parameters);
+      Class desktop;
+      
+      try {
+        desktop = Class.forName("org.jdesktop.jdic.desktop.Desktop");
+      } catch (java.lang.ClassNotFoundException ex) {
+        desktop = Class.forName("java.awt.Desktop");
+        if ((Boolean) (desktop.getMethod("isDesktopSupported", new Class[] {}).invoke(null, new Object[] {}))) {
+          manager = desktop.getMethod("getDesktop", new Class[] {}).invoke(null, new Object[] {});
+          desktop = null;
+        }
+      }
+      
+      if (desktop!=null) {
+        open = desktop.getMethod("open", parameters);
+      }
       jdic = (open!=null);
     }
     catch (Exception ex) {
@@ -62,7 +76,7 @@ public class PdfViewer {
       IllegalArgumentException, IllegalAccessException, IOException {
     if (fPDF.exists() && canViewPDFs) {
         if (jdic&&(acroread.length()==0)) {
-          open.invoke(null, new Object[] { fPDF });
+          open.invoke(manager, new Object[] { fPDF });
         } else {
           Runtime.getRuntime().exec(new String[] { acroread, fPDF.getAbsolutePath() });
         }
