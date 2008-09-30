@@ -3616,13 +3616,16 @@ public class DbDataSource implements DbNavigatorDataSource {
   public boolean lock(boolean fatal) {
     boolean result = false;
     try {
-      System.out.println(getName()+":locking:["+Thread.currentThread().getName()+"]:"+(available.isHeldByCurrentThread()?"owner:current:"+available.getHoldCount():"queued:"+available.getQueueLength()));
-      
-      StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
-      System.out.println(getName()+":locking:["+Thread.currentThread().getName()+"]:"+stackTrace.getClassName()+"."+stackTrace.getMethodName()+":"+stackTrace.getLineNumber());
+      if (DUMP_SQL) {
+        System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + (available.isHeldByCurrentThread() ? "owner:current:" + available.getHoldCount() : "queued:" + available.getQueueLength()));
+
+        StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
+        System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
+      }
       if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
-        if (fatal)
+        if (fatal) {
           throw new IllegalStateException("Can't obtain lock");
+        }
       }
     } catch (InterruptedException ex) {
       throw (IllegalStateException) (new IllegalStateException("Can't obtain lock")).initCause(ex);
@@ -3632,9 +3635,11 @@ public class DbDataSource implements DbNavigatorDataSource {
   
   public void unlock() {
     available.unlock();
-    StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
-    System.out.println(getName()+":unlocking:["+Thread.currentThread().getName()+"]:"+stackTrace.getClassName()+"."+stackTrace.getMethodName()+":"+stackTrace.getLineNumber());
-    System.out.println(getName()+":unlocking:["+Thread.currentThread().getName()+"]:"+available.getHoldCount());
+    if (DUMP_SQL) {
+      StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
+      System.out.println(getName()+":unlocking:["+Thread.currentThread().getName()+"]:"+stackTrace.getClassName()+"."+stackTrace.getMethodName()+":"+stackTrace.getLineNumber());
+      System.out.println(getName()+":unlocking:["+Thread.currentThread().getName()+"]:"+available.getHoldCount());
+    }
   }
 
   public boolean isReloadsOnEventQueue() {

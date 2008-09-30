@@ -1,6 +1,7 @@
 package com.openitech.ref;
 
 import com.openitech.Settings;
+import java.awt.EventQueue;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -589,17 +590,21 @@ public final class WeakListenerList
       try {
         while (true) {
           sleep(9000);
-          lock.lock();
-          try {
-            cleanUp();
-          for (WeakListenerListReference wr : weakListenerList) {
-            if (wr!=null && wr.get()!=null) {
-              ((WeakListenerList) wr.get()).cleanUp();
+          EventQueue.invokeLater(new Runnable() {
+            public void run() {
+              lock.lock();
+              try {
+                cleanUp();
+              for (WeakListenerListReference wr : weakListenerList) {
+                if (wr!=null && wr.get()!=null) {
+                  ((WeakListenerList) wr.get()).cleanUp();
+                  }
+                }
+              } finally {
+                lock.unlock();
               }
             }
-          } finally {
-            lock.unlock();
-          }
+          });
         }
       } catch (InterruptedException ex) {
         weakListenerList.clear();
