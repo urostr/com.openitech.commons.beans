@@ -24,19 +24,34 @@ import javax.crypto.spec.SecretKeySpec;
  * @author uros
  */
 public final class Encoder {
-  
   /** Creates a new instance of Encoder */
   private Encoder() {
   }
   
   private static byte[] getDefaultKey() throws IOException {
+//    return new byte[] {
+//      -125,
+//      -29,
+//      61,
+//      4,
+//      84,
+//      82,
+//      -22,
+//      -15
+//    };
     InputStream is = Encoder.class.getResourceAsStream("DefaultKey.bytes");
     ByteArrayOutputStream out = new ByteArrayOutputStream(is.available());
     byte[] b = new byte[is.available()];
     int in;
     
-    while ((in=is.read(b))==b.length)
+    while ((in=is.read(b))==b.length) {
       out.write(b,0,in);
+    }
+//    System.out.print("{");
+//    for (byte bt:b) {
+//      System.out.print(bt);System.out.print(",");
+//    }
+//    System.out.println("}");
     
     return out.toByteArray();
   }

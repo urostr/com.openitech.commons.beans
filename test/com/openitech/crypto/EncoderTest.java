@@ -33,6 +33,28 @@ public class EncoderTest extends TestCase {
     
     return suite;
   }
+  
+  private byte[] getDefaultKey() throws IOException {
+    InputStream is = Encoder.class.getResourceAsStream("DefaultKey.bytes");
+    ByteArrayOutputStream out = new ByteArrayOutputStream(is.available());
+    byte[] b = new byte[is.available()];
+    int in;
+    
+    while ((in=is.read(b))==b.length)
+      out.write(b,0,in);
+    
+    return out.toByteArray();
+  }
+  
+  public void testDumpKey() throws IOException {
+    byte[] keys = getDefaultKey();
+    
+    for (byte key:keys) {
+      System.out.println(key+",");
+    }
+    
+    System.out.println(new String(keys));
+  }
 
   /**
    * Test of encrypt method, of class com.openitech.crypto.Encoder.

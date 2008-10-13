@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  * <p>Company: Odprte Informacijske Tehnologije Uroš Trojar s.p.</p>
  *
  * @author Uroš Trojar
- * @version $Revision: 1.1.1.1 $
+ * @version $Revision: 1.2 $
  */
 public final class WeakListenerList
     implements List<Object> {

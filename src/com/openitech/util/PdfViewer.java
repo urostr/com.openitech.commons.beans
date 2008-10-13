@@ -15,7 +15,7 @@ import java.io.IOException;
  * <p>Company: Odprte Informacijske Tehnologije Uroš Trojar s.p.</p>
  *
  * @author Uroš Trojar
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class PdfViewer {
   private static PdfViewer instance = null;
