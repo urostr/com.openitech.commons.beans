@@ -3,10 +3,8 @@
  *
  * Created on Ponedeljek, 25 avgust 2008, 14:07
  */
-
 package com.openitech.db.components;
 
-import com.openitech.auth.LoginContextManager;
 import com.openitech.db.ConnectionManager;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.filters.DataSourceFilters.IntegerSeekType;
@@ -15,29 +13,27 @@ import com.openitech.db.filters.FilterDocumentCaretListener;
 import com.openitech.db.filters.FilterDocumentListener;
 import com.openitech.db.filters.Scheduler;
 import com.openitech.db.model.DbDataSource;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.security.auth.login.LoginException;
-import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
 
 /**
  *
  * @author  uros
  */
 public class JPIzbiraNaslova extends javax.swing.JPanel {
+
   DbDataModel dbDataModel = new DbDataModel();
   FilterDocumentCaretListener flPostnaStevilka;
   FilterDocumentCaretListener flPosta;
-  
   DbDataSource dataSource;
-  
-  
+  ActionListener alDataSource;
+
   /**
    * Creates new form JPIzbiraNaslova
    */
@@ -67,6 +63,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }
   
   public void setDataSource(DbDataSource dataSource) {
+    removeListeners();
     this.dataSource = dataSource;
     
     jtfUlice.setDataSource(dataSource);
@@ -74,9 +71,40 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     jtfPosta.setDataSource(dataSource);
     jtfPostnaStevilka.setDataSource(dataSource);
     jtfNaselja.setDataSource(dataSource);
-    
+    addListeners();
   }
   
+  private void removeListeners() {
+    if ((alDataSource != null) && (dataSource != null)) {
+      dataSource.removeActionListener(alDataSource);
+    }
+  }
+  
+  private void addListeners() {
+    if (dataSource != null) {
+      if (alDataSource == null) {
+        alDataSource = new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+            if (dataSource != null) {
+              boolean updating = false;
+              try {
+                updating = dataSource.rowUpdated();
+              } catch (SQLException ex) {
+                Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+              }
+              
+              dbDataModel.dsHisneStevilkeFilter.setDisabled(!updating);
+              dbDataModel.dsUliceFilter.setDisabled(!updating);
+              dbDataModel.dsNaseljaFilter.setDisabled(!updating);
+              dbDataModel.dsPosteFilter.setDisabled(!updating);
+            }
+          }
+        };
+      }
+      dataSource.addActionListener(alDataSource);
+    }
+  }
+
   /** This method is called from within the constructor to
    * initialize the form.
    * WARNING: Do NOT modify this code. The content of this method is
@@ -243,9 +271,9 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     add(jtfNaselja, gridBagConstraints);
 
   }// </editor-fold>//GEN-END:initComponents
-  
+
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
-    if (!jtfNaselja.isFocusOwner()&&cmNaselja.getSize()==1) {
+    if (!jtfNaselja.isFocusOwner() && cmNaselja.getSize() == 1) {
       jtfNaselja.setText(cmNaselja.getElementAt(0).toString());
     }
   }//GEN-LAST:event_cmNaseljaContentsChanged
@@ -309,13 +337,13 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }//GEN-LAST:event_jtfPostnaStevilkaFocusLost
   
   private void cmPosteContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPosteContentsChanged
-    if (!jtfPosta.isFocusOwner()&&cmPoste.getSize()==1) {
+    if (!jtfPosta.isFocusOwner() && cmPoste.getSize() == 1) {
       jtfPosta.setText(cmPoste.getElementAt(0).toString());
     }
   }//GEN-LAST:event_cmPosteContentsChanged
   
   private void cmPostneStevilkeContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPostneStevilkeContentsChanged
-    if (!jtfPostnaStevilka.isFocusOwner()&&cmPostneStevilke.getSize()==1) {
+    if (!jtfPostnaStevilka.isFocusOwner() && cmPostneStevilke.getSize() == 1) {
       jtfPostnaStevilka.setText(cmPostneStevilke.getElementAt(0).toString());
     }
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged

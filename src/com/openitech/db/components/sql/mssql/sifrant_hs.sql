@@ -5,7 +5,7 @@ SELECT DISTINCT
     hs, 
     hd 
 FROM 
-    HS_znane HS_s
+    HS_neznane HS_s
 WHERE 
     HS_s.hs_mid is null <%filter_hs%>
 ) 

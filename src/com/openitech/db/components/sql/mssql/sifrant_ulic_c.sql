@@ -3,7 +3,7 @@ SELECT DISTINCT
     UL_s.ul_ime, 
     UL_s.ul_uime 
 FROM 
-    HS_znane UL_s 
+    HS_neznane UL_s 
 WHERE 
     UL_s.ul_mid is null <%filter_ulice%>
 ) 

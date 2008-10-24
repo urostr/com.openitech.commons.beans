@@ -5,7 +5,7 @@ SELECT DISTINCT
     pt_ime, 
     pt_uime 
 FROM 
-    HS_znane PT_s
+    HS_neznane PT_s
 WHERE 
     PT_s.pt_mid is null <%filter_pt%>
 ) 

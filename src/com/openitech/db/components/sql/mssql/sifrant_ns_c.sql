@@ -5,7 +5,7 @@ SELECT DISTINCT
     na_ime, 
     na_uime 
 FROM 
-    HS_znane NA_s
+    HS_neznane NA_s
 WHERE 
     NA_s.na_mid is null <%filter_na%>
 ) 

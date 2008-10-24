@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.38 $
+ * $Revision: 1.39 $
  */
 
 package com.openitech.db.model;
@@ -5640,7 +5640,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     public String getReplace() {
       return replace;
     }
-    
+
     public void setAlias(String alias) {
       if (!this.alias.equals(alias)) {
         String oldValue = this.alias;
