@@ -25,37 +25,29 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
 
     // Property identifiers//GEN-FIRST:Properties
     private static final int PROPERTY_autoCompleteModel = 0;
-    private static final int PROPERTY_background = 1;
-    private static final int PROPERTY_border = 2;
-    private static final int PROPERTY_columnName = 3;
-    private static final int PROPERTY_componentPopupMenu = 4;
-    private static final int PROPERTY_dataSource = 5;
-    private static final int PROPERTY_dbFieldObserver = 6;
-    private static final int PROPERTY_document = 7;
-    private static final int PROPERTY_foreground = 8;
-    private static final int PROPERTY_searchField = 9;
-    private static final int PROPERTY_toolTipColumnName = 10;
-    private static final int PROPERTY_validator = 11;
+    private static final int PROPERTY_columnName = 1;
+    private static final int PROPERTY_dataSource = 2;
+    private static final int PROPERTY_dbFieldObserver = 3;
+    private static final int PROPERTY_document = 4;
+    private static final int PROPERTY_searchField = 5;
+    private static final int PROPERTY_toolTipColumnName = 6;
+    private static final int PROPERTY_validator = 7;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[12];
+        PropertyDescriptor[] properties = new PropertyDescriptor[8];
     
         try {
             properties[PROPERTY_autoCompleteModel] = new PropertyDescriptor ( "autoCompleteModel", com.openitech.db.components.JDbTextField.class, "getAutoCompleteModel", "setAutoCompleteModel" ); // NOI18N
             properties[PROPERTY_autoCompleteModel].setPreferred ( true );
-            properties[PROPERTY_background] = new PropertyDescriptor ( "background", com.openitech.db.components.JDbTextField.class, "getBackground", "setBackground" ); // NOI18N
-            properties[PROPERTY_border] = new PropertyDescriptor ( "border", com.openitech.db.components.JDbTextField.class, "getBorder", "setBorder" ); // NOI18N
             properties[PROPERTY_columnName] = new PropertyDescriptor ( "columnName", com.openitech.db.components.JDbTextField.class, "getColumnName", "setColumnName" ); // NOI18N
             properties[PROPERTY_columnName].setPreferred ( true );
-            properties[PROPERTY_componentPopupMenu] = new PropertyDescriptor ( "componentPopupMenu", com.openitech.db.components.JDbTextField.class, "getComponentPopupMenu", "setComponentPopupMenu" ); // NOI18N
             properties[PROPERTY_dataSource] = new PropertyDescriptor ( "dataSource", com.openitech.db.components.JDbTextField.class, "getDataSource", "setDataSource" ); // NOI18N
             properties[PROPERTY_dataSource].setPreferred ( true );
             properties[PROPERTY_dbFieldObserver] = new PropertyDescriptor ( "dbFieldObserver", com.openitech.db.components.JDbTextField.class, "getDbFieldObserver", null ); // NOI18N
             properties[PROPERTY_dbFieldObserver].setHidden ( true );
-            properties[PROPERTY_document] = new PropertyDescriptor ( "document", com.openitech.db.components.JDbTextField.class, "getDocument", "setDocument" ); // NOI18N
-            properties[PROPERTY_foreground] = new PropertyDescriptor ( "foreground", com.openitech.db.components.JDbTextField.class, "getForeground", "setForeground" ); // NOI18N
+            properties[PROPERTY_document] = new PropertyDescriptor ( "document", com.openitech.db.components.JDbTextField.class, null, "setDocument" ); // NOI18N
             properties[PROPERTY_searchField] = new PropertyDescriptor ( "searchField", com.openitech.db.components.JDbTextField.class, "isSearchField", "setSearchField" ); // NOI18N
             properties[PROPERTY_toolTipColumnName] = new PropertyDescriptor ( "toolTipColumnName", com.openitech.db.components.JDbTextField.class, "getToolTipColumnName", "setToolTipColumnName" ); // NOI18N
             properties[PROPERTY_validator] = new PropertyDescriptor ( "validator", com.openitech.db.components.JDbTextField.class, "getValidator", "setValidator" ); // NOI18N
@@ -69,11 +61,19 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
         return properties;     }//GEN-LAST:Properties
 
     // EventSet identifiers//GEN-FIRST:Events
+    private static final int EVENT_itemListener = 0;
 
     // EventSet array
     /*lazy EventSetDescriptor*/
     private static EventSetDescriptor[] getEdescriptor(){
-        EventSetDescriptor[] eventSets = new EventSetDescriptor[0];//GEN-HEADEREND:Events
+        EventSetDescriptor[] eventSets = new EventSetDescriptor[1];
+    
+        try {
+            eventSets[EVENT_itemListener] = new EventSetDescriptor ( com.openitech.db.components.JDbTextField.class, "itemListener", java.awt.event.ItemListener.class, new String[] {"itemStateChanged"}, "addItemListener", "removeItemListener" ); // NOI18N
+        }
+        catch(IntrospectionException e) {
+            e.printStackTrace();
+        }//GEN-HEADEREND:Events
 
     // Here you can add code for customizing the event sets array.
 

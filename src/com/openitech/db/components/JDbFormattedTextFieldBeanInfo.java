@@ -64,11 +64,19 @@ public class JDbFormattedTextFieldBeanInfo extends SimpleBeanInfo {
         return properties;     }//GEN-LAST:Properties
 
     // EventSet identifiers//GEN-FIRST:Events
+    private static final int EVENT_itemListener = 0;
 
     // EventSet array
     /*lazy EventSetDescriptor*/
     private static EventSetDescriptor[] getEdescriptor(){
-        EventSetDescriptor[] eventSets = new EventSetDescriptor[0];//GEN-HEADEREND:Events
+        EventSetDescriptor[] eventSets = new EventSetDescriptor[1];
+    
+        try {
+            eventSets[EVENT_itemListener] = new EventSetDescriptor ( com.openitech.db.components.JDbFormattedTextField.class, "itemListener", java.awt.event.ItemListener.class, new String[] {"itemStateChanged"}, "addItemListener", "removeItemListener" ); // NOI18N
+        }
+        catch(IntrospectionException e) {
+            e.printStackTrace();
+        }//GEN-HEADEREND:Events
 
     // Here you can add code for customizing the event sets array.
 
