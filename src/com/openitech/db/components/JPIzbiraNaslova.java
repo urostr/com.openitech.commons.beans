@@ -76,8 +76,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     jtfNaselja.setDataSource(dataSource);
     foHisnaStevilka.setDataSource(dataSource);
     foHisnaStevilkaMID.setDataSource(dataSource);
+    foUlica.setDataSource(dataSource);
     foUlicaMID.setDataSource(dataSource);
+    foNaselje.setDataSource(dataSource);
     foNaseljeMID.setDataSource(dataSource);
+    foPostnaStevilka.setDataSource(dataSource);
     addListeners();
   }
 
@@ -134,8 +137,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     cmNaselja = new com.openitech.db.model.DbComboBoxModel();
     foHisnaStevilka = new com.openitech.db.model.DbFieldObserver();
     foHisnaStevilkaMID = new com.openitech.db.model.DbFieldObserver();
+    foUlica = new com.openitech.db.model.DbFieldObserver();
     foUlicaMID = new com.openitech.db.model.DbFieldObserver();
+    foNaselje = new com.openitech.db.model.DbFieldObserver();
     foNaseljeMID = new com.openitech.db.model.DbFieldObserver();
+    foPostnaStevilka = new com.openitech.db.model.DbFieldObserver();
     jPanel1 = new javax.swing.JPanel();
     jtfUlice = new com.openitech.db.components.JDbTextField();
     jtfHisnaStevilka = new com.openitech.db.components.JDbTextField();
@@ -192,10 +198,34 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     });
 
     foHisnaStevilka.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foHisnaStevilkaFieldValueChanged(evt);
       }
+    });
+
+    foUlica.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
       public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
+      public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+        foUlicaFieldValueChanged(evt);
+      }
+    });
+
+    foNaselje.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
+      public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+        foNaseljeFieldValueChanged(evt);
+      }
+    });
+
+    foPostnaStevilka.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
+      public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+        foPostnaStevilkaFieldValueChanged(evt);
       }
     });
 
@@ -237,6 +267,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
     jtfPostnaStevilka.setAutoCompleteModel(cmPostneStevilke);
     jtfPostnaStevilka.setColumns(6);
+    jtfPostnaStevilka.addCaretListener(new javax.swing.event.CaretListener() {
+      public void caretUpdate(javax.swing.event.CaretEvent evt) {
+        jtfPostnaStevilkaCaretUpdate(evt);
+      }
+    });
     jtfPostnaStevilka.addFocusListener(new java.awt.event.FocusAdapter() {
       public void focusGained(java.awt.event.FocusEvent evt) {
         jtfPostnaStevilkaFocusGained(evt);
@@ -245,25 +280,20 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         jtfPostnaStevilkaFocusLost(evt);
       }
     });
-    jtfPostnaStevilka.addCaretListener(new javax.swing.event.CaretListener() {
-      public void caretUpdate(javax.swing.event.CaretEvent evt) {
-        jtfPostnaStevilkaCaretUpdate(evt);
-      }
-    });
     add(jtfPostnaStevilka, new java.awt.GridBagConstraints());
 
     jtfPosta.setAutoCompleteModel(cmPoste);
+    jtfPosta.addCaretListener(new javax.swing.event.CaretListener() {
+      public void caretUpdate(javax.swing.event.CaretEvent evt) {
+        jtfPostaCaretUpdate(evt);
+      }
+    });
     jtfPosta.addFocusListener(new java.awt.event.FocusAdapter() {
       public void focusGained(java.awt.event.FocusEvent evt) {
         jtfPostaFocusGained(evt);
       }
       public void focusLost(java.awt.event.FocusEvent evt) {
         jtfPostaFocusLost(evt);
-      }
-    });
-    jtfPosta.addCaretListener(new javax.swing.event.CaretListener() {
-      public void caretUpdate(javax.swing.event.CaretEvent evt) {
-        jtfPostaCaretUpdate(evt);
       }
     });
     gridBagConstraints = new java.awt.GridBagConstraints();
@@ -375,7 +405,45 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
     Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
   }
 }
-  
+
+private void foUlicaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foUlicaFieldValueChanged
+// TODO add your handling code here:
+  try {
+// TODO add your handling code here:
+    if (dataSource.rowInserted() || dataSource.rowUpdated()) {
+      int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+      foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
+    }
+  } catch (SQLException ex) {                                                 
+    Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+  }
+}//GEN-LAST:event_foUlicaFieldValueChanged
+
+private void foNaseljeFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foNaseljeFieldValueChanged
+// TODO add your handling code here:
+  try {
+// TODO add your handling code here:
+    if (dataSource.rowInserted() || dataSource.rowUpdated()) {
+      int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+      foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
+    }
+  } catch (SQLException ex) {                                                 
+    Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+  }
+}//GEN-LAST:event_foNaseljeFieldValueChanged
+
+private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foPostnaStevilkaFieldValueChanged
+  try {
+// TODO add your handling code here:
+    if (dataSource.rowInserted() || dataSource.rowUpdated()) {
+      int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+      foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
+    }
+  } catch (SQLException ex) {                                                 
+    Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+  }
+}//GEN-LAST:event_foPostnaStevilkaFieldValueChanged
+
   
   private void initDbModel() {
   }
@@ -429,7 +497,10 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
   private com.openitech.db.model.DbDataSource dsUlice;
   private com.openitech.db.model.DbFieldObserver foHisnaStevilka;
   private com.openitech.db.model.DbFieldObserver foHisnaStevilkaMID;
+  private com.openitech.db.model.DbFieldObserver foNaselje;
   private com.openitech.db.model.DbFieldObserver foNaseljeMID;
+  private com.openitech.db.model.DbFieldObserver foPostnaStevilka;
+  private com.openitech.db.model.DbFieldObserver foUlica;
   private com.openitech.db.model.DbFieldObserver foUlicaMID;
   private javax.swing.JPanel jPanel1;
   private com.openitech.db.components.JDbTextField jtfHisnaStevilka;
@@ -519,7 +590,7 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
         dsHisneStevilke.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_hs_c.sql", "cp1250"));
         dsHisneStevilke.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_hs.sql", "cp1250"));
         dsHisneStevilke.setFetchSize(108);
-//        dsHisneStevilke.setQueuedDelay(27);
+ //       dsHisneStevilke.setQueuedDelay(50);
         
         dsHisneStevilkeFilter.addDataSource(dsHisneStevilke);
         
@@ -543,7 +614,7 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
         dsPoste.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_pt_c.sql", "cp1250"));
         dsPoste.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_pt.sql", "cp1250")+"ORDER BY pt_ime");
         dsPoste.setFetchSize(108);
-//        dsPoste.setQueuedDelay(54);
+  //      dsPoste.setQueuedDelay(54);
         
         dsPostneStevilke.setCanAddRows(false);
         dsPostneStevilke.setCanDeleteRows(false);
@@ -558,7 +629,7 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
         dsPostneStevilke.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_pt_c.sql", "cp1250"));
         dsPostneStevilke.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_pt.sql", "cp1250")+"ORDER BY pt_id");
         dsPostneStevilke.setFetchSize(108);
-//        dsPostneStevilke.setQueuedDelay(54);
+  //      dsPostneStevilke.setQueuedDelay(54);
         
         dsPosteFilter.addDataSource(dsPoste);
         dsPosteFilter.addDataSource(dsPostneStevilke);
@@ -580,7 +651,7 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
         dsNaselja.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_ns_c.sql", "cp1250"));
         dsNaselja.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_ns.sql", "cp1250")+"ORDER BY na_ime");
         dsNaselja.setFetchSize(108);
-        dsNaselja.setQueuedDelay(54);
+//        dsNaselja.setQueuedDelay(54);
         
         dsNaseljaFilter.addDataSource(dsNaselja);
         
@@ -680,6 +751,7 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
    */
   public void setCnUlica(String cnUlica) {
     this.cnUlica = cnUlica;
+    foUlica.setColumnName(cnUlica);
     jtfUlice.setColumnName(cnUlica);
   }
   
@@ -747,6 +819,7 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
    */
   public void setCnPostnaStevilka(String cnPostnaStevilka) {
     this.cnPostnaStevilka = cnPostnaStevilka;
+    foPostnaStevilka.setColumnName(cnPostnaStevilka);
     jtfPostnaStevilka.setColumnName(cnPostnaStevilka);
   }
   
@@ -792,6 +865,7 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
   public void setCnNaseljeMID(String cnNaseljeMID) {
     this.cnNaseljeMID = cnNaseljeMID;
     foNaseljeMID.setColumnName(cnNaseljeMID);
+    
   }  
   /**
    * Holds value of property cnNaselje.
@@ -812,6 +886,7 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
    */
   public void setCnNaselje(String cnNaselje) {
     this.cnNaselje = cnNaselje;
+    foNaselje.setColumnName(cnNaselje);
     jtfNaselja.setColumnName(cnNaselje);
   }
 }

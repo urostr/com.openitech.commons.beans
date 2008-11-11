@@ -109,12 +109,30 @@
       <Events>
         <EventHandler event="fieldValueChanged" listener="com.openitech.db.events.ActiveRowChangeListener" parameters="com.openitech.db.events.ActiveRowChangeEvent" handler="foHisnaStevilkaFieldValueChanged"/>
       </Events>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_SerializeTo" type="java.lang.String" value="JPIzbiraNaslova_foHisnaStevilka"/>
+      </AuxValues>
     </Component>
     <Component class="com.openitech.db.model.DbFieldObserver" name="foHisnaStevilkaMID">
     </Component>
+    <Component class="com.openitech.db.model.DbFieldObserver" name="foUlica">
+      <Events>
+        <EventHandler event="fieldValueChanged" listener="com.openitech.db.events.ActiveRowChangeListener" parameters="com.openitech.db.events.ActiveRowChangeEvent" handler="foUlicaFieldValueChanged"/>
+      </Events>
+    </Component>
     <Component class="com.openitech.db.model.DbFieldObserver" name="foUlicaMID">
     </Component>
+    <Component class="com.openitech.db.model.DbFieldObserver" name="foNaselje">
+      <Events>
+        <EventHandler event="fieldValueChanged" listener="com.openitech.db.events.ActiveRowChangeListener" parameters="com.openitech.db.events.ActiveRowChangeEvent" handler="foNaseljeFieldValueChanged"/>
+      </Events>
+    </Component>
     <Component class="com.openitech.db.model.DbFieldObserver" name="foNaseljeMID">
+    </Component>
+    <Component class="com.openitech.db.model.DbFieldObserver" name="foPostnaStevilka">
+      <Events>
+        <EventHandler event="fieldValueChanged" listener="com.openitech.db.events.ActiveRowChangeListener" parameters="com.openitech.db.events.ActiveRowChangeEvent" handler="foPostnaStevilkaFieldValueChanged"/>
+      </Events>
     </Component>
   </NonVisualComponents>
   <AuxValues>
@@ -182,9 +200,9 @@
         <Property name="columns" type="int" value="6"/>
       </Properties>
       <Events>
+        <EventHandler event="caretUpdate" listener="javax.swing.event.CaretListener" parameters="javax.swing.event.CaretEvent" handler="jtfPostnaStevilkaCaretUpdate"/>
         <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jtfPostnaStevilkaFocusGained"/>
         <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jtfPostnaStevilkaFocusLost"/>
-        <EventHandler event="caretUpdate" listener="javax.swing.event.CaretListener" parameters="javax.swing.event.CaretEvent" handler="jtfPostnaStevilkaCaretUpdate"/>
       </Events>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -199,9 +217,9 @@
         </Property>
       </Properties>
       <Events>
+        <EventHandler event="caretUpdate" listener="javax.swing.event.CaretListener" parameters="javax.swing.event.CaretEvent" handler="jtfPostaCaretUpdate"/>
         <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jtfPostaFocusGained"/>
         <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jtfPostaFocusLost"/>
-        <EventHandler event="caretUpdate" listener="javax.swing.event.CaretListener" parameters="javax.swing.event.CaretEvent" handler="jtfPostaCaretUpdate"/>
       </Events>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
