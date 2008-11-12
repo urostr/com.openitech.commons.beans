@@ -1,6 +1,7 @@
 (
 (
 SELECT DISTINCT 
+    pt_mid,
     pt_id,
     pt_ime, 
     pt_uime 
@@ -12,6 +13,7 @@ WHERE
 UNION 
 (
 SELECT DISTINCT 
+    PT_s.pt_mid,
     PT_s.pt_id,
     PT_s.pt_ime, 
     PT_s.pt_uime 

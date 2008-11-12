@@ -129,10 +129,12 @@
     </Component>
     <Component class="com.openitech.db.model.DbFieldObserver" name="foNaseljeMID">
     </Component>
-    <Component class="com.openitech.db.model.DbFieldObserver" name="foPostnaStevilka">
+    <Component class="com.openitech.db.model.DbFieldObserver" name="foPostaMID">
       <Events>
-        <EventHandler event="fieldValueChanged" listener="com.openitech.db.events.ActiveRowChangeListener" parameters="com.openitech.db.events.ActiveRowChangeEvent" handler="foPostnaStevilkaFieldValueChanged"/>
+        <EventHandler event="fieldValueChanged" listener="com.openitech.db.events.ActiveRowChangeListener" parameters="com.openitech.db.events.ActiveRowChangeEvent" handler="foPostaMIDFieldValueChanged"/>
       </Events>
+    </Component>
+    <Component class="com.openitech.db.model.DbFieldObserver" name="foPosta">
     </Component>
   </NonVisualComponents>
   <AuxValues>

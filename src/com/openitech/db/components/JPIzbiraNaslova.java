@@ -80,8 +80,30 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     foUlicaMID.setDataSource(dataSource);
     foNaselje.setDataSource(dataSource);
     foNaseljeMID.setDataSource(dataSource);
-    foPostnaStevilka.setDataSource(dataSource);
+    foPostaMID.setDataSource(dataSource);
     addListeners();
+  }
+
+  private void getMIDs() {
+    try {
+// TODO add your handling code here:
+      if (dataSource.rowInserted() || dataSource.rowUpdated()) {
+        int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+        foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
+        if (hs_mid == -1) {
+          int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+          foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
+
+          int pt_mid = dbDataModel.getPostaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
+          foPostaMID.updateValue(pt_mid == -1 ? null : pt_mid);
+
+          int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
+          foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
+        }
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+    }
   }
 
   private void removeListeners() {
@@ -141,7 +163,8 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     foUlicaMID = new com.openitech.db.model.DbFieldObserver();
     foNaselje = new com.openitech.db.model.DbFieldObserver();
     foNaseljeMID = new com.openitech.db.model.DbFieldObserver();
-    foPostnaStevilka = new com.openitech.db.model.DbFieldObserver();
+    foPostaMID = new com.openitech.db.model.DbFieldObserver();
+    foPosta = new com.openitech.db.model.DbFieldObserver();
     jPanel1 = new javax.swing.JPanel();
     jtfUlice = new com.openitech.db.components.JDbTextField();
     jtfHisnaStevilka = new com.openitech.db.components.JDbTextField();
@@ -221,11 +244,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
       }
     });
 
-    foPostnaStevilka.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+    foPostaMID.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
       public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
-        foPostnaStevilkaFieldValueChanged(evt);
+        foPostaMIDFieldValueChanged(evt);
       }
     });
 
@@ -400,49 +423,27 @@ private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowC
     if (dataSource.rowInserted() || dataSource.rowUpdated()) {
       int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
       foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
+      if (hs_mid == -1) {
+        int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+        foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
+      }
     }
   } catch (SQLException ex) {//GEN-LAST:event_foHisnaStevilkaFieldValueChanged
-    Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+    }
   }
-}
 
 private void foUlicaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foUlicaFieldValueChanged
-// TODO add your handling code here:
-  try {
-// TODO add your handling code here:
-    if (dataSource.rowInserted() || dataSource.rowUpdated()) {
-      int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
-      foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-    }
-  } catch (SQLException ex) {                                                 
-    Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
-  }
+  getMIDs();
 }//GEN-LAST:event_foUlicaFieldValueChanged
 
 private void foNaseljeFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foNaseljeFieldValueChanged
-// TODO add your handling code here:
-  try {
-// TODO add your handling code here:
-    if (dataSource.rowInserted() || dataSource.rowUpdated()) {
-      int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
-      foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-    }
-  } catch (SQLException ex) {                                                 
-    Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
-  }
+  getMIDs();
 }//GEN-LAST:event_foNaseljeFieldValueChanged
 
-private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foPostnaStevilkaFieldValueChanged
-  try {
-// TODO add your handling code here:
-    if (dataSource.rowInserted() || dataSource.rowUpdated()) {
-      int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
-      foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-    }
-  } catch (SQLException ex) {                                                 
-    Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
-  }
-}//GEN-LAST:event_foPostnaStevilkaFieldValueChanged
+private void foPostaMIDFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foPostaMIDFieldValueChanged
+  getMIDs();
+}//GEN-LAST:event_foPostaMIDFieldValueChanged
 
   
   private void initDbModel() {
@@ -499,7 +500,8 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
   private com.openitech.db.model.DbFieldObserver foHisnaStevilkaMID;
   private com.openitech.db.model.DbFieldObserver foNaselje;
   private com.openitech.db.model.DbFieldObserver foNaseljeMID;
-  private com.openitech.db.model.DbFieldObserver foPostnaStevilka;
+  private com.openitech.db.model.DbFieldObserver foPosta;
+  private com.openitech.db.model.DbFieldObserver foPostaMID;
   private com.openitech.db.model.DbFieldObserver foUlica;
   private com.openitech.db.model.DbFieldObserver foUlicaMID;
   private javax.swing.JPanel jPanel1;
@@ -526,8 +528,10 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
     public final DsFilterRPE  dsNaseljaFilter = new DsFilterRPE("<%filter_na%>");
     
     private PreparedStatement findHS_MID = null;
-    
-    
+    private PreparedStatement findUL_MID = null;
+    private PreparedStatement findPT_MID = null;
+    private PreparedStatement findNA_MID = null;
+   
     private static String getDialect() {
       String dialect = "";
       try {
@@ -656,7 +660,10 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
         dsNaseljaFilter.addDataSource(dsNaselja);
         
         findHS_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"find_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        
+        findUL_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"find_ul_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        findPT_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"find_pt_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        findNA_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"find_na_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+       
       } catch (NullPointerException ex) {
         if (dialect.length()>0) {
           throw (IllegalStateException) (new IllegalStateException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
@@ -670,6 +677,7 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
         ul_ime = ul_ime == null ? null : ul_ime.toUpperCase();
         na_ime = na_ime == null ? null : na_ime.toUpperCase();
         hs_hd = hs_hd == null ? null : hs_hd.replaceAll(" ", "");
+        pt_id = pt_id ==null || pt_id.length()==0 ? null : pt_id;
 
       try {
         int param = 1;
@@ -678,7 +686,7 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
 
         findHS_MID.setString(param++, hs_hd);
         findHS_MID.setString(param++, ul_ime);
-        findHS_MID.setString(param++, pt_id);
+        findHS_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
         findHS_MID.setString(param++, na_ime);
 
         ResultSet rsHS_MID = findHS_MID.executeQuery();
@@ -693,7 +701,90 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
 
         return result;
     }
-    
+    public int getUlicaMID(String ul_ime, String pt_id, String na_ime){
+       int result = -1;
+
+        ul_ime = ul_ime == null ? null : ul_ime.toUpperCase();
+        na_ime = na_ime == null ? null : na_ime.toUpperCase();
+        pt_id = pt_id ==null || pt_id.length()==0 ? null : pt_id;
+        
+
+      try {
+        int param = 1;
+
+        findUL_MID.clearParameters();
+
+       
+        findUL_MID.setString(param++, ul_ime);
+        findUL_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
+        findUL_MID.setString(param++, na_ime);
+
+        ResultSet rsUL_MID = findUL_MID.executeQuery();
+
+        if (rsUL_MID.next()) {
+          result = rsUL_MID.getInt(1);
+        }
+        
+      } catch (SQLException ex) {
+        Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+        return result;
+    }
+     public int getPostaMID(String pt_id, String pt_ime){
+       int result = -1;
+
+        pt_id = pt_id ==null || pt_id.length()==0 ? null : pt_id;
+        pt_ime = pt_ime == null ? null : pt_ime.toUpperCase();
+        
+
+      try {
+        int param = 1;
+
+        findPT_MID.clearParameters();
+
+       
+        findPT_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
+        findPT_MID.setString(param++, pt_ime);
+        
+
+        ResultSet rsPT_MID = findPT_MID.executeQuery();
+
+        if (rsPT_MID.next()&&rsPT_MID.isLast()) {
+          result = rsPT_MID.getInt(1);
+        }
+        
+      } catch (SQLException ex) {
+        Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+        return result;
+    }
+    public int getNaseljeMID(String pt_id, String na_ime){
+       int result = -1;
+
+        pt_id = pt_id ==null || pt_id.length()==0 ? null : pt_id;
+        na_ime = na_ime == null ? null : na_ime.toUpperCase();
+               
+      try {
+        int param = 1;
+
+        findNA_MID.clearParameters();
+        findNA_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
+        findNA_MID.setString(param++, na_ime);
+        
+        ResultSet rsNA_MID = findNA_MID.executeQuery();
+
+        if (rsNA_MID.next()&&rsNA_MID.isLast()) {
+          result = rsNA_MID.getInt(1);
+        }
+        
+      } catch (SQLException ex) {
+        Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+        return result;
+    }
     
     private static class DsFilterRPE  extends DataSourceFilters {
       public final SeekType I_TYPE_UL_IME = new SeekType("ul_ime",8,2);
@@ -709,6 +800,8 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
     }
     
   }
+
+
   
   /**
    * Holds value of property cnUlicaMID.
@@ -819,7 +912,7 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
    */
   public void setCnPostnaStevilka(String cnPostnaStevilka) {
     this.cnPostnaStevilka = cnPostnaStevilka;
-    foPostnaStevilka.setColumnName(cnPostnaStevilka);
+    foPostaMID.setColumnName(cnPostnaStevilka);
     jtfPostnaStevilka.setColumnName(cnPostnaStevilka);
   }
   
@@ -842,6 +935,7 @@ private void foPostnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRow
    */
   public void setCnPosta(String cnPosta) {
     this.cnPosta = cnPosta;
+    foPosta.setColumnName(cnPosta);
     jtfPosta.setColumnName(cnPosta);
   }
   
