@@ -99,6 +99,15 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
           int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
+        } else if (hs_mid>0){
+          // updataj ostala polja
+
+
+          Naslov values = dbDataModel.getNaslovFromHS_MID(hs_mid);
+          jtfPostnaStevilka.setText(String.valueOf(values.pt_id));
+          jtfPosta.setText(values.pt_ime);
+          jtfNaselja.setText(values.na_ime);
+
         }
       }
     } catch (SQLException ex) {
@@ -107,7 +116,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }
 
   private boolean isUpdating() {
-    if (dataSource==null) {
+    if (dataSource == null) {
       return false;
     } else {
       try {
@@ -358,6 +367,8 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
     if (!jtfNaselja.isFocusOwner() && cmNaselja.getSize() == 1) {
       jtfNaselja.setText(cmNaselja.getElementAt(0).toString());
+    } else if (!jtfNaselja.isFocusOwner() && cmNaselja.getSize() == 0) {
+      jtfNaselja.setText("");
     }
   }//GEN-LAST:event_cmNaseljaContentsChanged
 
@@ -388,6 +399,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void jtfPostaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusLost
     dbDataModel.dsPoste.setReloadsOnEventQueue(false);
     dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPosteFilter.I_TYPE_PT_IME, null);
+
   }//GEN-LAST:event_jtfPostaFocusLost
 
   private void jtfPostaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusGained
@@ -431,12 +443,13 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     }
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged
 
-private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {                                                  
-  getMIDs();
-}
+  private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+    getMIDs();
+
+  }
 
 private void foUlicaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foUlicaFieldValueChanged
-  if (isUpdating()&&jtfUlice.isFocusOwner()) {
+  if (isUpdating() && jtfUlice.isFocusOwner()) {
     jtfHisnaStevilka.setText("");
   }
   getMIDs();
@@ -450,46 +463,44 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
   getMIDs();
 }//GEN-LAST:event_foPostnaStevilkaMIDFieldValueChanged
 
-  
   private void initDbModel() {
   }
-  
+
   private static class HisnaFilterDocumentListener extends FilterDocumentListener {
+
     final static Pattern pattern = Pattern.compile("(^(\\d*)(\\s*)(.*)$)");
-    
+
     public HisnaFilterDocumentListener(DbDataModel.DsFilterRPE filter) {
       super(filter, null, Scheduler.DELAY);
     }
-    
+
     public HisnaFilterDocumentListener(DbDataModel.DsFilterRPE filter, long delay) {
       super(filter, null, delay);
     }
-    
+
     protected void setSeekValue(final DocumentEvent e) {
       String text = getText(e);
       Integer hs = null;
-      String  hd = null;
-      
-      if ((text != null)&&(text.length()>0)) {
+      String hd = null;
+
+      if ((text != null) && (text.length() > 0)) {
         text = text.trim();
         Matcher matcher = pattern.matcher(text);
-        
+
         if (matcher.find()) {
-          if (matcher.group(2)!=null&&matcher.group(2).length()>0) {
+          if (matcher.group(2) != null && matcher.group(2).length() > 0) {
             hs = Integer.parseInt(matcher.group(2));
           }
-          if (matcher.group(4)!=null&&matcher.group(4).length()>0) {
+          if (matcher.group(4) != null && matcher.group(4).length() > 0) {
             hd = matcher.group(4);
           }
         }
       }
-      
+
       schedule(new SeekValueUpdateRunnable<Integer>(filter, ((DbDataModel.DsFilterRPE) filter).I_TYPE_HS, hs));
       schedule(new SeekValueUpdateRunnable<String>(filter, ((DbDataModel.DsFilterRPE) filter).I_TYPE_HD, hd));
     }
   }
-
-
   /**
    * Holds value of property cnUlicaMID.
    */
@@ -511,7 +522,6 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
     this.cnUlicaMID = cnUlicaMID;
     foUlicaMID.setColumnName(cnUlicaMID);
   }
-
   /**
    * Holds value of property cnUlica.
    */
@@ -534,7 +544,6 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
     foUlica.setColumnName(cnUlica);
     jtfUlice.setColumnName(cnUlica);
   }
-
   /**
    * Holds value of property cnHisnaStevilkaMID.
    */
@@ -556,7 +565,6 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
     this.cnHisnaStevilkaMID = cnHisnaStevilkaMID;
     foHisnaStevilkaMID.setColumnName(cnHisnaStevilkaMID);
   }
-
   /**
    * Holds value of property cnHisnaStevilka.
    */
@@ -598,7 +606,6 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
     this.cnPostnaStevilkaMID = cnPostnaStevilkaMID;
     foPostnaStevilkaMID.setColumnName(cnPostnaStevilkaMID);
   }
-
   /**
    * Holds value of property cnHisnaStevilka.
    */
@@ -622,7 +629,6 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
     jtfPostnaStevilka.setColumnName(cnPostnaStevilka);
   }
   //----------
-
   /**
    * Holds value of property cnHisnaStevilka.
    */
@@ -646,13 +652,10 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
     jtfPosta.setColumnName(cnPosta);
   }
   //----------
-
-
   /**
    * Getter for property cnPostnaStevilka.
    * @return Value of property cnPostnaStevilka.
    */
-
   /**
    * Holds value of property cnNaseljeMID.
    */
@@ -713,8 +716,6 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
       Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
-  
-  
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private com.openitech.db.model.DbComboBoxModel cmHisneStevilke;
   private com.openitech.db.model.DbComboBoxModel cmNaselja;
@@ -742,27 +743,43 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
   private com.openitech.db.components.JDbTextField jtfPostnaStevilka;
   private com.openitech.db.components.JDbTextField jtfUlice;
   // End of variables declaration//GEN-END:variables
-  
-  
+
+  private static class Naslov {
+
+    int hs_mid;
+    int hs_hs;
+    String hs_hd;
+    int ul_mid;
+    String ul_ime;
+    String ul_uime;
+    int pt_mid;
+    int pt_id;
+    String pt_ime;
+    String pt_uime;
+    int na_mid;
+    String na_ime;
+    String na_uime;
+  }
+
   private static class DbDataModel {
+
     public final DbDataSource dsUlice = new DbDataSource();
-    public final DsFilterRPE  dsUliceFilter = new DsFilterRPE("<%filter_ulice%>");
-    
+    public final DsFilterRPE dsUliceFilter = new DsFilterRPE("<%filter_ulice%>");
     public final DbDataSource dsHisneStevilke = new DbDataSource();
-    public final DsFilterRPE  dsHisneStevilkeFilter = new DsFilterRPE("<%filter_hs%>");
-    
+    public final DsFilterRPE dsHisneStevilkeFilter = new DsFilterRPE("<%filter_hs%>");
     public final DbDataSource dsPoste = new DbDataSource();
     public final DbDataSource dsPostneStevilke = new DbDataSource();
-    public final DsFilterRPE  dsPosteFilter = new DsFilterRPE("<%filter_pt%>");
-    
+    public final DsFilterRPE dsPosteFilter = new DsFilterRPE("<%filter_pt%>");
     public final DbDataSource dsNaselja = new DbDataSource();
-    public final DsFilterRPE  dsNaseljaFilter = new DsFilterRPE("<%filter_na%>");
-    
-    private PreparedStatement findHS_MID = null;
+    public final DsFilterRPE dsNaseljaFilter = new DsFilterRPE("<%filter_na%>");
+    private PreparedStatement findHS_MID_1 = null;
+    private PreparedStatement findHS_MID_2 = null;
+    private PreparedStatement findHS_MID_3 = null;
     private PreparedStatement findUL_MID = null;
     private PreparedStatement findPT_MID = null;
     private PreparedStatement findNA_MID = null;
-   
+    private PreparedStatement select_hs_mid = null;
+
     private static String getDialect() {
       String dialect = "";
       try {
@@ -775,11 +792,11 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
       }
       return dialect;
     }
-    
+
     private DbDataModel() throws SQLException {
       String dialect = getDialect();
       java.sql.Connection connection = ConnectionManager.getInstance().getConnection();
-      
+
       try {
         dsUliceFilter.setFilterRequired(true);
         dsUliceFilter.addRequired(dsUliceFilter.I_TYPE_UL_IME);
@@ -787,165 +804,196 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         dsUliceFilter.addRequired(dsUliceFilter.I_TYPE_PT_IME, 2);
         dsUliceFilter.addRequired(dsUliceFilter.I_TYPE_PT_ID, 2);
         dsUliceFilter.setOperator("and");
-        
+
         dsUlice.setCanAddRows(false);
         dsUlice.setCanDeleteRows(false);
         dsUlice.setReadOnly(true);
         dsUlice.setName("ulice");
-        
+
         java.util.List parameters = new java.util.ArrayList();
         parameters.add(dsUliceFilter);
         parameters.add(dsUliceFilter);
-        
+
         dsUlice.setParameters(parameters);
-        dsUlice.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_ulic_c.sql", "cp1250"));
-        dsUlice.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_ulic.sql", "cp1250"));
+        dsUlice.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_ulic_c.sql", "cp1250"));
+        dsUlice.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_ulic.sql", "cp1250"));
         dsUlice.setFetchSize(108);
 //        dsUlice.setQueuedDelay(108);
-        
+
         dsUliceFilter.addDataSource(dsUlice);
-        
+
         dsHisneStevilkeFilter.setFilterRequired(true);
         dsHisneStevilkeFilter.addRequired(dsHisneStevilkeFilter.I_TYPE_UL_IME);
         dsHisneStevilkeFilter.addRequired(dsHisneStevilkeFilter.I_TYPE_NA_IME);
         dsHisneStevilkeFilter.addRequired(dsHisneStevilkeFilter.I_TYPE_PT_IME, 2);
         dsHisneStevilkeFilter.addRequired(dsHisneStevilkeFilter.I_TYPE_PT_ID, 2);
         dsHisneStevilkeFilter.setOperator("and");
-        
+
         dsHisneStevilke.setCanAddRows(false);
         dsHisneStevilke.setCanDeleteRows(false);
         dsHisneStevilke.setReadOnly(true);
         dsHisneStevilke.setName("hisne_stevilke");
-        
+
         parameters = new java.util.ArrayList();
         parameters.add(dsHisneStevilkeFilter);
         parameters.add(dsHisneStevilkeFilter);
-        
+
         dsHisneStevilke.setParameters(parameters);
-        dsHisneStevilke.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_hs_c.sql", "cp1250"));
-        dsHisneStevilke.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_hs.sql", "cp1250"));
+        dsHisneStevilke.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_hs_c.sql", "cp1250"));
+        dsHisneStevilke.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_hs.sql", "cp1250"));
         dsHisneStevilke.setFetchSize(108);
- //       dsHisneStevilke.setQueuedDelay(50);
-        
+        //       dsHisneStevilke.setQueuedDelay(50);
+
         dsHisneStevilkeFilter.addDataSource(dsHisneStevilke);
-        
+
         dsPosteFilter.setFilterRequired(true);
         dsPosteFilter.addRequired(dsPosteFilter.I_TYPE_UL_IME);
         dsPosteFilter.addRequired(dsPosteFilter.I_TYPE_NA_IME);
         dsPosteFilter.addRequired(dsPosteFilter.I_TYPE_PT_IME);
         dsPosteFilter.addRequired(dsPosteFilter.I_TYPE_PT_ID);
         dsPosteFilter.setOperator("and");
-        
+
         dsPoste.setCanAddRows(false);
         dsPoste.setCanDeleteRows(false);
         dsPoste.setReadOnly(true);
         dsPoste.setName("poste");
-        
+
         parameters = new java.util.ArrayList();
         parameters.add(dsPosteFilter);
         parameters.add(dsPosteFilter);
-        
+
         dsPoste.setParameters(parameters);
-        dsPoste.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_pt_c.sql", "cp1250"));
-        dsPoste.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_pt.sql", "cp1250")+"ORDER BY pt_ime");
+        dsPoste.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_pt_c.sql", "cp1250"));
+        dsPoste.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_pt.sql", "cp1250") + "ORDER BY pt_ime");
         dsPoste.setFetchSize(108);
-  //      dsPoste.setQueuedDelay(54);
-        
+        //      dsPoste.setQueuedDelay(54);
+
         dsPostneStevilke.setCanAddRows(false);
         dsPostneStevilke.setCanDeleteRows(false);
         dsPostneStevilke.setReadOnly(true);
         dsPostneStevilke.setName("postne_stevilke");
-        
+
         parameters = new java.util.ArrayList();
         parameters.add(dsPosteFilter);
         parameters.add(dsPosteFilter);
-        
+
         dsPostneStevilke.setParameters(parameters);
-        dsPostneStevilke.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_pt_c.sql", "cp1250"));
-        dsPostneStevilke.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_pt.sql", "cp1250")+"ORDER BY pt_id");
+        dsPostneStevilke.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_pt_c.sql", "cp1250"));
+        dsPostneStevilke.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_pt.sql", "cp1250") + "ORDER BY pt_id");
         dsPostneStevilke.setFetchSize(108);
-  //      dsPostneStevilke.setQueuedDelay(54);
-        
+        //      dsPostneStevilke.setQueuedDelay(54);
+
         dsPosteFilter.addDataSource(dsPoste);
         dsPosteFilter.addDataSource(dsPostneStevilke);
-        
+
         dsNaseljaFilter.setFilterRequired(true);
         dsNaseljaFilter.addRequired(dsNaseljaFilter.I_TYPE_UL_IME);
         dsNaseljaFilter.setOperator("and");
-        
+
         dsNaselja.setCanAddRows(false);
         dsNaselja.setCanDeleteRows(false);
         dsNaselja.setReadOnly(true);
         dsNaselja.setName("naselja");
-        
+
         parameters = new java.util.ArrayList();
         parameters.add(dsNaseljaFilter);
         parameters.add(dsNaseljaFilter);
-        
+
         dsNaselja.setParameters(parameters);
-        dsNaselja.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_ns_c.sql", "cp1250"));
-        dsNaselja.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"sifrant_ns.sql", "cp1250")+"ORDER BY na_ime");
+        dsNaselja.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_ns_c.sql", "cp1250"));
+        dsNaselja.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_ns.sql", "cp1250") + "ORDER BY na_ime");
         dsNaselja.setFetchSize(108);
 //        dsNaselja.setQueuedDelay(54);
-        
+
         dsNaseljaFilter.addDataSource(dsNaselja);
-        
-        findHS_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"find_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        findUL_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"find_ul_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        findPT_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"find_pt_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        findNA_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+dialect+"find_na_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-       
+
+        findHS_MID_1 = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_hs_mid_1.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        findHS_MID_2 = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_hs_mid_2.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        findHS_MID_3 = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_hs_mid_3.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        findUL_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_ul_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        findPT_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_pt_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        select_hs_mid = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "select_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+
       } catch (NullPointerException ex) {
-        if (dialect.length()>0) {
+        if (dialect.length() > 0) {
           throw (IllegalStateException) (new IllegalStateException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
         }
       }
     }
-    
-    public int getHisnaStevilkaMID(String ul_ime, String hs_hd, String pt_id, String na_ime) {
-        int result = -1;
 
-        ul_ime = ul_ime == null ? null : ul_ime.toUpperCase();
-        na_ime = na_ime == null ? null : na_ime.toUpperCase();
-        hs_hd = hs_hd == null ? null : hs_hd.replaceAll(" ", "");
-        pt_id = pt_id ==null || pt_id.length()==0 ? null : pt_id;
+    public int getHisnaStevilkaMID(String ul_ime, String hs_hd, String pt_id, String na_ime) {
+      int result = -1;
+
+      ul_ime = ul_ime == null ? null : ul_ime.toUpperCase();
+      na_ime = na_ime == null ? null : na_ime.toUpperCase();
+      hs_hd = hs_hd == null ? null : hs_hd.replaceAll(" ", "");
+      pt_id = pt_id == null || pt_id.length() == 0 ? null : pt_id;
 
       try {
         int param = 1;
 
-        findHS_MID.clearParameters();
+        findHS_MID_1.clearParameters();
 
-        findHS_MID.setString(param++, hs_hd);
-        findHS_MID.setString(param++, ul_ime);
-        findHS_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
-        findHS_MID.setString(param++, na_ime);
+        findHS_MID_1.setString(param++, hs_hd);
+        findHS_MID_1.setString(param++, ul_ime);
 
-        ResultSet rsHS_MID = findHS_MID.executeQuery();
+        ResultSet rsHS_MID = findHS_MID_1.executeQuery();
 
-        if (rsHS_MID.next()) {
+        if (rsHS_MID.next() && rsHS_MID.isLast()) {
           result = rsHS_MID.getInt(1);
         }
-        
+
+        if (result == -1) {
+          param = 1;
+
+          findHS_MID_2.clearParameters();
+
+          findHS_MID_2.setString(param++, hs_hd);
+          findHS_MID_2.setString(param++, ul_ime);
+          findHS_MID_2.setObject(param++, pt_id, java.sql.Types.INTEGER);
+
+          rsHS_MID = findHS_MID_2.executeQuery();
+
+          if (rsHS_MID.next() && rsHS_MID.isLast()) {
+            result = rsHS_MID.getInt(1);
+          }
+        }
+        if (result == -2) {
+
+          findHS_MID_3.clearParameters();
+
+          findHS_MID_3.setString(param++, hs_hd);
+          findHS_MID_3.setString(param++, ul_ime);
+          findHS_MID_3.setObject(param++, pt_id, java.sql.Types.INTEGER);
+          findHS_MID_3.setString(param++, na_ime);
+
+          rsHS_MID = findHS_MID_3.executeQuery();
+
+          if (rsHS_MID.next() && rsHS_MID.isLast()) {
+            result = rsHS_MID.getInt(1);
+          }
+        }
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-        return result;
+      return result;
     }
-    public int getUlicaMID(String ul_ime, String pt_id, String na_ime){
-       int result = -1;
 
-        ul_ime = ul_ime == null ? null : ul_ime.toUpperCase();
-        na_ime = na_ime == null ? null : na_ime.toUpperCase();
-        pt_id = pt_id ==null || pt_id.length()==0 ? null : pt_id;
-        
+    public int getUlicaMID(String ul_ime, String pt_id, String na_ime) {
+      int result = -1;
+
+      ul_ime = ul_ime == null ? null : ul_ime.toUpperCase();
+      na_ime = na_ime == null ? null : na_ime.toUpperCase();
+      pt_id = pt_id == null || pt_id.length() == 0 ? null : pt_id;
+
 
       try {
         int param = 1;
 
         findUL_MID.clearParameters();
 
-       
+
         findUL_MID.setString(param++, ul_ime);
         findUL_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
         findUL_MID.setString(param++, na_ime);
@@ -955,80 +1003,118 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         if (rsUL_MID.next()) {
           result = rsUL_MID.getInt(1);
         }
-        
+
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-        return result;
+      return result;
     }
-     public int getPostnaStevilkaMID(String pt_id, String pt_ime){
-       int result = -1;
 
-        pt_id = pt_id ==null || pt_id.length()==0 ? null : pt_id;
-        pt_ime = pt_ime == null ? null : pt_ime.toUpperCase();
-        
+    public int getPostnaStevilkaMID(String pt_id, String pt_ime) {
+      int result = -1;
+
+      pt_id = pt_id == null || pt_id.length() == 0 ? null : pt_id;
+      pt_ime = pt_ime == null ? null : pt_ime.toUpperCase();
+
 
       try {
         int param = 1;
 
         findPT_MID.clearParameters();
 
-       
+
         findPT_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
         findPT_MID.setString(param++, pt_ime);
-        
+
 
         ResultSet rsPT_MID = findPT_MID.executeQuery();
 
-        if (rsPT_MID.next()&& rsPT_MID.isLast()) {
+        if (rsPT_MID.next() && rsPT_MID.isLast()) {
           result = rsPT_MID.getInt(1);
         }
-        
+
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-        return result;
+      return result;
     }
-    public int getNaseljeMID(String pt_id, String na_ime){
-       int result = -1;
 
-        pt_id = pt_id ==null || pt_id.length()==0 ? null : pt_id;
-        na_ime = na_ime == null ? null : na_ime.toUpperCase();
-               
+    public int getNaseljeMID(String pt_id, String na_ime) {
+      int result = -1;
+
+      pt_id = pt_id == null || pt_id.length() == 0 ? null : pt_id;
+      na_ime = na_ime == null ? null : na_ime.toUpperCase();
+
       try {
         int param = 1;
 
         findNA_MID.clearParameters();
         findNA_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
         findNA_MID.setString(param++, na_ime);
-        
+
         ResultSet rsNA_MID = findNA_MID.executeQuery();
 
-        if (rsNA_MID.next()&&rsNA_MID.isLast()) {
+        if (rsNA_MID.next() && rsNA_MID.isLast()) {
           result = rsNA_MID.getInt(1);
         }
-        
+
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-        return result;
+      return result;
     }
-    
-    private static class DsFilterRPE  extends DataSourceFilters {
-      public final SeekType I_TYPE_UL_IME = new SeekType("ul_ime",8,2);
-      public final SeekType I_TYPE_NA_IME = new SeekType("na_ime",8,1);
-      public final SeekType I_TYPE_PT_IME = new SeekType("pt_ime",8,1);
-      public final SeekType I_TYPE_PT_ID  = DbDataModel.getDialect().length()==0?new SeekType("CAST(pt_id as varchar) like (?+'%')",7,1):new SeekType(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+DbDataModel.getDialect()+"fragment_filter_pt_id.sql", "cp1250"),7,1);
-      public final IntegerSeekType I_TYPE_HS = new IntegerSeekType("hs",4);
-      public final SeekType I_TYPE_HD = new SeekType("hd",4,1);
-      
+
+    private static class DsFilterRPE extends DataSourceFilters {
+
+      public final SeekType I_TYPE_UL_IME = new SeekType("ul_ime", 8, 2);
+      public final SeekType I_TYPE_NA_IME = new SeekType("na_ime", 8, 1);
+      public final SeekType I_TYPE_PT_IME = new SeekType("pt_ime", 8, 1);
+      public final SeekType I_TYPE_PT_ID = DbDataModel.getDialect().length() == 0 ? new SeekType("CAST(pt_id as varchar) like (?+'%')", 7, 1) : new SeekType(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + DbDataModel.getDialect() + "fragment_filter_pt_id.sql", "cp1250"), 7, 1);
+      public final IntegerSeekType I_TYPE_HS = new IntegerSeekType("hs", 4);
+      public final SeekType I_TYPE_HD = new SeekType("hd", 4, 1);
+
       public DsFilterRPE(String replace) {
         super(replace);
       }
     }
-    
+
+    private Naslov getNaslovFromHS_MID(int hs_mid) {
+      try {
+        int param = 1;
+
+        select_hs_mid.clearParameters();
+        select_hs_mid.setInt(param++, hs_mid);
+
+        ResultSet rsSelect_hs_mid = select_hs_mid.executeQuery();
+
+        Naslov naslov = new Naslov();
+
+        if (rsSelect_hs_mid.next()) {
+          naslov.hs_mid=rsSelect_hs_mid.getInt("hs_mid");
+          naslov.hs_hs=rsSelect_hs_mid.getInt("hs");
+          naslov.hs_hd=rsSelect_hs_mid.getString("hd");
+          naslov.ul_mid=rsSelect_hs_mid.getInt("ul_mid");
+          naslov.ul_ime = rsSelect_hs_mid.getString("ul_ime");
+          naslov.ul_uime = rsSelect_hs_mid.getString("ul_uime");
+          naslov.pt_mid=rsSelect_hs_mid.getInt("pt_mid");
+          naslov.pt_id=rsSelect_hs_mid.getInt("pt_id");
+          naslov.pt_ime = rsSelect_hs_mid.getString("pt_ime");
+          naslov.pt_uime = rsSelect_hs_mid.getString("pt_uime");
+          naslov.na_mid=rsSelect_hs_mid.getInt("na_mid");
+          naslov.na_ime = rsSelect_hs_mid.getString("na_ime");
+          naslov.na_uime = rsSelect_hs_mid.getString("na_uime");
+                  
+        }
+        return naslov;
+      } catch (SQLException ex) {
+        Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+        return null;
+      }
+
+
+    }
   }
 }
