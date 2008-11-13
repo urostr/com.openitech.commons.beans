@@ -156,6 +156,13 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
+  public DbDataSource(PreparedStatement select, PreparedStatement count, List<Object> parameters) {
+    this.selectStatement = select;
+    this.countStatement = count;
+    this.parameters.clear();
+    this.parameters.addAll(parameters);
+  }
+
   public String getName() {
     return name;
   }
@@ -1971,6 +1978,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
+
   }
 
   /**
@@ -4175,10 +4183,27 @@ public class DbDataSource implements DbNavigatorDataSource {
     return rs;
   }
 
+  public static ResultSet executeQuery(String selectSQL, List<?> parameters) throws SQLException {
+    String sql = substParameters(selectSQL, parameters);
+    PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql,
+            ResultSet.TYPE_SCROLL_INSENSITIVE,
+            ResultSet.CONCUR_READ_ONLY,
+            ResultSet.HOLD_CURSORS_OVER_COMMIT);
+
+    return executeQuery(statement, parameters);
+  }
+
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
     setParameters(statement, parameters, 1, false);
 
     return statement.executeQuery();
+  }
+
+  public static int executeUpdate(String selectSQL, List<?> parameters) throws SQLException {
+    String sql = substParameters(selectSQL, parameters);
+    PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql);
+
+    return executeUpdate(statement, parameters);
   }
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
@@ -4205,6 +4230,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     if (parameters != null) {
       this.parameters.addAll(parameters);
     }
+
     if (reload) {
       return reload();
     } else {
@@ -4421,6 +4447,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         } else {
           columnValues = new HashMap<String, Object>();
         }
+
         columnValues.put(columnName, value);
         storedUpdates.put(row, columnValues);
 
@@ -4500,9 +4527,11 @@ public class DbDataSource implements DbNavigatorDataSource {
     if (storedUpdates.containsKey(r)) {
       result = storedUpdates.get(r).containsKey(columnName.toUpperCase());
     }
+
     if (!result) {
       storedResult[0] = false;
     }
+
     return result;
   }
 
@@ -4531,6 +4560,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         } else if (type.equals(String.class)) {
           result = result.toString();
         }
+
         return (T) result;
       }
     }
@@ -4580,6 +4610,7 @@ public class DbDataSource implements DbNavigatorDataSource {
       } else {
         result = selectResultSet.getObject(columnName);
       }
+
       if (oldrow != row) {
         selectResultSet.absolute(oldrow);
       }
@@ -4646,6 +4677,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         } else {
           selectResultSet.first();
         }
+
         if (isSeekUpdatedRow()) {
           if (!compareValues(selectResultSet, oldValues)) {
             selectResultSet.first();
@@ -5071,6 +5103,7 @@ public class DbDataSource implements DbNavigatorDataSource {
       if ((key != null) && (key instanceof String)) {
         key = ((String) key).toUpperCase();
       }
+
       if (containsKey(key)) {
         return get(key);
       } else {
@@ -5145,6 +5178,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         for (Iterator<String> c = columnNames.iterator(); c.hasNext();) {
           sql.append(sql.length() > 0 ? " AND " : "").append(c.next()).append("=? ");
         }
+
         sql.insert(0, "DELETE FROM " + table + " WHERE ");
 
         delete = connection.prepareStatement(sql.toString());
@@ -5169,6 +5203,7 @@ public class DbDataSource implements DbNavigatorDataSource {
           for (String c : columnNames) {
             sql.append(sql.length() > 0 ? " AND " : "").append(c).append("=? ");
           }
+
           sql.insert(0, "SELECT * FROM " + table + " WHERE ");
           sql.append(" FOR UPDATE");
 

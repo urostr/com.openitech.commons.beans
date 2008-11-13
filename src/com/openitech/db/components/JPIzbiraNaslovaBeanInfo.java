@@ -30,14 +30,15 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
     private static final int PROPERTY_cnNaseljeMID = 3;
     private static final int PROPERTY_cnPosta = 4;
     private static final int PROPERTY_cnPostnaStevilka = 5;
-    private static final int PROPERTY_cnUlica = 6;
-    private static final int PROPERTY_cnUlicaMID = 7;
-    private static final int PROPERTY_dataSource = 8;
+    private static final int PROPERTY_cnPostnaStevilkaMID = 6;
+    private static final int PROPERTY_cnUlica = 7;
+    private static final int PROPERTY_cnUlicaMID = 8;
+    private static final int PROPERTY_dataSource = 9;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[9];
+        PropertyDescriptor[] properties = new PropertyDescriptor[10];
     
         try {
             properties[PROPERTY_cnHisnaStevilka] = new PropertyDescriptor ( "cnHisnaStevilka", com.openitech.db.components.JPIzbiraNaslova.class, "getCnHisnaStevilka", "setCnHisnaStevilka" ); // NOI18N
@@ -48,10 +49,12 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_cnNaselje].setPreferred ( true );
             properties[PROPERTY_cnNaseljeMID] = new PropertyDescriptor ( "cnNaseljeMID", com.openitech.db.components.JPIzbiraNaslova.class, "getCnNaseljeMID", "setCnNaseljeMID" ); // NOI18N
             properties[PROPERTY_cnNaseljeMID].setPreferred ( true );
-            properties[PROPERTY_cnPosta] = new PropertyDescriptor ( "cnPosta", com.openitech.db.components.JPIzbiraNaslova.class, "getCnPosta", "setCnPosta" ); // NOI18N
+            properties[PROPERTY_cnPosta] = new PropertyDescriptor ( "cnPosta", com.openitech.db.components.JPIzbiraNaslova.class, "getcnPosta", "setcnPosta" ); // NOI18N
             properties[PROPERTY_cnPosta].setPreferred ( true );
-            properties[PROPERTY_cnPostnaStevilka] = new PropertyDescriptor ( "cnPostnaStevilka", com.openitech.db.components.JPIzbiraNaslova.class, "getCnPostnaStevilka", "setCnPostnaStevilka" ); // NOI18N
+            properties[PROPERTY_cnPostnaStevilka] = new PropertyDescriptor ( "cnPostnaStevilka", com.openitech.db.components.JPIzbiraNaslova.class, "getcnPostnaStevilka", "setcnPostnaStevilka" ); // NOI18N
             properties[PROPERTY_cnPostnaStevilka].setPreferred ( true );
+            properties[PROPERTY_cnPostnaStevilkaMID] = new PropertyDescriptor ( "cnPostnaStevilkaMID", com.openitech.db.components.JPIzbiraNaslova.class, "getcnPostnaStevilkaMID", "setcnPostnaStevilkaMID" ); // NOI18N
+            properties[PROPERTY_cnPostnaStevilkaMID].setPreferred ( true );
             properties[PROPERTY_cnUlica] = new PropertyDescriptor ( "cnUlica", com.openitech.db.components.JPIzbiraNaslova.class, "getCnUlica", "setCnUlica" ); // NOI18N
             properties[PROPERTY_cnUlica].setPreferred ( true );
             properties[PROPERTY_cnUlicaMID] = new PropertyDescriptor ( "cnUlicaMID", com.openitech.db.components.JPIzbiraNaslova.class, "getCnUlicaMID", "setCnUlicaMID" ); // NOI18N

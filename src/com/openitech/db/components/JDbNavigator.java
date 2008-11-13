@@ -3,7 +3,6 @@
  *
  * Created on Sobota, 8 april 2006, 13:34
  */
-
 package com.openitech.db.components;
 
 import com.openitech.Settings;
@@ -30,17 +29,16 @@ import com.openitech.components.JMnemonicButton;
  * @author  uros
  */
 public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeListener, PropertyChangeListener {
-  com.openitech.db.model.DbNavigatorDataSource dataSource;
 
+  com.openitech.db.model.DbNavigatorDataSource dataSource;
   private ActiveRowChangeWeakListener activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this);
   private PropertyChangeWeakListener propertyChangeWeakListener = new PropertyChangeWeakListener(this);
   private Component navigatorFor = null;
   private int fill = GridBagConstraints.NONE;
   private int condition = WHEN_IN_FOCUSED_WINDOW;
   private int mask = java.awt.Event.ALT_MASK;
-  private GridLayout layout = new GridLayout(1,0);
+  private GridLayout layout = new GridLayout(1, 0);
   private EnumSet<JDbNavigator.Operation> buttons = EnumSet.allOf(JDbNavigator.Operation.class);
-  
 
   /** Creates new form JDbNavigator */
   public JDbNavigator() {
@@ -49,7 +47,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     jbAdd.addMnemonic(java.awt.event.KeyEvent.VK_INSERT);
     jbDelete.addMnemonic(java.awt.event.KeyEvent.VK_DELETE);
   }
-  
+
   public JDbNavigator(Operation... e) {
     this();
     setButtons(e);
@@ -219,38 +217,40 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   public int getFill() {
     return fill;
   }
-  
+
   public void setRows(int rows) {
-    if (layout.getRows()!=rows) {
+    if (layout.getRows() != rows) {
       layout.setRows(rows);
       this.revalidate();
     }
   }
-  
+
   public int getRows() {
     return layout.getRows();
   }
-  
+
   public void setColumns(int columns) {
-    if (layout.getColumns()!=columns) {
+    if (layout.getColumns() != columns) {
       layout.setColumns(columns);
       this.revalidate();
     }
   }
-  
+
   public int getColumns() {
     return layout.getColumns();
   }
 
   private void jbReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbReloadActionPerformed
-    if (dataSource!=null)
+    if (dataSource != null) {
       dataSource.reload();
+    }
   }//GEN-LAST:event_jbReloadActionPerformed
 
   private void jbCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbCancelActionPerformed
     try {
-      if (dataSource!=null)
+      if (dataSource != null) {
         dataSource.cancelRowUpdates();
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error cancelling updates on the record.", ex);
     }
@@ -259,8 +259,9 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   private void jbConfirmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbConfirmActionPerformed
 //        dataSource.updateRow();
     try {
-      if (dataSource!=null)
+      if (dataSource != null) {
         dataSource.updateRow();
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error storing the updated record.", ex);
       StringBuffer message = new StringBuffer();
@@ -272,15 +273,16 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
   private void jbDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbDeleteActionPerformed
     try {
-      if (dataSource!=null && (JOptionPane.showOptionDialog(this,
+      if (dataSource != null && (JOptionPane.showOptionDialog(this,
               "Ali naj res zbri\u0161em zapis ?",
               "Brisanje",
               JOptionPane.YES_NO_OPTION,
               JOptionPane.QUESTION_MESSAGE,
               null,
-              new Object[] {"Da","Ne"},
-              "Ne")==JOptionPane.YES_OPTION))
+              new Object[]{"Da", "Ne"},
+              "Ne") == JOptionPane.YES_OPTION)) {
         dataSource.deleteRow();
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error deleting the record.", ex);
       StringBuffer message = new StringBuffer();
@@ -292,10 +294,12 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
   private void jbAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbAddActionPerformed
     try {
-      if (dataSource!=null)
+      if (dataSource != null) {
         dataSource.moveToInsertRow();
-      if (navigatorFor!=null)
+      }
+      if (navigatorFor != null) {
         navigatorFor.requestFocus();
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error adding the record.", ex);
     }
@@ -303,8 +307,9 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
   private void jbLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbLastActionPerformed
     try {
-      if (dataSource!=null)
+      if (dataSource != null) {
         dataSource.last();
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the last record.", ex);
     }
@@ -312,8 +317,9 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
   private void jbNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbNextActionPerformed
     try {
-      if (dataSource!=null)
+      if (dataSource != null) {
         dataSource.next();
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the next record.", ex);
     }
@@ -321,8 +327,9 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
   private void jbPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPrevActionPerformed
     try {
-      if (dataSource!=null)
+      if (dataSource != null) {
         dataSource.previous();
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the previous record.", ex);
     }
@@ -331,24 +338,26 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
   private void jbFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbFirstActionPerformed
     try {
-      if (dataSource!=null)
+      if (dataSource != null) {
         dataSource.first();
+      }
     } catch (SQLException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the first record.", ex);
     }
   }//GEN-LAST:event_jbFirstActionPerformed
 
   public void setDataSource(com.openitech.db.model.DbNavigatorDataSource dataSource) {
-    if (this.dataSource!=null) {
+    if (this.dataSource != null) {
       this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       this.dataSource.removePropertyChangeListener("model", propertyChangeWeakListener);
     }
     this.dataSource = dataSource;
-    if (this.dataSource!=null) {
+    if (this.dataSource != null) {
       this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
       this.dataSource.addPropertyChangeListener("model", propertyChangeWeakListener);
-      if (this.dataSource.isDataLoaded()||this.dataSource.loadData())
+      if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
         checkButtons();
+      }
     }
   }
 
@@ -357,41 +366,45 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   }
 
   private void checkButtons() {
-    dataSource.lock();
     try {
-      boolean first = this.dataSource.isFirst();
-      boolean last = this.dataSource.isLast();
-      boolean updating = this.dataSource.rowUpdated();
-      boolean inserting = this.dataSource.rowInserted();
-      boolean canAdd = this.dataSource.isCanAddRows();
-      boolean canDelete = this.dataSource.isCanDeleteRows();
-      int count = this.dataSource.getRowCount();
+      dataSource.lock();
+      try {
+        boolean first = this.dataSource.isFirst();
+        boolean last = this.dataSource.isLast();
+        boolean updating = this.dataSource.rowUpdated();
+        boolean inserting = this.dataSource.rowInserted();
+        boolean canAdd = this.dataSource.isCanAddRows();
+        boolean canDelete = this.dataSource.isCanDeleteRows();
+        int count = this.dataSource.getRowCount();
 
-      jbFirst.setEnabled(!first);
-      jbPrev.setEnabled(!first);
-      jbNext.setEnabled(!last);
-      jbLast.setEnabled(!last);
-      jbAdd.setEnabled(canAdd&&!updating);
-      jbDelete.setEnabled(canDelete&&!(inserting||updating)&&(count>0));
-      jbConfirm.setEnabled(updating);
-      jbCancel.setEnabled(updating);
-      jbReload.setEnabled(this.dataSource!=null);
-      if (updating) {
-        Logger.getLogger(Settings.LOGGER).finest("Updating");
+        jbFirst.setEnabled(!first);
+        jbPrev.setEnabled(!first);
+        jbNext.setEnabled(!last);
+        jbLast.setEnabled(!last);
+        jbAdd.setEnabled(canAdd && !updating);
+        jbDelete.setEnabled(canDelete && !(inserting || updating) && (count > 0));
+        jbConfirm.setEnabled(updating);
+        jbCancel.setEnabled(updating);
+        jbReload.setEnabled(this.dataSource != null);
+        if (updating) {
+          Logger.getLogger(Settings.LOGGER).finest("Updating");
+        }
+      } catch (SQLException ex) {
+        jbFirst.setEnabled(false);
+        jbPrev.setEnabled(false);
+        jbNext.setEnabled(false);
+        jbLast.setEnabled(false);
+        jbAdd.setEnabled(false);
+        jbDelete.setEnabled(false);
+        jbConfirm.setEnabled(false);
+        jbCancel.setEnabled(false);
+        jbReload.setEnabled(false);
+        Logger.getLogger(Settings.LOGGER).warning("Error setting navigator properties. [" + ex.getMessage() + "]");
+      } finally {
+        dataSource.unlock();
       }
-    } catch (SQLException ex) {
-      jbFirst.setEnabled(false);
-      jbPrev.setEnabled(false);
-      jbNext.setEnabled(false);
-      jbLast.setEnabled(false);
-      jbAdd.setEnabled(false);
-      jbDelete.setEnabled(false);
-      jbConfirm.setEnabled(false);
-      jbCancel.setEnabled(false);
-      jbReload.setEnabled(false);
-      Logger.getLogger(Settings.LOGGER).warning("Error setting navigator properties. ["+ex.getMessage()+"]");
-    } finally {
-      dataSource.unlock();
+    } catch (IllegalStateException ex) {
+      //ignore it
     }
   }
 
@@ -444,15 +457,15 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   public int getCondition() {
     return condition;
   }
-  
+
   public void setButtons(Operation... e) {
     EnumSet<Operation> s = EnumSet.noneOf(Operation.class);
     jpInternal.removeAll();
-    for (JDbNavigator.Operation visible:e) {
+    for (JDbNavigator.Operation visible : e) {
       visible.show(this);
       s.add(visible);
     }
-    for (JDbNavigator.Operation hidden:EnumSet.complementOf(s)) {
+    for (JDbNavigator.Operation hidden : EnumSet.complementOf(s)) {
       hidden.hide(this);
     }
     jpInternal.invalidate();
@@ -467,7 +480,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   }
 
   public void propertyChange(PropertyChangeEvent evt) {
-      setDataSource(getDataSource());
+    setDataSource(getDataSource());
   }
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -484,79 +497,100 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   // End of variables declaration//GEN-END:variables
 
   public static enum Operation {
-    FIRST {   
+
+    FIRST {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbFirst);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbFirst);
-      }},
+      }
+    },
     PREV {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbPrev);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbPrev);
-      }},
+      }
+    },
     NEXT {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbNext);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbNext);
-      }},
+      }
+    },
     LAST {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbLast);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbLast);
-      }},
+      }
+    },
     ADD {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbAdd);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbAdd);
-      }},
+      }
+    },
     DELETE {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbDelete);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbDelete);
-      }},
+      }
+    },
     CONFIRM {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbConfirm);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbConfirm);
-      }},
+      }
+    },
     CANCEL {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbCancel);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbCancel);
-      }},
+      }
+    },
     RELOAD {
+
       protected void show(JDbNavigator owner) {
         owner.jpInternal.add(owner.jbReload);
       }
 
       protected void hide(JDbNavigator owner) {
         owner.jpInternal.remove(owner.jbReload);
-      }};
+      }
+    };
+
     protected abstract void show(JDbNavigator owner);
+
     protected abstract void hide(JDbNavigator owner);
   }
 }

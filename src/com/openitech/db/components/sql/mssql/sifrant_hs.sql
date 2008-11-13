@@ -1,7 +1,7 @@
 (
 (
 SELECT DISTINCT 
-    CAST(hs as varchar)+'  '+hd as hs_hd,
+    CAST(hs as varchar)+hd as hs_hd,
     hs, 
     hd 
 FROM 
