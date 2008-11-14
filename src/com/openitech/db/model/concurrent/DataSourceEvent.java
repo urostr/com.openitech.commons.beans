@@ -111,7 +111,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
       this.dataSource = dataSource;
       this.type = type;
       this.onEventQueue = onEventQueue;
-      this.hash = dataSource.hashCode()+type.hashCode();
+      this.hash = dataSource.hashCode()+31*type.hashCode();
     }
     
     public int hashCode() {

@@ -13,6 +13,8 @@ import com.openitech.db.filters.FilterDocumentCaretListener;
 import com.openitech.db.filters.FilterDocumentListener;
 import com.openitech.db.filters.Scheduler;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.concurrent.DataSourceEvent;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.PreparedStatement;
@@ -30,6 +32,7 @@ import javax.swing.event.DocumentEvent;
  */
 public class JPIzbiraNaslova extends javax.swing.JPanel {
 
+  private static final int DEFAULT_DELAY = 27;
   DbDataModel dbDataModel = new DbDataModel();
   FilterDocumentCaretListener flPostnaStevilka;
   FilterDocumentCaretListener flPosta;
@@ -42,16 +45,16 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   public JPIzbiraNaslova() throws SQLException {
     initComponents();
 
-    jtfUlice.addCaretListener(new FilterDocumentCaretListener(jtfUlice.getDocument(), dbDataModel.dsUliceFilter, dbDataModel.dsUliceFilter.I_TYPE_UL_IME, 27));
-    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsHisneStevilkeFilter, dbDataModel.dsHisneStevilkeFilter.I_TYPE_UL_IME, 108));
-    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_UL_IME, 27));
-    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_UL_IME, 27));
+    jtfUlice.addCaretListener(new FilterDocumentCaretListener(jtfUlice.getDocument(), dbDataModel.dsUliceFilter, dbDataModel.dsUliceFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
+    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsHisneStevilkeFilter, dbDataModel.dsHisneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY * 4));
+    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
+    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
 
-    jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPosteFilter, 27));
-    jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsNaseljaFilter, 27));
+    jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPosteFilter, DEFAULT_DELAY));
+    jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsNaseljaFilter, DEFAULT_DELAY));
 
-    flPostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_ID, 27);
-    flPosta = new FilterDocumentCaretListener(jtfPosta.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_IME, 27);
+    flPostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
+    flPosta = new FilterDocumentCaretListener(jtfPosta.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_IME, DEFAULT_DELAY);
 
     dbDataModel.dsUlice.setReloadsOnEventQueue(false);
     dbDataModel.dsNaselja.setReloadsOnEventQueue(false);
@@ -85,34 +88,126 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     addListeners();
   }
 
-  private void getMIDs() {
-    try {
-      if (isUpdating()) {
-        int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
-        foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-        if (hs_mid == -1) {
-          int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
-          foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
+  private class RefreshMIDs extends DataSourceEvent {
 
-          int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
-          foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
+    private RefreshMIDs() {
+      super(new Event(dbDataModel.dsHisneStevilke, Event.Type.REFRESH));
+    }
 
-          int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
-          foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
-        } else if (hs_mid>0){
-          // updataj ostala polja
+    private RefreshMIDs(RefreshMIDs object) {
+      super(object);
+    }
+
+    @Override
+    public void run() {
+      try {
+        Thread.sleep(JPIzbiraNaslova.DEFAULT_DELAY);
+      } catch (InterruptedException ex) {
+        Logger.getLogger(JPIzbiraNaslova.class.getName()).info("Thread interrupted [refreshMIDs]");
+      }
+      if (timestamps.get(event).longValue() <= timestamp.longValue()) {
+        if (event.isOnEventQueue()) {
+          try {
+            EventQueue.invokeAndWait(new Runnable() {
+
+              public void run() {
+                lockAndGet();
+              }
+            });
+          } catch (Exception ex) {
+            Logger.getLogger(JPIzbiraNaslova.class.getName()).info("Thread interrupted [refreshMIDs]");
+          }
+        } else {
+          lockAndGet();
+        }
+      } else {
+        Logger.getLogger(JPIzbiraNaslova.class.getName()).fine("Skipped loading [refreshMIDs...]");
+      }
+    }
+
+    @Override
+    public Object clone() {
+      return new RefreshMIDs(this);
+    }
+
+    private void resubmit() {
+      DataSourceEvent.submit(this);
+    }
+
+    private void updateValues(Naslov naslov) throws SQLException {
+      foUlicaMID.updateValue(naslov.ul_mid);
+
+      if (!jtfPostnaStevilka.getText().equals(String.valueOf(naslov.pt_id))) {
+        jtfPostnaStevilka.setText(String.valueOf(naslov.pt_id));
+        foPostnaStevilkaMID.updateValue(naslov.pt_mid);
+      }
+      if (!jtfPosta.getText().equals(naslov.pt_uime)) {
+        jtfPosta.setText(naslov.pt_uime);
+      }
+      if (!jtfNaselja.getText().equals(naslov.na_uime)) {
+        jtfNaselja.setText(naslov.na_uime);
+        foNaseljeMID.updateValue(naslov.na_mid);
+      }
+    }
+
+    private void get() {
+      try {
+        if (isUpdating()) {
+          int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+          foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
+          if (hs_mid == -1) {
+            int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+            foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
+
+            int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
+            foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
+
+            int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
+            foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
+          } else if (hs_mid > 0) {
+            // updataj ostala polja
 
 
-          Naslov values = dbDataModel.getNaslovFromHS_MID(hs_mid);
-          jtfPostnaStevilka.setText(String.valueOf(values.pt_id));
-          jtfPosta.setText(values.pt_ime);
-          jtfNaselja.setText(values.na_ime);
-          
+            final Naslov naslov = dbDataModel.getNaslovFromHS_MID(hs_mid);
+
+            if (EventQueue.isDispatchThread()) {
+              updateValues(naslov);
+            } else {
+              EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                  try {
+                    updateValues(naslov);
+                  } catch (SQLException ex) {
+                    Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+                  }
+                }
+              });
+            }
+          }
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+
+    private void lockAndGet() {
+      if (getDataSource() != null) {
+        if (getDataSource().lock(false)) {
+          try {
+            get();
+          } finally {
+            getDataSource().unlock();
+          }
+        } else {
+          //resubmit();
         }
       }
-    } catch (SQLException ex) {
-      Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
     }
+  }
+
+  private void getMIDs() {
+    DataSourceEvent.submit(new RefreshMIDs());
   }
 
   private boolean isUpdating() {
@@ -942,7 +1037,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         timer = System.currentTimeMillis();
         ResultSet rsHS_MID = findHS_MID_1.executeQuery();
         System.out.println("izbiranaslova:findHS_MID_1:" + (System.currentTimeMillis() - timer) + "ms");
-        
+
         if (rsHS_MID.next() && rsHS_MID.isLast()) {
           result = rsHS_MID.getInt(1);
         }
@@ -968,15 +1063,15 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         }
         if (result == -1) {
           param = 1;
-          
+
           findHS_MID_3.clearParameters();
 
           findHS_MID_3.setString(param++, hs_hd);
           findHS_MID_3.setString(param++, ul_ime);
           findHS_MID_3.setObject(param++, pt_id, java.sql.Types.INTEGER);
           findHS_MID_3.setString(param++, na_ime);
-          
-          
+
+
           timer = System.currentTimeMillis();
           ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
           System.out.println("izbiranaslova:findHS_MID_3:" + (System.currentTimeMillis() - timer) + "ms");
@@ -1106,20 +1201,20 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         Naslov naslov = new Naslov();
 
         if (rsSelect_hs_mid.next()) {
-          naslov.hs_mid=rsSelect_hs_mid.getInt("hs_mid");
-          naslov.hs_hs=rsSelect_hs_mid.getInt("hs");
-          naslov.hs_hd=rsSelect_hs_mid.getString("hd");
-          naslov.ul_mid=rsSelect_hs_mid.getInt("ul_mid");
+          naslov.hs_mid = rsSelect_hs_mid.getInt("hs_mid");
+          naslov.hs_hs = rsSelect_hs_mid.getInt("hs");
+          naslov.hs_hd = rsSelect_hs_mid.getString("hd");
+          naslov.ul_mid = rsSelect_hs_mid.getInt("ul_mid");
           naslov.ul_ime = rsSelect_hs_mid.getString("ul_ime");
           naslov.ul_uime = rsSelect_hs_mid.getString("ul_uime");
-          naslov.pt_mid=rsSelect_hs_mid.getInt("pt_mid");
-          naslov.pt_id=rsSelect_hs_mid.getInt("pt_id");
+          naslov.pt_mid = rsSelect_hs_mid.getInt("pt_mid");
+          naslov.pt_id = rsSelect_hs_mid.getInt("pt_id");
           naslov.pt_ime = rsSelect_hs_mid.getString("pt_ime");
           naslov.pt_uime = rsSelect_hs_mid.getString("pt_uime");
-          naslov.na_mid=rsSelect_hs_mid.getInt("na_mid");
+          naslov.na_mid = rsSelect_hs_mid.getInt("na_mid");
           naslov.na_ime = rsSelect_hs_mid.getString("na_ime");
           naslov.na_uime = rsSelect_hs_mid.getString("na_uime");
-                  
+
         }
         return naslov;
       } catch (SQLException ex) {
