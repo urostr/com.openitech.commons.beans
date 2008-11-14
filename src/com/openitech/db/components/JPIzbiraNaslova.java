@@ -107,7 +107,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
           jtfPostnaStevilka.setText(String.valueOf(values.pt_id));
           jtfPosta.setText(values.pt_ime);
           jtfNaselja.setText(values.na_ime);
-
+          
         }
       }
     } catch (SQLException ex) {
@@ -912,6 +912,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         findHS_MID_3 = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_hs_mid_3.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         findUL_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_ul_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         findPT_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_pt_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        findNA_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_na_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         select_hs_mid = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "select_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 
       } catch (NullPointerException ex) {
@@ -928,6 +929,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
       na_ime = na_ime == null ? null : na_ime.toUpperCase();
       hs_hd = hs_hd == null ? null : hs_hd.replaceAll(" ", "");
       pt_id = pt_id == null || pt_id.length() == 0 ? null : pt_id;
+      long timer;
 
       try {
         int param = 1;
@@ -937,11 +939,14 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         findHS_MID_1.setString(param++, hs_hd);
         findHS_MID_1.setString(param++, ul_ime);
 
+        timer = System.currentTimeMillis();
         ResultSet rsHS_MID = findHS_MID_1.executeQuery();
-
+        System.out.println("izbiranaslova:findHS_MID_1:" + (System.currentTimeMillis() - timer) + "ms");
+        
         if (rsHS_MID.next() && rsHS_MID.isLast()) {
           result = rsHS_MID.getInt(1);
         }
+        rsHS_MID.close();
 
         if (result == -1) {
           param = 1;
@@ -952,26 +957,34 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
           findHS_MID_2.setString(param++, ul_ime);
           findHS_MID_2.setObject(param++, pt_id, java.sql.Types.INTEGER);
 
-          rsHS_MID = findHS_MID_2.executeQuery();
+          timer = System.currentTimeMillis();
+          ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
+          System.out.println("izbiranaslova:findHS_MID_2:" + (System.currentTimeMillis() - timer) + "ms");
 
-          if (rsHS_MID.next() && rsHS_MID.isLast()) {
-            result = rsHS_MID.getInt(1);
+          if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
+            result = rsHS_MID_2.getInt(1);
           }
+          rsHS_MID_2.close();
         }
-        if (result == -2) {
-
+        if (result == -1) {
+          param = 1;
+          
           findHS_MID_3.clearParameters();
 
           findHS_MID_3.setString(param++, hs_hd);
           findHS_MID_3.setString(param++, ul_ime);
           findHS_MID_3.setObject(param++, pt_id, java.sql.Types.INTEGER);
           findHS_MID_3.setString(param++, na_ime);
+          
+          
+          timer = System.currentTimeMillis();
+          ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
+          System.out.println("izbiranaslova:findHS_MID_3:" + (System.currentTimeMillis() - timer) + "ms");
 
-          rsHS_MID = findHS_MID_3.executeQuery();
-
-          if (rsHS_MID.next() && rsHS_MID.isLast()) {
-            result = rsHS_MID.getInt(1);
+          if (rsHS_MID_3.next() && rsHS_MID_3.isLast()) {
+            result = rsHS_MID_3.getInt(1);
           }
+          rsHS_MID_3.close();
         }
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);

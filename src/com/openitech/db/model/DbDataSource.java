@@ -4093,6 +4093,7 @@ public class DbDataSource implements DbNavigatorDataSource {
       }
     }
     return selectResultSet != null;
+   
   }
 
   public boolean loadData() {
