@@ -66,34 +66,41 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
     }
   }
 
+  private boolean isSelected() {
+    boolean result = true;
+    if (getParent() instanceof com.openitech.framework.JActionPanel)
+      result = ((com.openitech.framework.JActionPanel) getParent()).isSelected(this);
+
+    return result;
+  }
+
+  private boolean isSelected(com.openitech.framework.JActionPanel component) {
+    boolean result = false;
+    if (getParent() instanceof com.openitech.framework.JActionPanel) {
+      result = ((com.openitech.framework.JActionPanel) getParent()).isSelected();
+      if (component!=null)
+        result = result&&component.equals(((com.openitech.framework.JActionPanel) getParent()).getSelectedComponent());
+    } else
+      result = true;
+
+    return result;
+  }
+
+  @Override
   public void updateRefreshSuspends(boolean isParentSelected) {
-    if (isChildUpdatesPanels() || (getSelectedComponent() instanceof com.openitech.framework.JActionPanel)) {
-      if (getTabCount() > 0) {
-        if (getSelectedComponent() instanceof com.openitech.framework.context.AssociatedSuspends) {
-          ((com.openitech.framework.context.AssociatedSuspends) getSelectedComponent()).updateRefreshSuspends(isParentSelected);
-        }
-      }
-    } else {
+    if (getTabCount() > 0) {
       Component selected = getSelectedComponent();
 
       for (Component c : getComponents()) {
         if (c instanceof com.openitech.framework.context.AssociatedSuspends) {
-          ((com.openitech.framework.context.AssociatedSuspends) c).updateRefreshSuspends(isParentSelected && c.equals(selected));
+          ((com.openitech.framework.context.AssociatedSuspends) c).updateRefreshSuspends(isParentSelected&&c.equals(selected));
         }
       }
     }
   }
 
   protected void updateRefreshSuspends() {
-    if (getTabCount() > 0) {
-      Component selected = getSelectedComponent();
-
-      for (Component c : getComponents()) {
-        if (c instanceof com.openitech.framework.context.AssociatedSuspends) {
-          ((com.openitech.framework.context.AssociatedSuspends) c).updateRefreshSuspends(c.equals(selected));
-        }
-      }
-    }
+    updateRefreshSuspends(isSelected(this));
   }
 
   protected void updatePanels() {
@@ -333,6 +340,7 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
 //    }
       super.insertTab(title, icon, component, tip, index);
       updatePanels();
+      updateRefreshSuspends();
   }
 
   /**
@@ -350,6 +358,7 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
   public void removeTabAt(int index) {
     super.removeTabAt(index);
     updatePanels();
+    updateRefreshSuspends();
   }
 
   /**
@@ -364,5 +373,6 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
   public void setModel(SingleSelectionModel model) {
     super.setModel(model);
     updatePanels();
+    updateRefreshSuspends();
   }
 }
