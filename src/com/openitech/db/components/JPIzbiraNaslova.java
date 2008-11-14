@@ -34,7 +34,8 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
   private static final int DEFAULT_DELAY = 27;
   DbDataModel dbDataModel = new DbDataModel();
-  FilterDocumentCaretListener flPostnaStevilka;
+  FilterDocumentCaretListener flDsPostneStevilePostnaStevilka;
+  FilterDocumentCaretListener flDsPostePostnaStevilka;
   FilterDocumentCaretListener flPosta;
   DbDataSource dataSource;
   ActionListener alDataSource;
@@ -48,12 +49,15 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     jtfUlice.addCaretListener(new FilterDocumentCaretListener(jtfUlice.getDocument(), dbDataModel.dsUliceFilter, dbDataModel.dsUliceFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
     jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsHisneStevilkeFilter, dbDataModel.dsHisneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY * 4));
     jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
+    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
     jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
 
     jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPosteFilter, DEFAULT_DELAY));
+    jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPostneStevilkeFilter, DEFAULT_DELAY));
     jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsNaseljaFilter, DEFAULT_DELAY));
 
-    flPostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
+    flDsPostneStevilePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
+    flDsPostePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
     flPosta = new FilterDocumentCaretListener(jtfPosta.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_IME, DEFAULT_DELAY);
 
     dbDataModel.dsUlice.setReloadsOnEventQueue(false);
@@ -174,6 +178,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
               updateValues(naslov);
             } else {
               EventQueue.invokeLater(new Runnable() {
+
                 @Override
                 public void run() {
                   try {
@@ -511,9 +516,10 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
   private void jtfPostnaStevilkaCaretUpdate(javax.swing.event.CaretEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaCaretUpdate
     if (jtfPostnaStevilka.isFocusOwner()) {
-      flPostnaStevilka.caretUpdate(evt);
+      flDsPostePostnaStevilka.caretUpdate(evt);
+      flDsPostneStevilePostnaStevilka.caretUpdate(evt);
     } else {
-      dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPosteFilter.I_TYPE_PT_ID, null);
+      dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, null);
     }
   }//GEN-LAST:event_jtfPostnaStevilkaCaretUpdate
 
@@ -523,18 +529,18 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
   private void jtfPostnaStevilkaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaFocusLost
     dbDataModel.dsPostneStevilke.setReloadsOnEventQueue(false);
-    dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPosteFilter.I_TYPE_PT_ID, null);
+    dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, null);
   }//GEN-LAST:event_jtfPostnaStevilkaFocusLost
 
   private void cmPosteContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPosteContentsChanged
-    if (!jtfPosta.isFocusOwner() && cmPoste.getSize() == 1) {
-      jtfPosta.setText(cmPoste.getElementAt(0).toString());
+    if (!jtfPosta.isFocusOwner()) {
+      jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
     }
   }//GEN-LAST:event_cmPosteContentsChanged
 
   private void cmPostneStevilkeContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPostneStevilkeContentsChanged
-    if (!jtfPostnaStevilka.isFocusOwner() && cmPostneStevilke.getSize() == 1) {
-      jtfPostnaStevilka.setText(cmPostneStevilke.getElementAt(0).toString());
+    if (!jtfPostnaStevilka.isFocusOwner()) {
+      jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
     }
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged
 
@@ -863,8 +869,9 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
     public final DbDataSource dsHisneStevilke = new DbDataSource();
     public final DsFilterRPE dsHisneStevilkeFilter = new DsFilterRPE("<%filter_hs%>");
     public final DbDataSource dsPoste = new DbDataSource();
-    public final DbDataSource dsPostneStevilke = new DbDataSource();
     public final DsFilterRPE dsPosteFilter = new DsFilterRPE("<%filter_pt%>");
+    public final DbDataSource dsPostneStevilke = new DbDataSource();
+    public final DsFilterRPE dsPostneStevilkeFilter = new DsFilterRPE("<%filter_pt%>");
     public final DbDataSource dsNaselja = new DbDataSource();
     public final DsFilterRPE dsNaseljaFilter = new DsFilterRPE("<%filter_na%>");
     private PreparedStatement findHS_MID_1 = null;
@@ -962,6 +969,14 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         dsPoste.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_pt.sql", "cp1250") + "ORDER BY pt_ime");
         dsPoste.setFetchSize(108);
         //      dsPoste.setQueuedDelay(54);
+        dsPosteFilter.addDataSource(dsPoste);
+
+        dsPostneStevilkeFilter.setFilterRequired(true);
+        dsPostneStevilkeFilter.addRequired(dsPostneStevilkeFilter.I_TYPE_UL_IME);
+        dsPostneStevilkeFilter.addRequired(dsPostneStevilkeFilter.I_TYPE_NA_IME);
+        dsPostneStevilkeFilter.addRequired(dsPostneStevilkeFilter.I_TYPE_PT_IME);
+        dsPostneStevilkeFilter.addRequired(dsPostneStevilkeFilter.I_TYPE_PT_ID);
+        dsPostneStevilkeFilter.setOperator("and");
 
         dsPostneStevilke.setCanAddRows(false);
         dsPostneStevilke.setCanDeleteRows(false);
@@ -969,8 +984,8 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         dsPostneStevilke.setName("postne_stevilke");
 
         parameters = new java.util.ArrayList();
-        parameters.add(dsPosteFilter);
-        parameters.add(dsPosteFilter);
+        parameters.add(dsPostneStevilkeFilter);
+        parameters.add(dsPostneStevilkeFilter);
 
         dsPostneStevilke.setParameters(parameters);
         dsPostneStevilke.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "sifrant_pt_c.sql", "cp1250"));
@@ -978,8 +993,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         dsPostneStevilke.setFetchSize(108);
         //      dsPostneStevilke.setQueuedDelay(54);
 
-        dsPosteFilter.addDataSource(dsPoste);
-        dsPosteFilter.addDataSource(dsPostneStevilke);
+        dsPostneStevilkeFilter.addDataSource(dsPostneStevilke);
 
         dsNaseljaFilter.setFilterRequired(true);
         dsNaseljaFilter.addRequired(dsNaseljaFilter.I_TYPE_UL_IME);

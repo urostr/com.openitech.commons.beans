@@ -2,6 +2,12 @@ SELECT DISTINCT
     HS_s.hs_mid
 FROM 
     UL_s 
+INNER JOIN
+	UL_PT_s
+	ON (
+        UL_s.ul_mid = UL_PT_s.ul_mid AND
+        UL_s.na_mid = UL_PT_s.na_mid
+	)
 LEFT OUTER JOIN 
     HS_S
     ON 

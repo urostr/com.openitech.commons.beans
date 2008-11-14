@@ -2,7 +2,7 @@ SELECT DISTINCT
     UL_s.ul_mid
 FROM         
     UL_s 
-LEFT OUTER JOIN
+INNER JOIN
     UL_PT_s 
     ON 
     (
