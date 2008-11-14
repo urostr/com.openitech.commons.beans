@@ -6,7 +6,6 @@
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-
 package com.openitech.framework;
 
 import java.awt.Component;
@@ -28,8 +27,9 @@ import com.openitech.ref.WeakMethodReference;
  * @author uros
  */
 public class JActionPanel extends JTabbedPane implements AssociatedTasks, AssociatedFilter, AssociatedSuspends {
+
   private ActionPanelModelModelListener changeListener;
-  
+
   /** Creates a new instance of JActionPanel */
   public JActionPanel() {
     super(BOTTOM);
@@ -44,113 +44,110 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
    * @see #fireStateChanged
    */
   protected ChangeListener createChangeListener() {
-    if (changeListener==null)
+    if (changeListener == null) {
       changeListener = new ActionPanelModelModelListener(this);
+    }
     return changeListener;
   }
-  
+
   protected class ActionPanelModelModelListener extends WeakMethodReference<Object> implements ChangeListener {
+
     protected ActionPanelModelModelListener(JActionPanel owner) {
-        super(owner);
+      super(owner);
     }
-    
+
     public void stateChanged(ChangeEvent e) {
       Object referent = this.get();
-      if (referent!=null && isEnabled()) {
+      if (referent != null && isEnabled()) {
         ((JActionPanel) referent).updateRefreshSuspends();
         ((JActionPanel) referent).updatePanels();
         ((JActionPanel) referent).fireStateChanged();
       }
     }
   }
-  
 
   public void updateRefreshSuspends(boolean isParentSelected) {
-    if (isChildUpdatesPanels()) {
-      if (getTabCount()>0) {
+    if (isChildUpdatesPanels() || (getSelectedComponent() instanceof com.openitech.framework.JActionPanel)) {
+      if (getTabCount() > 0) {
         if (getSelectedComponent() instanceof com.openitech.framework.context.AssociatedSuspends) {
-          ((com.openitech.framework.JActionPanel) getSelectedComponent()).updateRefreshSuspends(isParentSelected);
+          ((com.openitech.framework.context.AssociatedSuspends) getSelectedComponent()).updateRefreshSuspends(isParentSelected);
         }
       }
     } else {
       Component selected = getSelectedComponent();
 
-      for (Component c:getComponents()) {
+      for (Component c : getComponents()) {
         if (c instanceof com.openitech.framework.context.AssociatedSuspends) {
-          ((com.openitech.framework.context.AssociatedSuspends) c).updateRefreshSuspends(isParentSelected&&c.equals(selected));
+          ((com.openitech.framework.context.AssociatedSuspends) c).updateRefreshSuspends(isParentSelected && c.equals(selected));
         }
       }
     }
   }
-  
-  
+
   protected void updateRefreshSuspends() {
-    if (getTabCount()>0) {
+    if (getTabCount() > 0) {
       Component selected = getSelectedComponent();
 
-      for (Component c:getComponents()) {
+      for (Component c : getComponents()) {
         if (c instanceof com.openitech.framework.context.AssociatedSuspends) {
-          ((      com.openitech.framework.context.AssociatedSuspends) c).updateRefreshSuspends(c.equals(selected));
+          ((com.openitech.framework.context.AssociatedSuspends) c).updateRefreshSuspends(c.equals(selected));
         }
       }
     }
   }
 
   protected void updatePanels() {
-    updatePanels(getFilterPanelContainer(),getTaskPaneContainer());
+    updatePanels(getFilterPanelContainer(), getTaskPaneContainer());
   }
-  
+
   protected void updatePanels(java.awt.Container filterPanelContainer, java.awt.Container taskPaneContainer) {
-    if (getTabCount()>0) {
-      if (isChildUpdatesPanels()&&(getSelectedComponent() instanceof com.openitech.framework.JActionPanel)) {
-        ((com.openitech.framework.JActionPanel) getSelectedComponent()).updatePanels(filterPanelContainer, taskPaneContainer);
-      } else  {
+    if (getTabCount() > 0) {
+//      if (isChildUpdatesPanels() && (getSelectedComponent() instanceof com.openitech.framework.JActionPanel)) {
+//        ((com.openitech.framework.JActionPanel) getSelectedComponent()).updatePanels(filterPanelContainer, taskPaneContainer);
+//      } else {
         Component selected = getSelectedComponent();
-        
-        if (filterPanelContainer!=null&&getFilterPanelContainer()==null) {
+
+        if (filterPanelContainer != null && getFilterPanelContainer() == null) {
           setFilterPanelContainer(filterPanelContainer);
         }
-        
-        filterPanelContainer = filterPanelContainer==null?getFilterPanelContainer():filterPanelContainer;
+
+        filterPanelContainer = filterPanelContainer == null ? getFilterPanelContainer() : filterPanelContainer;
 
 
-        if (filterPanelContainer!=null) {
-          java.awt.Component filterPanel = (selected instanceof com.openitech.framework.context.AssociatedFilter)?
-                                            ((com.openitech.framework.context.AssociatedFilter) getSelectedComponent()).getFilterPanel():
-                                            null;
+        if (filterPanelContainer != null) {
+          java.awt.Component filterPanel = (selected instanceof com.openitech.framework.context.AssociatedFilter) ? ((com.openitech.framework.context.AssociatedFilter) selected).getFilterPanel() : null;
           filterPanelContainer.removeAll();
-          if (filterPanel!=null) {
-            if (filterPanelContainer.getLayout() instanceof java.awt.BorderLayout)
+          if (filterPanel != null) {
+            if (filterPanelContainer.getLayout() instanceof java.awt.BorderLayout) {
               filterPanelContainer.add(filterPanel, java.awt.BorderLayout.CENTER);
-            else
+            } else {
               filterPanelContainer.add(filterPanel);
+            }
           }
           filterPanelContainer.invalidate();
           filterPanelContainer.repaint(500);
         }
 
-        if (taskPaneContainer!=null&&getTaskPaneContainer()==null) {
+        if (taskPaneContainer != null && getTaskPaneContainer() == null) {
           setTaskPaneContainer(taskPaneContainer);
         }
-        
-        taskPaneContainer = taskPaneContainer==null?getTaskPaneContainer():taskPaneContainer;
 
-        if (taskPaneContainer!=null){
+        taskPaneContainer = taskPaneContainer == null ? getTaskPaneContainer() : taskPaneContainer;
+
+        if (taskPaneContainer != null) {
           taskPaneContainer.removeAll();
-         java.util.List<org.jdesktop.swingx.JXTaskPane> taskPanes = (selected instanceof com.openitech.framework.context.AssociatedTasks)?
-                                                                    ((com.openitech.framework.context.AssociatedTasks) getSelectedComponent()).getTaskPanes():
-                                                                    null;
-         if (taskPanes!=null) {
-            for (org.jdesktop.swingx.JXTaskPane c:taskPanes)
+          java.util.List<org.jdesktop.swingx.JXTaskPane> taskPanes = (selected instanceof com.openitech.framework.context.AssociatedTasks) ? ((com.openitech.framework.context.AssociatedTasks) selected).getTaskPanes() : null;
+          if (taskPanes != null) {
+            for (org.jdesktop.swingx.JXTaskPane c : taskPanes) {
               taskPaneContainer.add(c);
+            }
           }
           taskPaneContainer.invalidate();
           taskPaneContainer.repaint(500);
-        }
+//        }
       }
     }
   }
-
   /**
    * Holds value of property taskPaneContainer.
    */
@@ -161,7 +158,10 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
    * @return Value of property taskPaneContainer.
    */
   public java.awt.Container getTaskPaneContainer() {
-    return this.taskPaneContainer;
+    if ((this.taskPaneContainer==null) && (getParent() instanceof JActionPanel)) {
+      return ((JActionPanel) getParent()).getTaskPaneContainer();
+    } else
+      return this.taskPaneContainer;
   }
 
   /**
@@ -171,7 +171,6 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
   public void setTaskPaneContainer(java.awt.Container taskPaneContainer) {
     this.taskPaneContainer = taskPaneContainer;
   }
-
   /**
    * Holds value of property filterPanelContainer.
    */
@@ -182,7 +181,10 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
    * @return Value of property filterPanelContainer.
    */
   public java.awt.Container getFilterPanelContainer() {
-    return this.filterPanelContainer;
+    if ((this.filterPanelContainer==null) && (getParent() instanceof JActionPanel)) {
+      return ((JActionPanel) getParent()).getFilterPanelContainer();
+    } else
+      return this.filterPanelContainer;
   }
 
   /**
@@ -197,7 +199,6 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
       firePropertyChange("filterPanelContainer", oldValue, this.filterPanelContainer);
     }
   }
-
   /**
    * Holds value of property taskPanes.
    */
@@ -208,37 +209,48 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
    * @return Value of property taskPanes.
    */
   public java.util.List<org.jdesktop.swingx.JXTaskPane> getTaskPanes() {
-    return this.taskPanes;
+     if (isChildUpdatesPanels()||this.taskPanes==null) {
+      Component selected = getSelectedComponent();
+
+      return (selected instanceof com.openitech.framework.context.AssociatedTasks) ? ((com.openitech.framework.context.AssociatedTasks) selected).getTaskPanes() : null;
+    } else {
+      return this.taskPanes;
+    }
   }
-  
+
   public void setTaskPane(JXTaskPane taskPane) {
-    if (this.taskPanes==null)
+    if (this.taskPanes == null) {
       this.taskPanes = new java.util.LinkedList<org.jdesktop.swingx.JXTaskPane>();
-    else
+    } else {
       this.taskPanes.clear();
+    }
     this.taskPanes.add(taskPane);
   }
 
   public JXTaskPane getTaskPane() {
-    if ((this.taskPanes==null)||(this.taskPanes.isEmpty()))
+    java.util.List<org.jdesktop.swingx.JXTaskPane> taskPanes = getTaskPanes();
+
+    if ((taskPanes == null) || (taskPanes.isEmpty())) {
       return null;
-    else
-      return this.taskPanes.get(0);
+    } else {
+      return taskPanes.get(0);
+    }
   }
-  
+
   public boolean add(JXTaskPane taskPane) {
-    if (this.taskPanes==null)
+    if (this.taskPanes == null) {
       this.taskPanes = new java.util.LinkedList<org.jdesktop.swingx.JXTaskPane>();
+    }
     return this.taskPanes.add(taskPane);
   }
 
   public boolean remove(JXTaskPane taskPane) {
-    if (this.taskPanes!=null) {
+    if (this.taskPanes != null) {
       return this.taskPanes.remove(taskPane);
-    } else
+    } else {
       return false;
+    }
   }
-
   /**
    * Holds value of property filterPanel.
    */
@@ -249,7 +261,13 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
    * @return Value of property filterPanel.
    */
   public java.awt.Component getFilterPanel() {
-    return this.filterPanel;
+    if (isChildUpdatesPanels()||this.filterPanel==null) {
+      Component selected = getSelectedComponent();
+
+      return (selected instanceof com.openitech.framework.context.AssociatedFilter) ? ((com.openitech.framework.context.AssociatedFilter) selected).getFilterPanel() : null;
+    } else {
+      return this.filterPanel;
+    }
   }
 
   /**
@@ -264,7 +282,6 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
       firePropertyChange("filterPanel", oldValue, this.filterPanel);
     }
   }
-
   /**
    * Holds value of property childUpdatesPanels.
    */
@@ -284,9 +301,10 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
    */
   public void setChildUpdatesPanels(boolean childUpdatesPanels) {
     if (this.childUpdatesPanels != childUpdatesPanels) {
-        boolean oldValue = this.childUpdatesPanels;
-        this.childUpdatesPanels = childUpdatesPanels;;
-        firePropertyChange("childUpdatesPanels", oldValue, childUpdatesPanels);
+      boolean oldValue = this.childUpdatesPanels;
+      this.childUpdatesPanels = childUpdatesPanels;
+      ;
+      firePropertyChange("childUpdatesPanels", oldValue, childUpdatesPanels);
     }
   }
 
@@ -307,12 +325,14 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
    * @see #removeTabAt
    */
   public void insertTab(String title, Icon icon, Component component, String tip, int index) {
-    changeListener.setEnabled(isChildUpdatesPanels());
-    try {
+//    changeListener.setEnabled(isChildUpdatesPanels());
+//    try {
+//      super.insertTab(title, icon, component, tip, index);
+//    } finally {
+//      changeListener.setEnabled(true);
+//    }
       super.insertTab(title, icon, component, tip, index);
-    } finally {
-      changeListener.setEnabled(true);
-    }
+      updatePanels();
   }
 
   /**
@@ -329,6 +349,7 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
    */
   public void removeTabAt(int index) {
     super.removeTabAt(index);
+    updatePanels();
   }
 
   /**
