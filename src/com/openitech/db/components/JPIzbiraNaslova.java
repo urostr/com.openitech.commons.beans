@@ -48,7 +48,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     initComponents();
 
     jtfUlice.addCaretListener(new FilterDocumentCaretListener(jtfUlice.getDocument(), dbDataModel.dsUliceFilter, dbDataModel.dsUliceFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
-    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsHisneStevilkeFilter, dbDataModel.dsHisneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY * 4));
+    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsHisneStevilkeFilter, dbDataModel.dsHisneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
     jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
     jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
     jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
@@ -116,7 +116,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         if (event.isOnEventQueue()) {
           try {
             EventQueue.invokeAndWait(new Runnable() {
-
+              @Override
               public void run() {
                 lockAndGet();
               }
@@ -180,7 +180,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
               updateValues(naslov);
             } else {
               EventQueue.invokeLater(new Runnable() {
-
                 @Override
                 public void run() {
                   try {
@@ -214,7 +213,9 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }
 
   private void getMIDs() {
-    DataSourceEvent.submit(new RefreshMIDs());
+    if (isUpdating()) {
+      DataSourceEvent.submit(new RefreshMIDs());
+    }
   }
 
   private boolean isUpdating() {
@@ -520,22 +521,24 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }//GEN-LAST:event_jtfPostnaStevilkaFocusLost
 
   private void cmPosteContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPosteContentsChanged
-    if (!jtfPosta.isFocusOwner() && cmPostneStevilke.getSize() == 1) {
-      jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
+    if (isUpdating()) {
+      if (!jtfPosta.isFocusOwner() && cmPostneStevilke.getSize() == 1) {
+        jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
+      }
     }
   }//GEN-LAST:event_cmPosteContentsChanged
 
   private void cmPostneStevilkeContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPostneStevilkeContentsChanged
-    if (!jtfPostnaStevilka.isFocusOwner()) {
-      jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
+    if (isUpdating()) {
+      if (!jtfPostnaStevilka.isFocusOwner()) {
+        jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
+      }
     }
-
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged
 
-  private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+  private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foHisnaStevilkaFieldValueChanged
     getMIDs();
-
-  }
+  }//GEN-LAST:event_foHisnaStevilkaFieldValueChanged
 
 private void foUlicaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foUlicaFieldValueChanged
   if (isUpdating() && jtfUlice.isFocusOwner()) {
@@ -553,14 +556,18 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
 }//GEN-LAST:event_foPostnaStevilkaMIDFieldValueChanged
 
 private void jtfPostnaStevilkaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaItemStateChanged
-  if (jtfPostnaStevilka.isFocusOwner()&&(evt.getStateChange()==java.awt.event.ItemEvent.SELECTED)&&cmPostneStevilke.getSelectedItem()!=null) {
-    jtfPosta.setText(((DbComboBoxEntry<Object,String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());
+  if (isUpdating()) {
+    if (jtfPostnaStevilka.isFocusOwner() && (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) && cmPostneStevilke.getSelectedItem() != null) {
+      jtfPosta.setText(((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());
+    }
   }
 }//GEN-LAST:event_jtfPostnaStevilkaItemStateChanged
 
 private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jtfPostaItemStateChanged
-  if (jtfPosta.isFocusOwner()&&(evt.getStateChange()==java.awt.event.ItemEvent.SELECTED)&&cmPoste.getSelectedItem()!=null) {
-    jtfPostnaStevilka.setText(((DbComboBoxEntry<Object,String>) cmPoste.getSelectedItem()).getValue("pt_id").toString());
+  if (isUpdating()) {
+    if (jtfPosta.isFocusOwner() && (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) && cmPoste.getSelectedItem() != null) {
+      jtfPostnaStevilka.setText(((DbComboBoxEntry<Object, String>) cmPoste.getSelectedItem()).getValue("pt_id").toString());
+    }
   }
 }//GEN-LAST:event_jtfPostaItemStateChanged
 
