@@ -32,7 +32,7 @@ import javax.swing.event.DocumentEvent;
  */
 public class JPIzbiraNaslova extends javax.swing.JPanel {
 
-  private static final int DEFAULT_DELAY = 27;
+  private static final int DEFAULT_DELAY = 380;
   DbDataModel dbDataModel = new DbDataModel();
   FilterDocumentCaretListener flDsPostneStevilePostnaStevilka;
   FilterDocumentCaretListener flDsPostePostnaStevilka;
@@ -156,10 +156,10 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
     private void get() {
       try {
-        if (isUpdating()) {
+        if (isUpdating() && !jtfHisnaStevilka.getText().isEmpty()) {
           int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-          if (hs_mid == -1) {
+          if (hs_mid == -1 && !jtfHisnaStevilka.getText().isEmpty()) {
             int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
             foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
 
@@ -170,7 +170,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
             foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
           } else if (hs_mid > 0) {
             // updataj ostala polja
-
 
             final Naslov naslov = dbDataModel.getNaslovFromHS_MID(hs_mid);
 
@@ -413,6 +412,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
     jtfPostnaStevilka.setAutoCompleteModel(cmPostneStevilke);
     jtfPostnaStevilka.setColumns(6);
+    jtfPostnaStevilka.addItemListener(new java.awt.event.ItemListener() {
+      public void itemStateChanged(java.awt.event.ItemEvent evt) {
+        jtfPostnaStevilkaItemStateChanged(evt);
+      }
+    });
     jtfPostnaStevilka.addCaretListener(new javax.swing.event.CaretListener() {
       public void caretUpdate(javax.swing.event.CaretEvent evt) {
         jtfPostnaStevilkaCaretUpdate(evt);
@@ -424,6 +428,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
       }
       public void focusLost(java.awt.event.FocusEvent evt) {
         jtfPostnaStevilkaFocusLost(evt);
+      }
+    });
+    jtfPostnaStevilka.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+      public void propertyChange(java.beans.PropertyChangeEvent evt) {
+        jtfPostnaStevilkaPropertyChange(evt);
       }
     });
     add(jtfPostnaStevilka, new java.awt.GridBagConstraints());
@@ -465,8 +474,8 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }// </editor-fold>//GEN-END:initComponents
 
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
-    if (!jtfNaselja.isFocusOwner() && cmNaselja.getSize() == 1) {
-      jtfNaselja.setText(cmNaselja.getElementAt(0).toString());
+    if (!jtfNaselja.isFocusOwner()) {
+      jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
     } else if (!jtfNaselja.isFocusOwner() && cmNaselja.getSize() == 0) {
       jtfNaselja.setText("");
     }
@@ -533,7 +542,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }//GEN-LAST:event_jtfPostnaStevilkaFocusLost
 
   private void cmPosteContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPosteContentsChanged
-    if (!jtfPosta.isFocusOwner()) {
+    if (!jtfPosta.isFocusOwner() && cmPostneStevilke.getSize() == 1) {
       jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
     }
   }//GEN-LAST:event_cmPosteContentsChanged
@@ -542,6 +551,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     if (!jtfPostnaStevilka.isFocusOwner()) {
       jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
     }
+    
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged
 
   private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
@@ -563,6 +573,18 @@ private void foNaseljeFieldValueChanged(com.openitech.db.events.ActiveRowChangeE
 private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foPostnaStevilkaMIDFieldValueChanged
   getMIDs();
 }//GEN-LAST:event_foPostnaStevilkaMIDFieldValueChanged
+
+private void jtfPostnaStevilkaPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaPropertyChange
+// TODO add your handling code here:
+  if(!jtfPostnaStevilka.isFocusOwner())
+  jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
+}//GEN-LAST:event_jtfPostnaStevilkaPropertyChange
+
+private void jtfPostnaStevilkaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaItemStateChanged
+// TODO add your handling code here:
+  if(!jtfPostnaStevilka.isFocusOwner())
+  jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");  
+}//GEN-LAST:event_jtfPostnaStevilkaItemStateChanged
 
   private void initDbModel() {
   }
@@ -1050,7 +1072,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
 
         timer = System.currentTimeMillis();
         ResultSet rsHS_MID = findHS_MID_1.executeQuery();
-        System.out.println("izbiranaslova:findHS_MID_1:" + (System.currentTimeMillis() - timer) + "ms");
+        System.out.println("izbiranaslova:findHS_MID_1: " + (System.currentTimeMillis() - timer) + "ms");
 
         if (rsHS_MID.next() && rsHS_MID.isLast()) {
           result = rsHS_MID.getInt(1);
@@ -1068,7 +1090,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
 
           timer = System.currentTimeMillis();
           ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
-          System.out.println("izbiranaslova:findHS_MID_2:" + (System.currentTimeMillis() - timer) + "ms");
+          System.out.println("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
 
           if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
             result = rsHS_MID_2.getInt(1);
@@ -1088,7 +1110,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
 
           timer = System.currentTimeMillis();
           ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
-          System.out.println("izbiranaslova:findHS_MID_3:" + (System.currentTimeMillis() - timer) + "ms");
+          System.out.println("izbiranaslova:findHS_MID_3: " + (System.currentTimeMillis() - timer) + "ms");
 
           if (rsHS_MID_3.next() && rsHS_MID_3.isLast()) {
             result = rsHS_MID_3.getInt(1);
@@ -1104,6 +1126,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
 
     public int getUlicaMID(String ul_ime, String pt_id, String na_ime) {
       int result = -1;
+      long timer;
 
       ul_ime = ul_ime == null ? null : ul_ime.toUpperCase();
       na_ime = na_ime == null ? null : na_ime.toUpperCase();
@@ -1120,7 +1143,11 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         findUL_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
         findUL_MID.setString(param++, na_ime);
 
+        timer = System.currentTimeMillis();
         ResultSet rsUL_MID = findUL_MID.executeQuery();
+        System.out.println("izbiranaslova:findUL_MID: " + (System.currentTimeMillis() - timer) + "ms");
+
+
 
         if (rsUL_MID.next()) {
           result = rsUL_MID.getInt(1);
@@ -1135,6 +1162,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
 
     public int getPostnaStevilkaMID(String pt_id, String pt_ime) {
       int result = -1;
+      long timer;
 
       pt_id = pt_id == null || pt_id.length() == 0 ? null : pt_id;
       pt_ime = pt_ime == null ? null : pt_ime.toUpperCase();
@@ -1149,8 +1177,11 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         findPT_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
         findPT_MID.setString(param++, pt_ime);
 
-
+        timer = System.currentTimeMillis();
         ResultSet rsPT_MID = findPT_MID.executeQuery();
+        System.out.println("izbiranaslova:findPT_MID: " + (System.currentTimeMillis() - timer) + "ms");
+
+
 
         if (rsPT_MID.next() && rsPT_MID.isLast()) {
           result = rsPT_MID.getInt(1);
@@ -1165,6 +1196,7 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
 
     public int getNaseljeMID(String pt_id, String na_ime) {
       int result = -1;
+      long timer;
 
       pt_id = pt_id == null || pt_id.length() == 0 ? null : pt_id;
       na_ime = na_ime == null ? null : na_ime.toUpperCase();
@@ -1176,7 +1208,11 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
         findNA_MID.setObject(param++, pt_id, java.sql.Types.INTEGER);
         findNA_MID.setString(param++, na_ime);
 
+        timer = System.currentTimeMillis();
         ResultSet rsNA_MID = findNA_MID.executeQuery();
+        System.out.println("izbiranaslova:findNA_MID: " + (System.currentTimeMillis() - timer) + "ms");
+
+
 
         if (rsNA_MID.next() && rsNA_MID.isLast()) {
           result = rsNA_MID.getInt(1);
@@ -1206,11 +1242,16 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
     private Naslov getNaslovFromHS_MID(int hs_mid) {
       try {
         int param = 1;
+        long timer;
 
         select_hs_mid.clearParameters();
         select_hs_mid.setInt(param++, hs_mid);
 
+        timer = System.currentTimeMillis();
         ResultSet rsSelect_hs_mid = select_hs_mid.executeQuery();
+        System.out.println("izbiranaslova:select_hs_mid: " + (System.currentTimeMillis() - timer) + "ms");
+
+
 
         Naslov naslov = new Naslov();
 
