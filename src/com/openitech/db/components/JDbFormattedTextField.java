@@ -5,7 +5,6 @@
  *
  * $Revision $
  */
-
 package com.openitech.db.components;
 
 import com.openitech.Settings;
@@ -58,31 +57,30 @@ import javax.swing.text.NumberFormatter;
  *
  * @author uros
  */
-public class JDbFormattedTextField extends JFormattedTextField  implements DocumentListener, ListDataListener, AutoCompleteTextComponent {
+public class JDbFormattedTextField extends JFormattedTextField implements DocumentListener, ListDataListener, AutoCompleteTextComponent {
+
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;
   private FocusLostHandler focusLostHandler = new FocusLostHandler();
   private final Selector selector = new Selector(this);
-  
   private transient ActionWeakListener actionWeakListener;
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
   private transient DocumentWeakListener documentWeakListener;
   //private transient PropertyChangeWeakListener propertyChangeWeakListener;
   private transient FocusWeakListener focusWeakListener;
-  
-  private static final Dimension MINIMUM_SIZE=(new JTextField()).getMinimumSize();
-  
+  private static final Dimension MINIMUM_SIZE = (new JTextField()).getMinimumSize();
+
   /** Creates a new instance of JDbFormattedTextField */
   public JDbFormattedTextField() {
     try {
       actionWeakListener = new ActionWeakListener(this, "dataSource_actionPerformed");
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null);
-      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null);
-      focusWeakListener = new FocusWeakListener(this,"this_focusGained", null);
+      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
+      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
+      focusWeakListener = new FocusWeakListener(this, "this_focusGained", null);
       documentWeakListener = new DocumentWeakListener(this);
-      //propertyChangeWeakListener = new PropertyChangeWeakListener(this);
+    //propertyChangeWeakListener = new PropertyChangeWeakListener(this);
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
     }
@@ -90,30 +88,31 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
-    this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2,2,2,2));
-    this.setFont((java.awt.Font)UIManager.getDefaults().get("TextField.font"));
-    //this.addPropertyChangeListener("value", propertyChangeWeakListener);
+    this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2, 2, 2, 2));
+    this.setFont((java.awt.Font) UIManager.getDefaults().get("TextField.font"));
+  //this.addPropertyChangeListener("value", propertyChangeWeakListener);
   }
-  
+
   public void this_focusGained(FocusEvent e) {
     EventQueue.invokeLater(selector);
   }
-  
+
   public void setFormat(Format format) {
     JFormattedTextField.AbstractFormatterFactory af;
     if (format instanceof DateFormat) {
       af = new DefaultFormatterFactory(new DateFormatter((DateFormat) format));
     } else if (format instanceof NumberFormat) {
       af = new DefaultFormatterFactory(new NumberFormatter(
-              (NumberFormat)format));
+              (NumberFormat) format));
     } else if (format instanceof Format) {
       af = new DefaultFormatterFactory(new InternationalFormatter(
-              (Format)format));
-    } else
+              (Format) format));
+    } else {
       af = new DefaultFormatterFactory(new DefaultFormatter());
+    }
     setFormatterFactory(af);
   }
-  
+
   public void setFormat(String mask) {
     try {
       setFormatterFactory(new DefaultFormatterFactory(new MaskFormatter(mask)));
@@ -121,43 +120,43 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
       throw (IllegalArgumentException) new IllegalArgumentException().initCause(ex);
     }
   }
-  
+
   public DbFieldObserver getDbFieldObserver() {
     return dbFieldObserver;
   }
-  
+
   public void setFormat(Number type) {
     AbstractFormatter displayFormatter = new NumberFormatter();
-    ((NumberFormatter)displayFormatter).setValueClass(type.getClass());
+    ((NumberFormatter) displayFormatter).setValueClass(type.getClass());
     AbstractFormatter editFormatter = new NumberFormatter(
             new DecimalFormat("#.#"));
-    ((NumberFormatter)editFormatter).setValueClass(type.getClass());
-    
+    ((NumberFormatter) editFormatter).setValueClass(type.getClass());
+
     setFormatterFactory(new DefaultFormatterFactory(displayFormatter,
-            displayFormatter,editFormatter));
+            displayFormatter, editFormatter));
   }
-  
+
   public void setDataSource(DbDataSource dataSource) {
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
   }
-  
+
   public DbDataSource getDataSource() {
     return dbFieldObserver.getDataSource();
   }
-  
+
   public void setColumnName(String columnName) {
     dbFieldObserver.setColumnName(columnName);
   }
-  
+
   public String getColumnName() {
     return dbFieldObserver.getColumnName();
   }
-  
+
   public void setToolTipColumnName(String columnName) {
     dbFieldObserverToolTip.setColumnName(columnName);
   }
-  
+
   public String getToolTipColumnName() {
     return dbFieldObserverToolTip.getColumnName();
   }
@@ -169,67 +168,73 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public Validator getValidator() {
     return validator;
   }
-  
+
   /**
    * FOCUS_LOST behavior implementation
    */
-  private class FocusLostHandler implements Runnable,Serializable {
-      public void run() {
-        if (validator!=null) {
-          validator.isValid(getFormatter()==null?getText():getValue());
-        }
+  private class FocusLostHandler implements Runnable, Serializable {
+
+    public void run() {
+      if (validator != null) {
+        validator.isValid(getFormatter() == null ? getText() : getValue());
       }
+    }
   }
 
   public void dataSource_actionPerformed(ActionEvent event) throws ParseException {
-    if (event.getActionCommand().equals("update"))
+    if (event.getActionCommand().equals("update")) {
       commitEdit();
+    }
   }
-  
+
   private Object getFieldValue(boolean update) {
     Object value = dbFieldObserver.getValueAsText();
     boolean wasNull = dbFieldObserver.wasNull();
     JFormattedTextField.AbstractFormatter formatter = getFormatter();
-    if (formatter!=null) {
+    if (formatter != null) {
       if (!wasNull) {
         if ((formatter instanceof NumberFormatter)) {
-          if (((String) value).length()>0) {
-            if (((NumberFormat) ((NumberFormatter) formatter).getFormat()).getMaximumFractionDigits()==0)
+          if (((String) value).length() > 0) {
+            if (((NumberFormat) ((NumberFormatter) formatter).getFormat()).getMaximumFractionDigits() == 0) {
               value = dbFieldObserver.getValueAsInt();
-            else
+            } else {
               value = dbFieldObserver.getValueAsDouble();
-          } else
+            }
+          } else {
             wasNull = true;
-        } else if ((formatter instanceof DateFormatter) && ((String) value).length()>0)  {
-          if (((String) value).length()>0) {
+          }
+        } else if ((formatter instanceof DateFormatter) && ((String) value).length() > 0) {
+          if (((String) value).length() > 0) {
             value = dbFieldObserver.getValueAsDate();
-          } else
+          } else {
             wasNull = true;
+          }
         }
       }
       if (update) {
         try {
           if (wasNull) {
             this.setText("");
-          } else
+          } else {
             setValue(value);
-        } catch(Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't display the '"+dbFieldObserver.getColumnName()+"' value. ["+ex.getMessage()+"]");
+          }
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't display the '" + dbFieldObserver.getColumnName() + "' value. [" + ex.getMessage() + "]");
         }
       }
     }
-    
+
     return value;
   }
-  
+
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     documentWeakListener.setEnabled(false);
     //propertyChangeWeakListener.setEnabled(false);
-    
+
     try {
       JFormattedTextField.AbstractFormatter formatter = getFormatter();
-      
-      if (formatter==null) {
+
+      if (formatter == null) {
         this.setText(dbFieldObserver.getValueAsText());
       } else {
         getFieldValue(true);
@@ -241,19 +246,21 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   }
 
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
-    String tip  = dbFieldObserverToolTip.getValueAsText();
-    if (!dbFieldObserverToolTip.wasNull()&&tip.length()>0) {
-      this.setToolTipText("Pomo\u010d : "+tip);
-    } else
+    String tip = dbFieldObserverToolTip.getValueAsText();
+    if (!dbFieldObserverToolTip.wasNull() && tip.length() > 0) {
+      this.setToolTipText("Pomo\u010d : " + tip);
+    } else {
       this.setToolTipText(null);
+    }
   }
-  
+
   private void updateColumn() {
     if (!dbFieldObserver.isUpdatingFieldValue()) {
       activeRowChangeWeakListener.setEnabled(false);
       try {
-        if ((validator==null)||(validator!=null&&validator.isValid(getFormatter()==null?this.getText():this.getValue())))
-          dbFieldObserver.updateValue(getFormatter()==null?this.getText():this.getValue());
+        if ((validator == null) || (validator != null && validator.isValid(getFormatter() == null ? this.getText() : this.getValue()))) {
+          dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : this.getValue());
+        }
       } catch (SQLException ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
       } finally {
@@ -261,21 +268,21 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
       }
     }
   }
-  
+
   private void documentUpdated() {
-    if (getFormatter()==null)
+    if (getFormatter() == null) {
       updateColumn();
-    else if ((dbFieldObserver!=null)&&!dbFieldObserver.isUpdatingFieldValue()) {
+    } else if ((dbFieldObserver != null) && !dbFieldObserver.isUpdatingFieldValue()) {
       dbFieldObserver.startUpdate();
     }
-    /*else
-      try {
-        commitEdit();
-      } catch (ParseException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't update the formatted value. ["+ex.getMessage()+"]");
-      }//*/
+  /*else
+  try {
+  commitEdit();
+  } catch (ParseException ex) {
+  Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't update the formatted value. ["+ex.getMessage()+"]");
+  }//*/
   }
-  
+
   public void setValue(Object value) {
     documentWeakListener.setEnabled(false);
     try {
@@ -297,7 +304,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public void removeUpdate(DocumentEvent e) {
     documentUpdated();
   }
-  
+
   /**
    * Gives notification that there was an insert into the document.  The
    * range given by the DocumentEvent bounds the freshly inserted region.
@@ -308,7 +315,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public void insertUpdate(DocumentEvent e) {
     documentUpdated();
   }
-  
+
   /**
    * Gives notification that an attribute or set of attributes changed.
    *
@@ -318,20 +325,20 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public void changedUpdate(DocumentEvent e) {
     documentUpdated();
   }
-  
+
   private boolean sameValues(Object oldValue, Object newValue) {
-    if (oldValue==null)
-      return newValue==null;
-    else
+    if (oldValue == null) {
+      return newValue == null;
+    } else {
       return oldValue.equals(newValue);
+    }
   }
-  
+
   /*public void propertyChange(PropertyChangeEvent evt) {
-    if (evt.getPropertyName().equals("value") &&
-            !sameValues(evt.getOldValue(), evt.getNewValue()))
-      updateColumn();
+  if (evt.getPropertyName().equals("value") &&
+  !sameValues(evt.getOldValue(), evt.getNewValue()))
+  updateColumn();
   }//*/
-  
   /**
    * Sets the <code>AbstractFormatterFactory</code>.
    * <code>AbstractFormatterFactory</code> is
@@ -363,14 +370,14 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     try {
       documentWeakListener.setEnabled(false);
       super.setFormatterFactory(tf);
-      if (getDataSource()!=null&&getColumnName()!=null) {
-        dataSource_fieldValueChanged(new ActiveRowChangeEvent(getDataSource(),getColumnName(), -1));
+      if (getDataSource() != null && getColumnName() != null) {
+        dataSource_fieldValueChanged(new ActiveRowChangeEvent(getDataSource(), getColumnName(), -1));
       }
     } finally {
       documentWeakListener.setEnabled(wasEnabled);
     }
   }
-  
+
   /**
    * Forces the current value to be taken from the
    * <code>AbstractFormatter</code> and set as the current value.
@@ -385,18 +392,20 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     try {
       super.commitEdit();
     } catch (ParseException ex) {
-      if (getText().length()>0) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error updating the value. ["+ex.getMessage()+"]");
+      if (getText().length() > 0) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error updating the value. [" + ex.getMessage() + "]");
         StringBuffer message = new StringBuffer();
         message.append("Napaka pri vnosu podatkov!\n");
-        message.append(getText().substring(0,ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n");
+        message.append(getText().substring(0, ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n");
         message.append(ex.getMessage());
         JOptionPane.showMessageDialog(this, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);
-      } else
+      } else {
         setValue(null);
+      }
     }
-    if (!sameValues(getFieldValue(false),getValue()))
+    if (!sameValues(getFieldValue(false), getValue())) {
       updateColumn();
+    }
   }
 
   protected void processFocusEvent(FocusEvent e) {
@@ -409,13 +418,13 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     }
     EventQueue.invokeLater(focusLostHandler);
   }
-  
+
   public Object getPendingValue() {
     try {
       AbstractFormatter format = getFormatter();
 
       if (format != null) {
-          return format.stringToValue(getText());
+        return format.stringToValue(getText());
       }
     } catch (ParseException ex) {
       //ignore it;
@@ -425,9 +434,8 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
 
   public void setColumns(int columns) {
     super.setColumns(columns);
-    setMinimumSize(new Dimension(Math.min(MINIMUM_SIZE.width*columns,MINIMUM_SIZE.width),MINIMUM_SIZE.height));
+    setMinimumSize(new Dimension(Math.min(MINIMUM_SIZE.width * columns, MINIMUM_SIZE.width), MINIMUM_SIZE.height));
   }
-
   /**
    * Holds value of property searchField.
    */
@@ -447,7 +455,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    */
   public void setSearchField(boolean searchField) {
     this.searchField = searchField;
-    this.putClientProperty("Quaqua.TextField.style", searchField?"search":"normal");
+    this.putClientProperty("Quaqua.TextField.style", searchField ? "search" : "normal");
   }
 
   /**
@@ -464,18 +472,19 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    *       expert: true
    */
   public void setDocument(Document doc) {
-    if (getDocument()!=null&&documentWeakListener!=null)
+    if (getDocument() != null && documentWeakListener != null) {
       getDocument().removeDocumentListener(documentWeakListener);
+    }
     super.setDocument(doc);
-    if (getDocument()!=null&&documentWeakListener!=null)
+    if (getDocument() != null && documentWeakListener != null) {
       getDocument().addDocumentListener(documentWeakListener);
+    }
   }
-  
   /**
    * Holds value of property autoCompleteModel.
    */
   private ComboBoxModel autoCompleteModel;
-  
+
   /**
    * Getter for property autoCompleteModel.
    * @return Value of property autoCompleteModel.
@@ -483,29 +492,29 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public ComboBoxModel getAutoCompleteModel() {
     return this.autoCompleteModel;
   }
-  
+
   /**
    * Setter for property dataModel.
    *
    * @param dataModel New value of property dataModel.
    */
   public void setAutoCompleteModel(ComboBoxModel dataModel) {
-    if (dataModel!=null) {
+    if (dataModel != null) {
       ComboBoxModel oldModel = dataModel;
       if (oldModel != null) {
         oldModel.removeListDataListener(this);
       }
       this.autoCompleteModel = dataModel;
-      
+
       dataModel.addListDataListener(this);
-      
+
       AutoCompleteDecorator.decorate(this, dataModel);
-      
+
       firePropertyChange("autoCompleteModel", oldModel, dataModel);
     }
   }
-  
- /**
+
+  /**
    * Adds a <code>PopupMenu</code> listener which will listen to notification
    * messages from the popup portion of the combo box.
    * <p>
@@ -518,9 +527,9 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    * @since 1.4
    */
   public void addPopupMenuListener(PopupMenuListener l) {
-    listenerList.add(PopupMenuListener.class,l);
+    listenerList.add(PopupMenuListener.class, l);
   }
-  
+
   /**
    * Removes a <code>PopupMenuListener</code>.
    *
@@ -529,9 +538,9 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    * @since 1.4
    */
   public void removePopupMenuListener(PopupMenuListener l) {
-    listenerList.remove(PopupMenuListener.class,l);
+    listenerList.remove(PopupMenuListener.class, l);
   }
-  
+
   /**
    * Returns an array of all the <code>PopupMenuListener</code>s added
    * to this JComboBox with addPopupMenuListener().
@@ -541,10 +550,10 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    * @since 1.4
    */
   public PopupMenuListener[] getPopupMenuListeners() {
-    return (PopupMenuListener[])listenerList.getListeners(
+    return (PopupMenuListener[]) listenerList.getListeners(
             PopupMenuListener.class);
   }
-  
+
   /**
    * Notifies <code>PopupMenuListener</code>s that the popup portion of the
    * combo box will become visible.
@@ -556,16 +565,17 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    */
   public void firePopupMenuWillBecomeVisible() {
     Object[] listeners = listenerList.getListenerList();
-    PopupMenuEvent e=null;
-    for (int i = listeners.length-2; i>=0; i-=2) {
-      if (listeners[i]==PopupMenuListener.class) {
-        if (e == null)
+    PopupMenuEvent e = null;
+    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+      if (listeners[i] == PopupMenuListener.class) {
+        if (e == null) {
           e = new PopupMenuEvent(this);
-        ((PopupMenuListener)listeners[i+1]).popupMenuWillBecomeVisible(e);
+        }
+        ((PopupMenuListener) listeners[i + 1]).popupMenuWillBecomeVisible(e);
       }
     }
   }
-  
+
   /**
    * Notifies <code>PopupMenuListener</code>s that the popup portion of the
    * combo box has become invisible.
@@ -577,16 +587,17 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    */
   public void firePopupMenuWillBecomeInvisible() {
     Object[] listeners = listenerList.getListenerList();
-    PopupMenuEvent e=null;
-    for (int i = listeners.length-2; i>=0; i-=2) {
-      if (listeners[i]==PopupMenuListener.class) {
-        if (e == null)
+    PopupMenuEvent e = null;
+    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+      if (listeners[i] == PopupMenuListener.class) {
+        if (e == null) {
           e = new PopupMenuEvent(this);
-        ((PopupMenuListener)listeners[i+1]).popupMenuWillBecomeInvisible(e);
+        }
+        ((PopupMenuListener) listeners[i + 1]).popupMenuWillBecomeInvisible(e);
       }
     }
   }
-  
+
   /**
    * Notifies <code>PopupMenuListener</code>s that the popup portion of the
    * combo box has been canceled.
@@ -598,16 +609,16 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    */
   public void firePopupMenuCanceled() {
     Object[] listeners = listenerList.getListenerList();
-    PopupMenuEvent e=null;
-    for (int i = listeners.length-2; i>=0; i-=2) {
-      if (listeners[i]==PopupMenuListener.class) {
-        if (e == null)
+    PopupMenuEvent e = null;
+    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+      if (listeners[i] == PopupMenuListener.class) {
+        if (e == null) {
           e = new PopupMenuEvent(this);
-        ((PopupMenuListener)listeners[i+1]).popupMenuCanceled(e);
+        }
+        ((PopupMenuListener) listeners[i + 1]).popupMenuCanceled(e);
       }
     }
   }
-  
   /**
    * This protected field is implementation specific. Do not access directly
    * or override. Use the accessor methods instead.
@@ -616,7 +627,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    * @see #setMaximumRowCount
    */
   protected int maximumRowCount = 8;
-  
+
   /**
    * Sets the maximum number of rows the <code>JComboBox</code> displays.
    * If the number of objects in the model is greater than count,
@@ -632,9 +643,9 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public void setMaximumRowCount(int count) {
     int oldCount = maximumRowCount;
     maximumRowCount = count;
-    firePropertyChange( "maximumRowCount", oldCount, maximumRowCount );
+    firePropertyChange("maximumRowCount", oldCount, maximumRowCount);
   }
-  
+
   /**
    * Returns the maximum number of items the combo box can display
    * without a scrollbar
@@ -645,7 +656,7 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
   public int getMaximumRowCount() {
     return maximumRowCount;
   }
-  
+
   /**
    * Adds an <code>ItemListener</code>.
    * <p>
@@ -656,17 +667,17 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    * @see #setSelectedItem
    */
   public void addItemListener(ItemListener aListener) {
-    listenerList.add(ItemListener.class,aListener);
+    listenerList.add(ItemListener.class, aListener);
   }
-  
+
   /** Removes an <code>ItemListener</code>.
    *
    * @param aListener  the <code>ItemListener</code> to remove
    */
   public void removeItemListener(ItemListener aListener) {
-    listenerList.remove(ItemListener.class,aListener);
+    listenerList.remove(ItemListener.class, aListener);
   }
-  
+
   /**
    * Returns an array of all the <code>ItemListener</code>s added
    * to this JComboBox with addItemListener().
@@ -676,9 +687,9 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    * @since 1.4
    */
   public ItemListener[] getItemListeners() {
-    return (ItemListener[])listenerList.getListeners(ItemListener.class);
+    return (ItemListener[]) listenerList.getListeners(ItemListener.class);
   }
-  
+
   /**
    * Notifies all listeners that have registered interest for
    * notification on this event type.
@@ -691,45 +702,48 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
     Object[] listeners = listenerList.getListenerList();
     // Process the listeners last to first, notifying
     // those that are interested in this event
-    for ( int i = listeners.length-2; i>=0; i-=2 ) {
-      if ( listeners[i]==ItemListener.class ) {
+    for (int i = listeners.length - 2; i >= 0; i -= 2) {
+      if (listeners[i] == ItemListener.class) {
         // Lazily create the event:
         // if (changeEvent == null)
         // changeEvent = new ChangeEvent(this);
-        ((ItemListener)listeners[i+1]).itemStateChanged(e);
+        ((ItemListener) listeners[i + 1]).itemStateChanged(e);
       }
     }
   }
-  
-    /**
-     * Returns the first item in the list that matches the given item.
-     * The result is not always defined if the <code>JComboBox</code>
-     * allows selected items that are not in the list. 
-     * Returns -1 if there is no selected item or if the user specified
-     * an item which is not in the list.
-     
-     * @return an integer specifying the currently selected list item,
-     *			where 0 specifies
-     *                	the first item in the list;
-     *			or -1 if no item is selected or if
-     *                	the currently selected item is not in the list
-     */
-    public int getSelectedIndex() {
-      if (autoCompleteModel instanceof DbComboBoxModel) {
-        return ((DbComboBoxModel) autoCompleteModel).getSelectedIndex();
-      } else {
-        Object sObject = autoCompleteModel.getSelectedItem();
-        int i,c;
-        Object obj;
 
-        for ( i=0,c=autoCompleteModel.getSize();i<c;i++ ) {
+  /**
+   * Returns the first item in the list that matches the given item.
+   * The result is not always defined if the <code>JComboBox</code>
+   * allows selected items that are not in the list.
+   * Returns -1 if there is no selected item or if the user specified
+   * an item which is not in the list.
+
+   * @return an integer specifying the currently selected list item,
+   *			where 0 specifies
+   *                	the first item in the list;
+   *			or -1 if no item is selected or if
+   *                	the currently selected item is not in the list
+   */
+  public int getSelectedIndex() {
+    if (autoCompleteModel instanceof DbComboBoxModel) {
+      return ((DbComboBoxModel) autoCompleteModel).getSelectedIndex();
+    } else {
+      Object sObject = autoCompleteModel.getSelectedItem();
+      int i, c;
+      Object obj;
+
+      for (i = 0      ,
+        c = autoCompleteModel.getSize();
+         i < c;i++ ) {
             obj = autoCompleteModel.getElementAt(i);
-            if ( obj != null && obj.equals(sObject) )
-                return i;
+            if ( obj != null && obj.equals(sObject)) {
+          return i;
         }
-        return -1;
       }
+      return -1;
     }
+  }
 
   /**
    * Returns the current selected item.
@@ -742,72 +756,106 @@ public class JDbFormattedTextField extends JFormattedTextField  implements Docum
    * @see #setSelectedItem
    */
   public Object getSelectedItem() {
-    return autoCompleteModel==null?getText():autoCompleteModel.getSelectedItem();
+    return autoCompleteModel == null ? getText() : autoCompleteModel.getSelectedItem();
   }
-  
+
   public Object[] getSelectedObjects() {
     Object selectedObject = getSelectedItem();
-    if ( selectedObject == null )
+    if (selectedObject == null) {
       return new Object[0];
-    else {
+    } else {
       Object result[] = new Object[1];
       result[0] = selectedObject;
       return result;
     }
   }
   /**
+   * Sets the selected item in the autocomplete display area to the object in
+   * the argument.
+   * If this constitutes a change in the selected item,
+   * <code>ItemListener</code>s added to the combo box will be notified with
+   * one or two <code>ItemEvent</code>s.
+   * If there is a current selected item, an <code>ItemEvent</code> will be
+   * fired and the state change will be <code>ItemEvent.DESELECTED</code>.
+   * If <code>anObject</code> is in the list and is not currently selected
+   * then an <code>ItemEvent</code> will be fired and the state change will
+   * be <code>ItemEvent.SELECTED</code>.
+   *
+   * @param anObject  the list object to select; use <code>null</code> to
+  clear the selection
+   * @beaninfo
+   *    preferred:   true
+   *    description: Sets the selected item in the autocomplete popup.
+   */
+  public void setSelectedItem(Object anObject) {
+    Object oldSelection = selectedItemReminder;
+    Object objectToSelect = anObject;
+    if (oldSelection == null || !oldSelection.equals(anObject)) {
+      autoCompleteModel.setSelectedItem(objectToSelect);
+
+      if (selectedItemReminder != autoCompleteModel.getSelectedItem()) {
+        // in case a users implementation of ComboBoxModel
+        // doesn't fire a ListDataEvent when the selection
+        // changes.
+        selectedItemChanged();
+      }
+    }
+  }
+
+  /**
    * This protected field is implementation specific. Do not access directly
    * or override.
    */
   protected Object selectedItemReminder = null;
-  
-    /**
-     * This method is public as an implementation side effect. 
-     * do not call or override. 
-     */
-    public void contentsChanged(ListDataEvent e) {
-	Object oldSelection = selectedItemReminder;
-	Object newSelection = autoCompleteModel.getSelectedItem();
-	if (oldSelection == null || !oldSelection.equals(newSelection)) {
-	    selectedItemChanged();
-	}
+
+  /**
+   * This method is public as an implementation side effect.
+   * do not call or override.
+   */
+  public void contentsChanged(ListDataEvent e) {
+    Object oldSelection = selectedItemReminder;
+    Object newSelection = autoCompleteModel.getSelectedItem();
+    if (oldSelection == null || !oldSelection.equals(newSelection)) {
+      selectedItemChanged();
+    }
+  }
+
+  /**
+   * This method is public as an implementation side effect.
+   * do not call or override.
+   */
+  public void intervalAdded(ListDataEvent e) {
+    if (selectedItemReminder != autoCompleteModel.getSelectedItem()) {
+      selectedItemChanged();
+    }
+  }
+
+  /**
+   * This method is public as an implementation side effect.
+   * do not call or override.
+   */
+  public void intervalRemoved(ListDataEvent e) {
+    contentsChanged(e);
+  }
+
+  /**
+   * This protected method is implementation specific. Do not access directly
+   * or override.
+   */
+  protected void selectedItemChanged() {
+    if (selectedItemReminder != null) {
+      fireItemStateChanged(new ItemEvent(this, ItemEvent.ITEM_STATE_CHANGED,
+              selectedItemReminder,
+              ItemEvent.DESELECTED));
     }
 
-    /**
-     * This method is public as an implementation side effect. 
-     * do not call or override. 
-     */
-    public void intervalAdded(ListDataEvent e) {
-	if (selectedItemReminder != autoCompleteModel.getSelectedItem()) {
-	    selectedItemChanged();
-	}
-    }
+    // set the new selected item.
+    selectedItemReminder = autoCompleteModel.getSelectedItem();
 
-    /**
-     * This method is public as an implementation side effect. 
-     * do not call or override. 
-     */
-    public void intervalRemoved(ListDataEvent e) {
-	contentsChanged(e);
+    if (selectedItemReminder != null) {
+      fireItemStateChanged(new ItemEvent(this, ItemEvent.ITEM_STATE_CHANGED,
+              selectedItemReminder,
+              ItemEvent.SELECTED));
     }
-    /**
-     * This protected method is implementation specific. Do not access directly
-     * or override. 
-     */
-    protected void selectedItemChanged() {
-	if (selectedItemReminder != null ) {
-	    fireItemStateChanged(new ItemEvent(this,ItemEvent.ITEM_STATE_CHANGED,
-					       selectedItemReminder,
-					       ItemEvent.DESELECTED));
-	}
-	
-	// set the new selected item.
-	selectedItemReminder = autoCompleteModel.getSelectedItem();
-
-	if (selectedItemReminder != null ) {
-	    fireItemStateChanged(new ItemEvent(this,ItemEvent.ITEM_STATE_CHANGED,
-					       selectedItemReminder,
-					       ItemEvent.SELECTED));
-	}
-    }
+  }
 }

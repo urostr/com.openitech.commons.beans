@@ -52,6 +52,11 @@
         <Property name="dataSource" type="com.openitech.db.model.DbDataSource" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
           <Connection component="dsPostneStevilke" type="bean"/>
         </Property>
+        <Property name="extendedValueColumnNames" type="[Ljava.lang.String;" editor="org.netbeans.beaninfo.editors.StringArrayEditor">
+          <StringArray count="1">
+            <StringItem index="0" value="pt_uime"/>
+          </StringArray>
+        </Property>
         <Property name="keyColumnName" type="java.lang.String" value="pt_id"/>
         <Property name="valueColumnNames" type="[Ljava.lang.String;" editor="org.netbeans.beaninfo.editors.StringArrayEditor">
           <StringArray count="1">
@@ -72,6 +77,11 @@
       <Properties>
         <Property name="dataSource" type="com.openitech.db.model.DbDataSource" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
           <Connection component="dsPoste" type="bean"/>
+        </Property>
+        <Property name="extendedValueColumnNames" type="[Ljava.lang.String;" editor="org.netbeans.beaninfo.editors.StringArrayEditor">
+          <StringArray count="1">
+            <StringItem index="0" value="pt_id"/>
+          </StringArray>
         </Property>
         <Property name="keyColumnName" type="java.lang.String" value="pt_id"/>
         <Property name="valueColumnNames" type="[Ljava.lang.String;" editor="org.netbeans.beaninfo.editors.StringArrayEditor">
@@ -206,10 +216,8 @@
       </Properties>
       <Events>
         <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="jtfPostnaStevilkaItemStateChanged"/>
-        <EventHandler event="caretUpdate" listener="javax.swing.event.CaretListener" parameters="javax.swing.event.CaretEvent" handler="jtfPostnaStevilkaCaretUpdate"/>
         <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jtfPostnaStevilkaFocusGained"/>
         <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jtfPostnaStevilkaFocusLost"/>
-        <EventHandler event="propertyChange" listener="java.beans.PropertyChangeListener" parameters="java.beans.PropertyChangeEvent" handler="jtfPostnaStevilkaPropertyChange"/>
       </Events>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -224,7 +232,7 @@
         </Property>
       </Properties>
       <Events>
-        <EventHandler event="caretUpdate" listener="javax.swing.event.CaretListener" parameters="javax.swing.event.CaretEvent" handler="jtfPostaCaretUpdate"/>
+        <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="jtfPostaItemStateChanged"/>
         <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jtfPostaFocusGained"/>
         <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jtfPostaFocusLost"/>
       </Events>

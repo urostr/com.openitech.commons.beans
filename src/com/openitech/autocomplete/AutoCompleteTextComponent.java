@@ -6,7 +6,6 @@
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-
 package com.openitech.autocomplete;
 
 import java.awt.ItemSelectable;
@@ -19,20 +18,19 @@ import javax.swing.event.PopupMenuListener;
  * @author uros
  */
 public interface AutoCompleteTextComponent extends ItemSelectable {
-  
+
   /**
    * Getter for property autoCompleteModel.
    * @return Value of property autoCompleteModel.
    */
   public ComboBoxModel getAutoCompleteModel();
-  
+
   /**
    * Setter for property autoCompleteModel.
    * @param autoCompleteModel New value of property autoCompleteModel.
    */
   public void setAutoCompleteModel(ComboBoxModel autoCompleteModel);
-  
-  
+
   /**
    * Adds a <code>PopupMenu</code> listener which will listen to notification
    * messages from the popup portion of the combo box.
@@ -46,7 +44,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @since 1.4
    */
   public void addPopupMenuListener(PopupMenuListener l);
-  
+
   /**
    * Removes a <code>PopupMenuListener</code>.
    *
@@ -55,7 +53,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @since 1.4
    */
   public void removePopupMenuListener(PopupMenuListener l);
-  
+
   /**
    * Returns an array of all the <code>PopupMenuListener</code>s added
    * to this JComboBox with addPopupMenuListener().
@@ -65,7 +63,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @since 1.4
    */
   public PopupMenuListener[] getPopupMenuListeners();
-  
+
   /**
    * Notifies <code>PopupMenuListener</code>s that the popup portion of the
    * combo box will become visible.
@@ -76,7 +74,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @since 1.4
    */
   public void firePopupMenuWillBecomeVisible();
-  
+
   /**
    * Notifies <code>PopupMenuListener</code>s that the popup portion of the
    * combo box has become invisible.
@@ -87,7 +85,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @since 1.4
    */
   public void firePopupMenuWillBecomeInvisible();
-  
+
   /**
    * Notifies <code>PopupMenuListener</code>s that the popup portion of the
    * combo box has been canceled.
@@ -98,6 +96,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @since 1.4
    */
   public void firePopupMenuCanceled();
+
   /**
    * Sets the maximum number of rows the <code>JComboBox</code> displays.
    * If the number of objects in the model is greater than count,
@@ -111,6 +110,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    *  description: The maximum number of rows the popup should have
    */
   public void setMaximumRowCount(int count);
+
   /**
    * Returns the maximum number of items the combo box can display
    * without a scrollbar
@@ -119,6 +119,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    *         displayed in the list before using a scrollbar
    */
   public int getMaximumRowCount();
+
   /**
    * Adds an <code>ItemListener</code>.
    * <p>
@@ -129,13 +130,13 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @see #setSelectedItem
    */
   public void addItemListener(ItemListener aListener);
-  
+
   /** Removes an <code>ItemListener</code>.
    *
    * @param aListener  the <code>ItemListener</code> to remove
    */
   public void removeItemListener(ItemListener aListener);
-  
+
   /**
    * Returns an array of all the <code>ItemListener</code>s added
    * to this JComboBox with addItemListener().
@@ -145,7 +146,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @since 1.4
    */
   public ItemListener[] getItemListeners();
-  
+
   /**
    * Returns the current selected item.
    * <p>
@@ -157,7 +158,7 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    * @see #setSelectedItem
    */
   public Object getSelectedItem();
-  
+
   /**
    * Returns the first item in the list that matches the given item.
    * The result is not always defined if the <code>JComboBox</code>
@@ -172,4 +173,24 @@ public interface AutoCompleteTextComponent extends ItemSelectable {
    *                	the currently selected item is not in the list
    */
   public int getSelectedIndex();
+
+  /**
+   * Sets the selected item in the autocomplete display area to the object in
+   * the argument.
+   * If this constitutes a change in the selected item,
+   * <code>ItemListener</code>s added to the combo box will be notified with
+   * one or two <code>ItemEvent</code>s.
+   * If there is a current selected item, an <code>ItemEvent</code> will be
+   * fired and the state change will be <code>ItemEvent.DESELECTED</code>.
+   * If <code>anObject</code> is in the list and is not currently selected
+   * then an <code>ItemEvent</code> will be fired and the state change will
+   * be <code>ItemEvent.SELECTED</code>.
+   *
+   * @param anObject  the list object to select; use <code>null</code> to
+  clear the selection
+   * @beaninfo
+   *    preferred:   true
+   *    description: Sets the selected item in the autocomplete popup.
+   */
+  public void setSelectedItem(Object anObject);
 }

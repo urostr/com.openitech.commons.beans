@@ -12,6 +12,7 @@ import com.openitech.db.filters.DataSourceFilters.SeekType;
 import com.openitech.db.filters.FilterDocumentCaretListener;
 import com.openitech.db.filters.FilterDocumentListener;
 import com.openitech.db.filters.Scheduler;
+import com.openitech.db.model.DbComboBoxModel.DbComboBoxEntry;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.concurrent.DataSourceEvent;
 import java.awt.EventQueue;
@@ -56,6 +57,8 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPostneStevilkeFilter, DEFAULT_DELAY));
     jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsNaseljaFilter, DEFAULT_DELAY));
 
+    jtfPostnaStevilka.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_PT_ID, DEFAULT_DELAY));
+
     flDsPostneStevilePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
     flDsPostePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
     flPosta = new FilterDocumentCaretListener(jtfPosta.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_IME, DEFAULT_DELAY);
@@ -95,7 +98,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private class RefreshMIDs extends DataSourceEvent {
 
     private RefreshMIDs() {
-      super(new Event(dbDataModel.dsHisneStevilke, Event.Type.REFRESH));
+      super(new Event(dbDataModel.dsMIDs, Event.Type.REFRESH));
     }
 
     private RefreshMIDs(RefreshMIDs object) {
@@ -304,6 +307,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     cmHisneStevilke.setValueColumnNames(new String[] {"hs", "hd"});
 
     cmPostneStevilke.setDataSource(dsPostneStevilke);
+    cmPostneStevilke.setExtendedValueColumnNames(new String[] {"pt_uime"});
     cmPostneStevilke.setKeyColumnName("pt_id");
     cmPostneStevilke.setValueColumnNames(new String[] {"pt_id"});
     cmPostneStevilke.addListDataListener(new javax.swing.event.ListDataListener() {
@@ -317,6 +321,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     });
 
     cmPoste.setDataSource(dsPoste);
+    cmPoste.setExtendedValueColumnNames(new String[] {"pt_id"});
     cmPoste.setKeyColumnName("pt_id");
     cmPoste.setValueColumnNames(new String[] {"pt_uime"});
     cmPoste.addListDataListener(new javax.swing.event.ListDataListener() {
@@ -417,11 +422,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         jtfPostnaStevilkaItemStateChanged(evt);
       }
     });
-    jtfPostnaStevilka.addCaretListener(new javax.swing.event.CaretListener() {
-      public void caretUpdate(javax.swing.event.CaretEvent evt) {
-        jtfPostnaStevilkaCaretUpdate(evt);
-      }
-    });
     jtfPostnaStevilka.addFocusListener(new java.awt.event.FocusAdapter() {
       public void focusGained(java.awt.event.FocusEvent evt) {
         jtfPostnaStevilkaFocusGained(evt);
@@ -430,17 +430,12 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         jtfPostnaStevilkaFocusLost(evt);
       }
     });
-    jtfPostnaStevilka.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-      public void propertyChange(java.beans.PropertyChangeEvent evt) {
-        jtfPostnaStevilkaPropertyChange(evt);
-      }
-    });
     add(jtfPostnaStevilka, new java.awt.GridBagConstraints());
 
     jtfPosta.setAutoCompleteModel(cmPoste);
-    jtfPosta.addCaretListener(new javax.swing.event.CaretListener() {
-      public void caretUpdate(javax.swing.event.CaretEvent evt) {
-        jtfPostaCaretUpdate(evt);
+    jtfPosta.addItemListener(new java.awt.event.ItemListener() {
+      public void itemStateChanged(java.awt.event.ItemEvent evt) {
+        jtfPostaItemStateChanged(evt);
       }
     });
     jtfPosta.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -515,23 +510,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     dbDataModel.dsPoste.setReloadsOnEventQueue(true);
   }//GEN-LAST:event_jtfPostaFocusGained
 
-  private void jtfPostaCaretUpdate(javax.swing.event.CaretEvent evt) {//GEN-FIRST:event_jtfPostaCaretUpdate
-    if (jtfPosta.isFocusOwner()) {
-      flPosta.caretUpdate(evt);
-    } else {
-      dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPosteFilter.I_TYPE_PT_IME, null);
-    }
-  }//GEN-LAST:event_jtfPostaCaretUpdate
-
-  private void jtfPostnaStevilkaCaretUpdate(javax.swing.event.CaretEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaCaretUpdate
-    if (jtfPostnaStevilka.isFocusOwner()) {
-      flDsPostePostnaStevilka.caretUpdate(evt);
-      flDsPostneStevilePostnaStevilka.caretUpdate(evt);
-    } else {
-      dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, null);
-    }
-  }//GEN-LAST:event_jtfPostnaStevilkaCaretUpdate
-
   private void jtfPostnaStevilkaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaFocusGained
     dbDataModel.dsPostneStevilke.setReloadsOnEventQueue(true);
   }//GEN-LAST:event_jtfPostnaStevilkaFocusGained
@@ -551,7 +529,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     if (!jtfPostnaStevilka.isFocusOwner()) {
       jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
     }
-    
+
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged
 
   private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
@@ -574,17 +552,17 @@ private void foPostnaStevilkaMIDFieldValueChanged(com.openitech.db.events.Active
   getMIDs();
 }//GEN-LAST:event_foPostnaStevilkaMIDFieldValueChanged
 
-private void jtfPostnaStevilkaPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaPropertyChange
-// TODO add your handling code here:
-  if(!jtfPostnaStevilka.isFocusOwner())
-  jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
-}//GEN-LAST:event_jtfPostnaStevilkaPropertyChange
-
 private void jtfPostnaStevilkaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaItemStateChanged
-// TODO add your handling code here:
-  if(!jtfPostnaStevilka.isFocusOwner())
-  jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");  
+  if (jtfPostnaStevilka.isFocusOwner()&&(evt.getStateChange()==java.awt.event.ItemEvent.SELECTED)&&cmPostneStevilke.getSelectedItem()!=null) {
+    jtfPosta.setText(((DbComboBoxEntry<Object,String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());
+  }
 }//GEN-LAST:event_jtfPostnaStevilkaItemStateChanged
+
+private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jtfPostaItemStateChanged
+  if (jtfPosta.isFocusOwner()&&(evt.getStateChange()==java.awt.event.ItemEvent.SELECTED)&&cmPoste.getSelectedItem()!=null) {
+    jtfPostnaStevilka.setText(((DbComboBoxEntry<Object,String>) cmPoste.getSelectedItem()).getValue("pt_id").toString());
+  }
+}//GEN-LAST:event_jtfPostaItemStateChanged
 
   private void initDbModel() {
   }
@@ -896,6 +874,7 @@ private void jtfPostnaStevilkaItemStateChanged(java.awt.event.ItemEvent evt) {//
     public final DsFilterRPE dsPostneStevilkeFilter = new DsFilterRPE("<%filter_pt%>");
     public final DbDataSource dsNaselja = new DbDataSource();
     public final DsFilterRPE dsNaseljaFilter = new DsFilterRPE("<%filter_na%>");
+    public final DbDataSource dsMIDs = new DbDataSource();
     private PreparedStatement findHS_MID_1 = null;
     private PreparedStatement findHS_MID_2 = null;
     private PreparedStatement findHS_MID_3 = null;

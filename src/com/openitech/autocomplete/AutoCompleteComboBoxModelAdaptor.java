@@ -33,7 +33,11 @@ public class AutoCompleteComboBoxModelAdaptor extends AbstractAutoCompleteAdapto
   }
 
   public void setSelectedItem(Object item) {
-    this.model.setSelectedItem(item);
+    if (this.textComponent instanceof AutoCompleteTextComponent) {
+      ((AutoCompleteTextComponent) this.textComponent).setSelectedItem(item);
+    } else {
+      this.model.setSelectedItem(item);
+    }
   }
 
   public int getItemCount() {
