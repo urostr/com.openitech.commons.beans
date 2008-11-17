@@ -78,6 +78,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   public static boolean DUMP_SQL = false;
   public final static String MOVE_TO_INSERT_ROW = "moveToInsertRow";
   public final static String UPDATE_ROW = "updateRow";
+  public final static String ROW_INSERTED = "rowInserted";
   public final static String ROW_UPDATED = "rowUpdated";
   public final static String CANCEL_UPDATES = "cancelUpdates";
   public final static String DELETE_ROW = "deleteRow";
@@ -3104,6 +3105,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
           fireIntervalAdded(new ListDataEvent(this, ListDataEvent.INTERVAL_ADDED, getRowCount() - 1, getRowCount() - 1));
           fireActiveRowChange(new ActiveRowChangeEvent(this, getRow(), oldRow));
+          fireActionPerformed(new ActionEvent(this, 1, ROW_INSERTED));
         }
       } else {
         throw new SQLException("Ni pripravljenih podatkov.");
@@ -4441,7 +4443,8 @@ public class DbDataSource implements DbNavigatorDataSource {
     if (getRow() > 0 && !readOnly) {
       columnName = columnName.toUpperCase();
       Integer row = new Integer(getRow());
-      if (inserting || storedUpdates.containsKey(row) || !Equals.equals(value, getOpenSelectResultSet().getObject(columnName))) {
+      boolean isUpdating = inserting || storedUpdates.containsKey(row);
+      if (isUpdating || !Equals.equals(value, getOpenSelectResultSet().getObject(columnName))) {
         Map<String, Object> columnValues;
         if (storedUpdates.containsKey(row)) {
           columnValues = storedUpdates.get(row);
