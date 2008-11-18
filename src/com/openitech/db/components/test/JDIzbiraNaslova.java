@@ -53,9 +53,9 @@ public class JDIzbiraNaslova extends javax.swing.JDialog {
         jPIzbiraNaslova1.setCnHisnaStevilkaMID("hs_mid_SN");
         jPIzbiraNaslova1.setCnNaselje("na_uime_SN");
         jPIzbiraNaslova1.setCnNaseljeMID("na_mid_SN");
-        jPIzbiraNaslova1.setcnPosta("pt_uime_SN");
-        jPIzbiraNaslova1.setcnPostnaStevilka("pt_id_SN");
-        jPIzbiraNaslova1.setcnPostnaStevilkaMID("pt_mid_SN");
+        jPIzbiraNaslova1.setCnPosta("pt_uime_SN");
+        jPIzbiraNaslova1.setCnPostnaStevilka("pt_id_SN");
+        jPIzbiraNaslova1.setCnPostnaStevilkaMID("pt_mid_SN");
         jPIzbiraNaslova1.setCnUlica("ul_uime_SN");
         jPIzbiraNaslova1.setCnUlicaMID("ul_mid_SN");
         jPIzbiraNaslova1.setDataSource(dbDataSource1);

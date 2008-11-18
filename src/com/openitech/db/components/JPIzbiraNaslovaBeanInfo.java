@@ -12,17 +12,17 @@ import java.beans.*;
  * @author uros
  */
 public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
-  
+
     // Bean descriptor//GEN-FIRST:BeanDescriptor
     /*lazy BeanDescriptor*/
     private static BeanDescriptor getBdescriptor(){
         BeanDescriptor beanDescriptor = new BeanDescriptor  ( com.openitech.db.components.JPIzbiraNaslova.class , null ); // NOI18N//GEN-HEADEREND:BeanDescriptor
-    
+
     // Here you can add code for customizing the BeanDescriptor.
-    
+
         return beanDescriptor;     }//GEN-LAST:BeanDescriptor
-  
-  
+
+
     // Property identifiers//GEN-FIRST:Properties
     private static final int PROPERTY_cnHisnaStevilka = 0;
     private static final int PROPERTY_cnHisnaStevilkaMID = 1;
@@ -35,11 +35,11 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
     private static final int PROPERTY_cnUlicaMID = 8;
     private static final int PROPERTY_dataSource = 9;
 
-    // Property array 
+    // Property array
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
         PropertyDescriptor[] properties = new PropertyDescriptor[10];
-    
+
         try {
             properties[PROPERTY_cnHisnaStevilka] = new PropertyDescriptor ( "cnHisnaStevilka", com.openitech.db.components.JPIzbiraNaslova.class, "getCnHisnaStevilka", "setCnHisnaStevilka" ); // NOI18N
             properties[PROPERTY_cnHisnaStevilka].setPreferred ( true );
@@ -49,11 +49,11 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_cnNaselje].setPreferred ( true );
             properties[PROPERTY_cnNaseljeMID] = new PropertyDescriptor ( "cnNaseljeMID", com.openitech.db.components.JPIzbiraNaslova.class, "getCnNaseljeMID", "setCnNaseljeMID" ); // NOI18N
             properties[PROPERTY_cnNaseljeMID].setPreferred ( true );
-            properties[PROPERTY_cnPosta] = new PropertyDescriptor ( "cnPosta", com.openitech.db.components.JPIzbiraNaslova.class, "getcnPosta", "setcnPosta" ); // NOI18N
+            properties[PROPERTY_cnPosta] = new PropertyDescriptor ( "cnPosta", com.openitech.db.components.JPIzbiraNaslova.class, "getCnPosta", "setCnPosta" ); // NOI18N
             properties[PROPERTY_cnPosta].setPreferred ( true );
-            properties[PROPERTY_cnPostnaStevilka] = new PropertyDescriptor ( "cnPostnaStevilka", com.openitech.db.components.JPIzbiraNaslova.class, "getcnPostnaStevilka", "setcnPostnaStevilka" ); // NOI18N
+            properties[PROPERTY_cnPostnaStevilka] = new PropertyDescriptor ( "cnPostnaStevilka", com.openitech.db.components.JPIzbiraNaslova.class, "getCnPostnaStevilka", "setCnPostnaStevilka" ); // NOI18N
             properties[PROPERTY_cnPostnaStevilka].setPreferred ( true );
-            properties[PROPERTY_cnPostnaStevilkaMID] = new PropertyDescriptor ( "cnPostnaStevilkaMID", com.openitech.db.components.JPIzbiraNaslova.class, "getcnPostnaStevilkaMID", "setcnPostnaStevilkaMID" ); // NOI18N
+            properties[PROPERTY_cnPostnaStevilkaMID] = new PropertyDescriptor ( "cnPostnaStevilkaMID", com.openitech.db.components.JPIzbiraNaslova.class, "getCnPostnaStevilkaMID", "setCnPostnaStevilkaMID" ); // NOI18N
             properties[PROPERTY_cnPostnaStevilkaMID].setPreferred ( true );
             properties[PROPERTY_cnUlica] = new PropertyDescriptor ( "cnUlica", com.openitech.db.components.JPIzbiraNaslova.class, "getCnUlica", "setCnUlica" ); // NOI18N
             properties[PROPERTY_cnUlica].setPreferred ( true );
@@ -65,48 +65,48 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
         catch(IntrospectionException e) {
             e.printStackTrace();
         }//GEN-HEADEREND:Properties
-    
+
     // Here you can add code for customizing the properties array.
-    
+
         return properties;     }//GEN-LAST:Properties
-  
+
     // EventSet identifiers//GEN-FIRST:Events
 
     // EventSet array
     /*lazy EventSetDescriptor*/
     private static EventSetDescriptor[] getEdescriptor(){
         EventSetDescriptor[] eventSets = new EventSetDescriptor[0];//GEN-HEADEREND:Events
-    
+
     // Here you can add code for customizing the event sets array.
-    
+
         return eventSets;     }//GEN-LAST:Events
-  
+
     // Method identifiers//GEN-FIRST:Methods
 
-    // Method array 
+    // Method array
     /*lazy MethodDescriptor*/
     private static MethodDescriptor[] getMdescriptor(){
         MethodDescriptor[] methods = new MethodDescriptor[0];//GEN-HEADEREND:Methods
-    
+
     // Here you can add code for customizing the methods array.
-    
+
         return methods;     }//GEN-LAST:Methods
-  
-  
+
+
     private static final int defaultPropertyIndex = -1;//GEN-BEGIN:Idx
     private static final int defaultEventIndex = -1;//GEN-END:Idx
-  
-  
+
+
     public BeanInfo[] getAdditionalBeanInfo() {//GEN-FIRST:Superclass
         Class superclass = com.openitech.db.components.JPIzbiraNaslova.class.getSuperclass();
         BeanInfo sbi = null;
         try {
             sbi = Introspector.getBeanInfo(superclass);//GEN-HEADEREND:Superclass
-  
+
   // Here you can add code for customizing the Superclass BeanInfo.
-  
+
             } catch(IntrospectionException ex) { }  return new BeanInfo[] { sbi }; }//GEN-LAST:Superclass
-  
+
   /**
    * Gets the bean's <code>BeanDescriptor</code>s.
    *
@@ -117,7 +117,7 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
   public BeanDescriptor getBeanDescriptor() {
     return getBdescriptor();
   }
-  
+
   /**
    * Gets the bean's <code>PropertyDescriptor</code>s.
    *
@@ -133,7 +133,7 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
   public PropertyDescriptor[] getPropertyDescriptors() {
     return getPdescriptor();
   }
-  
+
   /**
    * Gets the bean's <code>EventSetDescriptor</code>s.
    *
@@ -144,7 +144,7 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
   public EventSetDescriptor[] getEventSetDescriptors() {
     return getEdescriptor();
   }
-  
+
   /**
    * Gets the bean's <code>MethodDescriptor</code>s.
    *
@@ -155,7 +155,7 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
   public MethodDescriptor[] getMethodDescriptors() {
     return getMdescriptor();
   }
-  
+
   /**
    * A bean may have a "default" property that is the property that will
    * mostly commonly be initially chosen for update by human's who are
@@ -167,7 +167,7 @@ public class JPIzbiraNaslovaBeanInfo extends SimpleBeanInfo {
   public int getDefaultPropertyIndex() {
     return defaultPropertyIndex;
   }
-  
+
   /**
    * A bean may have a "default" event that is the event that will
    * mostly commonly be used by human's when using the bean.

@@ -700,7 +700,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
    * Getter for property cnHisnaStevilkaMID.
    * @return Value of property cnHisnaStevilkaMID.
    */
-  public String getcnPostnaStevilkaMID() {
+  public String getCnPostnaStevilkaMID() {
     return this.cnPostnaStevilkaMID;
   }
 
@@ -708,7 +708,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
    * Setter for property cnHisnaStevilkaMID.
    * @param cnHisnaStevilkaMID New value of property cnHisnaStevilkaMID.
    */
-  public void setcnPostnaStevilkaMID(String cnPostnaStevilkaMID) {
+  public void setCnPostnaStevilkaMID(String cnPostnaStevilkaMID) {
     this.cnPostnaStevilkaMID = cnPostnaStevilkaMID;
     foPostnaStevilkaMID.setColumnName(cnPostnaStevilkaMID);
   }
@@ -721,7 +721,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
    * Getter for property cnHisnaStevilka.
    * @return Value of property cnHisnaStevilka.
    */
-  public String getcnPostnaStevilka() {
+  public String getCnPostnaStevilka() {
     return this.cnPostnaStevilka;
   }
 
@@ -729,7 +729,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
    * Setter for property cnHisnaStevilka.
    * @param cnHisnaStevilka New value of property cnHisnaStevilka.
    */
-  public void setcnPostnaStevilka(String cnPostnaStevilka) {
+  public void setCnPostnaStevilka(String cnPostnaStevilka) {
     this.cnPostnaStevilka = cnPostnaStevilka;
     foPostnaStevilka.setColumnName(cnPostnaStevilka);
     jtfPostnaStevilka.setColumnName(cnPostnaStevilka);
@@ -744,7 +744,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
    * Getter for property cnHisnaStevilka.
    * @return Value of property cnHisnaStevilka.
    */
-  public String getcnPosta() {
+  public String getCnPosta() {
     return this.cnPosta;
   }
 
@@ -752,7 +752,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
    * Setter for property cnHisnaStevilka.
    * @param cnHisnaStevilka New value of property cnHisnaStevilka.
    */
-  public void setcnPosta(String cnPosta) {
+  public void setCnPosta(String cnPosta) {
     this.cnPosta = cnPosta;
     foPosta.setColumnName(cnPosta);
     jtfPosta.setColumnName(cnPosta);
