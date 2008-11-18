@@ -116,6 +116,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         if (event.isOnEventQueue()) {
           try {
             EventQueue.invokeAndWait(new Runnable() {
+
               @Override
               public void run() {
                 lockAndGet();
@@ -177,13 +178,18 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
             final Naslov naslov = dbDataModel.getNaslovFromHS_MID(hs_mid);
 
             if (EventQueue.isDispatchThread()) {
-              updateValues(naslov);
+              if (!jtfHisnaStevilka.getText().isEmpty()) {
+                updateValues(naslov);
+              }
             } else {
               EventQueue.invokeLater(new Runnable() {
+
                 @Override
                 public void run() {
                   try {
-                    updateValues(naslov);
+                    if (!jtfHisnaStevilka.getText().isEmpty()) {
+                      updateValues(naslov);
+                    }
                   } catch (SQLException ex) {
                     Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
                   }
@@ -223,7 +229,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
       return false;
     } else {
       try {
-        return dataSource.isDataLoaded()&&(dataSource.rowInserted() || dataSource.rowUpdated());
+        return dataSource.isDataLoaded() && (dataSource.rowInserted() || dataSource.rowUpdated());
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
         return false;
@@ -246,7 +252,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
             if (dataSource != null) {
               boolean updating = false;
               try {
-                updating = dataSource.isDataLoaded()&&(dataSource.rowInserted() || dataSource.rowUpdated());
+                updating = dataSource.isDataLoaded() && (dataSource.rowInserted() || dataSource.rowUpdated());
               } catch (SQLException ex) {
                 Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
               }
@@ -847,7 +853,6 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
   private com.openitech.db.components.JDbTextField jtfPostnaStevilka;
   private com.openitech.db.components.JDbTextField jtfUlice;
   // End of variables declaration//GEN-END:variables
-
   private static class Naslov {
 
     int hs_mid;
