@@ -223,7 +223,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
       return false;
     } else {
       try {
-        return dataSource.rowInserted() || dataSource.rowUpdated();
+        return dataSource.isDataLoaded()&&(dataSource.rowInserted() || dataSource.rowUpdated());
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
         return false;
@@ -246,19 +246,17 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
             if (dataSource != null) {
               boolean updating = false;
               try {
-                updating = dataSource.rowUpdated();
+                updating = dataSource.isDataLoaded()&&(dataSource.rowInserted() || dataSource.rowUpdated());
               } catch (SQLException ex) {
                 Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
               }
 
-              dbDataModel.dsHisneStevilkeFilter.setDisabled(!updating);
-              dbDataModel.dsUliceFilter.setDisabled(!updating);
-              dbDataModel.dsNaseljaFilter.setDisabled(!updating);
-              dbDataModel.dsPosteFilter.setDisabled(!updating);
+              dbDataModel.disableFilters(!updating);
             }
           }
         };
       }
+      dbDataModel.disableFilters(!isUpdating());
       dataSource.addActionListener(alDataSource);
     }
   }
@@ -1037,6 +1035,16 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
           throw (IllegalStateException) (new IllegalStateException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
         }
       }
+    }
+
+    public void disableFilters(boolean disable) {
+
+      dsHisneStevilkeFilter.setDisabled(disable);
+      dsUliceFilter.setDisabled(disable);
+      dsNaseljaFilter.setDisabled(disable);
+      dsPosteFilter.setDisabled(disable);
+      dsPostneStevilkeFilter.setDisabled(disable);
+
     }
 
     public int getHisnaStevilkaMID(String ul_ime, String hs_hd, String pt_id, String na_ime) {

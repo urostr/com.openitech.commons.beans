@@ -291,7 +291,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       value.append(EMPTY);
     }
 
-    if (!(super.getValue().equals(EMPTY) && value.equals(EMPTY))) {
+    if (!(super.getValue().equals(EMPTY) && value.toString().equals(EMPTY))) {
       super.setValue(value.toString());
       firePropertyChange("query", notify, false);
     }
