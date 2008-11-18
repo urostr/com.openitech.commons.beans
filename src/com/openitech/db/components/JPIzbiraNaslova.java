@@ -256,7 +256,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
           }
         };
       }
-      dbDataModel.disableFilters(!isUpdating());
+      //dbDataModel.disableFilters(!isUpdating());
       dataSource.addActionListener(alDataSource);
     }
   }
@@ -470,8 +470,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
     if (!jtfNaselja.isFocusOwner()) {
       jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
-    } else if (!jtfNaselja.isFocusOwner() && cmNaselja.getSize() == 0) {
-      jtfNaselja.setText("");
     }
   }//GEN-LAST:event_cmNaseljaContentsChanged
 
