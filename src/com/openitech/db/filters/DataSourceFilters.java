@@ -307,6 +307,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     if (this.disabled!=disabled) {
       this.disabled = disabled;
       setParameters(true);
+      firePropertyChange("query", true, false);
     }
   }
 

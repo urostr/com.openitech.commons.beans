@@ -143,59 +143,61 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     }
 
     private void updateValues(Naslov naslov) throws SQLException {
-      foUlicaMID.updateValue(naslov.ul_mid);
+      if (isUpdating()) {
+        foUlicaMID.updateValue(naslov.ul_mid);
 
-      if (!jtfPostnaStevilka.getText().equals(String.valueOf(naslov.pt_id))) {
-        jtfPostnaStevilka.setText(String.valueOf(naslov.pt_id));
-        foPostnaStevilkaMID.updateValue(naslov.pt_mid);
-      }
-      if (!jtfPosta.getText().equals(naslov.pt_uime)) {
-        jtfPosta.setText(naslov.pt_uime);
-      }
-      if (!jtfNaselja.getText().equals(naslov.na_uime)) {
-        jtfNaselja.setText(naslov.na_uime);
-        foNaseljeMID.updateValue(naslov.na_mid);
+        if (!jtfPostnaStevilka.getText().equals(String.valueOf(naslov.pt_id))) {
+          jtfPostnaStevilka.setText(String.valueOf(naslov.pt_id));
+          foPostnaStevilkaMID.updateValue(naslov.pt_mid);
+        }
+        if (!jtfPosta.getText().equals(naslov.pt_uime)) {
+          jtfPosta.setText(naslov.pt_uime);
+        }
+        if (!jtfNaselja.getText().equals(naslov.na_uime)) {
+          jtfNaselja.setText(naslov.na_uime);
+          foNaseljeMID.updateValue(naslov.na_mid);
+        }
       }
     }
 
     private void get() {
+      int ul_mid=0;
+      int pt_mid=0;
+      int na_mid=0;
       try {
-        if (isUpdating() && !jtfHisnaStevilka.getText().isEmpty()) {
+        if (isUpdating() && !jtfHisnaStevilka.getText().trim().isEmpty()) {
           int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
           if (hs_mid == -1 && !jtfHisnaStevilka.getText().isEmpty()) {
-            int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+            ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
             foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
 
-            int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
+            pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
             foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
 
-            int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
+            na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
             foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
-          } else if (hs_mid > 0) {
+          } 
+          if (hs_mid > 0 || ul_mid > 0 || pt_mid > 0 || na_mid > 0) {
             // updataj ostala polja
+          //  final Naslov naslov = dbDataModel.getNaslovFromHS_MID(hs_mid);
 
-            final Naslov naslov = dbDataModel.getNaslovFromHS_MID(hs_mid);
-
-            if (EventQueue.isDispatchThread()) {
-              if (!jtfHisnaStevilka.getText().isEmpty()) {
-                updateValues(naslov);
-              }
+           //   final Naslov naslov2= dbDataModel.getNaslovFromUL_MID(ul_mid);
+            /*if (EventQueue.isDispatchThread()) {
+            //  updateValues(naslov);
             } else {
               EventQueue.invokeLater(new Runnable() {
 
                 @Override
                 public void run() {
                   try {
-                    if (!jtfHisnaStevilka.getText().isEmpty()) {
-                      updateValues(naslov);
-                    }
+                    updateValues(naslov);
                   } catch (SQLException ex) {
                     Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
                   }
                 }
               });
-            }
+            }//*/
           }
         }
       } catch (SQLException ex) {
@@ -246,9 +248,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void addListeners() {
     if (dataSource != null) {
       if (alDataSource == null) {
-        alDataSource = new ActionListener() {
+        alDataSource = new  
 
-          public void actionPerformed(ActionEvent e) {
+            ActionListener( ) {
+
+               public void actionPerformed(ActionEvent e) {
             if (dataSource != null) {
               boolean updating = false;
               try {
@@ -262,7 +266,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
           }
         };
       }
-      //dbDataModel.disableFilters(!isUpdating());
+      dbDataModel.disableFilters(!isUpdating());
       dataSource.addActionListener(alDataSource);
     }
   }
@@ -474,8 +478,10 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }// </editor-fold>//GEN-END:initComponents
 
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
-    if (!jtfNaselja.isFocusOwner()) {
-      jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
+    if (isUpdating()) {
+      if (!jtfNaselja.isFocusOwner()) {
+        jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
+      }
     }
   }//GEN-LAST:event_cmNaseljaContentsChanged
 
@@ -493,6 +499,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
   private void jtfUliceFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfUliceFocusGained
     dbDataModel.dsUlice.setReloadsOnEventQueue(true);
+    dbDataModel.disableFilters(false);
   }//GEN-LAST:event_jtfUliceFocusGained
 
   private void jtfHisnaStevilkaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfHisnaStevilkaFocusLost
@@ -524,7 +531,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
   private void cmPosteContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPosteContentsChanged
     if (isUpdating()) {
-      if (!jtfPosta.isFocusOwner() && cmPostneStevilke.getSize() == 1) {
+      if (!jtfPosta.isFocusOwner() ){//&& cmPostneStevilke.getSize() == 1) {
         jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
       }
     }
@@ -533,7 +540,10 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void cmPostneStevilkeContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPostneStevilkeContentsChanged
     if (isUpdating()) {
       if (!jtfPostnaStevilka.isFocusOwner()) {
-        jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
+        if (cmPostneStevilke.getSize() == 1)
+          jtfPostnaStevilka.setText(cmPostneStevilke.getElementAt(0).toString());
+        else
+          jtfPostnaStevilka.setText("");
       }
     }
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged
@@ -1233,6 +1243,45 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
 
       public DsFilterRPE(String replace) {
         super(replace);
+      }
+    }
+
+    private Naslov getNaslovFromUL_MID(int ul_mid) {
+      try {
+        int param = 1;
+        long timer;
+
+        select_hs_mid.clearParameters();
+        select_hs_mid.setInt(param++, ul_mid);
+
+        timer = System.currentTimeMillis();
+        ResultSet rsSelect_hs_mid = select_hs_mid.executeQuery();
+        System.out.println("izbiranaslova:select_hs_mid: " + (System.currentTimeMillis() - timer) + "ms");
+
+
+
+        Naslov naslov = new Naslov();
+
+        if (rsSelect_hs_mid.next()) {
+          naslov.hs_mid = rsSelect_hs_mid.getInt("hs_mid");
+          naslov.hs_hs = rsSelect_hs_mid.getInt("hs");
+          naslov.hs_hd = rsSelect_hs_mid.getString("hd");
+          naslov.ul_mid = rsSelect_hs_mid.getInt("ul_mid");
+          naslov.ul_ime = rsSelect_hs_mid.getString("ul_ime");
+          naslov.ul_uime = rsSelect_hs_mid.getString("ul_uime");
+          naslov.pt_mid = rsSelect_hs_mid.getInt("pt_mid");
+          naslov.pt_id = rsSelect_hs_mid.getInt("pt_id");
+          naslov.pt_ime = rsSelect_hs_mid.getString("pt_ime");
+          naslov.pt_uime = rsSelect_hs_mid.getString("pt_uime");
+          naslov.na_mid = rsSelect_hs_mid.getInt("na_mid");
+          naslov.na_ime = rsSelect_hs_mid.getString("na_ime");
+          naslov.na_uime = rsSelect_hs_mid.getString("na_uime");
+
+        }
+        return naslov;
+      } catch (SQLException ex) {
+        Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+        return null;
       }
     }
 

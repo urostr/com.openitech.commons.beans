@@ -4452,11 +4452,13 @@ public class DbDataSource implements DbNavigatorDataSource {
           columnValues = new HashMap<String, Object>();
         }
 
-        columnValues.put(columnName, value);
-        storedUpdates.put(row, columnValues);
+        if (!Equals.equals(value, columnValues.get(columnName))) {
+          columnValues.put(columnName, value);
+          storedUpdates.put(row, columnValues);
 
-        if (notify) {
-          fireFieldValueChanged(new ActiveRowChangeEvent(this, columnName, -1));
+          if (notify) {
+            fireFieldValueChanged(new ActiveRowChangeEvent(this, columnName, -1));
+          }
         }
       }
     }
