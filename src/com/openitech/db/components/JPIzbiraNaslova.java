@@ -457,7 +457,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
     if (isUpdating()) {
       if (!jtfNaselja.isFocusOwner()) {
-        jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");        
+        jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
       }
     }
   }//GEN-LAST:event_cmNaseljaContentsChanged
@@ -469,7 +469,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
   private void jtfNaseljaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfNaseljaFocusGained
     dbDataModel.dsNaselja.setReloadsOnEventQueue(true);
-    dbDataModel.disableFilters(false);   
+    dbDataModel.disableFilters(false);
   }//GEN-LAST:event_jtfNaseljaFocusGained
 
   private void jtfUliceFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfUliceFocusLost
@@ -497,11 +497,15 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void jtfPostaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusLost
     dbDataModel.dsPoste.setReloadsOnEventQueue(false);
     dbDataModel.disableFilters(!isUpdating());
-    //dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPosteFilter.I_TYPE_PT_IME, null);
-//    if (jtfPosta.getText() != null) {
-//      jtfPosta.setSelectedItem(jtfPosta.getText().toString());
-//      jtfPostnaStevilka.setText(((DbComboBoxEntry<Object, String>) cmPoste.getSelectedItem()).getValue("pt_id").toString());
-//    }
+    boolean postaJeOK=false;
+    for (int i = 0; i < cmPoste.getSize(); i++) {
+      if (jtfPosta.getText().equals(cmPoste.getElementAt(i).toString())) {
+        postaJeOK=true;
+      }
+    }
+    if(!postaJeOK){
+      jtfPosta.setText(((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());        
+    }
   }//GEN-LAST:event_jtfPostaFocusLost
 
   private void jtfPostaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusGained
@@ -521,11 +525,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     dbDataModel.dsPostneStevilke.setReloadsOnEventQueue(false);
     dbDataModel.disableFilters(!isUpdating());
     //dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, null);
-    if (cmPostneStevilke.getSelectedItem()!=null) {
+    if (cmPostneStevilke.getSelectedItem() != null) {
       if (cmPostneStevilke.getSelectedItem().toString().toLowerCase().equals(jtfPostnaStevilka.getText().toLowerCase())) {
         jtfPosta.setText(((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());
         cmPoste.setSelectedItem(jtfPosta.getText());
-      } 
+      }
     }
 //    jtfPostnaStevilka.setSelectedItem(jtfPostnaStevilka.getText().toString());
 //    
@@ -545,7 +549,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     //poklice, tudi ko je posta ze izpolnjena
     if (isUpdating()) {
       if (!jtfPostnaStevilka.isFocusOwner()) {
-       // jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
+        // jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
       }
     }
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged
