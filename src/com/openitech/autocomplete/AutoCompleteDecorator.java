@@ -21,6 +21,7 @@
 package com.openitech.autocomplete;
 
 import com.openitech.autocomplete.AutoCompleteTextComponentPopup;
+import com.openitech.db.model.DbComboBoxModel;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusListener;
@@ -67,36 +68,37 @@ import org.jdesktop.swingx.autocomplete.workarounds.MacOSXPopupLocationFix;
  * @author Thomas Bierhance
  */
 public class AutoCompleteDecorator {
+
   private static void removeFocusListener(Component c) {
     FocusListener[] listeners = c.getFocusListeners();
-    
+
     for (FocusListener l : listeners) {
       if (l instanceof AutoCompleteFocusAdapter) {
         c.removeFocusListener(l);
       }
     }
   }
-  
+
   private static void removeKeyListener(Component c) {
     KeyListener[] listeners = c.getKeyListeners();
-    
+
     for (KeyListener l : listeners) {
       if (l instanceof AutoCompleteKeyAdapter) {
         c.removeKeyListener(l);
       }
     }
   }
-  
+
   private static void removePropertyChangeListener(Component c) {
     PropertyChangeListener[] listeners = c.getPropertyChangeListeners("editor");
-    
+
     for (PropertyChangeListener l : listeners) {
       if (l instanceof AutoCompletePropertyChangeListener) {
         c.removePropertyChangeListener("editor", l);
       }
     }
   }
-  
+
   /**
    * Enables automatic completion for the given JTextComponent based on the
    * items contained in the given <tt>List</tt>.
@@ -108,7 +110,7 @@ public class AutoCompleteDecorator {
   public static void decorate(JTextComponent textComponent, List<?> items, boolean strictMatching) {
     decorate(textComponent, items, strictMatching, ObjectToStringConverter.DEFAULT_IMPLEMENTATION);
   }
-  
+
   /**
    * Enables automatic completion for the given JTextComponent based on the
    * items contained in the given <tt>List</tt>.
@@ -123,7 +125,7 @@ public class AutoCompleteDecorator {
     AutoCompleteDocument document = new AutoCompleteDocument(adaptor, strictMatching, stringConverter, textComponent.getDocument());
     decorate(textComponent, document, adaptor);
   }
-  
+
   /**
    * Enables automatic completion for the given JTextComponent based on the
    * items contained in the given JList. The two components will be
@@ -135,7 +137,7 @@ public class AutoCompleteDecorator {
   public static void decorate(JList list, JTextComponent textComponent) {
     decorate(list, textComponent, ObjectToStringConverter.DEFAULT_IMPLEMENTATION);
   }
-  
+
   /**
    * Enables automatic completion for the given JTextComponent based on the
    * items contained in the given JList. The two components will be
@@ -150,7 +152,7 @@ public class AutoCompleteDecorator {
     AutoCompleteDocument document = new AutoCompleteDocument(adaptor, true, stringConverter, textComponent.getDocument());
     decorate(textComponent, document, adaptor);
   }
-  
+
   /**
    * Enables automatic completion for the given JComboBox. The automatic
    * completion will be strict (only items from the combo box can be selected)
@@ -161,7 +163,7 @@ public class AutoCompleteDecorator {
   public static void decorate(final JComboBox comboBox) {
     decorate(comboBox, ObjectToStringConverter.DEFAULT_IMPLEMENTATION);
   }
-  
+
   /**
    * Enables automatic completion for the given JComboBox. The automatic
    * completion will be strict (only items from the combo box can be selected)
@@ -190,34 +192,42 @@ public class AutoCompleteDecorator {
     comboBox.setEditable(true);
     // fix the popup location
     MacOSXPopupLocationFix.install(comboBox);
-    
+
     // configure the text component=editor component
     JTextComponent editorComponent = (JTextComponent) comboBox.getEditor().getEditorComponent();
     final AbstractAutoCompleteAdaptor adaptor = new ComboBoxAdaptor(comboBox);
     final AutoCompleteDocument document = new AutoCompleteDocument(adaptor, strictMatching,
             stringConverter, editorComponent.getDocument());
     decorate(editorComponent, document, adaptor);
-    
+
     //remove old key listener
     removeKeyListener(editorComponent);
-    
+
     // show the popup list when the user presses a key
     final KeyListener keyListener = new AutoCompleteKeyAdapter() {
+
+      @Override
       public void keyPressed(KeyEvent keyEvent) {
         // don't popup on action keys (cursor movements, etc...)
-        if (keyEvent.isActionKey()) return;
-        
+        if (keyEvent.isActionKey()) {
+          return;
+        }
         int keyCode = keyEvent.getKeyCode();
         // don't popup if the combobox isn't visible anyway
         if (comboBox.isDisplayable() && !comboBox.isPopupVisible()) {
           // don't popup when the user hits shift,ctrl or alt
-          if (keyCode==keyEvent.VK_SHIFT || keyCode==keyEvent.VK_CONTROL || keyCode==keyEvent.VK_ALT) return;
+          if (keyCode == KeyEvent.VK_SHIFT || keyCode == KeyEvent.VK_CONTROL || keyCode == KeyEvent.VK_ALT) {
+            return;
           // don't popup when the user hits escape (see issue #311)
-          if (keyCode==keyEvent.VK_ESCAPE) return;
+          }
+          if (keyCode == KeyEvent.VK_ESCAPE) {
+            return;
+          }
           comboBox.setPopupVisible(true);
         }
+
         //confirm selection and close popup
-        if (comboBox.isPopupVisible()&&(keyCode == keyEvent.VK_ENTER)) {
+        if (comboBox.isPopupVisible() && (keyCode == KeyEvent.VK_ENTER)) {
           try {
             document.remove(0, document.getLength());
             document.insertString(0, stringConverter.getPreferredStringForItem(comboBox.getSelectedItem()), null);
@@ -229,31 +239,31 @@ public class AutoCompleteDecorator {
       }
     };
     editorComponent.addKeyListener(keyListener);
-    
-    if (stringConverter!=ObjectToStringConverter.DEFAULT_IMPLEMENTATION) {
+
+    if (stringConverter != ObjectToStringConverter.DEFAULT_IMPLEMENTATION) {
       comboBox.setEditor(new AutoCompleteComboBoxEditor(comboBox.getEditor(), stringConverter));
     }
-    
+
     //remove old property change listener
     removePropertyChangeListener(comboBox);
-    
+
     // Changing the l&f can change the combobox' editor which in turn
     // would not be autocompletion-enabled. The new editor needs to be set-up.
     comboBox.addPropertyChangeListener("editor", new AutoCompletePropertyChangeListener() {
+      @Override
       public void propertyChange(PropertyChangeEvent e) {
         ComboBoxEditor editor = (ComboBoxEditor) e.getOldValue();
         if (editor != null && editor.getEditorComponent() != null) {
           removeKeyListener(editor.getEditorComponent());
         }
-        
+
         editor = (ComboBoxEditor) e.getNewValue();
-        if (editor!=null && editor.getEditorComponent()!=null) {
-          if (!(editor instanceof AutoCompleteComboBoxEditor)
-          && stringConverter!=ObjectToStringConverter.DEFAULT_IMPLEMENTATION) {
+        if (editor != null && editor.getEditorComponent() != null) {
+          if (!(editor instanceof AutoCompleteComboBoxEditor) && stringConverter != ObjectToStringConverter.DEFAULT_IMPLEMENTATION) {
             comboBox.setEditor(new AutoCompleteComboBoxEditor(editor, stringConverter));
-            // Don't do the decorate step here because calling setEditor will trigger
-            // the propertychange listener a second time, which will do the decorate
-            // and addKeyListener step.
+          // Don't do the decorate step here because calling setEditor will trigger
+          // the propertychange listener a second time, which will do the decorate
+          // and addKeyListener step.
           } else {
             decorate((JTextComponent) editor.getEditorComponent(), document, adaptor);
             editor.getEditorComponent().addKeyListener(keyListener);
@@ -262,7 +272,7 @@ public class AutoCompleteDecorator {
       }
     });
   }
-  
+
   /**
    * Decorates a given text component for automatic completion using the
    * given AutoCompleteDocument and AbstractAutoCompleteAdaptor.
@@ -273,15 +283,16 @@ public class AutoCompleteDecorator {
    * @param adaptor the AbstractAutoCompleteAdaptor to be used
    */
   public static void decorate(JTextComponent textComponent, ComboBoxModel dataModel) {
-      // set the current selected item.
-      Object selectedItemReminder = dataModel.getSelectedItem();
-      
-      dataModel.setSelectedItem(null);
-      AutoCompleteComboBoxModelAdaptor adapter = new AutoCompleteComboBoxModelAdaptor(textComponent, dataModel);
-      AutoCompleteDocument document = new AutoCompleteDocument(adapter, false, com.openitech.autocomplete.ObjectToStringConverter.DEFAULT_IMPLEMENTATION, textComponent.getDocument());
-      AutoCompleteDecorator.decorate(textComponent, document, adapter);
-      dataModel.setSelectedItem(selectedItemReminder);
+    // set the current selected item.
+    Object selectedItemReminder = dataModel.getSelectedItem();
+
+    dataModel.setSelectedItem(null);
+    AutoCompleteComboBoxModelAdaptor adapter = new AutoCompleteComboBoxModelAdaptor(textComponent, dataModel);
+    AutoCompleteDocument document = new AutoCompleteDocument(adapter, false, com.openitech.autocomplete.ObjectToStringConverter.DEFAULT_IMPLEMENTATION, textComponent.getDocument());
+    AutoCompleteDecorator.decorate(textComponent, document, adapter);
+    dataModel.setSelectedItem(selectedItemReminder);
   }
+
   /**
    * Decorates a given text component for automatic completion using the
    * given AutoCompleteDocument and AbstractAutoCompleteAdaptor.
@@ -294,10 +305,10 @@ public class AutoCompleteDecorator {
   public static void decorate(final JTextComponent textComponent, final AutoCompleteDocument document, final AbstractAutoCompleteAdaptor adaptor) {
     // install the document on the text component
     textComponent.setDocument(document);
-    
+
     //remove old focus listener
     removeFocusListener(textComponent);
-    
+
 //        // mark entire text when the text component gains focus
 //        // otherwise the last mark would have been retained which is quiet confusing
 //        textComponent.addFocusListener(new AutoCompleteFocusAdapter() {
@@ -305,11 +316,11 @@ public class AutoCompleteDecorator {
 //                adaptor.markEntireText();
 //            }
 //        });
-    
+
     // Tweak some key bindings
     InputMap editorInputMap = textComponent.getInputMap();
     ActionMap editorActionMap = textComponent.getActionMap();
-    
+
     if (document.isStrictMatching()) {
       // move the selection to the left on VK_BACK_SPACE
       editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_BACK_SPACE, 0), DefaultEditorKit.selectionBackwardAction);
@@ -326,87 +337,94 @@ public class AutoCompleteDecorator {
               editorActionMap.get(DefaultEditorKit.selectionBackwardAction),
               adaptor));
     }
-    
-    
-    
+
+
+
     if (textComponent instanceof AutoCompleteTextComponent) {
       //remove old key listener
       removeKeyListener(textComponent);
-      
+
       final ComboBoxModel autoCompleteModel = ((AutoCompleteTextComponent) textComponent).getAutoCompleteModel();
       final AutoCompleteTextComponentPopup autoCompletePopUp = new AutoCompleteTextComponentPopup(textComponent, autoCompleteModel);
-      
+
       editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DOWN, 0), "select-autocomplete-nextitem");
       editorActionMap.put("select-autocomplete-nextitem", new TextAction("select-autocomplete-nextitem") {
+
         public void actionPerformed(ActionEvent e) {
-          if (autoCompleteModel.getSize()>0) {
+          if (autoCompleteModel.getSize() > 0) {
             if (!autoCompletePopUp.isVisible()) {
               autoCompletePopUp.show();
             } else {
-              autoCompletePopUp.setListSelection(autoCompletePopUp. getListSelection()+1);
+              autoCompletePopUp.setListSelection(autoCompletePopUp.getListSelection() + 1);
             }
-            
+
             int caret = textComponent.getCaretPosition();
             textComponent.setText(autoCompletePopUp.getSelectedText());
-            
+
             int length = textComponent.getText().length();
             textComponent.getCaret().setDot(length);
             textComponent.getCaret().moveDot(Math.min(caret, length));
-            
+
             autoCompletePopUp.requestFocus(true);
           }
         }
       });
-      
-      
+
+
       editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_UP, 0), "select-autocomplete-previousitem");
       editorActionMap.put("select-autocomplete-previousitem", new TextAction("select-autocomplete-previousitem") {
+
         public void actionPerformed(ActionEvent e) {
-          if (autoCompleteModel.getSize()>0) {
-            if (autoCompletePopUp. getListSelection()>0) {
+          if (autoCompleteModel.getSize() > 0) {
+            if (autoCompletePopUp.getListSelection() > 0) {
               if (!autoCompletePopUp.isVisible()) {
                 autoCompletePopUp.show();
-              } else {             
-                autoCompletePopUp.setListSelection(autoCompletePopUp. getListSelection()-1);
+              } else {
+                autoCompletePopUp.setListSelection(autoCompletePopUp.getListSelection() - 1);
               }
-              
+
               int caret = textComponent.getCaretPosition();
               textComponent.setText(autoCompletePopUp.getSelectedText());
               int length = textComponent.getText().length();
               textComponent.getCaret().setDot(length);
               textComponent.getCaret().moveDot(Math.min(caret, length));
-              
+
               autoCompletePopUp.requestFocus(true);
             } else {
               if (autoCompletePopUp.isVisible()) {
                 autoCompletePopUp.hide();
               }
-            }            
+            }
           }
         }
       });
-      
-      
+
+
       // show the popup list when the user presses a key
       final KeyListener keyListener = new AutoCompleteKeyAdapter() {
-        
+
         public void keyPressed(KeyEvent keyEvent) {
           // don't popup on action keys (cursor movements, etc...)
-          if (keyEvent.isActionKey()) return;
-          
+          if (keyEvent.isActionKey()) {
+            return;
+          }
           int keyCode = keyEvent.getKeyCode();
           // don't popup if the combobox isn't visible anyway
           if (textComponent.isDisplayable() && !autoCompletePopUp.isVisible()) {
             // don't popup when the user hits shift,ctrl or alt
-            if (keyCode==keyEvent.VK_SHIFT || keyCode==keyEvent.VK_CONTROL || keyCode==keyEvent.VK_ALT) return;
+            if (keyCode == keyEvent.VK_SHIFT || keyCode == keyEvent.VK_CONTROL || keyCode == keyEvent.VK_ALT) {
+              return;
             // don't popup when the user hits escape (see issue #311)
-            if (keyCode==keyEvent.VK_ESCAPE) return;
-            
-            if (autoCompleteModel.getSize()>0)
+            }
+            if (keyCode == keyEvent.VK_ESCAPE) {
+              return;
+            }
+            if (autoCompleteModel.getSize() > 0) {
               autoCompletePopUp.show();
+            }
           }
           //confirm selection and close popup
-          if (autoCompletePopUp.isVisible()&&(keyCode == keyEvent.VK_ENTER)) {
+          if (autoCompletePopUp.isVisible() && (keyCode == keyEvent.VK_ENTER)) {
             int caret = textComponent.getCaretPosition();
             textComponent.setText(autoCompletePopUp.getSelectedText());
             int length = textComponent.getText().length();
@@ -417,34 +435,64 @@ public class AutoCompleteDecorator {
         }
       };
       textComponent.addKeyListener(keyListener);
+
+      //remove old focus listener
+      removeFocusListener(textComponent);
+
+      final FocusListener focusListener = new AutoCompleteFocusAdapter() {
+        /**
+         * Invoked when a component loses the keyboard focus.
+         */
+        @Override
+        public void focusLost(java.awt.event.FocusEvent evt) {
+          if ((autoCompleteModel.getSize() > 0) &&
+              (autoCompleteModel.getElementAt(0).toString().toLowerCase().startsWith(textComponent.getText().toLowerCase()))
+              ) {
+            if (autoCompleteModel.getSelectedItem() == null) {
+              autoCompletePopUp.setListSelection(0);
+            }
+
+            int caret = textComponent.getCaretPosition();
+            ((AutoCompleteTextComponent) textComponent).setSelectedItem(autoCompletePopUp.getSelectedText());
+            textComponent.setText(autoCompletePopUp.getSelectedText());
+            int length = textComponent.getText().length();
+            textComponent.getCaret().setDot(length);
+            textComponent.getCaret().moveDot(Math.min(caret, length));
+          }
+          autoCompletePopUp.hide();
+        }
+      };
+      textComponent.addFocusListener(focusListener);
     }
     //remove old property change listener
     removePropertyChangeListener(textComponent);
-    
+
     // Changing the l&f can change the combobox' editor which in turn
     // would not be autocompletion-enabled. The new editor needs to be set-up.
     textComponent.addPropertyChangeListener("document", new AutoCompletePropertyChangeListener() {
+
       public void propertyChange(PropertyChangeEvent e) {
         if (e.getOldValue() instanceof AutoCompleteDocument) {
           ((AutoCompleteDocument) e.getOldValue()).setDelegate((javax.swing.text.Document) e.getNewValue());
-          textComponent.setDocument((javax.swing.text.Document)e.getOldValue());
+          textComponent.setDocument((javax.swing.text.Document) e.getOldValue());
         }
       }
     });
   }
-  
+
   static class NonStrictBackspaceAction extends TextAction {
+
     Action backspace;
     Action selectionBackward;
     AbstractAutoCompleteAdaptor adaptor;
-    
+
     public NonStrictBackspaceAction(Action backspace, Action selectionBackward, AbstractAutoCompleteAdaptor adaptor) {
       super("nonstrict-backspace");
       this.backspace = backspace;
       this.selectionBackward = selectionBackward;
       this.adaptor = adaptor;
     }
-    
+
     public void actionPerformed(ActionEvent e) {
       if (adaptor.listContainsSelectedItem()) {
         selectionBackward.actionPerformed(e);
@@ -453,12 +501,12 @@ public class AutoCompleteDecorator {
       }
     }
   }
-  
   /**
    * A TextAction that provides an error feedback for the text component that invoked
    * the action. The error feedback is most likely a "beep".
    */
   static Object errorFeedbackAction = new TextAction("provide-error-feedback") {
+
     public void actionPerformed(ActionEvent e) {
       UIManager.getLookAndFeel().provideErrorFeedback(getTextComponent(e));
     }

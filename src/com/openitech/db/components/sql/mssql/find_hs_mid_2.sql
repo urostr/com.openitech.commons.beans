@@ -23,7 +23,7 @@ LEFT OUTER JOIN
     ) 
 WHERE 
     HS_s.hs_mid is not null AND
-    (CAST(HS_s.hs as varchar)+HS_s.hd) = ? AND
+    RTRIM(CAST(HS_s.hs as varchar)+HS_s.hd) = ? AND
     UL_s.ul_ime = ? AND
     PT_s.pt_id = ? 
    

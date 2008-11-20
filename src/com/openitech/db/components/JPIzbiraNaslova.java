@@ -60,7 +60,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     jtfPostnaStevilka.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_PT_ID, DEFAULT_DELAY));
 
     flDsPostneStevilePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
-    flDsPostePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
+    //flDsPostePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
     flPosta = new FilterDocumentCaretListener(jtfPosta.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_IME, DEFAULT_DELAY);
 
     dbDataModel.dsUlice.setReloadsOnEventQueue(false);
@@ -457,22 +457,26 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
     if (isUpdating()) {
       if (!jtfNaselja.isFocusOwner()) {
-        jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
+        jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");        
       }
     }
   }//GEN-LAST:event_cmNaseljaContentsChanged
 
   private void jtfNaseljaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfNaseljaFocusLost
     dbDataModel.dsNaselja.setReloadsOnEventQueue(false);
-    dbDataModel.disableFilters(true);
+    dbDataModel.disableFilters(!isUpdating());
   }//GEN-LAST:event_jtfNaseljaFocusLost
 
   private void jtfNaseljaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfNaseljaFocusGained
     dbDataModel.dsNaselja.setReloadsOnEventQueue(true);
+    dbDataModel.disableFilters(false);   
   }//GEN-LAST:event_jtfNaseljaFocusGained
 
   private void jtfUliceFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfUliceFocusLost
     dbDataModel.dsUlice.setReloadsOnEventQueue(false);
+    dbDataModel.disableFilters(!isUpdating());
+//    jtfUlice.setSelectedItem(cmUlice.getElementAt(0).toString() == null ? null : cmUlice.getElementAt(0).toString());
+//    jtfUlice.setText(((DbComboBoxEntry<Object, String>) cmUlice.getSelectedItem()).getValue("ul_uime").toString());
   }//GEN-LAST:event_jtfUliceFocusLost
 
   private void jtfUliceFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfUliceFocusGained
@@ -482,35 +486,57 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
   private void jtfHisnaStevilkaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfHisnaStevilkaFocusLost
     dbDataModel.dsHisneStevilke.setReloadsOnEventQueue(false);
+    dbDataModel.disableFilters(!isUpdating());
   }//GEN-LAST:event_jtfHisnaStevilkaFocusLost
 
   private void jtfHisnaStevilkaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfHisnaStevilkaFocusGained
     dbDataModel.dsHisneStevilke.setReloadsOnEventQueue(true);
+    dbDataModel.disableFilters(false);
   }//GEN-LAST:event_jtfHisnaStevilkaFocusGained
 
   private void jtfPostaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusLost
     dbDataModel.dsPoste.setReloadsOnEventQueue(false);
-    dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPosteFilter.I_TYPE_PT_IME, null);
-
+    dbDataModel.disableFilters(!isUpdating());
+    //dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPosteFilter.I_TYPE_PT_IME, null);
+//    if (jtfPosta.getText() != null) {
+//      jtfPosta.setSelectedItem(jtfPosta.getText().toString());
+//      jtfPostnaStevilka.setText(((DbComboBoxEntry<Object, String>) cmPoste.getSelectedItem()).getValue("pt_id").toString());
+//    }
   }//GEN-LAST:event_jtfPostaFocusLost
 
   private void jtfPostaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusGained
     dbDataModel.dsPoste.setReloadsOnEventQueue(true);
+    dbDataModel.disableFilters(false);
+//    if (jtfPosta.getText() != null) {
+//      jtfPosta.setSelectedItem(cmPoste.getSelectedItem());//jtfPosta.getText().toString());
+//    }
   }//GEN-LAST:event_jtfPostaFocusGained
 
   private void jtfPostnaStevilkaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaFocusGained
     dbDataModel.dsPostneStevilke.setReloadsOnEventQueue(true);
+    dbDataModel.disableFilters(false);
   }//GEN-LAST:event_jtfPostnaStevilkaFocusGained
 
   private void jtfPostnaStevilkaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaFocusLost
     dbDataModel.dsPostneStevilke.setReloadsOnEventQueue(false);
-    dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, null);
+    dbDataModel.disableFilters(!isUpdating());
+    //dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, null);
+    if (cmPostneStevilke.getSelectedItem()!=null) {
+      if (cmPostneStevilke.getSelectedItem().toString().toLowerCase().equals(jtfPostnaStevilka.getText().toLowerCase())) {
+        jtfPosta.setText(((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());
+        cmPoste.setSelectedItem(jtfPosta.getText());
+      } 
+    }
+//    jtfPostnaStevilka.setSelectedItem(jtfPostnaStevilka.getText().toString());
+//    
+//    jtfPosta.setSelectedItem(cmPoste.getSelectedItem());//jtfPosta.getText().toString());
+//    cmPoste.setSelectedItem(jtfPosta.getText().toString());
   }//GEN-LAST:event_jtfPostnaStevilkaFocusLost
 
   private void cmPosteContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPosteContentsChanged
     if (isUpdating()) {
-      if (!jtfPosta.isFocusOwner()) {//&& cmPostneStevilke.getSize() == 1) {
-        jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
+      if (!jtfPosta.isFocusOwner() && !jtfNaselja.isFocusOwner()) {//&& cmPostneStevilke.getSize() == 1) {
+        //jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
       }
     }
   }//GEN-LAST:event_cmPosteContentsChanged
@@ -519,7 +545,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     //poklice, tudi ko je posta ze izpolnjena
     if (isUpdating()) {
       if (!jtfPostnaStevilka.isFocusOwner()) {
-        jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");       
+       // jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
       }
     }
   }//GEN-LAST:event_cmPostneStevilkeContentsChanged
@@ -1046,62 +1072,62 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
       long timer;
 
       try {
-        
-        int param = 1;
-/*
-        findHS_MID_1.clearParameters();
 
+        int param = 1;
+        /*
+        findHS_MID_1.clearParameters();
+        
         findHS_MID_1.setString(param++, hs_hd);
         findHS_MID_1.setString(param++, ul_ime);
-
+        
         timer = System.currentTimeMillis();
         ResultSet rsHS_MID = findHS_MID_1.executeQuery();
         System.out.println("izbiranaslova:findHS_MID_1: " + (System.currentTimeMillis() - timer) + "ms");
-
+        
         if (rsHS_MID.next() && rsHS_MID.isLast()) {
-          result = rsHS_MID.getInt(1);
+        result = rsHS_MID.getInt(1);
         }
         rsHS_MID.close();
-
+        
         if (result == -1) {
-          param = 1;
-
-          findHS_MID_2.clearParameters();
-
-          findHS_MID_2.setString(param++, hs_hd);
-          findHS_MID_2.setString(param++, ul_ime);
-          findHS_MID_2.setObject(param++, pt_id, java.sql.Types.INTEGER);
-
-          timer = System.currentTimeMillis();
-          ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
-          System.out.println("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
-
-          if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
-            result = rsHS_MID_2.getInt(1);
-          }
-          rsHS_MID_2.close();
+        param = 1;
+        
+        findHS_MID_2.clearParameters();
+        
+        findHS_MID_2.setString(param++, hs_hd);
+        findHS_MID_2.setString(param++, ul_ime);
+        findHS_MID_2.setObject(param++, pt_id, java.sql.Types.INTEGER);
+        
+        timer = System.currentTimeMillis();
+        ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
+        System.out.println("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
+        
+        if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
+        result = rsHS_MID_2.getInt(1);
+        }
+        rsHS_MID_2.close();
         }
         if (result == -1) {
-         /*/
-          param = 1;
+        /*/
+        param = 1;
 
-          findHS_MID_3.clearParameters();
+        findHS_MID_3.clearParameters();
 
-          findHS_MID_3.setString(param++, hs_hd);
-          findHS_MID_3.setString(param++, ul_ime);
-          findHS_MID_3.setObject(param++, pt_id, java.sql.Types.INTEGER);
-          findHS_MID_3.setString(param++, na_ime);
+        findHS_MID_3.setString(param++, hs_hd);
+        findHS_MID_3.setString(param++, ul_ime);
+        findHS_MID_3.setObject(param++, pt_id, java.sql.Types.INTEGER);
+        findHS_MID_3.setString(param++, na_ime);
 
 
-          timer = System.currentTimeMillis();
-          ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
-          System.out.println("izbiranaslova:findHS_MID_3: " + (System.currentTimeMillis() - timer) + "ms");
+        timer = System.currentTimeMillis();
+        ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
+        System.out.println("izbiranaslova:findHS_MID_3: " + (System.currentTimeMillis() - timer) + "ms");
 
-          if (rsHS_MID_3.next() && rsHS_MID_3.isLast()) {
-            result = rsHS_MID_3.getInt(1);
-          }
-          rsHS_MID_3.close();
-        
+        if (rsHS_MID_3.next() && rsHS_MID_3.isLast()) {
+          result = rsHS_MID_3.getInt(1);
+        }
+        rsHS_MID_3.close();
+
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
       }
@@ -1224,7 +1250,6 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
       }
     }
 
-   
     private Naslov getNaslovFromHS_MID(int hs_mid) {
       try {
         int param = 1;

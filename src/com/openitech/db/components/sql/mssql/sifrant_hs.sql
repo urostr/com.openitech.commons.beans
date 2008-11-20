@@ -1,7 +1,7 @@
 (
 (
 SELECT DISTINCT 
-    CAST(hs as varchar)+hd as hs_hd,
+    RTRIM(CAST(hs as varchar)+hd) as hs_hd,
     hs, 
     hd 
 FROM 
@@ -12,7 +12,7 @@ WHERE
 UNION 
 (
 SELECT DISTINCT 
-    CAST(HS_s.hs as varchar)+HS_s.hd,
+    RTRIM(CAST(HS_s.hs as varchar)+HS_s.hd),
     HS_s.hs, 
     HS_s.hd 
 FROM 
