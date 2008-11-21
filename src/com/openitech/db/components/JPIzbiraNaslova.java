@@ -160,23 +160,19 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     }
 
     private void get() {
-      int ul_mid = 0;
-      int pt_mid = 0;
-      int na_mid = 0;
-
       if (isUpdating() && !jtfHisnaStevilka.getText().trim().isEmpty()) {
         try {
           int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
           if (hs_mid == -1) {
-            ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+            int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
             foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
 
-            pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
+            int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
             foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
 
-            na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
-            foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
+            int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
+            foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);          
           }
         } catch (SQLException ex) {
           Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
@@ -227,9 +223,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void addListeners() {
     if (dataSource != null) {
       if (alDataSource == null) {
-        alDataSource = new ActionListener() {
+        alDataSource = new  
 
-          public void actionPerformed(ActionEvent e) {
+            ActionListener( ) {
+
+               public void actionPerformed(ActionEvent e) {
             if (dataSource != null) {
               boolean updating = false;
               try {
@@ -419,6 +417,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     add(jtfPostnaStevilka, new java.awt.GridBagConstraints());
 
     jtfPosta.setAutoCompleteModel(cmPoste);
+    jtfPosta.setValidator(new ValidatorPosta());
     jtfPosta.addItemListener(new java.awt.event.ItemListener() {
       public void itemStateChanged(java.awt.event.ItemEvent evt) {
         jtfPostaItemStateChanged(evt);
@@ -497,15 +496,15 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void jtfPostaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusLost
     dbDataModel.dsPoste.setReloadsOnEventQueue(false);
     dbDataModel.disableFilters(!isUpdating());
-    boolean postaJeOK=false;
-    for (int i = 0; i < cmPoste.getSize(); i++) {
-      if (jtfPosta.getText().equals(cmPoste.getElementAt(i).toString())) {
-        postaJeOK=true;
-      }
-    }
-    if(!postaJeOK){
-      jtfPosta.setText(((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());        
-    }
+  /*boolean postaJeOK = false;
+  for (int i = 0; i < cmPoste.getSize(); i++) {
+  if (jtfPosta.getText().equals(cmPoste.getElementAt(i).toString())) {
+  postaJeOK = true;
+  }
+  }
+  if (!postaJeOK) {
+  jtfPosta.setText(((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());
+  }//*/
   }//GEN-LAST:event_jtfPostaFocusLost
 
   private void jtfPostaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusGained
@@ -590,6 +589,19 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
 }//GEN-LAST:event_jtfPostaItemStateChanged
 
   private void initDbModel() {
+  }
+
+  private class ValidatorPosta implements Validator {
+
+    @Override
+    public boolean isValid(Object value) {
+      if (cmPoste.getSelectedIndex() != -1) {
+        if (((DbComboBoxEntry<Object, String>) cmPoste.getSelectedItem()).getValue("pt_id").toString().equalsIgnoreCase(value.toString())) {
+          return true;
+        }
+      }
+      return false;
+    }
   }
 
   private static class HisnaFilterDocumentListener extends FilterDocumentListener {
@@ -1078,60 +1090,60 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
       try {
 
         int param = 1;
-        /*
+
         findHS_MID_1.clearParameters();
-        
+
         findHS_MID_1.setString(param++, hs_hd);
         findHS_MID_1.setString(param++, ul_ime);
-        
+
         timer = System.currentTimeMillis();
         ResultSet rsHS_MID = findHS_MID_1.executeQuery();
         System.out.println("izbiranaslova:findHS_MID_1: " + (System.currentTimeMillis() - timer) + "ms");
-        
+
         if (rsHS_MID.next() && rsHS_MID.isLast()) {
-        result = rsHS_MID.getInt(1);
+          result = rsHS_MID.getInt(1);
         }
         rsHS_MID.close();
-        
+
         if (result == -1) {
-        param = 1;
-        
-        findHS_MID_2.clearParameters();
-        
-        findHS_MID_2.setString(param++, hs_hd);
-        findHS_MID_2.setString(param++, ul_ime);
-        findHS_MID_2.setObject(param++, pt_id, java.sql.Types.INTEGER);
-        
-        timer = System.currentTimeMillis();
-        ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
-        System.out.println("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
-        
-        if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
-        result = rsHS_MID_2.getInt(1);
-        }
-        rsHS_MID_2.close();
+          param = 1;
+
+          findHS_MID_2.clearParameters();
+
+          findHS_MID_2.setString(param++, hs_hd);
+          findHS_MID_2.setString(param++, ul_ime);
+          findHS_MID_2.setObject(param++, pt_id, java.sql.Types.INTEGER);
+
+          timer = System.currentTimeMillis();
+          ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
+          System.out.println("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
+
+          if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
+            result = rsHS_MID_2.getInt(1);
+          }
+          rsHS_MID_2.close();
         }
         if (result == -1) {
-        /*/
-        param = 1;
 
-        findHS_MID_3.clearParameters();
+          param = 1;
 
-        findHS_MID_3.setString(param++, hs_hd);
-        findHS_MID_3.setString(param++, ul_ime);
-        findHS_MID_3.setObject(param++, pt_id, java.sql.Types.INTEGER);
-        findHS_MID_3.setString(param++, na_ime);
+          findHS_MID_3.clearParameters();
+
+          findHS_MID_3.setString(param++, hs_hd);
+          findHS_MID_3.setString(param++, ul_ime);
+          findHS_MID_3.setObject(param++, pt_id, java.sql.Types.INTEGER);
+          findHS_MID_3.setString(param++, na_ime);
 
 
-        timer = System.currentTimeMillis();
-        ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
-        System.out.println("izbiranaslova:findHS_MID_3: " + (System.currentTimeMillis() - timer) + "ms");
+          timer = System.currentTimeMillis();
+          ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
+          System.out.println("izbiranaslova:findHS_MID_3: " + (System.currentTimeMillis() - timer) + "ms");
 
-        if (rsHS_MID_3.next() && rsHS_MID_3.isLast()) {
-          result = rsHS_MID_3.getInt(1);
+          if (rsHS_MID_3.next() && rsHS_MID_3.isLast()) {
+            result = rsHS_MID_3.getInt(1);
+          }
+          rsHS_MID_3.close();
         }
-        rsHS_MID_3.close();
-
       } catch (SQLException ex) {
         Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
       }

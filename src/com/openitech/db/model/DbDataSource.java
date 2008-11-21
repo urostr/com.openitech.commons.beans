@@ -4452,14 +4452,14 @@ public class DbDataSource implements DbNavigatorDataSource {
           columnValues = new HashMap<String, Object>();
         }
 
-        if (!Equals.equals(value, columnValues.get(columnName))) {
+        //if (!Equals.equals(value, columnValues.get(columnName))) {//ta pogoj ne vraca null-e, ce prej ni neke vrednosti, zato ga ne rabimo
           columnValues.put(columnName, value);
           storedUpdates.put(row, columnValues);
 
           if (notify) {
             fireFieldValueChanged(new ActiveRowChangeEvent(this, columnName, -1));
           }
-        }
+       // }
       }
     }
   }

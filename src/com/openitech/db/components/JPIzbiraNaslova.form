@@ -230,6 +230,9 @@
         <Property name="autoCompleteModel" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
           <Connection component="cmPoste" type="bean"/>
         </Property>
+        <Property name="validator" type="com.openitech.db.components.Validator" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="new ValidatorPosta()" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="jtfPostaItemStateChanged"/>
