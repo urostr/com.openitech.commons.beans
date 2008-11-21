@@ -64,9 +64,6 @@
           </StringArray>
         </Property>
       </Properties>
-      <Events>
-        <EventHandler event="contentsChanged" listener="javax.swing.event.ListDataListener" parameters="javax.swing.event.ListDataEvent" handler="cmPostneStevilkeContentsChanged"/>
-      </Events>
     </Component>
     <Component class="com.openitech.db.model.DbDataSource" name="dsPoste">
       <AuxValues>
@@ -90,9 +87,6 @@
           </StringArray>
         </Property>
       </Properties>
-      <Events>
-        <EventHandler event="contentsChanged" listener="javax.swing.event.ListDataListener" parameters="javax.swing.event.ListDataEvent" handler="cmPosteContentsChanged"/>
-      </Events>
     </Component>
     <Component class="com.openitech.db.model.DbDataSource" name="dsNaselja">
       <AuxValues>

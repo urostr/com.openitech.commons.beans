@@ -138,42 +138,21 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
       return new RefreshMIDs(this);
     }
 
-    private void resubmit() {
-      DataSourceEvent.submit(this);
-    }
-
-    private void updateValues(Naslov naslov) throws SQLException {
-      if (isUpdating()) {
-        foUlicaMID.updateValue(naslov.ul_mid);
-
-        if (!jtfPostnaStevilka.getText().equals(String.valueOf(naslov.pt_id))) {
-
-          foPostnaStevilkaMID.updateValue(naslov.pt_mid);
-        }
-        if (!jtfPosta.getText().equals(naslov.pt_uime)) {
-        }
-        if (!jtfNaselja.getText().equals(naslov.na_uime)) {
-
-          foNaseljeMID.updateValue(naslov.na_mid);
-        }
-      }
-    }
-
     private void get() {
       if (isUpdating() && !jtfHisnaStevilka.getText().trim().isEmpty()) {
         try {
           int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-          if (hs_mid == -1) {
-            int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
-            foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
 
-            int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
-            foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
+          int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
+          foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
 
-            int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
-            foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);          
-          }
+          int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
+          foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
+
+          int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
+          foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
+
         } catch (SQLException ex) {
           Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -223,11 +202,9 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void addListeners() {
     if (dataSource != null) {
       if (alDataSource == null) {
-        alDataSource = new  
+        alDataSource = new ActionListener() {
 
-            ActionListener( ) {
-
-               public void actionPerformed(ActionEvent e) {
+          public void actionPerformed(ActionEvent e) {
             if (dataSource != null) {
               boolean updating = false;
               try {
@@ -294,29 +271,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     cmPostneStevilke.setExtendedValueColumnNames(new String[] {"pt_uime"});
     cmPostneStevilke.setKeyColumnName("pt_id");
     cmPostneStevilke.setValueColumnNames(new String[] {"pt_id"});
-    cmPostneStevilke.addListDataListener(new javax.swing.event.ListDataListener() {
-      public void contentsChanged(javax.swing.event.ListDataEvent evt) {
-        cmPostneStevilkeContentsChanged(evt);
-      }
-      public void intervalAdded(javax.swing.event.ListDataEvent evt) {
-      }
-      public void intervalRemoved(javax.swing.event.ListDataEvent evt) {
-      }
-    });
 
     cmPoste.setDataSource(dsPoste);
     cmPoste.setExtendedValueColumnNames(new String[] {"pt_id"});
     cmPoste.setKeyColumnName("pt_id");
     cmPoste.setValueColumnNames(new String[] {"pt_uime"});
-    cmPoste.addListDataListener(new javax.swing.event.ListDataListener() {
-      public void contentsChanged(javax.swing.event.ListDataEvent evt) {
-        cmPosteContentsChanged(evt);
-      }
-      public void intervalAdded(javax.swing.event.ListDataEvent evt) {
-      }
-      public void intervalRemoved(javax.swing.event.ListDataEvent evt) {
-      }
-    });
 
     cmNaselja.setDataSource(dsNaselja);
     cmNaselja.setKeyColumnName("na_uime");
@@ -474,8 +433,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void jtfUliceFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfUliceFocusLost
     dbDataModel.dsUlice.setReloadsOnEventQueue(false);
     dbDataModel.disableFilters(!isUpdating());
-//    jtfUlice.setSelectedItem(cmUlice.getElementAt(0).toString() == null ? null : cmUlice.getElementAt(0).toString());
-//    jtfUlice.setText(((DbComboBoxEntry<Object, String>) cmUlice.getSelectedItem()).getValue("ul_uime").toString());
   }//GEN-LAST:event_jtfUliceFocusLost
 
   private void jtfUliceFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfUliceFocusGained
@@ -496,23 +453,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void jtfPostaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusLost
     dbDataModel.dsPoste.setReloadsOnEventQueue(false);
     dbDataModel.disableFilters(!isUpdating());
-  /*boolean postaJeOK = false;
-  for (int i = 0; i < cmPoste.getSize(); i++) {
-  if (jtfPosta.getText().equals(cmPoste.getElementAt(i).toString())) {
-  postaJeOK = true;
-  }
-  }
-  if (!postaJeOK) {
-  jtfPosta.setText(((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());
-  }//*/
   }//GEN-LAST:event_jtfPostaFocusLost
 
   private void jtfPostaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostaFocusGained
     dbDataModel.dsPoste.setReloadsOnEventQueue(true);
     dbDataModel.disableFilters(false);
-//    if (jtfPosta.getText() != null) {
-//      jtfPosta.setSelectedItem(cmPoste.getSelectedItem());//jtfPosta.getText().toString());
-//    }
   }//GEN-LAST:event_jtfPostaFocusGained
 
   private void jtfPostnaStevilkaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaFocusGained
@@ -530,28 +475,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         cmPoste.setSelectedItem(jtfPosta.getText());
       }
     }
-//    jtfPostnaStevilka.setSelectedItem(jtfPostnaStevilka.getText().toString());
-//    
-//    jtfPosta.setSelectedItem(cmPoste.getSelectedItem());//jtfPosta.getText().toString());
-//    cmPoste.setSelectedItem(jtfPosta.getText().toString());
   }//GEN-LAST:event_jtfPostnaStevilkaFocusLost
-
-  private void cmPosteContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPosteContentsChanged
-    if (isUpdating()) {
-      if (!jtfPosta.isFocusOwner() && !jtfNaselja.isFocusOwner()) {//&& cmPostneStevilke.getSize() == 1) {
-        //jtfPosta.setText(cmPoste.getSize() == 1 ? cmPoste.getElementAt(0).toString() : "");
-      }
-    }
-  }//GEN-LAST:event_cmPosteContentsChanged
-
-  private void cmPostneStevilkeContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmPostneStevilkeContentsChanged
-    //poklice, tudi ko je posta ze izpolnjena
-    if (isUpdating()) {
-      if (!jtfPostnaStevilka.isFocusOwner()) {
-        // jtfPostnaStevilka.setText(cmPostneStevilke.getSize() == 1 ? cmPostneStevilke.getElementAt(0).toString() : "");
-      }
-    }
-  }//GEN-LAST:event_cmPostneStevilkeContentsChanged
 
   private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foHisnaStevilkaFieldValueChanged
     getMIDs();
@@ -587,9 +511,6 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
     }
   }
 }//GEN-LAST:event_jtfPostaItemStateChanged
-
-  private void initDbModel() {
-  }
 
   private class ValidatorPosta implements Validator {
 
@@ -881,23 +802,6 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
   private com.openitech.db.components.JDbTextField jtfPostnaStevilka;
   private com.openitech.db.components.JDbTextField jtfUlice;
   // End of variables declaration//GEN-END:variables
-  private static class Naslov {
-
-    int hs_mid;
-    int hs_hs;
-    String hs_hd;
-    int ul_mid;
-    String ul_ime;
-    String ul_uime;
-    int pt_mid;
-    int pt_id;
-    String pt_ime;
-    String pt_uime;
-    int na_mid;
-    String na_ime;
-    String na_uime;
-  }
-
   private static class DbDataModel {
 
     public final DbDataSource dsUlice = new DbDataSource();
@@ -1264,47 +1168,6 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
       public DsFilterRPE(String replace) {
         super(replace);
       }
-    }
-
-    private Naslov getNaslovFromHS_MID(int hs_mid) {
-      try {
-        int param = 1;
-        long timer;
-
-        select_hs_mid.clearParameters();
-        select_hs_mid.setInt(param++, hs_mid);
-
-        timer = System.currentTimeMillis();
-        ResultSet rsSelect_hs_mid = select_hs_mid.executeQuery();
-        System.out.println("izbiranaslova:select_hs_mid: " + (System.currentTimeMillis() - timer) + "ms");
-
-
-
-        Naslov naslov = new Naslov();
-
-        if (rsSelect_hs_mid.next()) {
-          naslov.hs_mid = rsSelect_hs_mid.getInt("hs_mid");
-          naslov.hs_hs = rsSelect_hs_mid.getInt("hs");
-          naslov.hs_hd = rsSelect_hs_mid.getString("hd");
-          naslov.ul_mid = rsSelect_hs_mid.getInt("ul_mid");
-          naslov.ul_ime = rsSelect_hs_mid.getString("ul_ime");
-          naslov.ul_uime = rsSelect_hs_mid.getString("ul_uime");
-          naslov.pt_mid = rsSelect_hs_mid.getInt("pt_mid");
-          naslov.pt_id = rsSelect_hs_mid.getInt("pt_id");
-          naslov.pt_ime = rsSelect_hs_mid.getString("pt_ime");
-          naslov.pt_uime = rsSelect_hs_mid.getString("pt_uime");
-          naslov.na_mid = rsSelect_hs_mid.getInt("na_mid");
-          naslov.na_ime = rsSelect_hs_mid.getString("na_ime");
-          naslov.na_uime = rsSelect_hs_mid.getString("na_uime");
-
-        }
-        return naslov;
-      } catch (SQLException ex) {
-        Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
-        return null;
-      }
-
-
     }
   }
 }
