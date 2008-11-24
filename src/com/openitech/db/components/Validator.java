@@ -15,4 +15,5 @@ package com.openitech.db.components;
  */
 public interface Validator {
   public boolean isValid(Object value);
+  public void displayMessage();
 }

@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JOptionPane;
 import javax.swing.event.DocumentEvent;
 
 /**
@@ -415,7 +416,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
     if (isUpdating()) {
       if (!jtfNaselja.isFocusOwner()) {
-        jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
+        //jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
       }
     }
   }//GEN-LAST:event_cmNaseljaContentsChanged
@@ -516,12 +517,17 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
 
     @Override
     public boolean isValid(Object value) {
-      if (cmPoste.getSelectedIndex() != -1) {
-        if (((DbComboBoxEntry<Object, String>) cmPoste.getSelectedItem()).getValue("pt_id").toString().equalsIgnoreCase(value.toString())) {
+     // if (cmPoste.getSelectedIndex() != -1) {
+        if (cmPostneStevilke.getSelectedItem()==null || ((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString().equalsIgnoreCase(value.toString())) {
           return true;
         }
-      }
+     // }
       return false;
+    }
+
+    @Override
+    public void displayMessage() {
+      JOptionPane.showMessageDialog(jtfPosta, "Pošta ni veljavna.","Napaka",JOptionPane.ERROR_MESSAGE);
     }
   }
 

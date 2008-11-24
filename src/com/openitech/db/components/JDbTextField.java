@@ -56,7 +56,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
     try {
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
       tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
-      focusWeakListener = new FocusWeakListener(this, "this_focusGained", null);
+      focusWeakListener = new FocusWeakListener(this, "this_focusGained", "this_focusLost");
       documentWeakListener = new DocumentWeakListener(this);
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
@@ -70,6 +70,17 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
 
   public void this_focusGained(FocusEvent e) {
     EventQueue.invokeLater(selector);
+  }
+  
+  public void this_focusLost(FocusEvent e) {
+    if (validator != null && !validator.isValid(this.getText())) {
+      validator.displayMessage();
+        EventQueue.invokeLater(new Runnable() {
+          public void run() {
+            requestFocus();
+          }
+        });
+    }
   }
 
   public void setDataSource(DbDataSource dataSource) {

@@ -78,7 +78,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       actionWeakListener = new ActionWeakListener(this, "dataSource_actionPerformed");
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
       tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
-      focusWeakListener = new FocusWeakListener(this, "this_focusGained", null);
+      focusWeakListener = new FocusWeakListener(this, "this_focusGained", "this_focusLost");
       documentWeakListener = new DocumentWeakListener(this);
     //propertyChangeWeakListener = new PropertyChangeWeakListener(this);
     } catch (NoSuchMethodException ex) {
@@ -95,6 +95,17 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
 
   public void this_focusGained(FocusEvent e) {
     EventQueue.invokeLater(selector);
+  }
+  
+  public void this_focusLost(FocusEvent e) {
+    if (validator != null && !validator.isValid(this.getText())) {
+      validator.displayMessage();
+        EventQueue.invokeLater(new Runnable() {
+          public void run() {
+            requestFocus();
+          }
+        });
+    }
   }
 
   public void setFormat(Format format) {

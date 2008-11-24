@@ -61,7 +61,7 @@ public class FocusWeakListener extends WeakMethodReference<Object> implements Fo
     }
   }
 
-  public void focusLost(FocusEvent e) {
+  public void focusLost(FocusEvent e) {//mogoce
     try {
       if (this.isValid() && focusLostMethod!=null && this.isEnabled())
         focusLostMethod.invoke(this.get(), new Object[] {e});
