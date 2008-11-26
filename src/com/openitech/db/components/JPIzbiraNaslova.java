@@ -827,8 +827,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
     private PreparedStatement findUL_MID = null;
     private PreparedStatement findPT_MID = null;
     private PreparedStatement findNA_MID = null;
-    private PreparedStatement select_hs_mid = null;
-
+   
     private static String getDialect() {
       String dialect = "";
       try {
@@ -969,8 +968,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
         findUL_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_ul_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         findPT_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_pt_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         findNA_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_na_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        select_hs_mid = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "select_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-
+        
       } catch (NullPointerException ex) {
         if (dialect.length() > 0) {
           throw (IllegalStateException) (new IllegalStateException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
