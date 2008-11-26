@@ -13,7 +13,7 @@ import java.awt.event.FocusEvent;
  * <p>Copyright: Copyright (c) 2006</p>
  * <p>Company: Odprte Informacijske Tehnologije Uroš Trojar s.p.</p>
  * @author Uroš Trojar
- * @version $Revision: 1.1.1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class FocusWeakListener extends WeakMethodReference<Object> implements FocusListener {

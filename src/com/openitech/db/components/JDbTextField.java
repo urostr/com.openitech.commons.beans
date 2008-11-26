@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:35 AM
  *
- * $Revision: 1.6 $
+ * $Revision: 1.8 $
  */
 package com.openitech.db.components;
 

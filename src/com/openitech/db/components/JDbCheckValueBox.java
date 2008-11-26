@@ -125,8 +125,7 @@ public class JDbCheckValueBox extends JCheckBox implements ActionListener {
     try {
       if ((validator==null)||(validator!=null&&validator.isValid(this.isSelected()))) {
         if ((getModel() instanceof DefaultButtonModel)&&
-           (((DefaultButtonModel) getModel()).getGroup()==null)||
-            (((DefaultButtonModel) getModel()).getSelectedObjects().length==0)) {
+           (((DefaultButtonModel) getModel()).getGroup()==null)) {
           dbFieldObserver.updateValue(this.isSelected()?checkedValue:uncheckedValue);
         } else {
           if (this.isSelected()) {
