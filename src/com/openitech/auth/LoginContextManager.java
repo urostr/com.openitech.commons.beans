@@ -106,6 +106,17 @@ public class LoginContextManager extends PropertyChanges {
   }
   
   public void logon(Object source) throws LoginException {
+    try {
+      com.openitech.db.DbConnection dbConnection = com.openitech.db.ConnectionManager.getInstance();
+
+      name = name==null?dbConnection.getProperty(com.openitech.db.DbConnection.DB_USER, null):name;
+      String pwd = dbConnection.getProperty(com.openitech.db.DbConnection.DB_PASS, null);
+      if ((password==null)&&(pwd!=null)) {
+        password=pwd.toCharArray();
+      }
+    } catch (Exception ex) {
+      //ignore it
+    }
     if (name==null||
         password==null) {
       java.awt.Component owner = (source instanceof java.awt.Component)?((java.awt.Component) source):null;
