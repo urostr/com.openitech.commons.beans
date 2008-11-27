@@ -141,6 +141,9 @@
     <Component class="com.openitech.db.model.DbFieldObserver" name="foPostnaStevilka">
     </Component>
     <Component class="com.openitech.db.model.DbFieldObserver" name="foPosta">
+      <Events>
+        <EventHandler event="fieldValueChanged" listener="com.openitech.db.events.ActiveRowChangeListener" parameters="com.openitech.db.events.ActiveRowChangeEvent" handler="foPostaFieldValueChanged"/>
+      </Events>
     </Component>
   </NonVisualComponents>
   <AuxValues>

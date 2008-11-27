@@ -144,26 +144,26 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         try {
           int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-          if (hs_mid == -1 && jtfHisnaStevilka.getText() != null) {
+          if (hs_mid == -1 && jtfHisnaStevilka.getText() != null && !jtfHisnaStevilka.isFocusOwner()) {
             foHisnaStevilka.updateValue(jtfHisnaStevilka.getText());
           }
           int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
-          if (ul_mid == -1 && jtfUlice.getText() != null) {
+          if (ul_mid == -1 && jtfUlice.getText() != null && !jtfUlice.isFocusOwner()) {
             foUlica.updateValue(jtfUlice.getText());
           }
           int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
           foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
-          if (pt_mid == -1 && jtfPostnaStevilka.getText() != null) {
+          if (pt_mid == -1 && jtfPostnaStevilka.getText() != null && !jtfPostnaStevilka.isFocusOwner() && !jtfPosta.isFocusOwner()) {
             foPostnaStevilka.updateValue(jtfPostnaStevilka.getText());
             foPosta.updateValue(jtfPosta.getText() == null ? null : jtfPosta.getText());
           }
           int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
-          if (na_mid == -1 && jtfNaselja.getText() != null) {
+          if (na_mid == -1 && jtfNaselja.getText() != null && !jtfNaselja.isFocusOwner()) {
             foNaselje.updateValue(jtfNaselja.getText());
           }
-          
+
 
         } catch (SQLException ex) {
           Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
@@ -303,34 +303,42 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     });
 
     foHisnaStevilka.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
-      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foHisnaStevilkaFieldValueChanged(evt);
+      }
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
     foUlica.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
-      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foUlicaFieldValueChanged(evt);
+      }
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
     foNaselje.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
-      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foNaseljeFieldValueChanged(evt);
+      }
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
     foPostnaStevilkaMID.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
-      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foPostnaStevilkaMIDFieldValueChanged(evt);
+      }
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
+    });
+
+    foPosta.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+        foPostaFieldValueChanged(evt);
+      }
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
@@ -523,6 +531,11 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
     }
   }
 }//GEN-LAST:event_jtfPostaItemStateChanged
+
+private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foPostaFieldValueChanged
+// TODO add your handling code here:
+  getMIDs();
+}//GEN-LAST:event_foPostaFieldValueChanged
 
   private class ValidatorPosta implements Validator {
 
