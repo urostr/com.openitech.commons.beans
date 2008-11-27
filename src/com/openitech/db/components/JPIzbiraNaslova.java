@@ -144,15 +144,26 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         try {
           int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-
+          if (hs_mid == -1 && jtfHisnaStevilka.getText() != null) {
+            foHisnaStevilka.updateValue(jtfHisnaStevilka.getText());
+          }
           int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
-
+          if (ul_mid == -1 && jtfUlice.getText() != null) {
+            foUlica.updateValue(jtfUlice.getText());
+          }
           int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
           foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
-
+          if (pt_mid == -1 && jtfPostnaStevilka.getText() != null) {
+            foPostnaStevilka.updateValue(jtfPostnaStevilka.getText());
+            foPosta.updateValue(jtfPosta.getText() == null ? null : jtfPosta.getText());
+          }
           int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
+          if (na_mid == -1 && jtfNaselja.getText() != null) {
+            foNaselje.updateValue(jtfNaselja.getText());
+          }
+          
 
         } catch (SQLException ex) {
           Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
@@ -517,17 +528,17 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
 
     @Override
     public boolean isValid(Object value) {
-     // if (cmPoste.getSelectedIndex() != -1) {
-        if (cmPostneStevilke.getSelectedItem()==null || ((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString().equalsIgnoreCase(value.toString())) {
-          return true;
-        }
-     // }
+      // if (cmPoste.getSelectedIndex() != -1) {
+      if (cmPostneStevilke.getSelectedItem() == null || ((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString().equalsIgnoreCase(value.toString())) {
+        return true;
+      }
+      // }
       return false;
     }
 
     @Override
     public void displayMessage() {
-      JOptionPane.showMessageDialog(jtfPosta, "Pošta ni veljavna.","Napaka",JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(jtfPosta, "Pošta ni veljavna.", "Napaka", JOptionPane.ERROR_MESSAGE);
     }
   }
 
@@ -827,7 +838,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
     private PreparedStatement findUL_MID = null;
     private PreparedStatement findPT_MID = null;
     private PreparedStatement findNA_MID = null;
-   
+
     private static String getDialect() {
       String dialect = "";
       try {
@@ -968,7 +979,7 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
         findUL_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_ul_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         findPT_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_pt_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         findNA_MID = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "find_na_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        
+
       } catch (NullPointerException ex) {
         if (dialect.length() > 0) {
           throw (IllegalStateException) (new IllegalStateException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
