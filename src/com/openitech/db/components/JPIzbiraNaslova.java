@@ -433,11 +433,11 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }// </editor-fold>//GEN-END:initComponents
 
   private void cmNaseljaContentsChanged(javax.swing.event.ListDataEvent evt) {//GEN-FIRST:event_cmNaseljaContentsChanged
-    if (isUpdating()) {
-      if (!jtfNaselja.isFocusOwner()) {
-        jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
-      }
-    }
+//    if (isUpdating()) {
+//      if (!jtfNaselja.isFocusOwner()) {
+//        jtfNaselja.setText(cmNaselja.getSize() == 1 ? cmNaselja.getElementAt(0).toString() : "");
+//      }
+//    }
   }//GEN-LAST:event_cmNaseljaContentsChanged
 
   private void jtfNaseljaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfNaseljaFocusLost
