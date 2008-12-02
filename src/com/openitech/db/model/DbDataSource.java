@@ -6226,17 +6226,19 @@ public class DbDataSource implements DbNavigatorDataSource {
    * Holds value of property updateColumnNames.
    */
   private java.util.Set<String> updateColumnNames = new java.util.HashSet<String>();
+  private java.util.Set<String> updateColumnNamesCS = new java.util.HashSet<String>(); //case sensitive
 
   /**
    * Getter for property updateFieldNames.
    * @return Value of property updateFieldNames.
    */
-  private java.util.Set<String> getUpdateColumnNames() {
-    return this.updateColumnNames;
+  public java.util.Set<String> getUpdateColumnNames() {
+    return Collections.unmodifiableSet(updateColumnNamesCS);
   }
-
+  
   public void addUpdateColumnName(String... fieldNames) {
     for (String fieldName : fieldNames) {
+      updateColumnNamesCS.add(fieldName);
       updateColumnNames.add(fieldName);
       updateColumnNames.add(fieldName.toUpperCase());
     }
@@ -6244,6 +6246,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   public void removeUpdateColumnName(String... fieldNames) {
     for (String fieldName : fieldNames) {
+      updateColumnNamesCS.remove(fieldName);
       updateColumnNames.remove(fieldName);
       updateColumnNames.remove(fieldName.toUpperCase());
     }
