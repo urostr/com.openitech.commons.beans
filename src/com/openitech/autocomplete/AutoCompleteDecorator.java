@@ -1,5 +1,5 @@
 /*
- * $Id: AutoCompleteDecorator.java,v 1.4 2008/11/20 12:12:28 uros Exp $
+ * $Id: AutoCompleteDecorator.java,v 1.5 2008/12/03 12:56:50 uros Exp $
  *
  * Copyright 2004 Sun Microsystems, Inc., 4150 Network Circle,
  * Santa Clara, California 95054, U.S.A. All rights reserved.
