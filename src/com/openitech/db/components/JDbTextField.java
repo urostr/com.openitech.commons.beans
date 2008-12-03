@@ -524,7 +524,6 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
    *    preferred:   true
    *    description: Sets the selected item in the autocomplete popup.
    */
-  @Override
   public void setSelectedItem(Object anObject) {
     Object oldSelection = selectedItemReminder;
     Object objectToSelect = anObject;
@@ -541,7 +540,6 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
     }
   }
 
-  @Override
   public Object[] getSelectedObjects() {
     Object selectedObject = getSelectedItem();
     if (selectedObject == null) {

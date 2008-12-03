@@ -249,7 +249,6 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    * @param anItem the list object to select or <code>null</code>
    *        to clear the selection
    */
-  @Override
   public void setSelectedItem(Object anItem) {
     Object selectItem = null;
     if (anItem instanceof String) {
@@ -272,7 +271,6 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    *
    * @return The selected item or <code>null</code> if there is no selection
    */
-  @Override
   public Object getSelectedItem() {
     return ((selectedIndex<0)||(selectedIndex>=entries.size()))?selectedItem:entries.get(selectedIndex);
   }
@@ -283,7 +281,6 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    * @param index the requested index
    * @return the value at <code>index</code>
    */
-  @Override
   public Object getElementAt(int index) {
     return entries.get(index);
   }
@@ -294,7 +291,6 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    *
    * @return the length of the list
    */
-  @Override
   public int getSize() {
     return entries.size();
   }
@@ -308,7 +304,6 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    * @param e  a <code>ListDataEvent</code> encapsulating the
    *    event information
    */
-  @Override
   public void intervalRemoved(ListDataEvent e) {
     UpdateEntries();
   }
@@ -323,7 +318,6 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    * @param e  a <code>ListDataEvent</code> encapsulating the
    *    event information
    */
-  @Override
   public void intervalAdded(ListDataEvent e) {
     UpdateEntries();
   }
@@ -339,7 +333,6 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    * @param e  a <code>ListDataEvent</code> encapsulating the
    *    event information
    */
-  @Override
   public void contentsChanged(ListDataEvent e) {
     UpdateEntries();
   }
@@ -350,7 +343,6 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    * @param evt A PropertyChangeEvent object describing the event source
    *   	and the property that has changed.
    */
-  @Override
   public void propertyChange(PropertyChangeEvent evt) {
     UpdateEntries();
   }

@@ -86,7 +86,6 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
     return result;
   }
 
-  @Override
   public void updateRefreshSuspends(boolean isParentSelected) {
     if (getTabCount() > 0) {
       Component selected = getSelectedComponent();

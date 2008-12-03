@@ -39,6 +39,8 @@ public class JWProgressMonitor extends javax.swing.JDialog {
    */
   // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
   private void initComponents() {
+    java.awt.GridBagConstraints gridBagConstraints;
+
     jPanel1 = new javax.swing.JPanel();
     jlTitle = new javax.swing.JLabel();
     jlPage = new javax.swing.JLabel();
@@ -46,34 +48,29 @@ public class JWProgressMonitor extends javax.swing.JDialog {
 
     setAlwaysOnTop(true);
     setCursor(new java.awt.Cursor(java.awt.Cursor.WAIT_CURSOR));
+    jPanel1.setLayout(new java.awt.GridBagLayout());
+
     jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
     jlTitle.setText("Stran");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+    gridBagConstraints.insets = new java.awt.Insets(2, 2, 0, 0);
+    jPanel1.add(jlTitle, gridBagConstraints);
 
-    org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
-    jPanel1.setLayout(jPanel1Layout);
-    jPanel1Layout.setHorizontalGroup(
-      jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-      .add(jPanel1Layout.createSequentialGroup()
-        .addContainerGap()
-        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-          .add(org.jdesktop.layout.GroupLayout.TRAILING, jProgressBar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 270, Short.MAX_VALUE)
-          .add(jPanel1Layout.createSequentialGroup()
-            .add(jlTitle)
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-            .add(jlPage)))
-        .addContainerGap())
-    );
-    jPanel1Layout.setVerticalGroup(
-      jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-      .add(jPanel1Layout.createSequentialGroup()
-        .addContainerGap()
-        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-          .add(jlTitle)
-          .add(jlPage))
-        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-        .add(jProgressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-    );
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+    gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.insets = new java.awt.Insets(2, 2, 0, 2);
+    jPanel1.add(jlPage, gridBagConstraints);
+
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
+    jPanel1.add(jProgressBar, gridBagConstraints);
+
     getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
 
     pack();

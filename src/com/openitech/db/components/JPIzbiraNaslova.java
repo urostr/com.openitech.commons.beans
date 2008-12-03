@@ -117,8 +117,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         if (event.isOnEventQueue()) {
           try {
             EventQueue.invokeAndWait(new Runnable() {
-
-              @Override
               public void run() {
                 lockAndGet();
               }
@@ -140,7 +138,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     }
 
     private void get() {
-      if (isUpdating() && !jtfHisnaStevilka.getText().trim().isEmpty()) {
+      if (isUpdating() && !(jtfHisnaStevilka.getText().trim().length()==0)) {
         try {
           int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
@@ -539,7 +537,6 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
 
   private class ValidatorPosta implements Validator {
 
-    @Override
     public boolean isValid(Object value) {
       // if (cmPoste.getSelectedIndex() != -1) {
       if (cmPostneStevilke.getSelectedItem() == null || ((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString().equalsIgnoreCase(value.toString())) {
@@ -549,7 +546,6 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
       return false;
     }
 
-    @Override
     public void displayMessage() {
       JOptionPane.showMessageDialog(jtfPosta, "Pošta ni veljavna.", "Napaka", JOptionPane.ERROR_MESSAGE);
     }

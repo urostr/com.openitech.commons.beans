@@ -250,7 +250,6 @@ public class AutoCompleteDecorator {
     // Changing the l&f can change the combobox' editor which in turn
     // would not be autocompletion-enabled. The new editor needs to be set-up.
     comboBox.addPropertyChangeListener("editor", new AutoCompletePropertyChangeListener() {
-      @Override
       public void propertyChange(PropertyChangeEvent e) {
         ComboBoxEditor editor = (ComboBoxEditor) e.getOldValue();
         if (editor != null && editor.getEditorComponent() != null) {
