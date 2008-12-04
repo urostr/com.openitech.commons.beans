@@ -10,13 +10,13 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
+import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.ref.events.ActionWeakListener;
-import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -24,13 +24,12 @@ import java.util.logging.Logger;
 import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.event.ListDataEvent;
-import javax.swing.text.JTextComponent;
 
 /**
  *
  * @author tomaz
  */
-public class JDbComboBox extends JComboBox {
+public class JDbComboBox extends JComboBox implements FieldObserver {
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;

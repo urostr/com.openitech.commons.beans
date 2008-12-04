@@ -311,6 +311,13 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
+  @Override
+  public void reloadDataSources() {
+    if (!isDisabled()) {
+      super.reloadDataSources();
+    }
+  }
+
   public void setValue(String value) {
     throw new UnsupportedOperationException("Can't set value");
   }

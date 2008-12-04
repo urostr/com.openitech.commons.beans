@@ -8,6 +8,7 @@
 
 package com.openitech.db.components;
 
+import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
@@ -18,7 +19,7 @@ import javax.swing.JCheckBox;
  *
  * @author uros
  */
-public class JDbStatusBox extends JCheckBox {
+public class JDbStatusBox extends JCheckBox implements FieldObserver {
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;

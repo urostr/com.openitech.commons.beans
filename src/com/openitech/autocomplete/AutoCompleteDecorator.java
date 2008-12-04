@@ -1,5 +1,5 @@
 /*
- * $Id: AutoCompleteDecorator.java,v 1.5 2008/12/03 12:56:50 uros Exp $
+ * $Id: AutoCompleteDecorator.java,v 1.6 2008/12/04 15:34:35 uros Exp $
  *
  * Copyright 2004 Sun Microsystems, Inc., 4150 Network Circle,
  * Santa Clara, California 95054, U.S.A. All rights reserved.
@@ -21,7 +21,8 @@
 package com.openitech.autocomplete;
 
 import com.openitech.autocomplete.AutoCompleteTextComponentPopup;
-import com.openitech.db.model.DbComboBoxModel;
+import com.openitech.db.FieldObserver;
+import com.openitech.db.model.DbDataSource;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusListener;
@@ -29,8 +30,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.sql.SQLException;
 import java.util.List;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.ComboBoxEditor;
@@ -38,7 +42,6 @@ import javax.swing.ComboBoxModel;
 import javax.swing.InputMap;
 import javax.swing.JComboBox;
 import javax.swing.JList;
-import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.text.BadLocationException;
@@ -250,6 +253,7 @@ public class AutoCompleteDecorator {
     // Changing the l&f can change the combobox' editor which in turn
     // would not be autocompletion-enabled. The new editor needs to be set-up.
     comboBox.addPropertyChangeListener("editor", new AutoCompletePropertyChangeListener() {
+
       public void propertyChange(PropertyChangeEvent e) {
         ComboBoxEditor editor = (ComboBoxEditor) e.getOldValue();
         if (editor != null && editor.getEditorComponent() != null) {
@@ -411,11 +415,11 @@ public class AutoCompleteDecorator {
           // don't popup if the combobox isn't visible anyway
           if (textComponent.isDisplayable() && !autoCompletePopUp.isVisible()) {
             // don't popup when the user hits shift,ctrl or alt
-            if (keyCode == keyEvent.VK_SHIFT || keyCode == keyEvent.VK_CONTROL || keyCode == keyEvent.VK_ALT) {
+            if (keyCode == KeyEvent.VK_SHIFT || keyCode == KeyEvent.VK_CONTROL || keyCode == KeyEvent.VK_ALT) {
               return;
             // don't popup when the user hits escape (see issue #311)
             }
-            if (keyCode == keyEvent.VK_ESCAPE) {
+            if (keyCode == KeyEvent.VK_ESCAPE) {
               return;
             }
             if (autoCompleteModel.getSize() > 0) {
@@ -423,7 +427,7 @@ public class AutoCompleteDecorator {
             }
           }
           //confirm selection and close popup
-          if (autoCompletePopUp.isVisible() && (keyCode == keyEvent.VK_ENTER)) {
+          if (autoCompletePopUp.isVisible() && (keyCode == KeyEvent.VK_ENTER)) {
             int caret = textComponent.getCaretPosition();
             textComponent.setText(autoCompletePopUp.getSelectedText());
             int length = textComponent.getText().length();
@@ -439,24 +443,39 @@ public class AutoCompleteDecorator {
       removeFocusListener(textComponent);
 
       final FocusListener focusListener = new AutoCompleteFocusAdapter() {
+
         /**
          * Invoked when a component loses the keyboard focus.
          */
         @Override
         public void focusLost(java.awt.event.FocusEvent evt) {
-          if ((autoCompleteModel.getSize() > 0) &&
-              (autoCompleteModel.getElementAt(0).toString().toLowerCase().startsWith(textComponent.getText().toLowerCase()))
-              ) {
-            if (autoCompleteModel.getSelectedItem() == null) {
-              autoCompletePopUp.setListSelection(0);
+          boolean canUpdate = false;
+          if (textComponent instanceof FieldObserver) {
+            DbDataSource dataSource = ((FieldObserver) textComponent).getDataSource();
+            try {
+              canUpdate = (dataSource == null) || dataSource.rowInserted() || dataSource.rowUpdated();
+            } catch (SQLException ex) {
+              Logger.getLogger(AutoCompleteDecorator.class.getName()).log(Level.SEVERE, null, ex);
+              canUpdate = false;
             }
+          } else {
+            canUpdate = true;
+          }
+          if (canUpdate) {
+            String text;
+            if ((autoCompleteModel.getSize() > 0) &&
+                    ((text=autoCompleteModel.getElementAt(0).toString()).toLowerCase().startsWith(textComponent.getText().toLowerCase()))) {
+              if (autoCompleteModel.getSelectedItem() == null) {
+                autoCompletePopUp.setListSelection(0);
+              }
 
-            int caret = textComponent.getCaretPosition();
-            ((AutoCompleteTextComponent) textComponent).setSelectedItem(autoCompletePopUp.getSelectedText());
-            textComponent.setText(autoCompletePopUp.getSelectedText());
-            int length = textComponent.getText().length();
-            textComponent.getCaret().setDot(length);
-            textComponent.getCaret().moveDot(Math.min(caret, length));
+              int caret = textComponent.getCaretPosition();
+              ((AutoCompleteTextComponent) textComponent).setSelectedItem(text);
+              textComponent.setText(text);
+              int length = textComponent.getText().length();
+              textComponent.getCaret().setDot(length);
+              textComponent.getCaret().moveDot(Math.min(caret, length));
+            }
           }
           autoCompletePopUp.hide();
         }

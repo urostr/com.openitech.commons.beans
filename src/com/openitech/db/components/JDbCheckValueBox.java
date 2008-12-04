@@ -10,6 +10,7 @@ package com.openitech.db.components;
 
 import javax.swing.DefaultButtonModel;
 import com.openitech.Settings;
+import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
@@ -26,7 +27,7 @@ import javax.swing.JCheckBox;
  *
  * @author uros
  */
-public class JDbCheckValueBox extends JCheckBox implements ActionListener {
+public class JDbCheckValueBox extends JCheckBox implements ActionListener, FieldObserver {
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;

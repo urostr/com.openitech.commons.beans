@@ -9,6 +9,7 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
+import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
@@ -24,7 +25,7 @@ import javax.swing.JLabel;
  *
  * @author uros
  */
-public class JDbLabel extends JLabel {
+public class JDbLabel extends JLabel implements FieldObserver {
   DbFieldObserver dbFieldObserver = new DbFieldObserver();
   Format format = null;
   

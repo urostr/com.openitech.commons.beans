@@ -11,6 +11,7 @@ package com.openitech.db.components;
 
 import com.openitech.Settings;
 import com.openitech.crypto.Encoder;
+import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
@@ -27,7 +28,7 @@ import javax.swing.event.DocumentListener;
  *
  * @author uros
  */
-public class JDbPasswordField extends JPasswordField implements DocumentListener {
+public class JDbPasswordField extends JPasswordField implements DocumentListener, FieldObserver {
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;

@@ -10,6 +10,7 @@ package com.openitech.db.components;
 import com.openitech.Settings;
 import com.openitech.autocomplete.AutoCompleteDecorator;
 import com.openitech.autocomplete.AutoCompleteTextComponent;
+import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbComboBoxModel;
@@ -41,6 +42,7 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.EventListenerList;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.PopupMenuEvent;
@@ -57,7 +59,7 @@ import javax.swing.text.NumberFormatter;
  *
  * @author uros
  */
-public class JDbFormattedTextField extends JFormattedTextField implements DocumentListener, ListDataListener, AutoCompleteTextComponent {
+public class JDbFormattedTextField extends JFormattedTextField implements DocumentListener, ListDataListener, AutoCompleteTextComponent, FieldObserver {
 
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
@@ -71,6 +73,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   //private transient PropertyChangeWeakListener propertyChangeWeakListener;
   private transient FocusWeakListener focusWeakListener;
   private static final Dimension MINIMUM_SIZE = (new JTextField()).getMinimumSize();
+  private java.awt.Color c_default_bg;
 
   /** Creates a new instance of JDbFormattedTextField */
   public JDbFormattedTextField() {
@@ -96,15 +99,22 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   public void this_focusGained(FocusEvent e) {
     EventQueue.invokeLater(selector);
   }
-  
+
   public void this_focusLost(FocusEvent e) {
-    if (validator != null && !validator.isValid(this.getText())) {
+    boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
+    if (valid && c_default_bg != null) {
+      super.setBackground(c_default_bg);
+    } else if (!valid) {
+      super.setBackground(java.awt.Color.yellow);
+    }
+    if (!valid) {
       validator.displayMessage();
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
-            requestFocus();
-          }
-        });
+      EventQueue.invokeLater(new Runnable() {
+
+        public void run() {
+          requestFocus();
+        }
+      });
     }
   }
 
@@ -145,6 +155,12 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
 
     setFormatterFactory(new DefaultFormatterFactory(displayFormatter,
             displayFormatter, editFormatter));
+  }
+
+  @Override
+  public void setBackground(java.awt.Color bg) {
+    c_default_bg = bg;
+    super.setBackground(bg);
   }
 
   public void setDataSource(DbDataSource dataSource) {
@@ -250,6 +266,12 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       } else {
         getFieldValue(true);
       }
+      boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
+      if (valid && c_default_bg != null) {
+        super.setBackground(c_default_bg);
+      } else if (!valid) {
+        super.setBackground(java.awt.Color.yellow);
+      }
     } finally {
       //propertyChangeWeakListener.setEnabled(true);
       documentWeakListener.setEnabled(true);
@@ -265,11 +287,31 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     }
   }
 
+  private boolean isValid(Object value) {
+    DbDataSource dataSource = getDataSource();
+    if ((validator == null) || (dataSource == null)) {
+      return true;
+    } else {
+      try {
+        return (dataSource.rowUpdated() || dataSource.rowInserted())?validator.isValid(value):true;
+      } catch (SQLException ex) {
+        Logger.getLogger(JDbTextField.class.getName()).log(Level.SEVERE, null, ex);
+        return validator.isValid(value);
+      }
+    }
+  }
+
   private void updateColumn() {
     if (!dbFieldObserver.isUpdatingFieldValue()) {
       activeRowChangeWeakListener.setEnabled(false);
       try {
-        if ((validator == null) || (validator != null && validator.isValid(getFormatter() == null ? this.getText() : this.getValue()))) {
+        boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
+        if (valid && c_default_bg != null) {
+          super.setBackground(c_default_bg);
+        } else if (!valid) {
+          super.setBackground(java.awt.Color.yellow);
+        }
+        if (valid) {
           dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : this.getValue());
         }
       } catch (SQLException ex) {
@@ -744,7 +786,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       int i, c;
       Object obj;
 
-      for (i = 0      ,
+      for (i = 0                  ,
         c = autoCompleteModel.getSize();
          i < c;i++ ) {
             obj = autoCompleteModel.getElementAt(i);
@@ -780,6 +822,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       return result;
     }
   }
+
   /**
    * Sets the selected item in the autocomplete display area to the object in
    * the argument.
@@ -799,7 +842,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    *    description: Sets the selected item in the autocomplete popup.
    */
   public void setSelectedItem(Object anObject) {
-    Object oldSelection = selectedItemReminder;
+    Object oldSelection = autoCompleteModel.getSelectedItem();
     Object objectToSelect = anObject;
     if (oldSelection == null || !oldSelection.equals(anObject)) {
       autoCompleteModel.setSelectedItem(objectToSelect);
@@ -812,7 +855,6 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       }
     }
   }
-
   /**
    * This protected field is implementation specific. Do not access directly
    * or override.
@@ -824,11 +866,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    * do not call or override.
    */
   public void contentsChanged(ListDataEvent e) {
-    Object oldSelection = selectedItemReminder;
-    Object newSelection = autoCompleteModel.getSelectedItem();
-    if (oldSelection == null || !oldSelection.equals(newSelection)) {
-      selectedItemChanged();
-    }
+    setSelectedItem(getText());
   }
 
   /**
@@ -836,9 +874,8 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    * do not call or override.
    */
   public void intervalAdded(ListDataEvent e) {
-    if (selectedItemReminder != autoCompleteModel.getSelectedItem()) {
-      selectedItemChanged();
-    }
+    setSelectedItem(getText());
+
   }
 
   /**
@@ -846,7 +883,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    * do not call or override.
    */
   public void intervalRemoved(ListDataEvent e) {
-    contentsChanged(e);
+    setSelectedItem(getText());
   }
 
   /**
