@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:35 AM
  *
- * $Revision: 1.10 $
+ * $Revision: 1.11 $
  */
 package com.openitech.db.components;
 
@@ -161,16 +161,17 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
 
   private boolean isValid(Object value) {
     DbDataSource dataSource = getDataSource();
-    if ((validator == null) || (dataSource==null)) {
+    if (validator == null) {
       return true;
-    } else {
+    } else if (dataSource != null){
       try {
         return (dataSource.rowUpdated() || dataSource.rowInserted())?validator.isValid(value):true;
       } catch (SQLException ex) {
         Logger.getLogger(JDbTextField.class.getName()).log(Level.SEVERE, null, ex);
         return validator.isValid(value);
       }
-    }
+    } else
+      return validator.isValid(value);
   }
 
   private void updateColumn() {
