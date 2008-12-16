@@ -4421,6 +4421,10 @@ public class DbDataSource implements DbNavigatorDataSource {
         return readOnly || DataSourceEvent.isRefreshing(this);
     }
 
+    public boolean isUpdating() throws SQLException {
+      return rowInserted()||rowUpdated();
+    }
+
     public void updateRefreshPending() {
         boolean refreshPending = DataSourceEvent.isRefreshing(this);
         if (this.refreshPending != refreshPending) {
