@@ -32,6 +32,9 @@ public class Equals {
       else if (a instanceof String || b instanceof String) {
         return (a.toString()).equals(b.toString());
       }
+      else if (a instanceof Number && b instanceof Boolean) {
+        return ((Comparable) a).compareTo(((Boolean) b).booleanValue()?1:0)==0;
+      }
       else if (a instanceof Comparable && b instanceof Comparable)
         return ((Comparable) a).compareTo(b)==0;
       else 

@@ -186,17 +186,16 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver {
             case Types.DOUBLE:
             case Types.FLOAT:
             case Types.NUMERIC:
-              BigDecimal nvalue = dataSource.getBigDecimal(columnName);
-              result=!dataSource.wasNull();
-              if (result) //ni bil null
-                result=!nvalue.equals(BigDecimal.ZERO);
-              break;
             case Types.INTEGER:
             case Types.BIT:
-              int ivalue = dataSource.getInt(columnName);
-              result=!dataSource.wasNull();
-              if (result) //ni bil null
-                result=ivalue!=0;
+              Object value = dataSource.getObject(columnName);
+              if (value instanceof Boolean) {
+                result = (Boolean) value;
+              } else {
+                result=!dataSource.wasNull();
+                if (result) //ni bil null
+                  result=Equals.equals(value, 0);
+              }
               break;
             case Types.BOOLEAN:
               result=dataSource.getBoolean(columnName);
@@ -216,7 +215,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver {
           }
         }
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '"+columnName+"' from the dataSource '"+dataSource.getSelectSql()+"'. ["+ex.getMessage()+"]");
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '"+columnName+"' from the dataSource '"+dataSource.getSelectSql()+"'. ["+ex.getMessage()+"]", ex);
         result = false;
       }
       //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
@@ -268,7 +267,10 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver {
             case Types.FLOAT:
             case Types.INTEGER:
             case Types.NUMERIC:
-              dataSource.updateInt(columnName, value?1:0);
+              if (dataSource.getObject(columnName) instanceof Boolean)
+                dataSource.updateBoolean(columnName, value);
+              else
+                dataSource.updateInt(columnName, value?1:0);
               break;
             case Types.BOOLEAN:
               dataSource.updateBoolean(columnName, value);
