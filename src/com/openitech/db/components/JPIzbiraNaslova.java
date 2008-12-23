@@ -855,14 +855,9 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     private PreparedStatement findNA_MID = null;
 
     private static String getDialect() {
-      String dialect = "";
-      try {
-        String url = ConnectionManager.getInstance().getProperty("db.jdbc.net").toLowerCase();
-        if (url.startsWith("jdbc:jtds:sqlserver:")) {
-          dialect = "mssql/";
-        }
-      } catch (NullPointerException ex) {
-        //ignore
+      String dialect = ConnectionManager.getInstance().getDialect();
+      if (dialect.length()>0&&!dialect.endsWith("/")) {
+        dialect = dialect+"/";
       }
       return dialect;
     }
