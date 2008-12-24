@@ -6,9 +6,11 @@
 package com.openitech.sql.util;
 
 import com.openitech.db.ConnectionManager;
-import com.openitech.db.model.DbDataSource;
+import com.openitech.db.events.StoreUpdatesEvent;
+import com.openitech.util.Equals;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -59,19 +61,78 @@ public abstract class SqlUtilities {
   }
 
   public int executeUpdate(java.sql.PreparedStatement statement,
+                                java.util.Map<Field,Object> columnValues,
+                                Field... fields) throws SQLException {
+    return executeUpdate(statement, null, columnValues==null?new java.util.HashMap<Field,Object>():columnValues, fields);
+  }
+  public int executeUpdate(java.sql.PreparedStatement statement,
                                   com.openitech.db.model.DbDataSource source,
-                                  String... fields) throws SQLException {
-    int pos = 1;
+                                  String... fieldNames) throws SQLException {
+    Field[] fields = new Field[fieldNames.length];
+    for (int pos=0; pos<fields.length; pos++) {
+      fields[pos] = new Field(fieldNames[pos],  source.getType(fieldNames[pos]));
+    }
+    return executeUpdate(statement, source, null, fields);
+  }
 
+  private int executeUpdate(java.sql.PreparedStatement statement,
+                                  com.openitech.db.model.DbDataSource source,
+                                  java.util.Map<Field,Object> columnValues,
+                                  Field... fields) throws SQLException {
+    statement.clearParameters();
     System.out.println("Setting parameters");
-    for (String field:fields) {
-      int type = source.getType(field);
-      Object value = source.getObject(field);
-      System.out.println(pos+":"+field+":"+type+":"+(source.wasNull()?"null":value.toString()));
-      if (source.wasNull()) {
-        statement.setNull(pos++, type);
+    for (int pos=1; pos<=fields.length; pos++) {
+      Field field = fields[pos-1];
+      String fieldName = field.name;
+      int type = field.type;
+      Object value;
+      boolean wasNull = true;
+
+      if (source!=null) {
+        value = source.getObject(fieldName);
+        wasNull = source.wasNull();
       } else {
-        statement.setObject(pos++, value, type);
+        value = columnValues.get(field);
+        wasNull = value == null;
+      }
+      
+      System.out.println(pos+":"+fieldName+":"+type+":"+(wasNull?"null":value.toString()));
+      if (wasNull) {
+        statement.setNull(pos, type);
+      } else {
+          switch (type) {
+            case Types.DECIMAL:
+            case Types.DOUBLE:
+            case Types.FLOAT:
+              if (value instanceof Number) {
+                statement.setDouble(pos, ((Number) value).doubleValue());
+              } else {
+                statement.setDouble(pos, Double.parseDouble(value.toString()));
+              }
+              break;
+            case Types.BIT:
+            case Types.INTEGER:
+              if (value instanceof Number) {
+                statement.setInt(pos, ((Number) value).intValue()); break;
+              } else {
+                statement.setInt(pos, Integer.parseInt(value.toString()));
+              }
+              break;
+            case Types.BOOLEAN:
+              if (value instanceof Number) {
+                statement.setBoolean(pos, Equals.equals(value, 1));
+              } else if (value instanceof String) {
+                String svalue = value.toString().trim().toUpperCase();
+                statement.setBoolean(pos, svalue.length()>0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F")));
+              }
+              break;
+            case Types.CHAR:
+            case Types.VARCHAR:
+              statement.setString(pos, value.toString());
+              break;
+            default:
+              statement.setObject(pos, value, type);
+          }
       }
     }
 
@@ -81,7 +142,7 @@ public abstract class SqlUtilities {
   public boolean beginTransaction() throws SQLException {
     Connection connection = ConnectionManager.getInstance().getConnection();
 
-    if (!connection.getAutoCommit()) {
+    if (connection.getAutoCommit()) {
       autocommit = connection.getAutoCommit();
 
       connection.setAutoCommit(false);
@@ -105,5 +166,48 @@ public abstract class SqlUtilities {
     }
   }
 
-  public abstract long getLastSessionIdentity() throws SQLException;
+  public Map<Field,Object> getColumnValues(StoreUpdatesEvent event) throws SQLException {
+    Map<SqlUtilities.Field, Object> columnValues = new HashMap<SqlUtilities.Field, Object>();
+    for (Map.Entry<String,Object> entry:event.getColumnValues().entrySet()) {
+      columnValues.put(new SqlUtilities.Field(entry.getKey(), event.getSource().getType(entry.getKey())), entry.getValue());
+    }
+
+    return columnValues;
+  }
+
+  public abstract long getLastIdentity() throws SQLException;
+  public abstract long getScopeIdentity() throws SQLException;
+  public abstract long getCurrentIdentity(String tableName) throws SQLException;
+
+  public static class Field {
+    String name;
+    int type;
+
+    public Field(String name, int type) {
+      this.name = name;
+      this.type = type;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final Field other = (Field) obj;
+      if ((this.name == null) ? (other.name != null) : !this.name.equalsIgnoreCase(other.name)) {
+        return false;
+      }
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 7;
+      hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0);
+      return hash;
+    }
+  }
 }
