@@ -3601,7 +3601,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                 insertStatement.setObject(p++, scale.x, scale.scale);
               }
             } else {
-              insertStatement.setObject(p++, entry.getValue());
+              insertStatement.setObject(p++, entry.getValue(), getType(entry.getKey()));
 
             }
             oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
