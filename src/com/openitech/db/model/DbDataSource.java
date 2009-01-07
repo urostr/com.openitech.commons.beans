@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.43 $
+ * $Revision: 1.44 $
  */
 package com.openitech.db.model;
 
@@ -4541,7 +4541,9 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
 
     public boolean hasChanged(int columnIndex) throws SQLException {
-        if (wasUpdated(columnIndex)) {
+        if (inserting)
+          return true;
+        else if (wasUpdated(columnIndex)) {
             return !com.openitech.util.Equals.equals(getOpenSelectResultSet().getObject(columnIndex), getObject(columnIndex));
         } else {
             return false;
@@ -4549,11 +4551,21 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
 
     public boolean hasChanged(String columnName) throws SQLException {
-        if (wasUpdated(columnName)) {
+        if (inserting)
+          return true;
+        else if (wasUpdated(columnName)) {
             return !com.openitech.util.Equals.equals(getOpenSelectResultSet().getObject(columnName), getObject(columnName));
         } else {
             return false;
         }
+    }
+
+    public Object getOldValue(int columnIndex) throws SQLException {
+      return getOpenSelectResultSet().getObject(columnIndex);
+    }
+
+    public Object getOldValue(String columnName) throws SQLException {
+      return getOpenSelectResultSet().getObject(columnName);
     }
 
     public boolean wasUpdated(int columnIndex) throws SQLException {
