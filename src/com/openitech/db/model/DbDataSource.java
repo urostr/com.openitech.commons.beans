@@ -3517,205 +3517,230 @@ public class DbDataSource implements DbNavigatorDataSource {
         storeUpdatesEvent.getSource().doStoreUpdates(storeUpdatesEvent.isInsert(), columnValues, oldValues, storeUpdatesEvent.getRow());
     }
 
-    private void doStoreUpdates(boolean insert, Map<String, Object> columnValues, Map<Integer, Object> oldValues, Integer row) throws SQLException {
-        Logger.getLogger(Settings.LOGGER).entering(this.getClass().toString(), "storeUpdates", insert);
-        Scale scaledValue;
-        Entry<String, Object> entry;
+  private void doStoreUpdates(boolean insert, Map<String, Object> columnValues, Map<Integer, Object> oldValues, Integer row) throws SQLException {
+    Logger.getLogger(Settings.LOGGER).entering(this.getClass().toString(), "storeUpdates", insert);
+    Scale scaledValue;
+    Entry<String, Object> entry;
 
-        int columnCount = getColumnCount();
+    int columnCount = getColumnCount();
 
-        String delimiterLeft = getDelimiterLeft();
-        String delimiterRight = getDelimiterRight();
+    String delimiterLeft = getDelimiterLeft();
+    String delimiterRight = getDelimiterRight();
 
-        if (insert) {
-            String schemaName = null;
-            String tableName = updateTableName;
+    if (insert) {
+      String schemaName = null;
+      String tableName = updateTableName;
 
-            StringBuffer columns = new StringBuffer();
-            StringBuffer values = new StringBuffer();
+      StringBuffer columns = new StringBuffer();
+      StringBuffer values = new StringBuffer();
 
-            ResultSetMetaData metaData = getMetaData();
-            List<String> skipValues = new ArrayList<String>();
+      ResultSetMetaData metaData = getMetaData();
+      List<String> skipValues = new ArrayList<String>();
 
-            int columnIndex;
+      int columnIndex;
 
-            for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-                entry = i.next();
-                columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
-                if (!isSingleTableSelect()) {
-                    if (schemaName == null) {
-                        schemaName = metaData.getSchemaName(columnIndex);
-                    } else if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex))) {
-                        throw new SQLException("Insert on different schemas not supported.");
-                    }
-                    if (tableName == null) {
-                        tableName = metaData.getTableName(columnIndex);
-                    } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
-                        if (updateTableName == null) {
-                            throw new SQLException("Insert on different tables not supported.");
-                        } else if (!updateColumnNames.contains(entry.getKey())) {
-                            skipValues.add(entry.getKey());
-                            continue;
-                        }
-                    }
-                }
-                if (entry.getValue() != null || metaData.isNullable(columnIndex) != ResultSetMetaData.columnNoNulls) {
-                    columns.append(columns.length() > 0 ? "," : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight);
-                    values.append(values.length() > 0 ? "," : "").append("?");
-                } else {
-                    skipValues.add(entry.getKey());
-                    Logger.getLogger(Settings.LOGGER).info("Skipping null value: '" + entry.getKey() + "'");
-                }
+      for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+        entry = i.next();
+        columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
+        if (!isSingleTableSelect()) {
+          if (schemaName == null) {
+            schemaName = metaData.getSchemaName(columnIndex);
+          } else if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex))) {
+            throw new SQLException("Insert on different schemas not supported.");
+          }
+          if (tableName == null) {
+            tableName = metaData.getTableName(columnIndex);
+          } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
+            if (updateTableName == null) {
+              throw new SQLException("Insert on different tables not supported.");
+            } else if (!updateColumnNames.contains(entry.getKey())) {
+              skipValues.add(entry.getKey());
+              continue;
             }
-
-            StringBuffer sql = new StringBuffer();
-
-            sql.append("INSERT INTO ");
-            if (schemaName.length() > 0) {
-                sql.append(delimiterLeft).append(schemaName).append(delimiterRight).append(".");
-            }
-            sql.append(delimiterLeft).append(tableName).append(delimiterRight).append(" (").append(columns).append(") ");
-            sql.append("VALUES (").append(values).append(")");
-
-            PreparedStatement insertStatement = getConnection().prepareStatement(sql.toString());
-            try {
-                ParameterMetaData parameterMetaData = insertStatement.getParameterMetaData();
-
-                int p = 1;
-
-                for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-                    entry = i.next();
-                    if (skipValues.indexOf(entry.getKey()) == -1) {
-                        /*if (entry.getValue()==null)
-                        insertStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                        else//*/
-                        insertStatement.setObject(p++, entry.getValue());
-                        oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-                    }
-                }
-                Logger.getLogger(Settings.LOGGER).info("Executing insert : '" + sql + "'");
-                insertStatement.executeUpdate();
-            } finally {
-                insertStatement.close();
-            }
-        } else {
-            ResultSetMetaData metaData = selectResultSet.getMetaData();
-            List<String> skipColumns = new ArrayList<String>();
-            for (int c = 1; c <= columnCount; c++) {
-                if (updateTableName == null || updateColumnNames.contains(metaData.getColumnName(c)) || (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) {
-                    try {
-                        Object value = selectResultSet.getObject(c);
-                        oldValues.put(c, value);
-                    } catch (Exception err) {
-                        Logger.getLogger(Settings.LOGGER).info("Skipping illegal value for: '" + metaData.getColumnName(c) + "'");
-                        skipColumns.add(metaData.getColumnName(c));
-                    }
-                } else {
-                    skipColumns.add(metaData.getColumnName(c));
-                }
-            }
-            PrimaryKey key;
-            for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
-                key = pk.next();
-                ResultSet updateResultSet = key.getUpdateResultSet(getOpenSelectResultSet());
-
-                if (updateResultSet != null) {
-                    try {
-                        for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-                            entry = i.next();
-                            if (skipColumns.indexOf(entry.getKey()) == -1) {
-                                if (key.isUpdateColumn(entry.getKey())) {
-                                    if (entry.getValue() instanceof Scale) {
-                                        scaledValue = (Scale) entry.getValue();
-                                        if (scaledValue.method.equals("updateAsciiStream")) {
-                                            updateResultSet.updateAsciiStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                                        } else if (scaledValue.method.equals("updateBinaryStream")) {
-                                            updateResultSet.updateBinaryStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                                        } else if (scaledValue.method.equals("updateCharacterStream")) {
-                                            updateResultSet.updateCharacterStream(entry.getKey(), (Reader) scaledValue.x, scaledValue.scale);
-                                        } else if (scaledValue.method.equals("updateObject")) {
-                                            updateResultSet.updateObject(entry.getKey(), scaledValue.x, scaledValue.scale);
-                                        }
-                                    } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
-                                        if (entry.getValue() instanceof java.util.Date) {
-                                            updateResultSet.updateDate(entry.getKey(), new java.sql.Date(((java.util.Date) entry.getValue()).getTime()));
-                                        } else if (entry.getValue() == null) {
-                                            updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                                        } else {
-                                            try {
-                                                updateResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
-                                            } catch (ParseException ex) {
-                                                updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                                            }
-                                        }
-                                    } else {
-                                        updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                                    }
-                                    cache.remove(new CacheKey(row.intValue(), entry.getKey()));
-                                    oldValues.put(columnMapping.checkedGet(entry.getKey()), updateResultSet.getObject(entry.getKey()));
-                                }
-                            }
-                        }
-
-                        updateResultSet.updateRow();
-                    } finally {
-                        updateResultSet.close();
-                    }
-                } else {
-                    int updateCount = 0;
-                    StringBuffer set = new StringBuffer(540);
-                    for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-                        entry = i.next();
-                        if ((skipColumns.indexOf(entry.getKey()) == -1) && (metaData.getTableName(columnMapping.checkedGet(entry.getKey()).intValue()).equalsIgnoreCase(key.table))) {
-                            set.append(set.length() > 0 ? ", " : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight).append(" = ?");
-                            updateCount++;
-                        }
-                    }
-
-                    if (updateCount > 0) {
-                        StringBuffer where = new StringBuffer();
-
-                        for (String c : key.getColumnNames()) {
-                            where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
-                        }
-                        String sql = "UPDATE " + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
-
-                        PreparedStatement updateStatement = getConnection().prepareStatement(sql.toString());
-                        try {
-                            ParameterMetaData parameterMetaData = updateStatement.getParameterMetaData();
-
-                            int p = 1;
-
-                            for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-                                entry = i.next();
-                                if (skipColumns.indexOf(entry.getKey()) == -1) {
-                                    if (entry.getValue() == null) {
-                                        updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                                    } else {
-                                        updateStatement.setObject(p++, entry.getValue());
-                                    }
-                                    oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-                                }
-                            }
-                            for (String c : key.getColumnNames()) {
-                                Object value = selectResultSet.getObject(c);
-                                if (value == null) {
-                                    updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                                } else {
-                                    updateStatement.setObject(p++, value);
-                                }
-                                oldValues.put(columnMapping.checkedGet(c).intValue(), value);
-                            }
-                            Logger.getLogger(Settings.LOGGER).info("Executing update : '" + sql + "'");
-                            updateStatement.executeUpdate();
-                        } finally {
-                            updateStatement.close();
-                        }
-                    }
-                }
-            }
+          }
         }
+        if (entry.getValue() != null || metaData.isNullable(columnIndex) != ResultSetMetaData.columnNoNulls) {
+          columns.append(columns.length() > 0 ? "," : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight);
+          values.append(values.length() > 0 ? "," : "").append("?");
+        } else {
+          skipValues.add(entry.getKey());
+          Logger.getLogger(Settings.LOGGER).info("Skipping null value: '" + entry.getKey() + "'");
+        }
+      }
+
+      StringBuffer sql = new StringBuffer();
+
+      sql.append("INSERT INTO ");
+      if (schemaName.length() > 0) {
+        sql.append(delimiterLeft).append(schemaName).append(delimiterRight).append(".");
+      }
+      sql.append(delimiterLeft).append(tableName).append(delimiterRight).append(" (").append(columns).append(") ");
+      sql.append("VALUES (").append(values).append(")");
+
+      PreparedStatement insertStatement = getConnection().prepareStatement(sql.toString());
+      try {
+        ParameterMetaData parameterMetaData = insertStatement.getParameterMetaData();
+
+        int p = 1;
+
+        for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+          entry = i.next();
+          if (skipValues.indexOf(entry.getKey()) == -1) {
+            /*if (entry.getValue()==null)
+            insertStatement.setNull(p, parameterMetaData.getParameterType(p++));
+            else//*/
+            if (entry.getValue() instanceof Scale) {
+              Scale scale = (Scale) entry.getValue();
+              if (scale.method.equals("updateCharacterStream")) {
+                insertStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
+              } else if (scale.method.equals("updateBinaryStream")) {
+                insertStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
+              } else if (scale.method.equals("updateAsciiStream")) {
+                insertStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
+              } else {
+                insertStatement.setObject(p++, scale.x, scale.scale);
+              }
+            } else {
+              insertStatement.setObject(p++, entry.getValue());
+
+            }
+            oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
+          }
+        }
+        Logger.getLogger(Settings.LOGGER).info("Executing insert : '" + sql + "'");
+        insertStatement.executeUpdate();
+      } finally {
+        insertStatement.close();
+      }
+    } else {
+      ResultSetMetaData metaData = selectResultSet.getMetaData();
+      List<String> skipColumns = new ArrayList<String>();
+      for (int c = 1; c <= columnCount; c++) {
+        if (updateTableName == null || updateColumnNames.contains(metaData.getColumnName(c)) || (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) {
+          try {
+            Object value = selectResultSet.getObject(c);
+            oldValues.put(c, value);
+          } catch (Exception err) {
+            Logger.getLogger(Settings.LOGGER).info("Skipping illegal value for: '" + metaData.getColumnName(c) + "'");
+            skipColumns.add(metaData.getColumnName(c));
+          }
+        } else {
+          skipColumns.add(metaData.getColumnName(c));
+        }
+      }
+      PrimaryKey key;
+      for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
+        key = pk.next();
+        ResultSet updateResultSet = key.getUpdateResultSet(getOpenSelectResultSet());
+
+        if (updateResultSet != null) {
+          try {
+            for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+              entry = i.next();
+              if (skipColumns.indexOf(entry.getKey()) == -1) {
+                if (key.isUpdateColumn(entry.getKey())) {
+                  if (entry.getValue() instanceof Scale) {
+                    scaledValue = (Scale) entry.getValue();
+                    if (scaledValue.method.equals("updateAsciiStream")) {
+                      updateResultSet.updateAsciiStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
+                    } else if (scaledValue.method.equals("updateBinaryStream")) {
+                      updateResultSet.updateBinaryStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
+                    } else if (scaledValue.method.equals("updateCharacterStream")) {
+                      updateResultSet.updateCharacterStream(entry.getKey(), (Reader) scaledValue.x, scaledValue.scale);
+                    } else {
+                      updateResultSet.updateObject(entry.getKey(), scaledValue.x, scaledValue.scale);
+                    }
+                  } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
+                    if (entry.getValue() instanceof java.util.Date) {
+                      updateResultSet.updateDate(entry.getKey(), new java.sql.Date(((java.util.Date) entry.getValue()).getTime()));
+                    } else if (entry.getValue() == null) {
+                      updateResultSet.updateObject(entry.getKey(), entry.getValue());
+                    } else {
+                      try {
+                        updateResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
+                      } catch (ParseException ex) {
+                        updateResultSet.updateObject(entry.getKey(), entry.getValue());
+                      }
+                    }
+                  } else {
+                    updateResultSet.updateObject(entry.getKey(), entry.getValue());
+                  }
+                  cache.remove(new CacheKey(row.intValue(), entry.getKey()));
+                  oldValues.put(columnMapping.checkedGet(entry.getKey()), updateResultSet.getObject(entry.getKey()));
+                }
+              }
+            }
+
+            updateResultSet.updateRow();
+          } finally {
+            updateResultSet.close();
+          }
+        } else {
+          int updateCount = 0;
+          StringBuffer set = new StringBuffer(540);
+          for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+            entry = i.next();
+            if ((skipColumns.indexOf(entry.getKey()) == -1) && (metaData.getTableName(columnMapping.checkedGet(entry.getKey()).intValue()).equalsIgnoreCase(key.table))) {
+              set.append(set.length() > 0 ? ", " : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight).append(" = ?");
+              updateCount++;
+            }
+          }
+
+          if (updateCount > 0) {
+            StringBuffer where = new StringBuffer();
+
+            for (String c : key.getColumnNames()) {
+              where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
+            }
+            String sql = "UPDATE " + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
+
+            PreparedStatement updateStatement = getConnection().prepareStatement(sql.toString());
+            try {
+              ParameterMetaData parameterMetaData = updateStatement.getParameterMetaData();
+
+              int p = 1;
+
+              for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+                entry = i.next();
+                if (skipColumns.indexOf(entry.getKey()) == -1) {
+                  if (entry.getValue() == null) {
+                    updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
+                  } else if (entry.getValue() instanceof Scale) {
+                    Scale scale = (Scale) entry.getValue();
+                    if (scale.method.equals("updateCharacterStream")) {
+                      updateStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
+                    } else if (scale.method.equals("updateBinaryStream")) {
+                      updateStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
+                    } else if (scale.method.equals("updateAsciiStream")) {
+                      updateStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
+                    } else {
+                      updateStatement.setObject(p++, scale.x, scale.scale);
+                    }
+                  } else {
+                    updateStatement.setObject(p++, entry.getValue());
+                  }
+                  oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
+                }
+              }
+              for (String c : key.getColumnNames()) {
+                Object value = selectResultSet.getObject(c);
+                if (value == null) {
+                  updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
+                } else {
+                  updateStatement.setObject(p++, value);
+                }
+                oldValues.put(columnMapping.checkedGet(c).intValue(), value);
+              }
+              Logger.getLogger(Settings.LOGGER).info("Executing update : '" + sql + "'");
+              updateStatement.executeUpdate();
+            } finally {
+              updateStatement.close();
+            }
+          }
+        }
+      }
     }
+  }
 
     private void setName() {
         if (componentName == null || componentName.length() == 0) {

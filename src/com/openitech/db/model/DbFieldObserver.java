@@ -16,6 +16,9 @@ import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.formats.FormatFactory;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.util.Equals;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
@@ -327,6 +330,24 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver {
     }
   }
   
+  public void updateInputStream(BufferedInputStream value) throws SQLException {
+    if (dataSource!=null && columnName!=null) {
+      activeRowChangeWeakListener.setEnabled(false);
+      try {
+        try {
+          dataSource.updateBinaryStream(columnName, value, value.available());
+        } catch (IOException ex) {
+          Logger.getLogger(DbFieldObserver.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        InputStream newvalue = dataSource.getBinaryStream(columnName);
+        if (newvalue!=value)
+          fireLaterFieldValueChanged(new ActiveRowChangeEvent(dataSource, columnName, -1));
+      } finally {
+        activeRowChangeWeakListener.setEnabled(true);
+      }
+    }
+  }
+    
   public boolean wasNull() {
     boolean result=true;
     if (this.dataSource!=null&&dataSource.getRowCount()>0)
