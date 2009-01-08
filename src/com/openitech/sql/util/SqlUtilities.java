@@ -9,6 +9,7 @@ import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.util.Equals;
 import java.sql.Connection;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -290,8 +291,19 @@ public abstract class SqlUtilities {
     }
   }
 
-  public Map<Field, Object> getColumnValues(StoreUpdatesEvent event) throws SQLException {
+  public Map<Field, Object> getColumnValues(DbDataSource source) throws SQLException {
+    ResultSetMetaData metaData = source.getMetaData();
+
     Map<SqlUtilities.Field, Object> columnValues = new HashMap<SqlUtilities.Field, Object>();
+    for (int field = 1; field<=metaData.getColumnCount(); field++) {
+      columnValues.put(new SqlUtilities.Field(metaData.getColumnName(field), metaData.getColumnType(field)), source.getObject(field));
+    }
+
+    return columnValues;
+  }
+
+  public Map<Field, Object> getColumnValues(StoreUpdatesEvent event) throws SQLException {
+    Map<SqlUtilities.Field, Object> columnValues = getColumnValues(event.getSource());
     for (Map.Entry<String, Object> entry : event.getColumnValues().entrySet()) {
       columnValues.put(new SqlUtilities.Field(entry.getKey(), event.getSource().getType(entry.getKey())), entry.getValue());
     }
