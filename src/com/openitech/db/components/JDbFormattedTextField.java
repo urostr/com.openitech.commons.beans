@@ -293,7 +293,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       return true;
     } else if (dataSource != null){
       try {
-        return (dataSource.rowUpdated() || dataSource.rowInserted())?validator.isValid(value):true;
+        return (dataSource.isDataLoaded()&&(dataSource.rowUpdated() || dataSource.rowInserted()))?validator.isValid(value):true;
       } catch (SQLException ex) {
         Logger.getLogger(JDbTextField.class.getName()).log(Level.SEVERE, null, ex);
         return validator.isValid(value);

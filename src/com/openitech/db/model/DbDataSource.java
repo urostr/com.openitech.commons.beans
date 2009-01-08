@@ -4618,6 +4618,8 @@ public class DbDataSource implements DbNavigatorDataSource {
                     result = nullValue;
                 } else if (type.equals(String.class)) {
                     result = result.toString();
+                } else if (result instanceof Scale) {
+                  result = ((Scale) result).x;
                 }
 
                 return (T) result;
