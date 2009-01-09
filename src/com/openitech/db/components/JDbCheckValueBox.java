@@ -107,7 +107,7 @@ public class JDbCheckValueBox extends JCheckBox implements ActionListener, Field
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     this.actionWeakListener.setEnabled(false);
     try {
-      setSelected(dbFieldObserver.getValueAsText().equalsIgnoreCase(checkedValue));
+      setSelected(checkedValue.equalsIgnoreCase(dbFieldObserver.getValueAsText()));
     } finally {
       this.actionWeakListener.setEnabled(true);
     }
