@@ -48,6 +48,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   private static Method setComparator;
 
   private static boolean sortable;
+  private boolean enableSorting = false;
 
 
   static {
@@ -90,6 +91,24 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
         }
       }
     });
+    
+    if (sortable) {
+      final javax.swing.JCheckBoxMenuItem miSorting = new javax.swing.JCheckBoxMenuItem();
+
+      miSorting.setText("Sortiranje seznama");
+      miSorting.setSelected(enableSorting);
+
+      miSorting.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          setEnableSorting(!isEnableSorting());
+          miSorting.setSelected(isEnableSorting());
+        }
+      });
+      menu.add(miSorting);
+    }
+
     menu.add(aReload);
     setComponentPopupMenu(menu);
     try {
@@ -124,15 +143,23 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       ((DbTableModel) this.getModel()).addActiveRowChangeListener(activeRowChangeWeakListener);
     }/* else
     throw new IllegalArgumentException("The data model for JDbTable must be a DbTableModel.");//*/
+    activateRowSorter();
+  }
+
+  private void activateRowSorter() {
     if (sortable) {
       try {
-        Object rowSorter = constructRowSorter.newInstance(dataModel);
+        if (isEnableSorting()) {
+          Object rowSorter = constructRowSorter.newInstance(dataModel);
 
-        for (int column=0; column<dataModel.getColumnCount(); column++) {
-          setComparator.invoke(rowSorter, column, DbTableModel.ColumnDescriptor.ValueMethodComparator.getInstance());
+          for (int column=0; column<dataModel.getColumnCount(); column++) {
+            setComparator.invoke(rowSorter, column, DbTableModel.ColumnDescriptor.ValueMethodComparator.getInstance());
+          }
+
+          setRowSorter.invoke(this, rowSorter);
+        } else {
+          setRowSorter.invoke(this, new Object[] { null });
         }
-
-        setRowSorter.invoke(this, rowSorter);
       } catch (Throwable ex) {
         Logger.getLogger(JDbTable.class.getName()).log(Level.WARNING, null, ex);
       }
@@ -350,6 +377,17 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
   public int getRow() throws SQLException {
     return (getDataSource() != null) ? getDataSource().getRow() : 0;
+  }
+
+  public boolean isEnableSorting() {
+    return enableSorting;
+  }
+
+  public void setEnableSorting(boolean enableSorting) {
+    if (sortable) {
+      this.enableSorting = enableSorting;
+      activateRowSorter();
+    }
   }
 
   private class UpdateViewRunnable implements Runnable {
