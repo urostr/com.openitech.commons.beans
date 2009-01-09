@@ -82,16 +82,6 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
     putClientProperty("Quaqua.Table.style", "striped");
     javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
-    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke", "RELOAD");
-    aReload.addActionListener(new ActionListener() {
-
-      public void actionPerformed(ActionEvent e) {
-        if (getDataSource() != null) {
-          getDataSource().reload();
-        }
-      }
-    });
-    
     if (sortable) {
       final javax.swing.JCheckBoxMenuItem miSorting = new javax.swing.JCheckBoxMenuItem();
 
@@ -108,6 +98,35 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       });
       menu.add(miSorting);
     }
+
+    try {
+      Class.forName("org.apache.poi.hssf.usermodel.HSSFWorkbook");
+
+      org.jdesktop.swingx.action.BoundAction aExport = new org.jdesktop.swingx.action.BoundAction("Izvozi podatke", "EXPORT");
+
+      final JTable owner = this;
+      aExport.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          com.openitech.util.HSSFWrapper.openWorkbook(owner);
+        }
+      });
+
+      menu.add(aExport);
+    } catch (ClassNotFoundException ex) {
+      //ignore it;
+    }
+
+    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke", "RELOAD");
+    aReload.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        if (getDataSource() != null) {
+          getDataSource().reload();
+        }
+      }
+    });
 
     menu.add(aReload);
     setComponentPopupMenu(menu);
