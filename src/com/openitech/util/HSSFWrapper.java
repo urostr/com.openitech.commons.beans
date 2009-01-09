@@ -4,6 +4,8 @@
  */
 package com.openitech.util;
 
+import com.openitech.components.JWProgressMonitor;
+import com.openitech.db.model.DbTableModel;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,11 +19,13 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFDataFormat;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.HSSFColor;
 
 /**
  *
@@ -51,7 +55,17 @@ public class HSSFWrapper {
 
     xls_header_cell_style.setFont(xls_header_font);
     xls_header_cell_style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
-    xls_header_cell_style.setBorderBottom(HSSFCellStyle.BORDER_DOUBLE);
+    xls_header_cell_style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND );
+    xls_header_cell_style.setFillForegroundColor(new HSSFColor.GREY_25_PERCENT().getIndex());
+    //xls_header_cell_style.setBorderBottom(HSSFCellStyle.BORDER_DOUBLE);
+
+    HSSFDataFormat xls_data_format = xls_workbook.createDataFormat();
+
+    HSSFCellStyle xls_date_cell_style = xls_workbook.createCellStyle();
+    xls_date_cell_style.setDataFormat(xls_data_format.getFormat("d.m.yyyy"));
+
+    HSSFCellStyle xls_double_cell_style = xls_workbook.createCellStyle();
+    xls_double_cell_style.setDataFormat(xls_data_format.getFormat("#,##0.00"));
 
     while (columns.hasMoreElements()) {
       TableColumn column = columns.nextElement();
@@ -65,27 +79,73 @@ public class HSSFWrapper {
 
     short row = 1;
 
-    while (row <= tableModel.getRowCount()) {
-      xls_row = xls_sheet.createRow(row);
-      cell = 0;
+    JWProgressMonitor progress = new JWProgressMonitor((java.awt.Frame) null);
 
-      HSSFCell xls_cell = xls_row.createCell(cell++);
-      xls_cell.setCellValue(new HSSFRichTextString(row + "/" + tableModel.getRowCount()));
+    progress.setTitle("Izvoz podatkov v Excel");
+    progress.setMax(tableModel.getRowCount());
 
-      while (cell<=columnModel.getColumnCount()) {
-        Object value = tableModel.getValueAt(row - 1, cell - 1);
-        if (value!=null) {
-           xls_cell = xls_row.createCell(cell++);
-           xls_cell.setCellValue(new HSSFRichTextString(value.toString()));
-        } else {
+    progress.setVisible(true);
+
+    try {
+      while (row <= tableModel.getRowCount()) {
+        xls_row = xls_sheet.createRow(row);
+        cell = 0;
+
+        HSSFCell xls_cell = xls_row.createCell(cell++);
+        xls_cell.setCellValue(new HSSFRichTextString(row + "/" + tableModel.getRowCount()));
+
+        while (cell <= columnModel.getColumnCount()) {
+          Object value = tableModel.getValueAt(row - 1, cell - 1);
+          if (value != null) {
+            if (value instanceof DbTableModel.ColumnDescriptor.ValueMethod) {
+              DbTableModel.ColumnDescriptor.ValueMethod vm = (DbTableModel.ColumnDescriptor.ValueMethod) value;
+
+              if (vm.getColumnNames().size() == 1) {
+                java.util.List<Object> values = vm.getValues();
+
+                Object vm_value = values.get(0);
+
+                if (vm_value != null) {
+                  xls_cell = xls_row.createCell(cell);
+                  if (vm_value instanceof java.util.Date) {
+                    xls_cell.setCellValue((java.util.Date) vm_value);
+                    xls_cell.setCellStyle(xls_date_cell_style);
+                  } else if (vm_value instanceof java.lang.Number) {
+                    xls_cell.setCellValue(((java.lang.Number) vm_value).doubleValue());
+                    if ((vm_value instanceof java.math.BigDecimal) ||
+                            (vm_value instanceof java.lang.Double) ||
+                            (vm_value instanceof java.lang.Float)) {
+                      xls_cell.setCellStyle(xls_double_cell_style);
+                    }
+                  } else if (vm_value instanceof java.lang.Boolean) {
+                    xls_cell.setCellValue(((java.lang.Boolean) vm_value).booleanValue());
+                  } else {
+                    xls_cell.setCellValue(new HSSFRichTextString(value.toString()));
+                  }
+                }
+              } else {
+                xls_cell = xls_row.createCell(cell);
+                xls_cell.setCellValue(new HSSFRichTextString(value.toString()));
+              }
+            } else {
+              xls_cell = xls_row.createCell(cell);
+              xls_cell.setCellValue(new HSSFRichTextString(value.toString()));
+            }
+          }
           cell++;
         }
+
+        row++;
+        progress.next();
       }
 
-      row++;
-    }
+      for (cell=0; cell<=columnModel.getColumnCount(); cell++)
+        xls_sheet.autoSizeColumn(cell);
 
-    xls_sheet.createFreezePane(1, 1);
+      xls_sheet.createFreezePane(1, 1);
+    } finally {
+      progress.setVisible(false);
+    }
 
 
     return xls_workbook;

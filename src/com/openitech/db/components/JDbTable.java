@@ -39,14 +39,11 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = null;
   private boolean selectionChanged = false;
   private final UpdateViewRunnable updateViewRunnable = new UpdateViewRunnable();
-
-
   private static Method convertRowIndexToModel;
   private static Method convertRowIndexToView;
   private static Method setRowSorter;
   private static Constructor constructRowSorter;
   private static Method setComparator;
-
   private static boolean sortable;
   private boolean enableSorting = false;
 
@@ -102,14 +99,20 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     try {
       Class.forName("org.apache.poi.hssf.usermodel.HSSFWorkbook");
 
-      org.jdesktop.swingx.action.BoundAction aExport = new org.jdesktop.swingx.action.BoundAction("Izvozi podatke", "EXPORT");
+      org.jdesktop.swingx.action.BoundAction aExport = new org.jdesktop.swingx.action.BoundAction("Izvozi podatke v XLS", "EXPORT");
 
       final JTable owner = this;
       aExport.addActionListener(new ActionListener() {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-          com.openitech.util.HSSFWrapper.openWorkbook(owner);
+          EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+              com.openitech.util.HSSFWrapper.openWorkbook(owner);
+            }
+          });
         }
       });
 
@@ -171,13 +174,13 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
         if (isEnableSorting()) {
           Object rowSorter = constructRowSorter.newInstance(dataModel);
 
-          for (int column=0; column<dataModel.getColumnCount(); column++) {
+          for (int column = 0; column < dataModel.getColumnCount(); column++) {
             setComparator.invoke(rowSorter, column, DbTableModel.ColumnDescriptor.ValueMethodComparator.getInstance());
           }
 
           setRowSorter.invoke(this, rowSorter);
         } else {
-          setRowSorter.invoke(this, new Object[] { null });
+          setRowSorter.invoke(this, new Object[]{null});
         }
       } catch (Throwable ex) {
         Logger.getLogger(JDbTable.class.getName()).log(Level.WARNING, null, ex);

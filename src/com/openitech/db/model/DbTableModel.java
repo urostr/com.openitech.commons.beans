@@ -617,13 +617,14 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     }
 
     public static class ValueMethodComparator implements java.util.Comparator<ValueMethod> {
+
       private static ValueMethodComparator instance;
 
       private ValueMethodComparator() {
       }
 
       public static ValueMethodComparator getInstance() {
-        if (instance==null) {
+        if (instance == null) {
           instance = new ValueMethodComparator();
         }
         return instance;
@@ -631,16 +632,16 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
       @Override
       public int compare(ValueMethod o1, ValueMethod o2) {
-        if (o1==null&&o2!=null) {
+        if (o1 == null && o2 != null) {
           return -1;
-        } else if (o1==null&&o2==null) {
+        } else if (o1 == null && o2 == null) {
           return 0;
-        } else if (o1!=null&&o2==null) {
+        } else if (o1 != null && o2 == null) {
           return 1;
-        } else
+        } else {
           return o1.compareTo(o2);
+        }
       }
-
     }
 
     public static class ValueMethod implements Comparable<ValueMethod> {
@@ -676,6 +677,19 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
       public Object getFunctionValue() {
         return function.invoke(this);
+      }
+
+      public java.util.List<Object> getValues() {
+        java.util.List<Object> result = new java.util.ArrayList<Object>();
+        try {
+          for (String columnName : columnNames) {
+            result.add(dataSource.getValueAt(rowIndex + 1, columnName, rowColumnNames));
+          }
+        } catch (SQLException ex) {
+          Logger.getLogger(DbTableModel.class.getName()).log(Level.SEVERE, null, ex);
+          result.clear();
+        }
+        return result;
       }
 
       public Object getValue() {
@@ -786,33 +800,35 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
       @Override
       public int compareTo(ValueMethod that) {
-        if (this.columnNames.size()==that.columnNames.size()) {
+        if (this.columnNames.size() == that.columnNames.size()) {
           int result = 0;
 
-          for (int pos=0;(pos<columnNames.size())&&result==0; pos++) {
+          for (int pos = 0; (pos < columnNames.size()) && result == 0; pos++) {
             try {
               Object this_value = this.dataSource.getValueAt(this.rowIndex + 1, columnNames.get(pos), rowColumnNames);
               Object that_value = that.dataSource.getValueAt(that.rowIndex + 1, columnNames.get(pos), rowColumnNames);
 
-              if (this_value==null&&that_value!=null) {
+              if (this_value == null && that_value != null) {
                 result = -1;
-              } else if (this_value==null&&that_value==null) {
+              } else if (this_value == null && that_value == null) {
                 result = 0;
-              } else if (this_value!=null&&that_value==null) {
+              } else if (this_value != null && that_value == null) {
                 result = 1;
-              } else if ((this_value instanceof Comparable)&&
-                         (that_value instanceof Comparable)) {
+              } else if ((this_value instanceof Comparable) &&
+                      (that_value instanceof Comparable)) {
                 result = ((Comparable) this_value).compareTo(that_value);
-              } else
+              } else {
                 result = this_value.toString().compareTo(that_value.toString());
+              }
             } catch (SQLException ex) {
               result = 0;
             }
           }
 
           return result;
-        } else
+        } else {
           return this.toString().compareTo(that.toString());
+        }
       }
 
       public static class Method {
