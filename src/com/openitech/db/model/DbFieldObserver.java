@@ -204,7 +204,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver {
                 result = !dataSource.wasNull();
                 if (result) //ni bil null
                 {
-                  result = Equals.equals(value, 0);
+                  result = Equals.equals(value, 1);
                 }
               }
               break;
