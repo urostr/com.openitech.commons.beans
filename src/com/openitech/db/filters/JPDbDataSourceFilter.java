@@ -87,7 +87,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
   private void updateFilterMenuItem() {
     filterMenuItem.removeAll();
     for (Map.Entry<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]> entry : documents.entrySet()) {
-      if ((entry.getValue().length == 1) && entry.getValue()[0].getLength() > 0) {
+      if ((entry.getValue()[0].getLength() > 0) || ((entry.getValue().length==2)&&(entry.getValue()[1].getLength() > 0))) {
         DataSourceFilters.AbstractSeekType<? extends Object> seekType = entry.getKey();
         JCheckBoxMenuItem miCheckbox = new JCheckBoxMenuItem(seekType.getDescription(), true);
         miCheckbox.setActionCommand("CLEAR");
@@ -765,13 +765,17 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       try {
         from_date = FormatFactory.DATE_FORMAT.parse(getText(from));
       } catch (ParseException ex) {
-        from_date = Calendar.getInstance().getTime();
+        //from_date = Calendar.getInstance().getTime();
+        from_date = null;
       }
       java.util.Date to_date;
       try {
         to_date = FormatFactory.DATE_FORMAT.parse(getText(to));
       } catch (ParseException ex) {
-        to_date = Calendar.getInstance().getTime();
+        to_date = from_date==null?null:Calendar.getInstance().getTime();
+      }
+      if (from_date==null && to_date!=null) {
+        from_date = new java.util.Date(0);
       }
 
       java.util.List<java.util.Date> value = new ArrayList<java.util.Date>(2);

@@ -1,6 +1,7 @@
 package com.openitech.db.filters;
 
 import com.openitech.db.model.*;
+import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
 import java.text.MessageFormat;
 import java.util.Date;
@@ -72,7 +73,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     public String getDescription() {
-      return this.toString()+" "+descriptions[i_type]+"'"+value.toString()+"'";
+      return this.toString()+" "+descriptions[i_type]+" "+value.toString();
     }
 
     public AbstractSeekType(String field, int i_type, int p_count) {
@@ -225,13 +226,24 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     @Override
+    public String getDescription() {
+      return this.toString()+" je"+ (value.get(0).getTime()>0?" od "+FormatFactory.DATE_FORMAT.format(value.get(0)):"")+" do "+FormatFactory.DATE_FORMAT.format(value.get(1));
+    }
+
+    @Override
     public boolean setValue(List<Date> value) {
       if (!Equals.equals(getValue(), value)) {
         if (value!=null&&value.size()==2) {
-          value.set(0, value.get(0) == null ? null : new java.sql.Date(value.get(0).getTime()));
-          value.set(1, value.get(1) == null ? null : new java.sql.Date(value.get(1).getTime()));
+          java.sql.Date from = value.get(0) == null ? null : new java.sql.Date(value.get(0).getTime());
+          java.sql.Date to = value.get(1) == null ? null : new java.sql.Date(value.get(1).getTime());
+          value.set(0, from);
+          value.set(1, to);
 
-          this.value=value;
+          if (from!=null||to!=null) {
+            this.value=value;
+          } else {
+            this.value=null;
+          }
           return true;
         } else
           return false;

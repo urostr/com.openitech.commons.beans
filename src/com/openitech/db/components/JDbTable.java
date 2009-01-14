@@ -20,11 +20,11 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JMenuItem;
 import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -137,6 +137,29 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, null, "tableModel_activeRowChanged");
     } catch (NoSuchMethodException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
+    }
+  }
+
+  private JMenuItem activeFiltersMenu;
+
+  public void setActiveFiltersMenu(JMenuItem miActiveFilters) {
+    javax.swing.JPopupMenu menu = getComponentPopupMenu();
+    if (activeFiltersMenu!=null) {
+      int index = menu.getComponentIndex(miActiveFilters);
+      if (index>=0) {
+        menu.remove(index);
+        if (menu.getComponent(index) instanceof javax.swing.JPopupMenu.Separator) {
+          menu.remove(index);
+        }
+      }
+      activeFiltersMenu = null;
+    }
+    if (miActiveFilters!=null) {
+
+      menu.insert(new javax.swing.JPopupMenu.Separator(), 0);
+      menu.insert(miActiveFilters, 0);
+
+      activeFiltersMenu = miActiveFilters;
     }
   }
 
