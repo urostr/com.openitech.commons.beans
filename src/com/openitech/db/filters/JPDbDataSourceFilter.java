@@ -14,17 +14,21 @@ import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 import com.openitech.db.filters.DataSourceFilters.SeekType;
 import com.openitech.db.filters.FilterDocumentListener;
+import com.openitech.formats.FormatFactory;
+import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.text.ParseException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JMenu;
+import javax.swing.event.DocumentEvent;
 import javax.swing.text.BadLocationException;
 
 /**
@@ -34,7 +38,7 @@ import javax.swing.text.BadLocationException;
 public class JPDbDataSourceFilter extends javax.swing.JPanel {
 
   private final FiltersMap filters = new FiltersMap();
-  private final java.util.Map<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document> documents = new HashMap<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document>();
+  private final java.util.Map<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]> documents = new HashMap<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]>();
 
   /** Creates new form JPDbDataSourceFilter */
   public JPDbDataSourceFilter() {
@@ -82,8 +86,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
 
   private void updateFilterMenuItem() {
     filterMenuItem.removeAll();
-    for (Map.Entry<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document> entry : documents.entrySet()) {
-      if (entry.getValue().getLength() > 0) {
+    for (Map.Entry<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]> entry : documents.entrySet()) {
+      if ((entry.getValue().length == 1) && entry.getValue()[0].getLength() > 0) {
         DataSourceFilters.AbstractSeekType<? extends Object> seekType = entry.getKey();
         JCheckBoxMenuItem miCheckbox = new JCheckBoxMenuItem(seekType.getDescription(), true);
         miCheckbox.setActionCommand("CLEAR");
@@ -106,11 +110,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
     @Override
     public void actionPerformed(ActionEvent e) {
       if (e.getActionCommand().equalsIgnoreCase("CLEAR") && documents.containsKey(seekType)) {
-        javax.swing.text.Document document = documents.get(seekType);
-        try {
-          document.remove(0, document.getLength());
-        } catch (BadLocationException ex) {
-          Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.WARNING, null, ex);
+        for (javax.swing.text.Document document : documents.get(seekType)) {
+          try {
+            document.remove(0, document.getLength());
+          } catch (BadLocationException ex) {
+            Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.WARNING, null, ex);
+          }
         }
       }
     }
@@ -134,20 +139,26 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
         DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
 
         headers.add(item);
-        javax.swing.text.Document document;
-        if (item instanceof DataSourceFilters.DateSeekType) {
-          document = new com.openitech.db.components.JDbDateTextField().getDocument();
+
+        if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+          javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
+          javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
+
+          from.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
+          to.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
+
+          documents.put(item, new javax.swing.text.Document[]{from, to});
         } else {
-          document = new com.openitech.db.components.JDbTextField().getDocument();
+          javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
+          document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+          documents.put(item, new javax.swing.text.Document[]{document});
         }
-        document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
-        documents.put(item, document);
       }
 
       entry.getKey().addPropertyChangeListener("query", queryChanged);
     }
-    if (headers.size()==0) {
-      jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Ni doloèen" }));
+    if (headers.size() == 0) {
+      jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Ni doloèen"}));
     } else {
       jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(headers));
     }
@@ -161,13 +172,14 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       refreshing = true;
       DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
 
-      if (item instanceof DataSourceFilters.DateSeekType) {
-        jtfDateValue.setDocument(documents.get(item));
-        lpFilterValues.setPosition(jpDateField, 0);
+      if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+        jtfDateValueOd.setDocument(documents.get(item)[0]);
+        jtfDateValueDo.setDocument(documents.get(item)[1]);
+        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "DATEFIELD_CARD");
       } else {
         jcbType.setSelectedIndex(item.getSeekType());
-        jtfValue.setDocument(documents.get(item));
-        lpFilterValues.setPosition(jpTextField, 0);
+        jtfValue.setDocument(documents.get(item)[0]);
+        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "TEXTFIELD_CARD");
       }
       invalidate();
       repaint();
@@ -186,17 +198,71 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
   private void initComponents() {
     java.awt.GridBagConstraints gridBagConstraints;
 
-    jtfDateValue = new com.openitech.db.components.JDbDateTextField();
+    jtfDateValueOd = new com.openitech.db.components.JDbDateTextField();
+    jtfDateValueDo = new com.openitech.db.components.JDbDateTextField();
+    jcbStolpec = new javax.swing.JComboBox();
+    jpFilterValues = new javax.swing.JPanel();
+    jpDateField = new javax.swing.JPanel();
+    jXDatePicker1 = new org.jdesktop.swingx.JXDatePicker();
+    jLabel1 = new javax.swing.JLabel();
+    jLabel2 = new javax.swing.JLabel();
+    jXDatePicker2 = new org.jdesktop.swingx.JXDatePicker();
     jpTextField = new javax.swing.JPanel();
     jcbType = new javax.swing.JComboBox();
     jtfValue = new com.openitech.db.components.JDbTextField();
-    jpDateField = new javax.swing.JPanel();
-    jcbDateType = new javax.swing.JComboBox();
-    jXDatePicker1 = new org.jdesktop.swingx.JXDatePicker();
-    jcbStolpec = new javax.swing.JComboBox();
-    lpFilterValues = new javax.swing.JLayeredPane();
 
-    jtfDateValue.setSearchField(true);
+    jtfDateValueOd.setSearchField(true);
+
+    jtfDateValueDo.setSearchField(true);
+
+    setLayout(new java.awt.GridBagLayout());
+
+    jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Ni doloèen" }));
+    jcbStolpec.setPreferredSize(jcbType.getPreferredSize());
+    jcbStolpec.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jcbStolpecActionPerformed(evt);
+      }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+    gridBagConstraints.insets = new java.awt.Insets(1, 0, 0, 0);
+    add(jcbStolpec, gridBagConstraints);
+
+    jpFilterValues.setLayout(new java.awt.CardLayout());
+
+    jXDatePicker1.setEditor(jtfDateValueOd);
+
+    jLabel1.setText("od");
+
+    jLabel2.setText("do");
+
+    jXDatePicker2.setEditor(jtfDateValueDo);
+
+    javax.swing.GroupLayout jpDateFieldLayout = new javax.swing.GroupLayout(jpDateField);
+    jpDateField.setLayout(jpDateFieldLayout);
+    jpDateFieldLayout.setHorizontalGroup(
+      jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(jpDateFieldLayout.createSequentialGroup()
+        .addComponent(jLabel1)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(jLabel2)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addContainerGap(26, Short.MAX_VALUE))
+    );
+    jpDateFieldLayout.setVerticalGroup(
+      jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+        .addComponent(jLabel1)
+        .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addComponent(jLabel2)
+        .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+    );
+
+    jpFilterValues.add(jpDateField, "DATEFIELD_CARD");
 
     jcbType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "je enako", "se zaène z", "se konèa z", "vsebuje" }));
     jcbType.setSelectedIndex(1);
@@ -217,7 +283,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       .addGroup(jpTextFieldLayout.createSequentialGroup()
         .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 184, Short.MAX_VALUE))
+        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE))
     );
     jpTextFieldLayout.setVerticalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -228,57 +294,14 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
           .addComponent(jtfValue, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
     );
 
-    jcbDateType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "ni doloèen", "je enak", "je veèji ali enak", "je manjši ali enak" }));
-    jcbDateType.setFocusable(false);
-    jcbDateType.addActionListener(new java.awt.event.ActionListener() {
-      public void actionPerformed(java.awt.event.ActionEvent evt) {
-        jcbDateTypeActionPerformed(evt);
-      }
-    });
+    jpFilterValues.add(jpTextField, "TEXTFIELD_CARD");
 
-    jXDatePicker1.setEditor(jtfDateValue);
-
-    javax.swing.GroupLayout jpDateFieldLayout = new javax.swing.GroupLayout(jpDateField);
-    jpDateField.setLayout(jpDateFieldLayout);
-    jpDateFieldLayout.setHorizontalGroup(
-      jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(jpDateFieldLayout.createSequentialGroup()
-        .addComponent(jcbDateType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(20, Short.MAX_VALUE))
-    );
-    jpDateFieldLayout.setVerticalGroup(
-      jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-        .addComponent(jcbDateType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-    );
-
-    setLayout(new java.awt.GridBagLayout());
-
-    jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Ni doloèen" }));
-    jcbStolpec.setPreferredSize(jcbType.getPreferredSize());
-    jcbStolpec.addActionListener(new java.awt.event.ActionListener() {
-      public void actionPerformed(java.awt.event.ActionEvent evt) {
-        jcbStolpecActionPerformed(evt);
-      }
-    });
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(1, 0, 0, 0);
-    add(jcbStolpec, gridBagConstraints);
-
-    lpFilterValues.setLayout(new java.awt.BorderLayout());
-
-    lpFilterValues.add(jpDateField, java.awt.BorderLayout.CENTER);
-    lpFilterValues.add(jpTextField, java.awt.BorderLayout.CENTER);
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
     gridBagConstraints.weightx = 1.0;
     gridBagConstraints.weighty = 1.0;
     gridBagConstraints.insets = new java.awt.Insets(0, 2, 0, 0);
-    add(lpFilterValues, gridBagConstraints);
+    add(jpFilterValues, gridBagConstraints);
   }// </editor-fold>//GEN-END:initComponents
 
     private void jcbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbTypeActionPerformed
@@ -296,22 +319,22 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       updateFilterPane();
     }//GEN-LAST:event_jcbStolpecActionPerformed
 
-    private void jcbDateTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbDateTypeActionPerformed
-      // TODO add your handling code here:
-}//GEN-LAST:event_jcbDateTypeActionPerformed
-
   // Variables declaration - do not modify//GEN-BEGIN:variables
+  private javax.swing.JLabel jLabel1;
+  private javax.swing.JLabel jLabel2;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker1;
-  private javax.swing.JComboBox jcbDateType;
+  private org.jdesktop.swingx.JXDatePicker jXDatePicker2;
   private javax.swing.JComboBox jcbStolpec;
   private javax.swing.JComboBox jcbType;
   private javax.swing.JPanel jpDateField;
+  private javax.swing.JPanel jpFilterValues;
   private javax.swing.JPanel jpTextField;
-  private com.openitech.db.components.JDbDateTextField jtfDateValue;
+  private com.openitech.db.components.JDbDateTextField jtfDateValueDo;
+  private com.openitech.db.components.JDbDateTextField jtfDateValueOd;
   private com.openitech.db.components.JDbTextField jtfValue;
-  private javax.swing.JLayeredPane lpFilterValues;
   // End of variables declaration//GEN-END:variables
 
+  // <editor-fold defaultstate="collapsed" desc="FiltersMap definition">
   public static class FiltersMap implements java.util.Map<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> {
 
     private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
@@ -368,7 +391,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       if (!list.contains(value)) {
         list.add(value);
       }
-      put(key,list);
+      put(key, list);
     }
 
     @Override
@@ -722,6 +745,40 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
         return;
       }
       firePropertyChange(propertyName, Double.valueOf(oldValue), Double.valueOf(newValue));
+    }
+  }// </editor-fold>
+
+  private static class BetweenDateDocumentListener extends FilterDocumentListener {
+
+    javax.swing.text.Document from;
+    javax.swing.text.Document to;
+
+    public BetweenDateDocumentListener(DataSourceFilters filter, DataSourceFilters.BetweenDateSeekType seek_type, javax.swing.text.Document from, javax.swing.text.Document to) {
+      super(filter, seek_type);
+      this.from = from;
+      this.to = to;
+    }
+
+    @Override
+    protected void setSeekValue(DocumentEvent e) {
+      java.util.Date from_date;
+      try {
+        from_date = FormatFactory.DATE_FORMAT.parse(getText(from));
+      } catch (ParseException ex) {
+        from_date = Calendar.getInstance().getTime();
+      }
+      java.util.Date to_date;
+      try {
+        to_date = FormatFactory.DATE_FORMAT.parse(getText(to));
+      } catch (ParseException ex) {
+        to_date = Calendar.getInstance().getTime();
+      }
+
+      java.util.List<java.util.Date> value = new ArrayList<java.util.Date>(2);
+      value.add(from_date);
+      value.add(to_date);
+
+      schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
     }
   }
 }

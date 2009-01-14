@@ -35,10 +35,30 @@ public class Equals {
       else if (a instanceof Number && b instanceof Boolean) {
         return ((Comparable) a).compareTo(((Boolean) b).booleanValue()?1:0)==0;
       }
+      else if (a instanceof java.util.List && b instanceof java.util.List) {
+        return compareList((java.util.List) a,(java.util.List) b);
+      }
       else if (a instanceof Comparable && b instanceof Comparable)
         return ((Comparable) a).compareTo(b)==0;
       else 
         return a.equals(b);
+    } else
+      return false;
+  }
+
+  private static final boolean compareList(java.util.List a, java.util.List b) {
+    if (a==null && b==null) {
+      return true;
+    } else if (a!=null && b!=null) {
+      if (a.size()==b.size()) {
+        boolean result = true;
+        for (int i=0; i<a.size() && result; i++) {
+          result = equals(a.get(i), b.get(i));
+        }
+
+        return result;
+      } else
+        return false;
     } else
       return false;
   }

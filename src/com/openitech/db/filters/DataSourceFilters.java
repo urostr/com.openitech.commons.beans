@@ -3,7 +3,9 @@ package com.openitech.db.filters;
 import com.openitech.db.model.*;
 import com.openitech.util.Equals;
 import java.text.MessageFormat;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -216,6 +218,29 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
+  public final static class BetweenDateSeekType extends AbstractSeekType<java.util.List<java.util.Date>> {
+
+    public BetweenDateSeekType(String field) {
+      super(field+" BETWEEN ? AND ? ", SeekType.PREFORMATTED, 1);
+    }
+
+    @Override
+    public boolean setValue(List<Date> value) {
+      if (!Equals.equals(getValue(), value)) {
+        if (value!=null&&value.size()==2) {
+          value.set(0, value.get(0) == null ? null : new java.sql.Date(value.get(0).getTime()));
+          value.set(1, value.get(1) == null ? null : new java.sql.Date(value.get(1).getTime()));
+
+          this.value=value;
+          return true;
+        } else
+          return false;
+      } else {
+        return false;
+      }
+    }
+  }
+
   public final static class IntegerSeekType extends AbstractSeekType<java.lang.Integer> {
 
     public IntegerSeekType(String field) {
@@ -319,7 +344,12 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
           if (seek.hasValue()) {
             value.append(value.length() > 0 ? " and " : "").append(seek.getSQLSegment());
             for (int p = 1; p <= seek.p_count; p++) {
-              parameters.add(seek.getValue());
+              if (seek.getValue() instanceof java.util.List) {
+                for (Object v:(java.util.List) seek.getValue()) {
+                  parameters.add(v);
+                }
+              } else
+                parameters.add(seek.getValue());
             }
           }
         }

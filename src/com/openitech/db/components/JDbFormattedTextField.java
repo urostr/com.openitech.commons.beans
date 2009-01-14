@@ -47,6 +47,7 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.DateFormatter;
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
@@ -531,6 +532,15 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     }
     super.setDocument(doc);
     if (getDocument() != null && documentWeakListener != null) {
+      try {
+        if (doc.getLength()==0) {
+          setValue(null);
+        } else if (getFormatter()!=null) {
+          setValue(getFormatter().stringToValue(doc.getText(0, doc.getLength())));
+        }
+      } catch (Exception ex) {
+        Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.SEVERE, null, ex);
+      }
       getDocument().addDocumentListener(documentWeakListener);
     }
   }
