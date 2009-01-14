@@ -6,7 +6,6 @@
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-
 package com.openitech.db.components;
 
 import com.openitech.Settings;
@@ -30,162 +29,183 @@ import javax.swing.event.ListDataEvent;
  * @author tomaz
  */
 public class JDbComboBox extends JComboBox implements FieldObserver {
-  private DbFieldObserver dbFieldObserver = new DbFieldObserver();
-  private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
-  private Validator validator = null;
-  
-  private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
-  private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
-  private transient ActionWeakListener actionWeakListener;
-  /** Creates a new instance of JDbComboBox */
-  public JDbComboBox() {
-    init();
-  }
-  
-  public JDbComboBox(boolean editable) {
-    super();
-    setEditable(editable);
-    init();
-  }
-  
-  private void init() {
-    try {
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null);
-      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null);
-      actionWeakListener = new ActionWeakListener(this);
-    } catch (NoSuchMethodException ex) {
-      throw (RuntimeException) new IllegalStateException().initCause(ex);
-    }
-    dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
-    dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
-    this.addActionListener(actionWeakListener);
-    com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
-  }
-  
-  public DbFieldObserver getDbFieldObserver() {
-    return dbFieldObserver;
-  }
-  
-  public void setDataSource(DbDataSource dataSource) {
-    dbFieldObserver.setDataSource(dataSource);
-    dbFieldObserverToolTip.setDataSource(dataSource);
-  }
-  
-  public DbDataSource getDataSource() {
-    return dbFieldObserver.getDataSource();
-  }
-  
-  public void setColumnName(String columnName) {
-    dbFieldObserver.setColumnName(columnName);
-  }
-  
-  public String getColumnName() {
-    return dbFieldObserver.getColumnName();
-  }
-  
-  public void setToolTipColumnName(String columnName) {
-    dbFieldObserverToolTip.setColumnName(columnName);
-  }
-  
-  public String getToolTipColumnName() {
-    return dbFieldObserverToolTip.getColumnName();
-  }
-  
-  public void setValidator(Validator validator) {
-    this.validator = validator;
-  }
-  
-  public Validator getValidator() {
-    return validator;
-  }
-  
-  public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
-    actionWeakListener.setEnabled(false);
-    try {
-      if (getModel() instanceof DbComboBoxModel) {
-        this.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object,Object>(dbFieldObserver.getValue(),null, null));
-      } else if (dbFieldObserver.getValueAsInt()<getModel().getSize())
-        this.setSelectedIndex(dbFieldObserver.getValueAsInt());
-      if (getEditor()!=null) {
-        getEditor().setItem(getSelectedItem());
-      }
-    } finally {
-      actionWeakListener.setEnabled(true);
-    }
-    repaint(27);
-  }
-  
-  public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
-    if (this.dbFieldObserverToolTip.getColumnName()!=null) {
-      int tip  = dbFieldObserverToolTip.getValueAsInt();
-      if (!dbFieldObserverToolTip.wasNull() && tip<this.getModel().getSize()) {
-        this.setToolTipText("Pomo\u010d : "+this.getModel().getElementAt(tip));
-      } else
-        this.setToolTipText(null);
-    } else
-      this.setToolTipText(null);
-  }
-  
-  private void updateColumn() {
-    activeRowChangeWeakListener.setEnabled(false);
-    try {
-      if (getModel() instanceof DbComboBoxModel) {
-        if (!((DbComboBoxModel) getModel()).isUpdatingEntries()) {
-          if ((this.getSelectedItem()!=null)&&(this.getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
-            Object value = (((DbComboBoxModel.DbComboBoxEntry) this.getSelectedItem()).getKey());
-            if ((validator==null)||(validator!=null&&validator.isValid(value))) {
-              dbFieldObserver.updateValue(value);
-            }
-          }
-        }
-      } else {
-        int value = this.getSelectedIndex();
-        if ((validator==null)||(validator!=null&&validator.isValid(value))) {
-          dbFieldObserver.updateValue(value);
-        }
-      }
-    } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
-    } finally {
-      activeRowChangeWeakListener.setEnabled(true);
-    }
-  }
-  
-  /**
-   * Invoked when an action occurs.
-   */
-  public void actionPerformed(ActionEvent e) {
-    updateColumn();
-  }
-  
-  public void contentsChanged(ListDataEvent e) {
-    boolean enabled = actionWeakListener.isEnabled();
-    actionWeakListener.setEnabled(false);
-    try {
-      if (!(getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
-        //final Object oldValue = getSelectedItem();
-        super.contentsChanged(e);
-        //setSelectedItem(oldValue);
-        //((JTextComponent) this.getEditor().getEditorComponent()).setText(oldValue.toString());
-      } else {
-        super.contentsChanged(e);
-        dataSource_fieldValueChanged(null);
-      }
-    } finally {
-      actionWeakListener.setEnabled(enabled);
-    }
-  }
 
-  public void setModel(ComboBoxModel aModel) {
-    if (actionWeakListener!=null)
-      actionWeakListener.setEnabled(false);
-    try {
-      super.setModel(aModel);
-    } finally {
-      if (actionWeakListener!=null)
-        actionWeakListener.setEnabled(true);
+    private DbFieldObserver dbFieldObserver = new DbFieldObserver();
+    private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
+    private Validator validator = null;
+    private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
+    private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
+    private transient ActionWeakListener actionWeakListener;
+
+    /** Creates a new instance of JDbComboBox */
+    public JDbComboBox() {
+        init();
     }
-    if (dbFieldObserver!=null)
-      dataSource_fieldValueChanged(null);
-  }
+
+    public JDbComboBox(boolean editable) {
+        super();
+        setEditable(editable);
+        init();
+    }
+
+    private void init() {
+        try {
+            activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
+            tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
+            actionWeakListener = new ActionWeakListener(this);
+        } catch (NoSuchMethodException ex) {
+            throw (RuntimeException) new IllegalStateException().initCause(ex);
+        }
+        dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
+        dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
+        this.addActionListener(actionWeakListener);
+        com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
+    }
+
+    public DbFieldObserver getDbFieldObserver() {
+        return dbFieldObserver;
+    }
+
+    @Override
+    public void setDataSource(DbDataSource dataSource) {
+        dbFieldObserver.setDataSource(dataSource);
+        dbFieldObserverToolTip.setDataSource(dataSource);
+    }
+
+    @Override
+    public DbDataSource getDataSource() {
+        return dbFieldObserver.getDataSource();
+    }
+
+    @Override
+    public void setColumnName(String columnName) {
+        dbFieldObserver.setColumnName(columnName);
+    }
+
+    @Override
+    public String getColumnName() {
+        return dbFieldObserver.getColumnName();
+    }
+
+    public void setToolTipColumnName(String columnName) {
+        dbFieldObserverToolTip.setColumnName(columnName);
+    }
+
+    public String getToolTipColumnName() {
+        return dbFieldObserverToolTip.getColumnName();
+    }
+
+    public void setValidator(Validator validator) {
+        this.validator = validator;
+    }
+
+    public Validator getValidator() {
+        return validator;
+    }
+
+    public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
+        actionWeakListener.setEnabled(false);
+        try {
+            if (getModel() instanceof DbComboBoxModel) {
+                this.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(dbFieldObserver.getValue(), null, null));
+            } else if (dbFieldObserver.getValueAsInt() < getModel().getSize()) {
+                this.setSelectedIndex(dbFieldObserver.getValueAsInt());
+            }
+            if (getEditor() != null) {
+                getEditor().setItem(getSelectedItem());
+            }
+        } finally {
+            actionWeakListener.setEnabled(true);
+        }
+        repaint(27);
+    }
+
+    @Override
+    protected void fireActionEvent() {
+        if (actionWeakListener.isEnabled()) {
+            super.fireActionEvent();
+        }
+    }
+
+    public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
+        if (this.dbFieldObserverToolTip.getColumnName() != null) {
+            int tip = dbFieldObserverToolTip.getValueAsInt();
+            if (!dbFieldObserverToolTip.wasNull() && tip < this.getModel().getSize()) {
+                this.setToolTipText("Pomo\u010d : " + this.getModel().getElementAt(tip));
+            } else {
+                this.setToolTipText(null);
+            }
+        } else {
+            this.setToolTipText(null);
+        }
+    }
+
+    private void updateColumn() {
+        activeRowChangeWeakListener.setEnabled(false);
+        try {
+            if (getModel() instanceof DbComboBoxModel) {
+                if (!((DbComboBoxModel) getModel()).isUpdatingEntries()) {
+                    if ((this.getSelectedItem() != null) && (this.getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
+                        Object value = (((DbComboBoxModel.DbComboBoxEntry) this.getSelectedItem()).getKey());
+                        if ((validator == null) || (validator != null && validator.isValid(value))) {
+                            dbFieldObserver.updateValue(value);
+                        }
+                    }
+                }
+            } else {
+                int value = this.getSelectedIndex();
+                if ((validator == null) || (validator != null && validator.isValid(value))) {
+                    dbFieldObserver.updateValue(value);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+        } finally {
+            activeRowChangeWeakListener.setEnabled(true);
+        }
+    }
+
+    /**
+     * Invoked when an action occurs.
+     */
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        updateColumn();
+    }
+
+    @Override
+    public void contentsChanged(ListDataEvent e) {
+        boolean enabled = actionWeakListener.isEnabled();
+        actionWeakListener.setEnabled(false);
+        try {
+            if (!(getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
+                //final Object oldValue = getSelectedItem();
+                super.contentsChanged(e);
+            //setSelectedItem(oldValue);
+            //((JTextComponent) this.getEditor().getEditorComponent()).setText(oldValue.toString());
+            } else {
+                super.contentsChanged(e);
+                dataSource_fieldValueChanged(null);
+            }
+        } finally {
+            actionWeakListener.setEnabled(enabled);
+        }
+    }
+
+    @Override
+    public void setModel(ComboBoxModel aModel) {
+        if (actionWeakListener != null) {
+            actionWeakListener.setEnabled(false);
+        }
+        try {
+            super.setModel(aModel);
+        } finally {
+            if (actionWeakListener != null) {
+                actionWeakListener.setEnabled(true);
+            }
+        }
+        if (dbFieldObserver != null) {
+            dataSource_fieldValueChanged(null);
+        }
+    }
 }
