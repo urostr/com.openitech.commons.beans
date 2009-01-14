@@ -5,15 +5,7 @@ import com.openitech.util.Equals;
 import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 
 public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
@@ -39,11 +31,47 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       new MessageFormat(" ({0} like (''%''+?)) "), //-9
       new MessageFormat(" ({0} like (''%''+?+''%'')) "),          //-10
     };
+    protected final String[] descriptions = new String[] {
+       "je enak",
+       "se zaène z",
+       "se konèa z",
+       "vsebuje",
+       "je enak",
+       "je veèji ali enak",
+       "je manjši ali enak",
+       "je",
+       "se zaène z",
+       "se konèa z",
+       "vsebuje"
+    };
     protected String field;
     protected E value = null;
     protected int def_i_type = 4;
     protected int i_type = 4;
     protected int p_count = 1;
+    private String name;
+
+    /**
+     * Get the value of name
+     *
+     * @return the value of name
+     */
+    public String getName() {
+      return name;
+    }
+
+    /**
+     * Set the value of name
+     *
+     * @param name new value of name
+     */
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getDescription() {
+      return this.toString()+" "+descriptions[i_type]+"'"+value.toString()+"'";
+    }
 
     public AbstractSeekType(String field, int i_type, int p_count) {
       this.field = field;
@@ -75,9 +103,20 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       return result;
     }
 
+    public int getSeekType() {
+      return i_type;
+    }
+
     public StringBuffer getSQLSegment() {
       return formati[i_type].format(new Object[]{field}, new StringBuffer(27), null);
     }
+
+    @Override
+    public String toString() {
+      return name!=null?name:super.toString();
+    }
+
+
   }
 
   public final static class SeekType extends AbstractSeekType<String> {
