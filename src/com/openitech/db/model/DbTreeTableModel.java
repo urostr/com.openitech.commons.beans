@@ -6,10 +6,12 @@
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-
 package com.openitech.db.model;
 
 import com.openitech.Settings;
+import com.openitech.db.filters.Scheduler;
+import com.openitech.ref.events.ListDataWeakListener;
+import java.awt.EventQueue;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,6 +19,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreePath;
 import org.jdesktop.swingx.tree.TreeModelSupport;
@@ -30,23 +34,23 @@ import org.jdesktop.swingx.treetable.TreeTableNode;
  * @author uros
  */
 public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
+
   /**
    * Provides support for event dispatching.
    */
   protected TreeModelSupport modelSupport;
   private DbTreeModelNode root = new DbTreeModelNode();
   private List<DbDataSourceIndex> indices = new ArrayList<DbDataSourceIndex>();
-  
   /**
    * Holds value of property nodeColumns.
    */
   private int nodeColumns = 2;
-  
+
   /** Creates a new instance of DbTreeTableModel */
   public DbTreeTableModel() {
     this.modelSupport = new TreeModelSupport(this);
   }
-  
+
   /**
    * Getter for property nodeColumns.
    * @return Value of property nodeColumns.
@@ -54,7 +58,7 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
   public int getNodeColumns() {
     return this.nodeColumns;
   }
-  
+
   /**
    * Setter for property nodeColumns.
    * @param nodeColumns New value of property nodeColumns.
@@ -63,7 +67,7 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
     this.nodeColumns = nodeColumns;
     changeDataStructure();
   }
-  
+
   /**
    * Gets the path from the root to the specified node.
    *
@@ -79,146 +83,189 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
   public TreeTableNode[] getPathToRoot(TreeTableNode aNode) {
     List<TreeTableNode> path = new ArrayList<TreeTableNode>();
     TreeTableNode node = aNode;
-    
+
     while (node != root) {
       path.add(0, node);
-      
+
       node = (TreeTableNode) node.getParent();
     }
-    
+
     if (node == root) {
       path.add(0, node);
     }
-    
+
     return path.toArray(new TreeTableNode[0]);
   }
-  
-  
+
   private boolean isValidTreeTableNode(Object node) {
     boolean result = false;
-    
+
     if (node instanceof TreeTableNode) {
       TreeTableNode ttn = (TreeTableNode) node;
-      
+
       while (!result && ttn != null) {
         result = ttn == root;
-        
+
         ttn = ttn.getParent();
       }
     }
-    
+
     return result;
   }
-  
+
+
+  private class ScheduleUpdateRoot extends Scheduler implements ListDataListener {
+    private Runnable updateRoot = new Runnable() {
+
+      @Override
+      public void run() {
+        EventQueue.invokeLater(new Runnable() {
+          @Override
+          public void run() {
+            updateRoot();
+          }
+        });
+      }
+    };
+
+    @Override
+    public void intervalAdded(ListDataEvent e) {
+      schedule(updateRoot);
+    }
+
+    @Override
+    public void intervalRemoved(ListDataEvent e) {
+      schedule(updateRoot);
+    }
+
+    @Override
+    public void contentsChanged(ListDataEvent e) {
+      schedule(updateRoot);
+    }
+  }
+
+  private ScheduleUpdateRoot scheduleUpdateRoot = new ScheduleUpdateRoot();
+  //private ListDataWeakListener indexChange = new ListDataWeakListener(scheduleUpdateRoot);
+
   private void changeDataStructure() {
     try {
-      root = new DbTreeModelNode();
+      for(DbDataSourceIndex index:indices) {
+        index.removeListDataListener(scheduleUpdateRoot);
+        index.setDataSource(null);
+      }
       indices.clear();
       List<String> keys = new ArrayList<String>();
-      for (int c=0;c<Math.min(nodeColumns,columnDescriptors.length); c++) {
+      for (int c = 0; c < Math.min(nodeColumns, columnDescriptors.length); c++) {
         keys.addAll(columnDescriptors[c].getColumnNames());
         DbDataSourceIndex index = new DbDataSourceIndex();
         index.setKeys(keys);
         index.setDataSource(getDataSource());
+        index.addListDataListener(scheduleUpdateRoot);
         indices.add(index);
       }
-      if (indices.size()>0) {
-        DbDataSourceIndex rootIndex = indices.get(0);
-        for (DbDataSourceIndex.DbIndexKey key:rootIndex.getUniqueKeys()) {
-          DbTreeModelNode node = new DbTreeModelNode();
-          node.setKey(key);
-          node.level = 0;
-          updateTreeStructure(node, rootIndex, 1, new HashSet<Integer> ());
-          root.add(node);
-        }
-      }
-      //System.out.println();
-      //System.out.println();
-      modelSupport.fireNewRoot();
+      updateRoot();
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change the tree structure. ["+ex.getMessage()+"]");
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change the tree structure. [" + ex.getMessage() + "]");
     }
   }
-  
+
+  private void updateRoot() {
+    if (indices.size() > 0) {
+      root = new DbTreeModelNode();
+      DbDataSourceIndex rootIndex = indices.get(0);
+      for (DbDataSourceIndex.DbIndexKey key : rootIndex.getUniqueKeys()) {
+        DbTreeModelNode node = new DbTreeModelNode();
+        node.setKey(key);
+        node.level = 0;
+        updateTreeStructure(node, rootIndex, 1, new HashSet<Integer>());
+        root.add(node);
+      }
+    }
+    //System.out.println();
+    //System.out.println();
+    modelSupport.fireNewRoot();
+  }
+
   public void reload() {
     changeDataStructure();
   }
-  
+
   private void updateTreeStructure(DbTreeModelNode parent, DbDataSourceIndex parentIndex, int level, Set<Integer> excludeRows) {
-    if (level<indices.size()) {
+    if (level < indices.size()) {
       Set<Integer> rows = parentIndex.findRows(parent.key);
 
       /*System.out.println();
       for (int i=0;i<level;i++)
-        System.out.print("  ");
+      System.out.print("  ");
       System.out.print(parent.key.toString()+":");
       System.out.print(level);
       System.out.print(":");
       for (int row:rows) {
-        System.out.print(row);
-        System.out.print(" ");
+      System.out.print(row);
+      System.out.print(" ");
       }
       System.out.println();//*/
-      
+
       Set<Integer> excluded = new HashSet<Integer>();
       excluded.addAll(excludeRows);
       excluded.add(parent.key.getRow());
       DbDataSourceIndex childIndex = indices.get(level);
 
       /*for (int i=0;i<level;i++)
-        System.out.print("  ");
+      System.out.print("  ");
       System.out.print(parent.key.toString()+":CHILD KEYS:  ");//*/
-      for (DbDataSourceIndex.DbIndexKey key:childIndex.getRowKeys(rows)) {
+      for (DbDataSourceIndex.DbIndexKey key : childIndex.getRowKeys(rows)) {
         if (!excluded.contains(key.getRow())) {
           //System.out.print(key.toString()+"  ");
-          
+
           DbTreeModelNode node = new DbTreeModelNode();
           node.setKey(key);
           node.level = level;
-          updateTreeStructure(node, childIndex, level+1, excluded);
+          updateTreeStructure(node, childIndex, level + 1, excluded);
           parent.add(node);
         }
       }
     }
   }
-  
+
   public void setColumns(String[][] headers) {
     super.setColumns(headers);
     changeDataStructure();
   }
-  
+
   public void setDataSource(DbDataSource dataSource) {
     super.setDataSource(dataSource);
     changeDataStructure();
   }
-  
+
   public int getHierarchicalColumn() {
     return 0;
   }
-  
+
   public Object getValueAt(Object node, int column) {
     Object result = null;
-    if ((node instanceof DbTreeModelNode)&&(indices.size()>0)) {
+    if ((node instanceof DbTreeModelNode) && (indices.size() > 0)) {
       DbTreeModelNode treeNode = (DbTreeModelNode) node;
       Integer row = indices.get(treeNode.level).findRow(treeNode.key);
-      if (row!=null)
-        result = super.getValueAt(row.intValue()-1, column+getNodeColumns());
+      if (row != null) {
+        result = super.getValueAt(row.intValue() - 1, column + getNodeColumns());
+      }
     }
-    
+
     return result;
   }
-  
+
   public boolean isCellEditable(Object node, int column) {
     return false;
   }
-  
+
   public void setValueAt(Object value, Object node, int column) {
   }
-  
+
   public Object getRoot() {
     return root;
   }
-  
+
   /**
    * Returns the child of <code>parent</code> at index <code>index</code>
    * in the parent's
@@ -236,12 +283,10 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
       throw new IllegalArgumentException(
               "parent must be a TreeTableNode managed by this model");
     }
-    
+
     return ((TreeTableNode) parent).getChildAt(index);
   }
-  
-  
-  
+
   /**
    * Returns the number of children of <code>parent</code>.
    * Returns 0 if the node
@@ -256,10 +301,10 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
       throw new IllegalArgumentException(
               "parent must be a TreeTableNode managed by this model");
     }
-    
+
     return ((TreeTableNode) parent).getChildCount();
   }
-  
+
   /**
    * Returns <code>true</code> if <code>node</code> is a leaf.
    * It is possible for this method to return <code>false</code>
@@ -276,11 +321,10 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
       throw new IllegalArgumentException(
               "node must be a TreeTableNode managed by this model");
     }
-    
+
     return ((TreeTableNode) node).isLeaf();
   }
-  
-  
+
   /**
    * Messaged when the user has altered the value for the item identified
    * by <code>path</code> to <code>newValue</code>.
@@ -292,8 +336,7 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
    */
   public void valueForPathChanged(TreePath path, Object newValue) {
   }
-  
-  
+
   /**
    * Returns the index of child in parent.  If either <code>parent</code>
    * or <code>child</code> is <code>null</code>, returns -1.
@@ -311,19 +354,18 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
       throw new IllegalArgumentException(
               "parent must be a TreeTableNode managed by this model");
     }
-    
+
     if (!isValidTreeTableNode(parent)) {
       throw new IllegalArgumentException(
               "child must be a TreeTableNode managed by this model");
     }
-    
+
     return ((TreeTableNode) parent).getIndex((TreeTableNode) child);
   }
-  
+
 //
 //  Change Events
 //
-  
   /**
    * Adds a listener for the <code>TreeModelEvent</code>
    * posted after the tree changes.
@@ -334,8 +376,7 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
   public void addTreeModelListener(TreeModelListener l) {
     modelSupport.addTreeModelListener(l);
   }
-  
-  
+
   /**
    * Removes a listener previously added with
    * <code>addTreeModelListener</code>.
@@ -346,7 +387,7 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
   public void removeTreeModelListener(TreeModelListener l) {
     modelSupport.removeTreeModelListener(l);
   }
-  
+
   /**
    * Returns an array of all the <code>TreeModelListener</code>s added
    * to this JXTreeTable with addTreeModelListener().
@@ -357,48 +398,48 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
   public TreeModelListener[] getTreeModelListeners() {
     return modelSupport.getTreeModelListeners();
   }
-  
+
   public int getColumnCount() {
-    return Math.max(0,super.getColumnCount()-getNodeColumns());
+    return Math.max(0, super.getColumnCount() - getNodeColumns());
   }
 
   public String getColumnName(int column) {
-    return super.getColumnName(column+getNodeColumns());
+    return super.getColumnName(column + getNodeColumns());
   }
-  
+
   public static class DbTreeModelNode extends AbstractMutableTreeTableNode implements MutableTreeTableNode {
+
     DbDataSourceIndex.DbIndexKey key;
-    
     int level = 0;
-    
+
     public void setKey(DbDataSourceIndex.DbIndexKey key) {
       this.key = key;
     }
-    
+
     public DbDataSourceIndex.DbIndexKey getKey() {
       return key;
     }
-    
+
     public int getLevel() {
       return level;
     }
-    
+
     public Object getValueAt(int column) {
       return userObject.toString();
     }
-    
+
     public int getColumnCount() {
       return 1;
     }
 
     public int hashCode() {
-      return key==null?super.hashCode():key.hashCode();
+      return key == null ? super.hashCode() : key.hashCode();
     }
 
     public boolean equals(Object obj) {
-      if ((obj==null)&&!(obj instanceof DbTreeModelNode))
+      if ((obj == null) && !(obj instanceof DbTreeModelNode)) {
         return super.equals(obj);
-      else {
+      } else {
         return com.openitech.util.Equals.equals(this.key, ((DbTreeModelNode) obj).key);
       }
     }

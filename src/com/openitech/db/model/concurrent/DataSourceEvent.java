@@ -47,7 +47,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   public static void submit(DataSourceEvent event) {
     if ((event instanceof RefreshDataSource)&&
         event.event.dataSource.getQueuedDelay()<=0) {
-        if (event.event.dataSource.lock()) {
+        if (event.event.dataSource.canLock()) {
          ((RefreshDataSource) event).load();
         }      
     } else {

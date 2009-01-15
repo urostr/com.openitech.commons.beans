@@ -4009,6 +4009,17 @@ public class DbDataSource implements DbNavigatorDataSource {
         return lock(true);
     }
 
+    public boolean canLock() {
+      boolean result = false;
+      try {
+         result = available.tryLock() || available.tryLock(10L, TimeUnit.MILLISECONDS);
+         available.unlock();
+      } catch (InterruptedException ex) {
+        //ignore it;
+      }
+      return result;
+    }
+
     public boolean lock(boolean fatal) {
         boolean result = false;
         try {
@@ -4057,14 +4068,17 @@ public class DbDataSource implements DbNavigatorDataSource {
     private boolean loadData(boolean reload, int oldRow) {
         boolean reloaded = false;
         if (reload) {
+            lock();
             try {
                 if (selectResultSet != null) {
                     selectResultSet.close();
                 }
             } catch (SQLException ex) {
                 Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
+            } finally {
+              selectResultSet = null;
+              unlock();
             }
-            selectResultSet = null;
         }
         if ((selectResultSet == null) && selectStatement != null) {
             lock();

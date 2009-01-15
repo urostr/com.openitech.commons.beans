@@ -125,7 +125,7 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
   
   private void lockAndLoad() {
-    if (event.dataSource.lock(false)) {
+    if (event.dataSource.canLock()) {
       load();
     } else {
       resubmit();
@@ -133,6 +133,7 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
   
   protected void load() {
+    event.dataSource.lock();
     try {
       if (filterChange)
         try {
