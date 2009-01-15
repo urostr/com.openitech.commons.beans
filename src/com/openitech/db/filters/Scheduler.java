@@ -50,9 +50,9 @@ public class Scheduler {
     DataSourceFilters.AbstractSeekType<E> seek_type;
     E value;
     
-    public SeekValueUpdateRunnable(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<E> seek_type, E value) {
+    public SeekValueUpdateRunnable(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<? extends E> seek_type, E value) {
       this.filter = filter;
-      this.seek_type = seek_type;
+      this.seek_type = (DataSourceFilters.AbstractSeekType<E>) seek_type;
       this.value = value;
     }
     
