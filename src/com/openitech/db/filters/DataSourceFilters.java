@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import javax.swing.text.Document;
 
 public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
@@ -55,6 +56,50 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     private String name;
 
     /**
+     * Get the value of automatic
+     *
+     * @return the value of automatic
+     */
+    public boolean isAutomatic() {
+      return documents==null;
+    }
+
+    private Document[] documents;
+
+    /**
+     * Get the value of documents
+     *
+     * @return the value of documents
+     */
+    public Document[] getDocuments() {
+      return documents;
+    }
+
+    /**
+     * Set the value of documents
+     *
+     * @param documents new value of documents
+     */
+    public void setDocuments(Document... documents) {
+      setDocuments(null, documents);
+    }
+
+    /**
+     * Set the value of documents
+     *
+     * @param documents new value of documents
+     */
+    public void setDocuments(DataSourceFilters filter, Document... documents) {
+      if (filter!=null) {
+        for (Document document:documents)
+          document.addDocumentListener(new FilterDocumentListener(filter, this));
+      }
+      this.documents = documents;
+    }
+
+
+
+    /**
      * Get the value of name
      *
      * @return the value of name
@@ -73,7 +118,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     public String getDescription() {
-      return this.toString()+" "+descriptions[i_type]+" "+value.toString();
+      return this.toString()+" "+descriptions[i_type]+" "+(value==null?"prazen":value.toString());
     }
 
     public AbstractSeekType(String field, int i_type, int p_count) {

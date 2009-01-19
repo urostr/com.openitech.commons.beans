@@ -12,7 +12,6 @@ package com.openitech.db.filters;
 
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
-import com.openitech.db.filters.DataSourceFilters.SeekType;
 import com.openitech.db.filters.FilterDocumentListener;
 import com.openitech.formats.FormatFactory;
 import java.awt.CardLayout;
@@ -28,6 +27,7 @@ import java.util.logging.Logger;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.event.DocumentEvent;
 import javax.swing.text.BadLocationException;
 
@@ -87,13 +87,18 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
   private void updateFilterMenuItem() {
     filterMenuItem.removeAll();
     for (Map.Entry<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]> entry : documents.entrySet()) {
-      if ((entry.getValue()[0].getLength() > 0) || ((entry.getValue().length==2)&&(entry.getValue()[1].getLength() > 0))) {
+      if ((entry.getValue()[0].getLength() > 0) || ((entry.getValue().length == 2) && (entry.getValue()[1].getLength() > 0))) {
         DataSourceFilters.AbstractSeekType<? extends Object> seekType = entry.getKey();
-        JCheckBoxMenuItem miCheckbox = new JCheckBoxMenuItem(seekType.getDescription(), true);
-        miCheckbox.setActionCommand("CLEAR");
-        miCheckbox.addActionListener(new ToggleFilter(seekType));
+//        if (seekType.isAutomatic()) {
+          JCheckBoxMenuItem miCheckbox = new JCheckBoxMenuItem(seekType.getDescription(), true);
+          miCheckbox.setActionCommand("CLEAR");
+          miCheckbox.addActionListener(new ToggleFilter(seekType));
+          filterMenuItem.add(miCheckbox);
+//        } else {
+//          JMenuItem miFilter = new JMenuItem(seekType.getDescription());
+//          filterMenuItem.add(miFilter);
+//        }
 
-        filterMenuItem.add(miCheckbox);
       }
     }
     firePropertyChange("filter_menu", filterMenuItem, null);
@@ -138,20 +143,25 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       for (int i = 0; i < seekTypeList.size(); i++) {
         DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
 
-        headers.add(item);
 
-        if (item instanceof DataSourceFilters.BetweenDateSeekType) {
-          javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
-          javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
-
-          from.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
-          to.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
-
-          documents.put(item, new javax.swing.text.Document[]{from, to});
+        if (!item.isAutomatic()) {
+          documents.put(item, item.getDocuments());
         } else {
-          javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
-          document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
-          documents.put(item, new javax.swing.text.Document[]{document});
+          headers.add(item);
+
+          if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+            javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
+            javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
+
+            from.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
+            to.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
+
+            documents.put(item, new javax.swing.text.Document[]{from, to});
+          } else {
+            javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
+            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+            documents.put(item, new javax.swing.text.Document[]{document});
+          }
         }
       }
 
@@ -772,9 +782,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       try {
         to_date = FormatFactory.DATE_FORMAT.parse(getText(to));
       } catch (ParseException ex) {
-        to_date = from_date==null?null:Calendar.getInstance().getTime();
+        to_date = from_date == null ? null : Calendar.getInstance().getTime();
       }
-      if (from_date==null && to_date!=null) {
+      if (from_date == null && to_date != null) {
         from_date = new java.util.Date(0);
       }
 
