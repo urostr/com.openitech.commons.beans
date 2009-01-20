@@ -267,7 +267,11 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   public final static class BetweenDateSeekType extends AbstractSeekType<java.util.List<java.util.Date>> {
 
     public BetweenDateSeekType(String field) {
-      super(field+" BETWEEN ? AND ? ", SeekType.PREFORMATTED, 1);
+      this(field+" BETWEEN ? AND ? ", true);
+    }
+
+    public BetweenDateSeekType(String field, boolean formatted) {
+      super(field, SeekType.PREFORMATTED, 1);
     }
 
     @Override
