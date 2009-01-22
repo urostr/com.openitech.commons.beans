@@ -187,8 +187,10 @@ public class JDbRadioButtonBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_bounds] = new PropertyDescriptor ( "bounds", com.openitech.db.components.JDbRadioButton.class, "getBounds", "setBounds" ); // NOI18N
             properties[PROPERTY_changeListeners] = new PropertyDescriptor ( "changeListeners", com.openitech.db.components.JDbRadioButton.class, "getChangeListeners", null ); // NOI18N
             properties[PROPERTY_checkedValue] = new PropertyDescriptor ( "checkedValue", com.openitech.db.components.JDbRadioButton.class, "getCheckedValue", "setCheckedValue" ); // NOI18N
+            properties[PROPERTY_checkedValue].setPreferred ( true );
             properties[PROPERTY_colorModel] = new PropertyDescriptor ( "colorModel", com.openitech.db.components.JDbRadioButton.class, "getColorModel", null ); // NOI18N
             properties[PROPERTY_columnName] = new PropertyDescriptor ( "columnName", com.openitech.db.components.JDbRadioButton.class, "getColumnName", "setColumnName" ); // NOI18N
+            properties[PROPERTY_columnName].setPreferred ( true );
             properties[PROPERTY_component] = new IndexedPropertyDescriptor ( "component", com.openitech.db.components.JDbRadioButton.class, null, null, "getComponent", null ); // NOI18N
             properties[PROPERTY_componentCount] = new PropertyDescriptor ( "componentCount", com.openitech.db.components.JDbRadioButton.class, "getComponentCount", null ); // NOI18N
             properties[PROPERTY_componentListeners] = new PropertyDescriptor ( "componentListeners", com.openitech.db.components.JDbRadioButton.class, "getComponentListeners", null ); // NOI18N
@@ -200,6 +202,7 @@ public class JDbRadioButtonBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_cursor] = new PropertyDescriptor ( "cursor", com.openitech.db.components.JDbRadioButton.class, "getCursor", "setCursor" ); // NOI18N
             properties[PROPERTY_cursorSet] = new PropertyDescriptor ( "cursorSet", com.openitech.db.components.JDbRadioButton.class, "isCursorSet", null ); // NOI18N
             properties[PROPERTY_dataSource] = new PropertyDescriptor ( "dataSource", com.openitech.db.components.JDbRadioButton.class, "getDataSource", "setDataSource" ); // NOI18N
+            properties[PROPERTY_dataSource].setPreferred ( true );
             properties[PROPERTY_dbFieldObserver] = new PropertyDescriptor ( "dbFieldObserver", com.openitech.db.components.JDbRadioButton.class, "getDbFieldObserver", null ); // NOI18N
             properties[PROPERTY_debugGraphicsOptions] = new PropertyDescriptor ( "debugGraphicsOptions", com.openitech.db.components.JDbRadioButton.class, "getDebugGraphicsOptions", "setDebugGraphicsOptions" ); // NOI18N
             properties[PROPERTY_disabledIcon] = new PropertyDescriptor ( "disabledIcon", com.openitech.db.components.JDbRadioButton.class, "getDisabledIcon", "setDisabledIcon" ); // NOI18N
@@ -209,6 +212,7 @@ public class JDbRadioButtonBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_doubleBuffered] = new PropertyDescriptor ( "doubleBuffered", com.openitech.db.components.JDbRadioButton.class, "isDoubleBuffered", "setDoubleBuffered" ); // NOI18N
             properties[PROPERTY_dropTarget] = new PropertyDescriptor ( "dropTarget", com.openitech.db.components.JDbRadioButton.class, "getDropTarget", "setDropTarget" ); // NOI18N
             properties[PROPERTY_enabled] = new PropertyDescriptor ( "enabled", com.openitech.db.components.JDbRadioButton.class, "isEnabled", "setEnabled" ); // NOI18N
+            properties[PROPERTY_enabled].setPreferred ( true );
             properties[PROPERTY_focusable] = new PropertyDescriptor ( "focusable", com.openitech.db.components.JDbRadioButton.class, "isFocusable", "setFocusable" ); // NOI18N
             properties[PROPERTY_focusCycleRoot] = new PropertyDescriptor ( "focusCycleRoot", com.openitech.db.components.JDbRadioButton.class, "isFocusCycleRoot", "setFocusCycleRoot" ); // NOI18N
             properties[PROPERTY_focusCycleRootAncestor] = new PropertyDescriptor ( "focusCycleRootAncestor", com.openitech.db.components.JDbRadioButton.class, "getFocusCycleRootAncestor", null ); // NOI18N
