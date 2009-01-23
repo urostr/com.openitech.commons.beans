@@ -70,6 +70,8 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
   }
 
+  final javax.swing.JCheckBoxMenuItem miSorting = new javax.swing.JCheckBoxMenuItem();
+
   /** Creates a new instance of JDbTable */
   public JDbTable() {
     super(new DbTableModel());
@@ -80,7 +82,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     putClientProperty("Quaqua.Table.style", "striped");
     javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
     if (sortable) {
-      final javax.swing.JCheckBoxMenuItem miSorting = new javax.swing.JCheckBoxMenuItem();
+      
 
       miSorting.setText("Sortiranje seznama");
       miSorting.setSelected(enableSorting);
@@ -431,6 +433,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   public void setEnableSorting(boolean enableSorting) {
     if (sortable) {
       this.enableSorting = enableSorting;
+      miSorting.setSelected(isEnableSorting());
       activateRowSorter();
     }
   }
