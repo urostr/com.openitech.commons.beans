@@ -140,6 +140,8 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public boolean setSeekType(int i) {
       boolean result = false;
 
+      int old_value = i_type;
+
       if (i >= 0 && i < formati.length) {
         result = i_type != i;
         i_type = i;
@@ -460,7 +462,9 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     if (!seek_types.contains(seek)) {
       seek_types.add(seek);
     }
+    int old_value = seek.getSeekType();
     if (seek.setSeekType(seek_type)) {
+      firePropertyChange("seek_type", old_value, seek.getSeekType());
       setParameters(true);
     }
   }

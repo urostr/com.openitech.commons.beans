@@ -61,7 +61,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     jtfPostnaStevilka.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_PT_ID, DEFAULT_DELAY));
 
     flDsPostneStevilePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
-    //flDsPostePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
     flPosta = new FilterDocumentCaretListener(jtfPosta.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_IME, DEFAULT_DELAY);
 
     dbDataModel.dsUlice.setReloadsOnEventQueue(false);
@@ -143,23 +142,23 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         try {
           int hs_mid = dbDataModel.getHisnaStevilkaMID(jtfUlice.getText(), jtfHisnaStevilka.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foHisnaStevilkaMID.updateValue(hs_mid == -1 ? null : hs_mid);
-          if (hs_mid == -1 && jtfHisnaStevilka.getText().length()>0 && !jtfHisnaStevilka.isFocusOwner()) {
+          if (hs_mid == -1 && jtfHisnaStevilka.getText().length() > 0 && !jtfHisnaStevilka.isFocusOwner()) {
             foHisnaStevilka.updateValue(jtfHisnaStevilka.getText());
           }
           int ul_mid = dbDataModel.getUlicaMID(jtfUlice.getText(), jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foUlicaMID.updateValue(ul_mid == -1 ? null : ul_mid);
-          if (ul_mid == -1 && jtfUlice.getText().length()>0 && !jtfUlice.isFocusOwner()) {
+          if (ul_mid == -1 && jtfUlice.getText().length() > 0 && !jtfUlice.isFocusOwner()) {
             foUlica.updateValue(jtfUlice.getText());
           }
           int pt_mid = dbDataModel.getPostnaStevilkaMID(jtfPostnaStevilka.getText(), jtfPosta.getText());
           foPostnaStevilkaMID.updateValue(pt_mid == -1 ? null : pt_mid);
-          if (pt_mid == -1 && jtfPostnaStevilka.getText().length()>0 && !jtfPostnaStevilka.isFocusOwner() && !jtfPosta.isFocusOwner()) {
+          if (pt_mid == -1 && jtfPostnaStevilka.getText().length() > 0 && !jtfPostnaStevilka.isFocusOwner() && !jtfPosta.isFocusOwner()) {
             foPostnaStevilka.updateValue(jtfPostnaStevilka.getText());
             foPosta.updateValue(jtfPosta.getText());
           }
           int na_mid = dbDataModel.getNaseljeMID(jtfPostnaStevilka.getText(), jtfNaselja.getText());
           foNaseljeMID.updateValue(na_mid == -1 ? null : na_mid);
-          if (na_mid == -1 && jtfNaselja.getText().length()>0 && !jtfNaselja.isFocusOwner()) {
+          if (na_mid == -1 && jtfNaselja.getText().length() > 0 && !jtfNaselja.isFocusOwner()) {
             foNaselje.updateValue(jtfNaselja.getText());
           }
 
@@ -487,13 +486,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   private void jtfPostnaStevilkaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfPostnaStevilkaFocusLost
     dbDataModel.dsPostneStevilke.setReloadsOnEventQueue(false);
     dbDataModel.disableFilters(!isUpdating());
-  //dbDataModel.dsPosteFilter.setSeekValue(dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, null);
-//    if (cmPostneStevilke.getSelectedItem() != null) {
-//      if (cmPostneStevilke.getSelectedItem().toString().toLowerCase().equals(jtfPostnaStevilka.getText().toLowerCase())) {
-//        jtfPosta.setText(((DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem()).getValue("pt_uime").toString());
-//        cmPoste.setSelectedItem(jtfPosta.getText());
-//      }
-//    }
   }//GEN-LAST:event_jtfPostnaStevilkaFocusLost
 
   private void foHisnaStevilkaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foHisnaStevilkaFieldValueChanged
@@ -501,9 +493,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   }//GEN-LAST:event_foHisnaStevilkaFieldValueChanged
 
 private void foUlicaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foUlicaFieldValueChanged
-  if (isUpdating() && jtfUlice.isFocusOwner()) {
-    jtfHisnaStevilka.setText("");
-  }
   getMIDs();
 }//GEN-LAST:event_foUlicaFieldValueChanged
 
@@ -532,7 +521,6 @@ private void jtfPostaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST
 }//GEN-LAST:event_jtfPostaItemStateChanged
 
 private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {//GEN-FIRST:event_foPostaFieldValueChanged
-// TODO add your handling code here:
   getMIDs();
 }//GEN-LAST:event_foPostaFieldValueChanged
 
@@ -552,7 +540,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
 
     public void displayMessage() {
       DbComboBoxEntry<Object, String> entry = (DbComboBoxEntry<Object, String>) cmPostneStevilke.getSelectedItem();
-      JOptionPane.showMessageDialog(jtfPosta, "Pošta ni veljavna.\nPoštna številka "+entry.getKey().toString()+" pripada pošti "+entry.getValue("pt_uime").toString()+".", "Napaka", JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(jtfPosta, "Pošta ni veljavna.\nPoštna številka " + entry.getKey().toString() + " pripada pošti " + entry.getValue("pt_uime").toString() + ".", "Napaka", JOptionPane.ERROR_MESSAGE);
     }
   }
 
@@ -856,8 +844,8 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
 
     private static String getDialect() {
       String dialect = ConnectionManager.getInstance().getDialect();
-      if (dialect.length()>0&&!dialect.endsWith("/")) {
-        dialect = dialect+"/";
+      if (dialect.length() > 0 && !dialect.endsWith("/")) {
+        dialect = dialect + "/";
       }
       return dialect;
     }
