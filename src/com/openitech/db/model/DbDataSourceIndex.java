@@ -105,7 +105,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
       }
     }
     id = key.toString();
-    if (fields.size() > 0) {
+    if ((fields.size() > 0)&&(dataSource.isDataLoaded())) {
       reindex();
     }
   }
