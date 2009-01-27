@@ -3927,14 +3927,27 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
 
     public void setConnection(Connection connection) throws SQLException {
-        this.connection = connection;
-        if (selectStatement != null && !selectStatement.getConnection().equals(connection)) {
-            if (this.selectStatement != null) {
-                this.selectStatement.close();
-                this.selectStatement = null;
-            }
-            setSelectSql(this.selectSql);
+      if (this.connection!=connection) {
+        for (PreparedStatement statement:cachedStatements.values()) {
+          statement.close();
         }
+        cachedStatements.clear();
+      }
+      this.connection = connection;
+      if (selectStatement != null && !selectStatement.getConnection().equals(connection)) {
+          if (this.selectStatement != null) {
+              this.selectStatement.close();
+              this.selectStatement = null;
+          }
+          if (this.countStatement != null) {
+              this.countStatement.close();
+              this.countStatement = null;
+          }
+          setSelectSql(this.selectSql);
+          if ((this.countStatement == null)&&(countSql!=null)) {
+            setCountSql(countSql);
+          }
+      }
     }
 
     public int getRowCount() {

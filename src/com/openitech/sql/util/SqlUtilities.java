@@ -253,7 +253,7 @@ public abstract class SqlUtilities {
     List<FieldValue> oldValues = new ArrayList<FieldValue>(fieldValues.length);
 
     for (FieldValue value : fieldValues) {
-      if ((operation==Operation.INSERT)||source.hasChanged(value.name)) {
+      if ((operation==Operation.INSERT)||(source!=null&&source.hasChanged(value.name))) {
         newValues.add(value);
         oldValues.add(new FieldValue(value.name, value.type, ((source == null) || (operation==Operation.INSERT)) ? null : source.getOldValue(value.name)));
       }
