@@ -223,6 +223,24 @@ public abstract class SqlUtilities {
     return statement.executeQuery();
   }
 
+  private java.util.List<String> getPrimaryKeys(java.sql.Connection connection, String tableName) throws SQLException {
+
+    java.sql.DatabaseMetaData metaData = connection.getMetaData();
+
+    java.sql.ResultSet rs_keys = metaData.getPrimaryKeys(null, null, tableName);
+    ArrayList<String> keys = new ArrayList<String>();
+    while (rs_keys.next()) {
+      keys.ensureCapacity(rs_keys.getInt("KEY_SEQ"));
+      for (int pos = keys.size(); pos < rs_keys.getInt("KEY_SEQ"); pos++) {
+        keys.add(null);
+      }
+      keys.set(rs_keys.getInt("KEY_SEQ") - 1, rs_keys.getString("COLUMN_NAME"));
+    }
+    rs_keys.close();
+
+    return keys;
+  }
+
   public void logChanges(String application, String database, String tableName, Operation operation, com.openitech.db.model.DbDataSource source, java.util.Map<Field, Object> columnValues,
           String... fieldNames) throws SQLException {
 
@@ -233,6 +251,7 @@ public abstract class SqlUtilities {
 
       fieldValues[pos - 1] = new FieldValue(field);
       fieldValues[pos - 1].setValue(columnValues.get(field));
+
     }
 
     logChanges(application, database, tableName, operation, source, fieldValues);
@@ -241,7 +260,7 @@ public abstract class SqlUtilities {
   public void logChanges(
           String application,
           String database,
-          String tableName, 
+          String tableName,
           Operation operation,
           FieldValue... fieldValues) throws SQLException {
     logChanges(application, database, tableName, operation, (com.openitech.db.model.DbDataSource) null, fieldValues);
@@ -252,10 +271,21 @@ public abstract class SqlUtilities {
     List<FieldValue> newValues = new ArrayList<FieldValue>(fieldValues.length);
     List<FieldValue> oldValues = new ArrayList<FieldValue>(fieldValues.length);
 
+    java.util.List<String> keys = getPrimaryKeys(source.getConnection(), tableName);
+
     for (FieldValue value : fieldValues) {
-      if ((operation==Operation.INSERT)||(source!=null&&source.hasChanged(value.name))) {
+      boolean isPrimaryKey = false;
+      for (int i = 0; i < keys.size(); i++) {
+        isPrimaryKey = keys.get(i).equalsIgnoreCase(value.name);
+        if (isPrimaryKey) {
+          break;
+        }
+      }
+      value.setLogAlways(isPrimaryKey||value.isLogAlways());
+
+      if ((operation == Operation.INSERT) || (source != null && source.hasChanged(value.name)) || value.isLogAlways()) {
         newValues.add(value);
-        oldValues.add(new FieldValue(value.name, value.type, ((source == null) || (operation==Operation.INSERT)) ? null : source.getOldValue(value.name)));
+        oldValues.add(new FieldValue(value.name, value.type, ((source == null) || (operation == Operation.INSERT)) ? null : source.getOldValue(value.name)));
       }
     }
 
@@ -295,7 +325,7 @@ public abstract class SqlUtilities {
     ResultSetMetaData metaData = source.getMetaData();
 
     Map<SqlUtilities.Field, Object> columnValues = new HashMap<SqlUtilities.Field, Object>();
-    for (int field = 1; field<=metaData.getColumnCount(); field++) {
+    for (int field = 1; field <= metaData.getColumnCount(); field++) {
       columnValues.put(new SqlUtilities.Field(metaData.getColumnName(field), metaData.getColumnType(field)), source.getObject(field));
     }
 
@@ -386,9 +416,29 @@ public abstract class SqlUtilities {
     public boolean isNull() {
       return value == null;
     }
+    private boolean logAlways;
+
+    /**
+     * Get the value of logAlways
+     *
+     * @return the value of logAlways
+     */
+    public boolean isLogAlways() {
+      return logAlways;
+    }
+
+    /**
+     * Set the value of logAlways
+     *
+     * @param logAlways new value of logAlways
+     */
+    public void setLogAlways(boolean logAlways) {
+      this.logAlways = logAlways;
+    }
   }
 
   public static enum Operation {
+
     INSERT,
     UPDATE
   }
