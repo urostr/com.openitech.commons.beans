@@ -105,7 +105,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
       }
     }
     id = key.toString();
-    if ((fields.size() > 0)&&(dataSource.isDataLoaded())) {
+    if (fields.size() > 0) {
       reindex();
     }
   }
@@ -115,7 +115,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
   }
 
   private void reindex(int min, int max) throws SQLException {
-    if (fields.size() > 0) {
+    if ((fields.size() > 0) && dataSource.isDataLoaded()) {
       min = Math.min(min, max);
       max = Math.max(min, max);
 
