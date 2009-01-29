@@ -283,7 +283,7 @@ public abstract class SqlUtilities {
       }
       value.setLogAlways(isPrimaryKey||value.isLogAlways());
 
-      if ((operation == Operation.INSERT) || (source != null && source.hasChanged(value.name)) || value.isLogAlways()) {
+      if ((operation != Operation.UPDATE) || (source != null && source.hasChanged(value.name)) || value.isLogAlways()) {
         newValues.add(value);
         oldValues.add(new FieldValue(value.name, value.type, ((source == null) || (operation == Operation.INSERT)) ? null : source.getOldValue(value.name)));
       }
@@ -334,8 +334,10 @@ public abstract class SqlUtilities {
 
   public Map<Field, Object> getColumnValues(StoreUpdatesEvent event) throws SQLException {
     Map<SqlUtilities.Field, Object> columnValues = getColumnValues(event.getSource());
-    for (Map.Entry<String, Object> entry : event.getColumnValues().entrySet()) {
-      columnValues.put(new SqlUtilities.Field(entry.getKey(), event.getSource().getType(entry.getKey())), entry.getValue());
+    if (event.getColumnValues()!=null) {
+      for (Map.Entry<String, Object> entry : event.getColumnValues().entrySet()) {
+        columnValues.put(new SqlUtilities.Field(entry.getKey(), event.getSource().getType(entry.getKey())), entry.getValue());
+      }
     }
 
     return columnValues;
@@ -440,6 +442,7 @@ public abstract class SqlUtilities {
   public static enum Operation {
 
     INSERT,
-    UPDATE
+    UPDATE,
+    DELETE
   }
 }

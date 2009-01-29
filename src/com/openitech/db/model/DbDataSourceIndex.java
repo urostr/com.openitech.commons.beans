@@ -16,6 +16,8 @@ import com.openitech.ref.events.ListDataWeakListener;
 import com.openitech.util.Equals;
 
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +29,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javax.swing.event.EventListenerList;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
@@ -370,7 +371,6 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
   //}
 
   public static class DbIndexKey {
-
     private static final String NULL = "NULL";
     private boolean valid = false;
     private int row = -1;
@@ -383,6 +383,9 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
         if (value == null) {
           this.keyValuesList.add(NULL);
           key.append(key.length() > 0 ? ";" : "").append(NULL);
+        } else if (value instanceof java.util.Date) {
+          keyValuesList.add(Long.toString(((java.util.Date)value).getTime()));
+          key.append(key.length() > 0 ? ";" : "").append(Long.toString(((java.util.Date)value).getTime()));
         } else {
           this.keyValuesList.add(value.toString());
           key.append(key.length() > 0 ? ";" : "").append(value.toString());
@@ -399,6 +402,9 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
         if (value == null) {
           keyValuesList.add(NULL);
           key.append(key.length() > 0 ? ";" : "").append(NULL);
+        } else if (value instanceof java.util.Date) {
+          keyValuesList.add(Long.toString(((java.util.Date)value).getTime()));
+          key.append(key.length() > 0 ? ";" : "").append(Long.toString(((java.util.Date)value).getTime()));
         } else {
           keyValuesList.add(value.toString());
           key.append(key.length() > 0 ? ";" : "").append(value.toString());
