@@ -273,7 +273,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
 
   public void intervalAdded(ListDataEvent e) {
     try {
-      reindex(e.getIndex0(), e.getIndex1());
+      reindex(e.getIndex0()+1, e.getIndex1()+1);
     } catch (SQLException ex) {
       throw (RuntimeException) new RuntimeException().initCause(ex);
     }
@@ -281,7 +281,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
 
   public void intervalRemoved(ListDataEvent e) {
     try {
-      remove(e.getIndex0(), e.getIndex1());
+      remove(e.getIndex0()+1, e.getIndex1()+1);
     } catch (SQLException ex) {
       throw (RuntimeException) new RuntimeException().initCause(ex);
     }
@@ -395,7 +395,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     public DbIndexKey(DbDataSource dataSource, List<String> keys, int row) throws SQLException {
       StringBuffer key = new StringBuffer(27);
       for (String column : keys) {
-        Object value = dataSource.getValueAt(row, column, keys.toArray(new String[keys.size()]));
+        Object value = row>dataSource.getRowCount()?null:dataSource.getValueAt(row, column, keys.toArray(new String[keys.size()]));
         if (value == null) {
           keyValuesList.add(NULL);
           key.append(key.length() > 0 ? ";" : "").append(NULL);

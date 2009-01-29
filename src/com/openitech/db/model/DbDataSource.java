@@ -4609,13 +4609,18 @@ public class DbDataSource implements DbNavigatorDataSource {
 
     private boolean wasUpdated(int row, String columnName) throws SQLException {
         boolean result = false;
-        Integer r = new Integer(row);
-        if (storedUpdates.containsKey(r)) {
-            result = storedUpdates.get(r).containsKey(columnName.toUpperCase());
-        }
 
-        if (!result) {
-            storedResult[0] = false;
+        if (row==getRow()&&inserting) {
+          result = true;
+        } else {
+          Integer r = new Integer(row);
+          if (storedUpdates.containsKey(r)) {
+              result = storedUpdates.get(r).containsKey(columnName.toUpperCase());
+          }
+
+          if (!result) {
+              storedResult[0] = false;
+          }
         }
 
         return result;
