@@ -271,7 +271,11 @@ public abstract class SqlUtilities {
     List<FieldValue> newValues = new ArrayList<FieldValue>(fieldValues.length);
     List<FieldValue> oldValues = new ArrayList<FieldValue>(fieldValues.length);
 
-    java.util.List<String> keys = getPrimaryKeys(source.getConnection(), tableName);
+    java.util.List<String> keys = new java.util.ArrayList<String>();
+    
+    if (source!=null) {
+      getPrimaryKeys(source.getConnection(), tableName);
+    }
 
     for (FieldValue value : fieldValues) {
       boolean isPrimaryKey = false;
