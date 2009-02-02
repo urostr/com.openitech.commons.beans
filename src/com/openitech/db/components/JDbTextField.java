@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:35 AM
  *
- * $Revision: 1.11 $
+ * $Revision: 1.12 $
  */
 package com.openitech.db.components;
 
@@ -18,9 +18,11 @@ import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbFieldObserver;
+import com.openitech.ref.events.ActionWeakListener;
 import com.openitech.ref.events.DocumentWeakListener;
 import com.openitech.ref.events.FocusWeakListener;
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -47,6 +49,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;
   private final Selector selector = new Selector(this);
+  private transient ActionWeakListener actionWeakListener;
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
   private transient DocumentWeakListener documentWeakListener;
@@ -56,6 +59,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
   /** Creates a new instance of JDbTextField */
   public JDbTextField() {
     try {
+      actionWeakListener = new ActionWeakListener(this, "dataSource_actionPerformed");
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
       tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
       focusWeakListener = new FocusWeakListener(this, "this_focusGained", "this_focusLost");
@@ -99,8 +103,14 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
   }
 
   public void setDataSource(DbDataSource dataSource) {
+    if (dataSource!=null) {
+      dataSource.removeActionListener(actionWeakListener);
+    }
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
+    if (dataSource!=null) {
+      dataSource.addActionListener(actionWeakListener);
+    }
   }
 
   public DbFieldObserver getDbFieldObserver() {
@@ -135,6 +145,16 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
     return validator;
   }
 
+  public void dataSource_actionPerformed(ActionEvent event) {
+    if (event.getActionCommand().equals(DbDataSource.UPDATE_ROW)) {
+
+      boolean valid = isValid(this.getText());
+
+      if (!valid) {
+        throw new IllegalStateException("Polje vsebuje napaèno vrednost");
+      }
+    }
+  }
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     documentWeakListener.setEnabled(false);
     try {

@@ -82,7 +82,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       actionWeakListener = new ActionWeakListener(this, "dataSource_actionPerformed");
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
       tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
-      focusWeakListener = new FocusWeakListener(this, "this_focusGained", "this_focusLost");
+      focusWeakListener = new FocusWeakListener(this, "this_focusGained", null);
       documentWeakListener = new DocumentWeakListener(this);
     //propertyChangeWeakListener = new PropertyChangeWeakListener(this);
     } catch (NoSuchMethodException ex) {
@@ -101,7 +101,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     EventQueue.invokeLater(selector);
   }
 
-  public void this_focusLost(FocusEvent e) {
+  private void this_focusLost() {
     boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
     if (valid && c_default_bg != null) {
       super.setBackground(c_default_bg);
@@ -110,12 +110,16 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     }
     if (!valid) {
       validator.displayMessage();
-      EventQueue.invokeLater(new Runnable() {
+      if (EventQueue.isDispatchThread()) {
+        requestFocus();
+      } else {
+        EventQueue.invokeLater(new Runnable() {
 
-        public void run() {
-          requestFocus();
-        }
-      });
+          public void run() {
+            requestFocus();
+          }
+        });
+      }
     }
   }
 
@@ -165,8 +169,14 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   }
 
   public void setDataSource(DbDataSource dataSource) {
+    if (dataSource!=null) {
+      dataSource.removeActionListener(actionWeakListener);
+    }
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
+    if (dataSource!=null) {
+      dataSource.addActionListener(actionWeakListener);
+    }
   }
 
   public DbDataSource getDataSource() {
@@ -203,15 +213,19 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   private class FocusLostHandler implements Runnable, Serializable {
 
     public void run() {
-      if (validator != null) {
-        validator.isValid(getFormatter() == null ? getText() : getValue());
-      }
+      this_focusLost();
     }
   }
 
   public void dataSource_actionPerformed(ActionEvent event) throws ParseException {
-    if (event.getActionCommand().equals("update")) {
+    if (event.getActionCommand().equals(DbDataSource.UPDATE_ROW)) {
       commitEdit();
+
+      boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
+
+      if (!valid) {
+        throw new IllegalStateException("Polje vsebuje napaèno vrednost");
+      }
     }
   }
 
