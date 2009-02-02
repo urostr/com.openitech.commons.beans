@@ -69,6 +69,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this);
   private transient WeakListenerList activeRowChangeListeners;
   private String separator = " ";
+  private boolean valuesAsString = false;
 
   /** Creates a new instance of DbTableModel */
   public DbTableModel() {
@@ -76,6 +77,23 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   //rendererInstances.put("DATE_TIME", new DbTableModel.DateTimeRenderer());
   }
 
+  /**
+   * Get the value of valuesAsString
+   *
+   * @return the value of valuesAsString
+   */
+  public boolean isValuesAsString() {
+    return valuesAsString;
+  }
+
+  /**
+   * Set the value of valuesAsString
+   *
+   * @param valuesAsString new value of valuesAsString
+   */
+  public void setValuesAsString(boolean valuesAsString) {
+    this.valuesAsString = valuesAsString;
+  }
   /**
    * Returns the value for the cell at <code>columnIndex</code> and
    * <code>rowIndex</code>.
@@ -89,7 +107,11 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       if (this.dataSource != null) {
 //        dataSource.lock();
 //        try {
-        return columnDescriptors[columnIndex].getValueAt(rowIndex, columnIndex);
+        Object result = columnDescriptors[columnIndex].getValueAt(rowIndex, columnIndex);
+
+        if (result!=null) {
+          return isValuesAsString()?result.toString():result;
+        }
 //        } finally {
 //          dataSource.unlock();
 //        }

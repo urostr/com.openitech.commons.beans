@@ -27,11 +27,12 @@ public class DbTableModelBeanInfo extends SimpleBeanInfo {
     private static final int PROPERTY_columns = 0;
     private static final int PROPERTY_dataSource = 1;
     private static final int PROPERTY_separator = 2;
+    private static final int PROPERTY_valuesAsString = 3;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[3];
+        PropertyDescriptor[] properties = new PropertyDescriptor[4];
     
         try {
             properties[PROPERTY_columns] = new PropertyDescriptor ( "columns", com.openitech.db.model.DbTableModel.class, "getColumns", "setColumns" ); // NOI18N
@@ -40,6 +41,8 @@ public class DbTableModelBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_dataSource].setPreferred ( true );
             properties[PROPERTY_separator] = new PropertyDescriptor ( "separator", com.openitech.db.model.DbTableModel.class, "getSeparator", "setSeparator" ); // NOI18N
             properties[PROPERTY_separator].setPreferred ( true );
+            properties[PROPERTY_valuesAsString] = new PropertyDescriptor ( "valuesAsString", com.openitech.db.model.DbTableModel.class, "isValuesAsString", "setValuesAsString" ); // NOI18N
+            properties[PROPERTY_valuesAsString].setPreferred ( true );
         }
         catch(IntrospectionException e) {
             e.printStackTrace();
@@ -74,88 +77,52 @@ public class DbTableModelBeanInfo extends SimpleBeanInfo {
     private static final int METHOD_activeRowChanged0 = 0;
     private static final int METHOD_contentsChanged1 = 1;
     private static final int METHOD_fieldValueChanged2 = 2;
-    private static final int METHOD_findColumn3 = 3;
-    private static final int METHOD_fireTableCellUpdated4 = 4;
-    private static final int METHOD_fireTableChanged5 = 5;
-    private static final int METHOD_fireTableDataChanged6 = 6;
-    private static final int METHOD_fireTableRowsDeleted7 = 7;
-    private static final int METHOD_fireTableRowsInserted8 = 8;
-    private static final int METHOD_fireTableRowsUpdated9 = 9;
-    private static final int METHOD_fireTableStructureChanged10 = 10;
-    private static final int METHOD_getListeners11 = 11;
-    private static final int METHOD_getValueAt12 = 12;
-    private static final int METHOD_intervalAdded13 = 13;
-    private static final int METHOD_intervalRemoved14 = 14;
-    private static final int METHOD_isCellEditable15 = 15;
-    private static final int METHOD_putAllEditors16 = 16;
-    private static final int METHOD_putAllFunctions17 = 17;
-    private static final int METHOD_putAllRenderers18 = 18;
-    private static final int METHOD_putEditor19 = 19;
-    private static final int METHOD_putFunction20 = 20;
-    private static final int METHOD_putRenderer21 = 21;
-    private static final int METHOD_removeEditor22 = 22;
-    private static final int METHOD_removeFunction23 = 23;
-    private static final int METHOD_removeRenderer24 = 24;
-    private static final int METHOD_setValueAt25 = 25;
+    private static final int METHOD_intervalAdded3 = 3;
+    private static final int METHOD_intervalRemoved4 = 4;
+    private static final int METHOD_putAllEditors5 = 5;
+    private static final int METHOD_putAllFunctions6 = 6;
+    private static final int METHOD_putAllRenderers7 = 7;
+    private static final int METHOD_putEditor8 = 8;
+    private static final int METHOD_putFunction9 = 9;
+    private static final int METHOD_putRenderer10 = 10;
+    private static final int METHOD_removeEditor11 = 11;
+    private static final int METHOD_removeFunction12 = 12;
+    private static final int METHOD_removeRenderer13 = 13;
 
     // Method array 
     /*lazy MethodDescriptor*/
     private static MethodDescriptor[] getMdescriptor(){
-        MethodDescriptor[] methods = new MethodDescriptor[26];
+        MethodDescriptor[] methods = new MethodDescriptor[14];
     
         try {
-            methods[METHOD_activeRowChanged0] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("activeRowChanged", new Class[] {com.openitech.db.events.ActiveRowChangeEvent.class})); // NOI18N
+            methods[METHOD_activeRowChanged0] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("activeRowChanged", new Class[] {com.openitech.db.events.ActiveRowChangeEvent.class})); // NOI18N
             methods[METHOD_activeRowChanged0].setDisplayName ( "" );
-            methods[METHOD_contentsChanged1] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("contentsChanged", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
+            methods[METHOD_contentsChanged1] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("contentsChanged", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
             methods[METHOD_contentsChanged1].setDisplayName ( "" );
-            methods[METHOD_fieldValueChanged2] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("fieldValueChanged", new Class[] {com.openitech.db.events.ActiveRowChangeEvent.class})); // NOI18N
+            methods[METHOD_fieldValueChanged2] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("fieldValueChanged", new Class[] {com.openitech.db.events.ActiveRowChangeEvent.class})); // NOI18N
             methods[METHOD_fieldValueChanged2].setDisplayName ( "" );
-            methods[METHOD_findColumn3] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("findColumn", new Class[] {java.lang.String.class})); // NOI18N
-            methods[METHOD_findColumn3].setDisplayName ( "" );
-            methods[METHOD_fireTableCellUpdated4] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("fireTableCellUpdated", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_fireTableCellUpdated4].setDisplayName ( "" );
-            methods[METHOD_fireTableChanged5] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("fireTableChanged", new Class[] {javax.swing.event.TableModelEvent.class})); // NOI18N
-            methods[METHOD_fireTableChanged5].setDisplayName ( "" );
-            methods[METHOD_fireTableDataChanged6] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("fireTableDataChanged", new Class[] {})); // NOI18N
-            methods[METHOD_fireTableDataChanged6].setDisplayName ( "" );
-            methods[METHOD_fireTableRowsDeleted7] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("fireTableRowsDeleted", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_fireTableRowsDeleted7].setDisplayName ( "" );
-            methods[METHOD_fireTableRowsInserted8] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("fireTableRowsInserted", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_fireTableRowsInserted8].setDisplayName ( "" );
-            methods[METHOD_fireTableRowsUpdated9] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("fireTableRowsUpdated", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_fireTableRowsUpdated9].setDisplayName ( "" );
-            methods[METHOD_fireTableStructureChanged10] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("fireTableStructureChanged", new Class[] {})); // NOI18N
-            methods[METHOD_fireTableStructureChanged10].setDisplayName ( "" );
-            methods[METHOD_getListeners11] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("getListeners", new Class[] {java.lang.Class.class})); // NOI18N
-            methods[METHOD_getListeners11].setDisplayName ( "" );
-            methods[METHOD_getValueAt12] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("getValueAt", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_getValueAt12].setDisplayName ( "" );
-            methods[METHOD_intervalAdded13] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("intervalAdded", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
-            methods[METHOD_intervalAdded13].setDisplayName ( "" );
-            methods[METHOD_intervalRemoved14] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("intervalRemoved", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
-            methods[METHOD_intervalRemoved14].setDisplayName ( "" );
-            methods[METHOD_isCellEditable15] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("isCellEditable", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_isCellEditable15].setDisplayName ( "" );
-            methods[METHOD_putAllEditors16] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("putAllEditors", new Class[] {java.util.Map.class})); // NOI18N
-            methods[METHOD_putAllEditors16].setDisplayName ( "" );
-            methods[METHOD_putAllFunctions17] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("putAllFunctions", new Class[] {java.util.Map.class})); // NOI18N
-            methods[METHOD_putAllFunctions17].setDisplayName ( "" );
-            methods[METHOD_putAllRenderers18] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("putAllRenderers", new Class[] {java.util.Map.class})); // NOI18N
-            methods[METHOD_putAllRenderers18].setDisplayName ( "" );
-            methods[METHOD_putEditor19] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("putEditor", new Class[] {java.lang.String.class, java.lang.Class.class})); // NOI18N
-            methods[METHOD_putEditor19].setDisplayName ( "" );
-            methods[METHOD_putFunction20] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("putFunction", new Class[] {java.lang.String.class, com.openitech.db.model.DbTableModel.ColumnDescriptor.ValueMethod.Method.class})); // NOI18N
-            methods[METHOD_putFunction20].setDisplayName ( "" );
-            methods[METHOD_putRenderer21] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("putRenderer", new Class[] {java.lang.String.class, java.lang.Class.class})); // NOI18N
-            methods[METHOD_putRenderer21].setDisplayName ( "" );
-            methods[METHOD_removeEditor22] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("removeEditor", new Class[] {java.lang.String.class})); // NOI18N
-            methods[METHOD_removeEditor22].setDisplayName ( "" );
-            methods[METHOD_removeFunction23] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("removeFunction", new Class[] {java.lang.String.class})); // NOI18N
-            methods[METHOD_removeFunction23].setDisplayName ( "" );
-            methods[METHOD_removeRenderer24] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("removeRenderer", new Class[] {java.lang.String.class})); // NOI18N
-            methods[METHOD_removeRenderer24].setDisplayName ( "" );
-            methods[METHOD_setValueAt25] = new MethodDescriptor ( com.openitech.db.model.DbTableModel.class.getMethod("setValueAt", new Class[] {java.lang.Object.class, Integer.TYPE, Integer.TYPE})); // NOI18N
-            methods[METHOD_setValueAt25].setDisplayName ( "" );
+            methods[METHOD_intervalAdded3] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("intervalAdded", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
+            methods[METHOD_intervalAdded3].setDisplayName ( "" );
+            methods[METHOD_intervalRemoved4] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("intervalRemoved", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
+            methods[METHOD_intervalRemoved4].setDisplayName ( "" );
+            methods[METHOD_putAllEditors5] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("putAllEditors", new Class[] {java.util.Map.class})); // NOI18N
+            methods[METHOD_putAllEditors5].setDisplayName ( "" );
+            methods[METHOD_putAllFunctions6] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("putAllFunctions", new Class[] {java.util.Map.class})); // NOI18N
+            methods[METHOD_putAllFunctions6].setDisplayName ( "" );
+            methods[METHOD_putAllRenderers7] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("putAllRenderers", new Class[] {java.util.Map.class})); // NOI18N
+            methods[METHOD_putAllRenderers7].setDisplayName ( "" );
+            methods[METHOD_putEditor8] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("putEditor", new Class[] {java.lang.String.class, java.lang.Class.class})); // NOI18N
+            methods[METHOD_putEditor8].setDisplayName ( "" );
+            methods[METHOD_putFunction9] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("putFunction", new Class[] {java.lang.String.class, com.openitech.db.model.DbTableModel.ColumnDescriptor.ValueMethod.Method.class})); // NOI18N
+            methods[METHOD_putFunction9].setDisplayName ( "" );
+            methods[METHOD_putRenderer10] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("putRenderer", new Class[] {java.lang.String.class, java.lang.Class.class})); // NOI18N
+            methods[METHOD_putRenderer10].setDisplayName ( "" );
+            methods[METHOD_removeEditor11] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("removeEditor", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_removeEditor11].setDisplayName ( "" );
+            methods[METHOD_removeFunction12] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("removeFunction", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_removeFunction12].setDisplayName ( "" );
+            methods[METHOD_removeRenderer13] = new MethodDescriptor(com.openitech.db.model.DbTableModel.class.getMethod("removeRenderer", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_removeRenderer13].setDisplayName ( "" );
         }
         catch( Exception e) {}//GEN-HEADEREND:Methods
     
