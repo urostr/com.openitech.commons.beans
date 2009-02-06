@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.46 $
+ * $Revision: 1.47 $
  */
 package com.openitech.db.model;
 
@@ -3625,16 +3625,20 @@ public class DbDataSource implements DbNavigatorDataSource {
       ResultSetMetaData metaData = selectResultSet.getMetaData();
       List<String> skipColumns = new ArrayList<String>();
       for (int c = 1; c <= columnCount; c++) {
-        if (updateTableName == null || updateColumnNames.contains(metaData.getColumnName(c)) || (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) {
+        String columnName = metaData.getColumnName(c).toUpperCase();
+        if ((updateTableName == null ||
+            (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) &&
+            (updateColumnNames.size()==0 ||
+            updateColumnNames.contains(columnName))){
           try {
             Object value = selectResultSet.getObject(c);
             oldValues.put(c, value);
           } catch (Exception err) {
-            Logger.getLogger(Settings.LOGGER).info("Skipping illegal value for: '" + metaData.getColumnName(c) + "'");
-            skipColumns.add(metaData.getColumnName(c));
+            Logger.getLogger(Settings.LOGGER).info("Skipping illegal value for: '" + columnName + "'");
+            skipColumns.add(columnName);
           }
         } else {
-          skipColumns.add(metaData.getColumnName(c));
+          skipColumns.add(columnName);
         }
       }
       PrimaryKey key;
@@ -5369,7 +5373,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                 ResultSetMetaData metaData = resultSet.getMetaData();
                 for (Iterator<Map.Entry<K, Object>> iterator = values.entrySet().iterator(); iterator.hasNext() && equals;) {
                   Map.Entry<K, Object> entry = iterator.next();
-                  columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue());
+                  columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue()).toUpperCase();
                   int index = getColumnNames().indexOf(columnName);
                   if (index >= 0) {
                     primarysChecked[index] = true;

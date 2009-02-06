@@ -31,6 +31,10 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   }
   
   private void init() throws SQLException  {
+    fGroup.setFilterRequired(true);
+    fGroup.addRequired(fGroup.I_TYPE_OPIS_SIFRANTA,2);
+    fGroup.addRequired(fGroup.I_TYPE_SKUPINA_SIFRANTA,2);
+
     dsSifrant.setCanAddRows(false);
     dsSifrant.setCanDeleteRows(false);
     dsSifrant.setReadOnly(true);
@@ -142,6 +146,7 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
    */
   public void setSifrantOpis(String sifrantOpis) {
     this.sifrantOpis = sifrantOpis;
+    dsSifrant.setName(sifrantOpis);
     fGroup.setSeekValue(fGroup.I_TYPE_OPIS_SIFRANTA, this.sifrantOpis);
   }
 }
