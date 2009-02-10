@@ -60,7 +60,15 @@ public class FilterDocumentListener extends Scheduler implements DocumentListene
                 Logger.getLogger(FilterDocumentListener.class.getName()).log(Level.WARNING, ex.getMessage());
                 schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, null));
             }
-        } else {
+        } else if (seek_type instanceof DataSourceFilters.IntegerSeekType) {
+            try {
+                Integer value = Integer.parseInt(getText(e).trim());
+                schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
+            } catch (NumberFormatException ex) {
+                Logger.getLogger(FilterDocumentListener.class.getName()).log(Level.WARNING, ex.getMessage());
+                schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, null));
+            }
+        }else {
             schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, getText(e)));
         }
     }
