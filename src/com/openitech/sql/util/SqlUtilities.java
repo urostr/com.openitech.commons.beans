@@ -274,7 +274,7 @@ public abstract class SqlUtilities {
     java.util.List<String> keys = new java.util.ArrayList<String>();
     
     if (source!=null) {
-      getPrimaryKeys(source.getConnection(), tableName);
+      keys = getPrimaryKeys(source.getConnection(), tableName);
     }
 
     for (FieldValue value : fieldValues) {

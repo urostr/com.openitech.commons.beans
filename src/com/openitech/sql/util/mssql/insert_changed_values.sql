@@ -1,28 +1,8 @@
 INSERT INTO [ChangeLogValues]
            ([ChangeId]
-           ,[FieldName]
-           ,[FieldType]
-           ,[NewIntValue]
-           ,[NewRealValue]
-           ,[NewStringValue]
-           ,[NewDateValue]
-           ,[NewObjectValue]
-           ,[OldIntValue]
-           ,[OldRealValue]
-           ,[OldStringValue]
-           ,[OldDateValue]
-           ,[OldObjectValue])
+           ,[NewValueId]
+           ,[OldValueId])
      VALUES
            (?
-           ,?
-           ,?
-           ,?
-           ,?
-           ,?
-           ,?
-           ,?
-           ,?
-           ,?
-           ,?
            ,?
            ,?)

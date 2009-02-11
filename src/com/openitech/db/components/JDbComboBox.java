@@ -39,16 +39,20 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
 
     /** Creates a new instance of JDbComboBox */
     public JDbComboBox() {
-        init();
+        this(false);
     }
 
     public JDbComboBox(boolean editable) {
-        super();
-        setEditable(editable);
-        init();
+        this(editable, true);
     }
 
-    private void init() {
+    public JDbComboBox(boolean editable, boolean decorate) {
+        super();
+        setEditable(editable);
+        init(decorate);
+    }
+
+    private void init(boolean decorate) {
         try {
             activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
             tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
@@ -59,7 +63,9 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
         dbFieldObserver.addActiveRowChangeListener(activeRowChangeWeakListener);
         dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
         this.addActionListener(actionWeakListener);
-        com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
+        if (decorate) {
+          com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
+        }
     }
 
     public DbFieldObserver getDbFieldObserver() {

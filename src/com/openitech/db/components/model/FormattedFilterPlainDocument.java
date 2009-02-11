@@ -23,11 +23,10 @@ import javax.swing.text.PlainDocument;
 /**
  *
  * @author uros
- * @deprecated
  */
 public class FormattedFilterPlainDocument extends PlainDocument {
   private static final ScheduledExecutorService schedule = Executors.newSingleThreadScheduledExecutor();
-  private static final long DELAY = 9;
+  private static final long DELAY = 15;
   private Future event = null;
   
   

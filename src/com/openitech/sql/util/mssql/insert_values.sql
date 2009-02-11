@@ -1,0 +1,20 @@
+INSERT INTO [VariousValues]
+           ([Source]
+           ,[FieldName]
+           ,[FieldType]
+           ,[IntValue]
+           ,[RealValue]
+           ,[StringValue]
+           ,[DateValue]
+           ,[ObjectValue]
+           ,[ClobValue])
+     VALUES
+           (?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?)

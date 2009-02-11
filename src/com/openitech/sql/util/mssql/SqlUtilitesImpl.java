@@ -20,6 +20,7 @@ import java.util.List;
 public class SqlUtilitesImpl extends SqlUtilities {
 
   PreparedStatement logChanges;
+  PreparedStatement logValues;
   PreparedStatement logChangedValues;
 
   @Override
@@ -57,6 +58,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (logChanges == null) {
       logChanges = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_change_log.sql", "cp1250"));
     }
+    if (logValues == null) {
+      logValues = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
+    }
+
     if (logChangedValues == null) {
       logChangedValues = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_changed_values.sql", "cp1250"));
     }
@@ -76,10 +81,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
       FieldValue newValue = newValues.get(fieldno);
       FieldValue oldValue = oldValues.get(fieldno);
 
-      fieldValues = new FieldValue[13];
+      fieldValues = new FieldValue[9];
 
       int pos = 0;
-      fieldValues[pos++] = new FieldValue("ChangeId", Types.BIGINT, changeId);
+      fieldValues[pos++] = new FieldValue("Source", Types.VARCHAR, "LOG");
       fieldValues[pos++] = new FieldValue("FieldName", Types.VARCHAR, newValue.getName());
 
       int fieldType;
@@ -103,7 +108,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
-          fieldType = 3;
+          if (newValue.getValue() != null && newValue.getValue().toString().length() > 108) {
+            fieldType = 6;
+          } else {
+            fieldType = 3;
+          }
           break;
         case Types.DATE:
         case Types.TIME:
@@ -113,85 +122,154 @@ public class SqlUtilitesImpl extends SqlUtilities {
         default:
           fieldType = 5;
       }
-      
+
       fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, fieldType);
 
-      switch (fieldType) {
-        case 1:
-          fieldValues[pos++] = new FieldValue("NewIntValue", Types.BIGINT, newValue.getValue());
-          fieldValues[pos++] = new FieldValue("NewRealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("NewStringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("NewDateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("NewObjectValue", Types.LONGVARBINARY, null);
+      Long newValueId = null;
 
-          fieldValues[pos++] = new FieldValue("OldIntValue", Types.BIGINT, oldValue.getValue());
-          fieldValues[pos++] = new FieldValue("OldRealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("OldStringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("OldDateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("OldObjectValue", Types.LONGVARBINARY, null);
+      if (!newValue.isNull()) {
+        switch (fieldType) {
+          case 1:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, newValue.getValue());
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
 
-          break;
+            break;
 
-        case 2:
-          fieldValues[pos++] = new FieldValue("NewIntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("NewRealValue", Types.DECIMAL, newValue.getValue());
-          fieldValues[pos++] = new FieldValue("NewStringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("NewDateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("NewObjectValue", Types.LONGVARBINARY, null);
+          case 2:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, newValue.getValue());
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
 
-          fieldValues[pos++] = new FieldValue("OldIntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("OldRealValue", Types.DECIMAL, oldValue.getValue());
-          fieldValues[pos++] = new FieldValue("OldStringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("OldDateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("OldObjectValue", Types.LONGVARBINARY, null);
+            break;
 
-          break;
+          case 3:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, newValue.getValue());
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
 
-        case 3:
-          fieldValues[pos++] = new FieldValue("NewIntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("NewRealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("NewStringValue", Types.VARCHAR, newValue.getValue());
-          fieldValues[pos++] = new FieldValue("NewDateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("NewObjectValue", Types.LONGVARBINARY, null);
+            break;
 
-          fieldValues[pos++] = new FieldValue("OldIntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("OldRealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("OldStringValue", Types.VARCHAR, oldValue.getValue());
-          fieldValues[pos++] = new FieldValue("OldDateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("OldObjectValue", Types.LONGVARBINARY, null);
+          case 4:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, newValue.getValue());
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
 
-          break;
+            break;
 
-        case 4:
-          fieldValues[pos++] = new FieldValue("NewIntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("NewRealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("NewStringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("NewDateValue", Types.TIMESTAMP, newValue.getValue());
-          fieldValues[pos++] = new FieldValue("NewObjectValue", Types.LONGVARBINARY, null);
+          case 5:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, newValue.getValue());
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
 
-          fieldValues[pos++] = new FieldValue("OldIntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("OldRealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("OldStringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("OldDateValue", Types.TIMESTAMP, oldValue.getValue());
-          fieldValues[pos++] = new FieldValue("OldObjectValue", Types.LONGVARBINARY, null);
+            break;
 
-          break;
+          case 6:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, newValue.getValue());
 
-        case 5:
-          fieldValues[pos++] = new FieldValue("NewIntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("NewRealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("NewStringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("NewDateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("NewObjectValue", Types.LONGVARBINARY, newValue.getValue());
+            break;
+        }
 
-          fieldValues[pos++] = new FieldValue("OldIntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("OldRealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("OldStringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("OldDateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("OldObjectValue", Types.LONGVARBINARY, oldValue.getValue());
-
-          break;
+        executeUpdate(logValues, fieldValues);
+        newValueId = getLastIdentity();
+        pos = 3;
       }
+
+
+
+      Long oldValueId = null;
+
+      if (!oldValue.isNull()) {
+        switch (fieldType) {
+          case 1:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, oldValue.getValue());
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
+
+            break;
+
+          case 2:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, oldValue.getValue());
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
+
+            break;
+
+          case 3:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, oldValue.getValue());
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
+
+            break;
+
+          case 4:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, oldValue.getValue());
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
+
+            break;
+
+          case 5:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, oldValue.getValue());
+            fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
+
+            break;
+
+          case 6:
+            fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+            fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+            fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+            fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+            fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, oldValue.getValue());
+
+            break;
+        }
+        executeUpdate(logValues, fieldValues);
+        oldValueId = getLastIdentity();
+      }
+
+      pos = 0;
+      fieldValues = new FieldValue[3];
+      fieldValues[pos++] = new FieldValue("ChangeId", Types.BIGINT, changeId);
+      fieldValues[pos++] = new FieldValue("NewValueId", Types.BIGINT, newValueId);
+      fieldValues[pos++] = new FieldValue("OldValueId", Types.BIGINT, oldValueId);
 
       executeUpdate(logChangedValues, fieldValues);
     }
