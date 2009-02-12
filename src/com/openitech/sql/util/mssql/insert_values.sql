@@ -1,7 +1,5 @@
 INSERT INTO [VariousValues]
-           ([Source]
-           ,[FieldName]
-           ,[FieldType]
+           ([FieldType]
            ,[IntValue]
            ,[RealValue]
            ,[StringValue]
@@ -10,8 +8,6 @@ INSERT INTO [VariousValues]
            ,[ClobValue])
      VALUES
            (?
-           ,?
-           ,?
            ,?
            ,?
            ,?
