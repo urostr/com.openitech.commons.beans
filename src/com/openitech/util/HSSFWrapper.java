@@ -92,7 +92,7 @@ public class HSSFWrapper {
         cell = 0;
 
         HSSFCell xls_cell = xls_row.createCell(cell++);
-        xls_cell.setCellValue(new HSSFRichTextString(row + "/" + tableModel.getRowCount()));
+        //xls_cell.setCellValue(new HSSFRichTextString(row + "/" + tableModel.getRowCount()));
 
         while (cell <= columnModel.getColumnCount()) {
           Object value = tableModel.getValueAt(row - 1, cell - 1);
