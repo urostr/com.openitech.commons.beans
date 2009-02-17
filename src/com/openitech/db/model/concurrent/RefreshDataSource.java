@@ -106,14 +106,14 @@ public final class RefreshDataSource extends DataSourceEvent {
           try {
             EventQueue.invokeAndWait(new Runnable() {
               public void run() {
-                lockAndLoad();
+                load();
               }
             });
           } catch (Exception ex) {
             Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
           }
         } else {
-          lockAndLoad();
+          load();
         }
       } else
         Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
@@ -124,16 +124,16 @@ public final class RefreshDataSource extends DataSourceEvent {
     DataSourceEvent.submit(this);
   }
   
-  private void lockAndLoad() {
-    if (event.dataSource.canLock()) {
-      load();
-    } else {
-      resubmit();
-    }
-  }
+//  private void lockAndLoad() {
+//    if (event.dataSource.canLock()) {
+//      load();
+//    } else {
+//      resubmit();
+//    }
+//  }
   
   protected void load() {
-    event.dataSource.lock();
+    event.dataSource.lock(true, true);
     try {
       if (filterChange)
         try {

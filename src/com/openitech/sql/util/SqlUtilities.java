@@ -353,6 +353,8 @@ public abstract class SqlUtilities {
 
   public abstract long getCurrentIdentity(String tableName) throws SQLException;
 
+  public abstract Long storeValue(int fieldType, final Object value) throws SQLException;
+
   public static class Field {
 
     String name;

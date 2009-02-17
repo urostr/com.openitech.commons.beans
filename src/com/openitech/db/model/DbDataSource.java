@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.48 $
+ * $Revision: 1.49 $
  */
 package com.openitech.db.model;
 
@@ -4045,8 +4045,11 @@ public class DbDataSource implements DbNavigatorDataSource {
       }
     return result;
   }
-
   public boolean lock(boolean fatal) {
+    return lock(fatal, false);
+  }
+
+  public boolean lock(boolean fatal, boolean force) {
     boolean result = false;
     try {
       if (DUMP_SQL) {
@@ -4055,9 +4058,14 @@ public class DbDataSource implements DbNavigatorDataSource {
         StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
         System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
       }
-      if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
-        if (fatal) {
-          throw new IllegalStateException("Can't obtain lock");
+      if (force) {
+        available.lock();
+        result = true;
+      } else {
+        if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
+          if (fatal) {
+            throw new IllegalStateException("Can't obtain lock");
+          }
         }
       }
     } catch (InterruptedException ex) {
