@@ -827,11 +827,11 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
   private com.openitech.db.model.DbFieldObserver foUlica;
   private com.openitech.db.model.DbFieldObserver foUlicaMID;
   private javax.swing.JPanel jPanel1;
-  private com.openitech.db.components.JDbTextField jtfHisnaStevilka;
-  private com.openitech.db.components.JDbTextField jtfNaselja;
-  private com.openitech.db.components.JDbTextField jtfPosta;
-  private com.openitech.db.components.JDbTextField jtfPostnaStevilka;
-  private com.openitech.db.components.JDbTextField jtfUlice;
+  public com.openitech.db.components.JDbTextField jtfHisnaStevilka;
+  public com.openitech.db.components.JDbTextField jtfNaselja;
+  public com.openitech.db.components.JDbTextField jtfPosta;
+  public com.openitech.db.components.JDbTextField jtfPostnaStevilka;
+  public com.openitech.db.components.JDbTextField jtfUlice;
   // End of variables declaration//GEN-END:variables
 
   private static class DbDataModel {
