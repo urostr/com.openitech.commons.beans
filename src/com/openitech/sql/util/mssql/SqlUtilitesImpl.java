@@ -137,6 +137,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public Long storeValue(int fieldType, final Object value) throws SQLException {
+    if (logValues == null) {
+      logValues = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
+    }
+
     int pos = 0;
     FieldValue[] fieldValues = new FieldValue[7];
     fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, fieldType);
