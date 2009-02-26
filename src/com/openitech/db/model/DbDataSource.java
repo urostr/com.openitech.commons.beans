@@ -4218,8 +4218,12 @@ public class DbDataSource implements DbNavigatorDataSource {
       if (value instanceof SqlParameter) {
         type = ((SqlParameter) value).getType();
         if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
-          statement.setObject(pos++, ((SqlParameter) value).getValue(),
-                  ((SqlParameter) value).getType());
+          if (((SqlParameter) value).getValue()!=null) {
+            statement.setObject(pos++, ((SqlParameter) value).getValue(),
+                                       ((SqlParameter) value).getType());
+          } else {
+            statement.setNull(pos++, ((SqlParameter) value).getType());
+          }
           if (DUMP_SQL) {
             System.out.println("--[" + (pos - 1) + "]=" + ((SqlParameter) value).getValue().toString());
           }
