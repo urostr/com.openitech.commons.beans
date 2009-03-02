@@ -285,8 +285,8 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public boolean setValue(List<Date> value) {
       if (!Equals.equals(getValue(), value)) {
         if (value!=null&&value.size()==2) {
-          java.sql.Date from = value.get(0) == null ? null : new java.sql.Date(value.get(0).getTime());
-          java.sql.Date to = value.get(1) == null ? null : new java.sql.Date(value.get(1).getTime());
+          java.sql.Timestamp from = value.get(0) == null ? null : new java.sql.Timestamp(value.get(0).getTime());
+          java.sql.Timestamp to = value.get(1) == null ? null : new java.sql.Timestamp(value.get(1).getTime());
           value.set(0, from);
           value.set(1, to);
 

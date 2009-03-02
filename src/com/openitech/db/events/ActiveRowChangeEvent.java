@@ -9,6 +9,7 @@
 package com.openitech.db.events;
 
 import com.openitech.db.model.DbDataSource;
+import java.sql.SQLException;
 import java.util.EventObject;
 
 /**
@@ -69,6 +70,15 @@ public class ActiveRowChangeEvent extends EventObject {
   
   public DbDataSource getSource() {
     return source;
+  }
+
+  public Object getValue() throws SQLException {
+    if (columnName!=null&&source!=null) {
+      return source.getObject(columnName);
+    } else if (columnIndex>0&&source!=null) {
+      return source.getObject(columnIndex);
+    } else
+      return null;
   }
 
   public int hashCode() {

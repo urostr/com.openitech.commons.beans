@@ -782,7 +782,16 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       try {
         to_date = FormatFactory.DATE_FORMAT.parse(getText(to));
       } catch (ParseException ex) {
-        to_date = from_date == null ? null : Calendar.getInstance().getTime();
+        if (from_date == null) {
+          to_date =  null ;
+        } else {
+          java.util.Calendar calendar = Calendar.getInstance();
+          calendar.set(java.util.Calendar.HOUR_OF_DAY, 23);
+          calendar.set(java.util.Calendar.MINUTE, 59);
+          calendar.set(java.util.Calendar.SECOND, 59);
+          calendar.set(java.util.Calendar.MILLISECOND, 0);
+          to_date = calendar.getTime();
+        }
       }
       if (from_date == null && to_date != null) {
         from_date = new java.util.Date(0);

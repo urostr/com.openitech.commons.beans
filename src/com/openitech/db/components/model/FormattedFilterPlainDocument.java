@@ -23,6 +23,7 @@ import javax.swing.text.PlainDocument;
 /**
  *
  * @author uros
+ * @deprecated
  */
 public class FormattedFilterPlainDocument extends PlainDocument {
   private static final ScheduledExecutorService schedule = Executors.newSingleThreadScheduledExecutor();
