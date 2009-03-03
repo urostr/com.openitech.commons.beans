@@ -21,6 +21,7 @@ import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFDataFormat;
 import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFPrintSetup;
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -37,11 +38,16 @@ public class HSSFWrapper {
 
   private HSSFWrapper() {
   }
-
   public static final HSSFWorkbook getWorkbook(JTable source) {
+    return getWorkbook(source, false);
+  }
+
+  public static final HSSFWorkbook getWorkbook(JTable source, boolean countRows) {
     HSSFWorkbook xls_workbook = new HSSFWorkbook();
     HSSFSheet xls_sheet = xls_workbook.createSheet("Pregled podatkov");
-
+    HSSFPrintSetup xls_sheet_printsetup = xls_sheet.getPrintSetup();
+    xls_sheet_printsetup.setPaperSize(HSSFPrintSetup.A4_PAPERSIZE);
+    xls_sheet_printsetup.setFitWidth((short) 1);
 
     TableColumnModel columnModel = source.getColumnModel();
     Enumeration<TableColumn> columns = columnModel.getColumns();
@@ -92,10 +98,12 @@ public class HSSFWrapper {
         cell = 0;
 
         HSSFCell xls_cell = xls_row.createCell(cell++);
-        //xls_cell.setCellValue(new HSSFRichTextString(row + "/" + tableModel.getRowCount()));
+        if (countRows) {
+          xls_cell.setCellValue(new HSSFRichTextString(Short.toString(row)));
+        }
 
         while (cell <= columnModel.getColumnCount()) {
-          Object value = tableModel.getValueAt(row - 1, cell - 1);
+          Object value = tableModel.getValueAt(source.convertRowIndexToModel(row - 1), source.convertColumnIndexToModel(cell - 1));
           if (value != null) {
             if (value instanceof DbTableModel.ColumnDescriptor.ValueMethod) {
               DbTableModel.ColumnDescriptor.ValueMethod vm = (DbTableModel.ColumnDescriptor.ValueMethod) value;

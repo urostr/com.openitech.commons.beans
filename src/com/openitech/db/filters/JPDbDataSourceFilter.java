@@ -90,10 +90,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       if ((entry.getValue()[0].getLength() > 0) || ((entry.getValue().length == 2) && (entry.getValue()[1].getLength() > 0))) {
         DataSourceFilters.AbstractSeekType<? extends Object> seekType = entry.getKey();
 //        if (seekType.isAutomatic()) {
-          JCheckBoxMenuItem miCheckbox = new JCheckBoxMenuItem(seekType.getDescription(), true);
-          miCheckbox.setActionCommand("CLEAR");
-          miCheckbox.addActionListener(new ToggleFilter(seekType));
-          filterMenuItem.add(miCheckbox);
+        JCheckBoxMenuItem miCheckbox = new JCheckBoxMenuItem(seekType.getDescription(), true);
+        miCheckbox.setActionCommand("CLEAR");
+        miCheckbox.addActionListener(new ToggleFilter(seekType));
+        filterMenuItem.add(miCheckbox);
 //        } else {
 //          JMenuItem miFilter = new JMenuItem(seekType.getDescription());
 //          filterMenuItem.add(miFilter);
@@ -783,16 +783,22 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
         to_date = FormatFactory.DATE_FORMAT.parse(getText(to));
       } catch (ParseException ex) {
         if (from_date == null) {
-          to_date =  null ;
+          to_date = null;
         } else {
-          java.util.Calendar calendar = Calendar.getInstance();
-          calendar.set(java.util.Calendar.HOUR_OF_DAY, 23);
-          calendar.set(java.util.Calendar.MINUTE, 59);
-          calendar.set(java.util.Calendar.SECOND, 59);
-          calendar.set(java.util.Calendar.MILLISECOND, 0);
-          to_date = calendar.getTime();
+          to_date = Calendar.getInstance().getTime();
         }
       }
+
+      if (to_date != null) {
+        java.util.Calendar calendar = Calendar.getInstance();
+        calendar.setTime(to_date);
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 23);
+        calendar.set(java.util.Calendar.MINUTE, 59);
+        calendar.set(java.util.Calendar.SECOND, 59);
+        calendar.set(java.util.Calendar.MILLISECOND, 0);
+        to_date = calendar.getTime();
+      }
+      
       if (from_date == null && to_date != null) {
         from_date = new java.util.Date(0);
       }

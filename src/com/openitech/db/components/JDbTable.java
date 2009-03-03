@@ -118,7 +118,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
         }
       });
 
-      menu.add(aExport);
+      this.exportTableMenu = menu.add(aExport);
     } catch (ClassNotFoundException ex) {
       //ignore it;
     }
@@ -164,6 +164,32 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       activeFiltersMenu = miActiveFilters;
     }
   }
+
+
+  private JMenuItem exportTableMenu = null;
+
+  public JMenuItem getExportTableMenu() {
+    return exportTableMenu;
+  }
+
+  public void setExportTableMenu(JMenuItem exportTableMenu) {
+    javax.swing.JPopupMenu menu = getComponentPopupMenu();
+    int index = -1;
+    if (this.exportTableMenu!=null) {
+      index = menu.getComponentIndex(this.exportTableMenu);
+      if (index>=0) {
+        menu.remove(index);
+      }
+      this.exportTableMenu = null;
+    }
+    if (exportTableMenu!=null) {
+      menu.insert(exportTableMenu, index>0?index:0);
+
+      this.exportTableMenu = exportTableMenu;
+    }
+  }
+
+
 
   /**
    * Sets the data model for this table to <code>newModel</code> and registers

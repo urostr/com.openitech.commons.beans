@@ -26,18 +26,20 @@ public class JDbTableBeanInfo extends SimpleBeanInfo {
     // Property identifiers//GEN-FIRST:Properties
     private static final int PROPERTY_dataSource = 0;
     private static final int PROPERTY_enableSorting = 1;
-    private static final int PROPERTY_model = 2;
+    private static final int PROPERTY_exportTableMenu = 2;
+    private static final int PROPERTY_model = 3;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[3];
+        PropertyDescriptor[] properties = new PropertyDescriptor[4];
     
         try {
             properties[PROPERTY_dataSource] = new PropertyDescriptor ( "dataSource", com.openitech.db.components.JDbTable.class, "getDataSource", "setDataSource" ); // NOI18N
             properties[PROPERTY_dataSource].setPreferred ( true );
             properties[PROPERTY_enableSorting] = new PropertyDescriptor ( "enableSorting", com.openitech.db.components.JDbTable.class, "isEnableSorting", "setEnableSorting" ); // NOI18N
             properties[PROPERTY_enableSorting].setPreferred ( true );
+            properties[PROPERTY_exportTableMenu] = new PropertyDescriptor ( "exportTableMenu", com.openitech.db.components.JDbTable.class, "getExportTableMenu", "setExportTableMenu" ); // NOI18N
             properties[PROPERTY_model] = new PropertyDescriptor ( "model", com.openitech.db.components.JDbTable.class, "getModel", "setModel" ); // NOI18N
             properties[PROPERTY_model].setPreferred ( true );
         }
