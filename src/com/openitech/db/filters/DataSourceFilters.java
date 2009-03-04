@@ -18,9 +18,21 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public abstract static class AbstractSeekType<E> {
 
+    /**
+     * Equals has value 4
+     */
     public static final int EQUALS = 4;
+    /**
+     * GREATER_OR_EQUALS has value 5
+     */
     public static final int GREATER_OR_EQUALS = 5;
+    /**
+     * LESS_OR_EQUALS has value 6
+     */
     public static final int LESS_OR_EQUALS = 6;
+    /**
+     * PREFORMATTED has value 7
+     */
     public static final int PREFORMATTED = 7;
     protected final MessageFormat[] formati = new MessageFormat[]{
       new MessageFormat(" (UPPER({0}) = ?) "), //-0
@@ -33,20 +45,20 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       new MessageFormat(" ({0}) "), //-7
       new MessageFormat(" ({0} like (?+''%'')) "), //-8
       new MessageFormat(" ({0} like (''%''+?)) "), //-9
-      new MessageFormat(" ({0} like (''%''+?+''%'')) "),          //-10
+      new MessageFormat(" ({0} like (''%''+?+''%'')) "), //-10
     };
-    protected final String[] descriptions = new String[] {
-       "je enak",
-       "se zaène z",
-       "se konèa z",
-       "vsebuje",
-       "je enak",
-       "je veèji ali enak",
-       "je manjši ali enak",
-       "je",
-       "se zaène z",
-       "se konèa z",
-       "vsebuje"
+    protected final String[] descriptions = new String[]{
+      "je enak",
+      "se zaène z",
+      "se konèa z",
+      "vsebuje",
+      "je enak",
+      "je veèji ali enak",
+      "je manjši ali enak",
+      "je",
+      "se zaène z",
+      "se konèa z",
+      "vsebuje"
     };
     protected String field;
     protected E value = null;
@@ -61,9 +73,8 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      * @return the value of automatic
      */
     public boolean isAutomatic() {
-      return documents==null;
+      return documents == null;
     }
-
     private Document[] documents;
 
     /**
@@ -90,14 +101,13 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      * @param documents new value of documents
      */
     public void setDocuments(DataSourceFilters filter, Document... documents) {
-      if (filter!=null) {
-        for (Document document:documents)
+      if (filter != null) {
+        for (Document document : documents) {
           document.addDocumentListener(new FilterDocumentListener(filter, this));
+        }
       }
       this.documents = documents;
     }
-
-
 
     /**
      * Get the value of name
@@ -118,7 +128,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     public String getDescription() {
-      return this.toString()+" "+descriptions[i_type]+" "+(value==null?"prazen":value.toString());
+      return this.toString() + " " + descriptions[i_type] + " " + (value == null ? "prazen" : value.toString());
     }
 
     public AbstractSeekType(String field, int i_type, int p_count) {
@@ -163,32 +173,84 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     @Override
     public String toString() {
-      return name!=null?name:super.toString();
+      return name != null ? name : super.toString();
     }
-
-
   }
 
   public final static class SeekType extends AbstractSeekType<String> {
 
+    /**
+     * UPPER_EQUALS has value 0
+     */
     public static final int UPPER_EQUALS = 0;
+    /**
+     * UPPER_BEGINS_WITH has value 1
+     */
     public static final int UPPER_BEGINS_WITH = 1;
+    /**
+     * UPPER_END_WITH has value 2
+     */
     public static final int UPPER_END_WITH = 2;
+    /**
+     * UPPER_CONTAINS has value 3
+     */
     public static final int UPPER_CONTAINS = 3;
     private int min_length = 3;
 
+    /**
+     * Set seekType
+     * @param filed  Polje po katerem se išèe
+     *    * default type = UPPER_EQUALS 
+     *    * default minimum length = 3 
+     *    * default count = 1 
+     */
     public SeekType(String field) {
       this(field, UPPER_EQUALS, 3, 1);
     }
 
+    /**
+     * Set seekType
+     * @param filed  Polje po katerem se išèe
+     * @param type  Tip iskanja 
+     *    - UPPER_EQUALS (je enako) 
+     *    - UPPER_BEGINS_WITH (se zaène z) 
+     *    - UPPER_END_WITH (se konèa z) 
+     *    - UPPER_CONTAINS (vsebuje) 
+     *
+     *     * default minimum length = 3 
+     *     * default count = 1 
+     */
     public SeekType(String field, int i_type) {
       this(field, i_type, 3, 1);
     }
 
+    /**
+     * Set seekType
+     * @param filed  Polje po katerem se išèe
+     * @param type  Tip iskanja 
+     *    - UPPER_EQUALS (je enako) 
+     *    - UPPER_BEGINS_WITH (se zaène z) 
+     *    - UPPER_END_WITH (se konèa z) 
+     *    - UPPER_CONTAINS (vsebuje) 
+     * @param minimal length - Minimalna dolžina iskanja
+     *     
+     *    * default count = 1 
+     */
     public SeekType(String field, int i_type, int min_length) {
       this(field, i_type, min_length, 1);
     }
 
+    /**
+     * Set seekType
+     * @param filed  Polje po katerem se išèe
+     * @param type  Tip iskanja 
+     *    - UPPER_EQUALS (je enako) 
+     *    - UPPER_BEGINS_WITH (se zaène z) 
+     *    - UPPER_END_WITH (se konèa z) 
+     *    - UPPER_CONTAINS (vsebuje) 
+     * @param minimal length - Minimalna dolžina iskanja
+     * @param count 
+     */
     public SeekType(String field, int i_type, int min_length, int p_count) {
       super(field, i_type, p_count);
       this.def_i_type = 1;
@@ -243,14 +305,32 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public final static class DateSeekType extends AbstractSeekType<java.util.Date> {
 
+    /**
+     * Set DateSeekType
+     * @param filed  Polje po katerem se išèe
+     *    * default type = EQUALS
+     *    * default count = 1
+     */
     public DateSeekType(String field) {
       this(field, EQUALS, 1);
     }
 
+    /**
+     * Set DateSeekType
+     * @param filed  Polje po katerem se išèe
+     * @param type   Tip iskanja
+     *    * default count = 1
+     */
     public DateSeekType(String field, int i_type) {
       this(field, i_type, 1);
     }
 
+    /**
+     * Set DateSeekType
+     * @param filed  Polje po katerem se išèe
+     * @param type   Tip iskanja
+     * @param count
+     */
     public DateSeekType(String field, int i_type, int p_count) {
       super(field, i_type, p_count);
     }
@@ -268,36 +348,50 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public final static class BetweenDateSeekType extends AbstractSeekType<java.util.List<java.util.Date>> {
 
+    /**
+     * Set DateSeekType
+     * @param filed  Polje po katerem se išèe
+     *  SQL:: filed + " BETWEEN ? AND ? "
+     *    * default formatted = true
+     */
     public BetweenDateSeekType(String field) {
-      this(field+" BETWEEN ? AND ? ", true);
+      this(field + " BETWEEN ? AND ? ", true);
     }
 
+    /**
+     * Set DateSeekType
+     * @param filed  Polje po katerem se išèe
+     *  SQL:: filed + " BETWEEN ? AND ? "
+     * @param formatted
+     *  * default count = 1
+     */
     public BetweenDateSeekType(String field, boolean formatted) {
       super(field, SeekType.PREFORMATTED, 1);
     }
 
     @Override
     public String getDescription() {
-      return this.toString()+" je"+ (value.get(0).getTime()>0?" od "+FormatFactory.DATE_FORMAT.format(value.get(0)):"")+" do "+FormatFactory.DATE_FORMAT.format(value.get(1));
+      return this.toString() + " je" + (value.get(0).getTime() > 0 ? " od " + FormatFactory.DATE_FORMAT.format(value.get(0)) : "") + " do " + FormatFactory.DATE_FORMAT.format(value.get(1));
     }
 
     @Override
     public boolean setValue(List<Date> value) {
       if (!Equals.equals(getValue(), value)) {
-        if (value!=null&&value.size()==2) {
+        if (value != null && value.size() == 2) {
           java.sql.Timestamp from = value.get(0) == null ? null : new java.sql.Timestamp(value.get(0).getTime());
           java.sql.Timestamp to = value.get(1) == null ? null : new java.sql.Timestamp(value.get(1).getTime());
           value.set(0, from);
           value.set(1, to);
 
-          if (from!=null||to!=null) {
-            this.value=value;
+          if (from != null || to != null) {
+            this.value = value;
           } else {
-            this.value=null;
+            this.value = null;
           }
           return true;
-        } else
+        } else {
           return false;
+        }
       } else {
         return false;
       }
@@ -408,11 +502,12 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
             value.append(value.length() > 0 ? " and " : "").append(seek.getSQLSegment());
             for (int p = 1; p <= seek.p_count; p++) {
               if (seek.getValue() instanceof java.util.List) {
-                for (Object v:(java.util.List) seek.getValue()) {
+                for (Object v : (java.util.List) seek.getValue()) {
                   parameters.add(v);
                 }
-              } else
+              } else {
                 parameters.add(seek.getValue());
+              }
             }
           }
         }
@@ -428,7 +523,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       firePropertyChange("query", notify, false);
     }
   }
-  
   protected boolean disabled = false;
 
   public boolean isDisabled() {
@@ -436,7 +530,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   }
 
   public void setDisabled(boolean disabled) {
-    if (this.disabled!=disabled) {
+    if (this.disabled != disabled) {
       this.disabled = disabled;
       setParameters(true);
       firePropertyChange("query", true, false);
