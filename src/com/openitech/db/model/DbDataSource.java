@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.49 $
+ * $Revision: 1.50 $
  */
 package com.openitech.db.model;
 
@@ -3272,7 +3272,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     if (isDataLoaded()) {
       return inserting;
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+      return false;
     }
   }
 
@@ -3290,7 +3290,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     if (isDataLoaded()) {
       return storedUpdates.containsKey(new Integer(getRow()));
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+      return false;
     }
   }
 

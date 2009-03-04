@@ -1,17 +1,19 @@
 SELECT * FROM (
 (SELECT 
-    0 AS ZAP_ST,
+    0 AS OrderId,
     (null) as IdKey,
     (null) as IdSifranta,
     (null) as IdSifre,
+    (null) as ZapSt,
     <%DbSifrantModelDescription%> as Opis
  )
 UNION ALL 
 (SELECT 
-    1 AS ZAP_ST,
+    1 AS OrderId,
     cast(Sifranti.IdSifranta as varchar)+'-'+cast(Sifranti.IdSifre as varchar) as IdKey, 
     Sifranti.IdSifranta,
     Sifranti.IdSifre,
+    Sifranti.ZapSt,
     Sifranti.Opis
 FROM 
     Sifranti 
@@ -26,4 +28,4 @@ WHERE
     (Sifranti.validTo IS NULL OR Sifranti.validTo>=CURRENT_TIMESTAMP)
 
 ))  Sifranti
-ORDER BY ZAP_ST,IdSifranta,IdSifre
+ORDER BY OrderId,IdSifranta,ZapSt,IdSifre
