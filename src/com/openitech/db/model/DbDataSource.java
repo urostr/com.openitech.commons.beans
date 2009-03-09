@@ -3876,6 +3876,10 @@ public class DbDataSource implements DbNavigatorDataSource {
     firePropertyChange("selectSql", oldvalue, this.selectSql);
   }
 
+  public int getColumnIndex(String columnName) throws SQLException {
+    return columnMapping.checkedGet(columnName).intValue();
+  }
+
   public void setCacheStatements(boolean cacheStatements) {
     this.cacheStatements = cacheStatements;
   }
@@ -5255,7 +5259,7 @@ public class DbDataSource implements DbNavigatorDataSource {
       this.table = table;
       this.connection = null;
       for (String s : uniqueID) {
-        columnNames.add(s);
+        columnNames.add(s.toUpperCase());
       }
       hashcode = table.hashCode();
     }
@@ -5373,7 +5377,7 @@ public class DbDataSource implements DbNavigatorDataSource {
             if (!primarysChecked[c]) {
               columnName = getColumnNames().get(c);
               columnIndex = columnMapping.get(columnName);
-              if (indexed && columnIndex != null) {
+              if (indexed && (columnIndex != null)) {
                 if (values.containsKey(columnIndex) && values.get(columnIndex) != null) {
                   equals = equals && (values.get(columnIndex).equals(resultSet.getObject(columnIndex)));
                 } else {

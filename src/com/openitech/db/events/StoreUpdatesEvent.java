@@ -30,8 +30,9 @@ public class StoreUpdatesEvent extends EventObject {
     this.insert = insert;
     if (columnValues!=null)
       this.columnValues = Collections.unmodifiableMap(columnValues);
-    if (oldColumnValues!=null)
-      this.oldColumnValues = Collections.unmodifiableMap(oldColumnValues);
+//    if (oldColumnValues!=null)
+//      this.oldColumnValues = Collections.unmodifiableMap(oldColumnValues);
+    this.oldColumnValues = oldColumnValues;
     this.hash = 37*source.hashCode();
   }
     
