@@ -27,8 +27,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement logChanges;
   PreparedStatement logValues;
   PreparedStatement logChangedValues;
+  PreparedStatement updateEvents;
   PreparedStatement insertEvents;
+  PreparedStatement findEventValue;
   PreparedStatement insertEventValues;
+  PreparedStatement updateEventValues;
   PreparedStatement find_datevalue;
   PreparedStatement find_intvalue;
   PreparedStatement find_realvalue;
@@ -115,8 +118,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (insertEvents == null) {
       insertEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
     }
+    if (updateEvents == null) {
+      updateEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEvents.sql", "cp1250"));
+    }
+    if (findEventValue == null) {
+      findEventValue = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_eventvalue.sql", "cp1250"));
+    }
     if (insertEventValues == null) {
       insertEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEventValues.sql", "cp1250"));
+    }
+    if (updateEventValues == null) {
+      updateEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEventValue.sql", "cp1250"));
     }
     int param;
     boolean success = true;
@@ -127,33 +139,69 @@ public class SqlUtilitesImpl extends SqlUtilities {
     try {
       beginTransaction();
 
-      //insertaj event
-      param = 1;
-      insertEvents.clearParameters();
-      insertEvents.setInt(param++, event.getSifrant());
-      insertEvents.setString(param++, event.getSifra());
-      insertEvents.setString(param++, event.getOpomba());
-      success = success && insertEvents.executeUpdate() > 0;
+      boolean insert = event.getId() == -1;
 
-      events_ID = getLastIdentity();
+      if (insert) {
+        //insertaj event
+        param = 1;
+        insertEvents.clearParameters();
+        insertEvents.setInt(param++, event.getSifrant());
+        insertEvents.setString(param++, event.getSifra());
+        insertEvents.setString(param++, event.getOpomba());
+        success = success && insertEvents.executeUpdate() > 0;
 
+        events_ID = getLastIdentity();
+      } else {
+        events_ID = event.getId();
 
-      Map<Field, List<FieldValue>> eventValues = event.getEventValues();
-      for (Field field : eventValues.keySet()) {
-        List<FieldValue> fieldValues = eventValues.get(field);
-        for (int i = 0; i < fieldValues.size(); i++) {
-          FieldValue value = fieldValues.get(i);
-          long valueId = storeValue(value.getType(), value.getValue());
+        param = 1;
+        updateEvents.clearParameters();
+        updateEvents.setInt(param++, event.getSifrant());
+        updateEvents.setString(param++, event.getSifra());
+        updateEvents.setString(param++, event.getOpomba());
+        updateEvents.setLong(param++, events_ID);
+        
+        success = success && updateEvents.executeUpdate() > 0;
+      }
 
-          //insertaj event value
-          param = 1;
-          insertEventValues.clearParameters();
-          insertEventValues.setLong(param++, events_ID);
-          insertEventValues.setString(param++, field.getName());
-          insertEventValues.setInt(param++, i + 1);  //indexPolja
-          insertEventValues.setLong(param++, valueId);
+      if (success) {
+        Map<Field, List<FieldValue>> eventValues = event.getEventValues();
+        for (Field field : eventValues.keySet()) {
+          List<FieldValue> fieldValues = eventValues.get(field);
+          for (int i = 0; i < fieldValues.size(); i++) {
+            FieldValue value = fieldValues.get(i);
+            long valueId = storeValue(value.getType(), value.getValue());
 
-          success = success && insertEventValues.executeUpdate() > 0;
+            param = 1;
+            findEventValue.clearParameters();
+            findEventValue.setLong(param++, events_ID);
+            findEventValue.setString(param++, field.getName());
+            findEventValue.setInt(param++, i + 1);  //indexPolja
+
+            ResultSet rs = findEventValue.executeQuery(); rs.next();
+
+            if (rs.getInt(1)==0) {
+              //insertaj event value
+              param = 1;
+              insertEventValues.clearParameters();
+              insertEventValues.setLong(param++, events_ID);
+              insertEventValues.setString(param++, field.getName());
+              insertEventValues.setInt(param++, i + 1);  //indexPolja
+              insertEventValues.setLong(param++, valueId);
+
+              success = success && insertEventValues.executeUpdate() > 0;
+            } else {
+              //updataj event value
+              param = 1;
+              updateEventValues.clearParameters();
+              updateEventValues.setLong(param++, valueId);
+              updateEventValues.setLong(param++, events_ID);
+              updateEventValues.setString(param++, field.getName());
+              updateEventValues.setInt(param++, i + 1);  //indexPolja
+
+              success = success && updateEventValues.executeUpdate() > 0;
+            }
+          }
         }
       }
 

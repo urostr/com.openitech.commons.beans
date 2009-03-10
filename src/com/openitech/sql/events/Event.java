@@ -22,7 +22,7 @@ public class Event {
     this.sifra = sifra;
   }
 
-  private long id;
+  private long id = -1;
 
   /**
    * Get the value of id

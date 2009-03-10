@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM [EventValues] WHERE [EventId]=? AND [FieldName]=? AND [FieldValueIndex]=?
