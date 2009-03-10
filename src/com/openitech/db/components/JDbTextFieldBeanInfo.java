@@ -51,6 +51,7 @@ public class JDbTextFieldBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_searchField] = new PropertyDescriptor ( "searchField", com.openitech.db.components.JDbTextField.class, "isSearchField", "setSearchField" ); // NOI18N
             properties[PROPERTY_toolTipColumnName] = new PropertyDescriptor ( "toolTipColumnName", com.openitech.db.components.JDbTextField.class, "getToolTipColumnName", "setToolTipColumnName" ); // NOI18N
             properties[PROPERTY_validator] = new PropertyDescriptor ( "validator", com.openitech.db.components.JDbTextField.class, "getValidator", "setValidator" ); // NOI18N
+            properties[PROPERTY_validator].setPreferred ( true );
         }
         catch(IntrospectionException e) {
             e.printStackTrace();
