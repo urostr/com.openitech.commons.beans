@@ -4,13 +4,17 @@
  */
 package com.openitech.sql.util;
 
+import com.openitech.sql.FieldValue;
+import com.openitech.sql.Field;
 import com.openitech.db.ConnectionManager;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.sql.events.Event;
 import com.openitech.util.Equals;
 import java.sql.Connection;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,7 +95,7 @@ public abstract class SqlUtilities {
       boolean wasNull = true;
 
       if (source != null) {
-        value = source.getObject(field.name);
+        value = source.getObject(field.getName());
         wasNull = source.wasNull();
       } else {
         value = columnValues.get(field);
@@ -111,10 +115,10 @@ public abstract class SqlUtilities {
     System.out.println("Setting parameters");
     for (int pos = 1; pos <= fieldValues.length; pos++) {
       FieldValue fieldValue = fieldValues[pos - 1];
-      String fieldName = fieldValue.name;
-      int type = fieldValue.type;
-      Object value = fieldValue.value;
-      boolean wasNull = fieldValue.isNull();
+      final String fieldName = fieldValue.getName();
+      final int type = fieldValue.getType();
+      final Object value = fieldValue.getValue();
+      final boolean wasNull = fieldValue.isNull();
 
 
       System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
@@ -167,10 +171,10 @@ public abstract class SqlUtilities {
     System.out.println("Setting parameters");
     for (int pos = 1; pos <= fieldValues.length; pos++) {
       FieldValue fieldValue = fieldValues[pos - 1];
-      String fieldName = fieldValue.name;
-      int type = fieldValue.type;
-      Object value = fieldValue.value;
-      boolean wasNull = fieldValue.isNull();
+      final String fieldName = fieldValue.getName();
+      final int type = fieldValue.getType();
+      final Object value = fieldValue.getValue();
+      final boolean wasNull = fieldValue.isNull();
 
 
       System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
@@ -279,17 +283,19 @@ public abstract class SqlUtilities {
 
     for (FieldValue value : fieldValues) {
       boolean isPrimaryKey = false;
+      final String name = value.getName();
+
       for (int i = 0; i < keys.size(); i++) {
-        isPrimaryKey = keys.get(i).equalsIgnoreCase(value.name);
+        isPrimaryKey = keys.get(i).equalsIgnoreCase(name);
         if (isPrimaryKey) {
           break;
         }
       }
       value.setLogAlways(isPrimaryKey||value.isLogAlways());
 
-      if ((operation != Operation.UPDATE) || (source != null && source.hasChanged(value.name)) || value.isLogAlways()) {
+      if ((operation != Operation.UPDATE) || (source != null && source.hasChanged(name)) || value.isLogAlways()) {
         newValues.add(value);
-        oldValues.add(new FieldValue(value.name, value.type, ((source == null) || (operation == Operation.INSERT)) ? null : source.getOldValue(value.name)));
+        oldValues.add(new FieldValue(name,value.getType(), ((source == null) || (operation == Operation.INSERT)) ? null : source.getOldValue(name)));
       }
     }
 
@@ -298,7 +304,9 @@ public abstract class SqlUtilities {
 
   protected abstract void logChanges(String application, String database, String tableName, Operation operation, List<FieldValue> newValues, List<FieldValue> oldValues) throws SQLException;
 
-  public boolean beginTransaction() throws SQLException {
+  private java.util.Stack<Savepoint> activeSavepoints = new java.util.Stack<Savepoint>();
+
+  public Savepoint beginTransaction() throws SQLException {
     Connection connection = ConnectionManager.getInstance().getConnection();
 
     if (connection.getAutoCommit()) {
@@ -306,19 +314,41 @@ public abstract class SqlUtilities {
 
       connection.setAutoCommit(false);
     }
-    return !connection.getAutoCommit();
+
+    activeSavepoints.push(connection.setSavepoint());
+
+    return activeSavepoints.peek();
+  }
+  
+  public boolean endTransaction(boolean commit, boolean force) throws SQLException {
+    if (force) {
+      activeSavepoints.clear();
+    }
+    return endTransaction(commit);
   }
 
+
   public boolean endTransaction(boolean commit) throws SQLException {
+    return endTransaction(commit, activeSavepoints.empty()?null:activeSavepoints.pop());
+  }
+
+  public boolean endTransaction(boolean commit, Savepoint savepoint) throws SQLException {
     Connection connection = ConnectionManager.getInstance().getConnection();
 
     if (!connection.getAutoCommit()) {
       if (commit) {
-        connection.commit();
+        if (savepoint!=null) {
+          connection.releaseSavepoint(savepoint);
+        }
+        if (activeSavepoints.size()==0) {
+          connection.commit();
+        }
       } else {
-        connection.rollback();
+        connection.rollback(savepoint);
+     }
+      if (activeSavepoints.size()==0) {
+        connection.setAutoCommit(autocommit);
       }
-      connection.setAutoCommit(autocommit);
       return true;
     } else {
       return false;
@@ -328,19 +358,19 @@ public abstract class SqlUtilities {
   public Map<Field, Object> getColumnValues(DbDataSource source) throws SQLException {
     ResultSetMetaData metaData = source.getMetaData();
 
-    Map<SqlUtilities.Field, Object> columnValues = new HashMap<SqlUtilities.Field, Object>();
+    Map< Field,Object> columnValues = new HashMap< Field,Object>();
     for (int field = 1; field <= metaData.getColumnCount(); field++) {
-      columnValues.put(new SqlUtilities.Field(metaData.getColumnName(field), metaData.getColumnType(field)), source.getObject(field));
+      columnValues.put(new Field(metaData.getColumnName(field), metaData.getColumnType(field)), source.getObject(field));
     }
 
     return columnValues;
   }
 
   public Map<Field, Object> getColumnValues(StoreUpdatesEvent event) throws SQLException {
-    Map<SqlUtilities.Field, Object> columnValues = getColumnValues(event.getSource());
+    Map< Field,Object> columnValues = getColumnValues(event.getSource());
     if (event.getColumnValues()!=null) {
       for (Map.Entry<String, Object> entry : event.getColumnValues().entrySet()) {
-        columnValues.put(new SqlUtilities.Field(entry.getKey(), event.getSource().getType(entry.getKey())), entry.getValue());
+        columnValues.put(new Field(entry.getKey(), event.getSource().getType(entry.getKey())), entry.getValue());
       }
     }
 
@@ -353,97 +383,8 @@ public abstract class SqlUtilities {
 
   public abstract long getCurrentIdentity(String tableName) throws SQLException;
 
+  public abstract Long storeEvent(Event event) throws SQLException;
   public abstract Long storeValue(int fieldType, final Object value) throws SQLException;
-
-  public static class Field {
-
-    String name;
-    int type;
-
-    public Field(String name, int type) {
-      this.name = name;
-      this.type = type;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == null) {
-        return false;
-      }
-      if (!obj.getClass().isInstance(this)) {
-        return false;
-      }
-      final Field other = (Field) obj;
-      if ((this.name == null) ? (other.name != null) : !this.name.equalsIgnoreCase(other.name)) {
-        return false;
-      }
-      return true;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public int getType() {
-      return type;
-    }
-
-    @Override
-    public int hashCode() {
-      int hash = 7;
-      hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0);
-      return hash;
-    }
-  }
-
-  public static class FieldValue extends Field {
-
-    Object value;
-
-    public FieldValue(Field field) {
-      super(field.name, field.type);
-    }
-
-    public FieldValue(String name, int type) {
-      super(name, type);
-    }
-
-    public FieldValue(String name, int type, Object value) {
-      super(name, type);
-      this.value = value;
-    }
-
-    public Object getValue() {
-      return value;
-    }
-
-    public void setValue(Object value) {
-      this.value = value;
-    }
-
-    public boolean isNull() {
-      return value == null;
-    }
-    private boolean logAlways;
-
-    /**
-     * Get the value of logAlways
-     *
-     * @return the value of logAlways
-     */
-    public boolean isLogAlways() {
-      return logAlways;
-    }
-
-    /**
-     * Set the value of logAlways
-     *
-     * @param logAlways new value of logAlways
-     */
-    public void setLogAlways(boolean logAlways) {
-      this.logAlways = logAlways;
-    }
-  }
 
   public static enum Operation {
 

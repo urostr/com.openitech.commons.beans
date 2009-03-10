@@ -5,13 +5,18 @@
 package com.openitech.sql.util.mssql;
 
 import com.openitech.db.ConnectionManager;
+import com.openitech.sql.Field;
+import com.openitech.sql.events.Event;
 import com.openitech.sql.util.SqlUtilities;
+import com.openitech.sql.FieldValue;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -22,6 +27,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement logChanges;
   PreparedStatement logValues;
   PreparedStatement logChangedValues;
+  PreparedStatement insertEvents;
+  PreparedStatement insertEventValues;
   PreparedStatement find_datevalue;
   PreparedStatement find_intvalue;
   PreparedStatement find_realvalue;
@@ -85,54 +92,78 @@ public class SqlUtilitesImpl extends SqlUtilities {
       FieldValue newValue = newValues.get(fieldno);
       FieldValue oldValue = oldValues.get(fieldno);
 
-      int fieldType;
       final Object value = newValue.getValue();
+      final int fieldType = newValue.getValueType().getTypeIndex();
 
-      switch (newValue.getType()) {
-        case Types.BIT:
-        case Types.BOOLEAN:
-        case Types.TINYINT:
-        case Types.SMALLINT:
-        case Types.BIGINT:
-        case Types.INTEGER:
-          fieldType = 1;
-          break;
-        case Types.FLOAT:
-        case Types.REAL:
-        case Types.DOUBLE:
-        case Types.DECIMAL:
-        case Types.NUMERIC:
-          fieldType = 2;
-          break;
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.LONGVARCHAR:
-          if (value != null && value.toString().length() > 108) {
-            fieldType = 6;
-          } else {
-            fieldType = 3;
-          }
-          break;
-        case Types.DATE:
-        case Types.TIME:
-        case Types.TIMESTAMP:
-          fieldType = 4;
-          break;
-        default:
-          fieldType = 5;
-      }
       Long newValueId = storeValue(fieldType, value);
-      Long oldValueId =  storeValue(fieldType, oldValue.getValue());
+      Long oldValueId = storeValue(fieldType, oldValue.getValue());
 
-      fieldValues = new FieldValue[] {
-        new FieldValue("ChangeId", Types.BIGINT, changeId),
-        new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
-        new FieldValue("NewValueId", Types.BIGINT, newValueId),
-        new FieldValue("OldValueId", Types.BIGINT, oldValueId)
-      };
+      fieldValues = new FieldValue[]{
+                new FieldValue("ChangeId", Types.BIGINT, changeId),
+                new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
+                new FieldValue("NewValueId", Types.BIGINT, newValueId),
+                new FieldValue("OldValueId", Types.BIGINT, oldValueId)
+              };
 
       executeUpdate(logChangedValues, fieldValues);
     }
+  }
+
+  @Override
+  public Long storeEvent(Event event) throws SQLException {
+    final Connection connection = ConnectionManager.getInstance().getConnection();
+    if (insertEvents == null) {
+      insertEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
+    }
+    if (insertEventValues == null) {
+      insertEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEventValues.sql", "cp1250"));
+    }
+    int param;
+    boolean success = true;
+    boolean commit = false;
+    // <editor-fold defaultstate="collapsed" desc="Shrani">
+
+    long events_ID = 0;
+    try {
+      beginTransaction();
+
+      //insertaj event
+      param = 1;
+      insertEvents.clearParameters();
+      insertEvents.setInt(param++, event.getSifrant());
+      insertEvents.setString(param++, event.getSifra());
+      insertEvents.setString(param++, event.getOpomba());
+      success = success && insertEvents.executeUpdate() > 0;
+
+      events_ID = getLastIdentity();
+
+
+      Map<Field, List<FieldValue>> eventValues = event.getEventValues();
+      for (Field field : eventValues.keySet()) {
+        List<FieldValue> fieldValues = eventValues.get(field);
+        for (int i = 0; i < fieldValues.size(); i++) {
+          FieldValue value = fieldValues.get(i);
+          long valueId = storeValue(value.getType(), value.getValue());
+
+          //insertaj event value
+          param = 1;
+          insertEventValues.clearParameters();
+          insertEventValues.setLong(param++, events_ID);
+          insertEventValues.setString(param++, field.getName());
+          insertEventValues.setInt(param++, i + 1);  //indexPolja
+          insertEventValues.setLong(param++, valueId);
+
+          success = success && insertEventValues.executeUpdate() > 0;
+        }
+      }
+
+      commit = success;
+    } finally {
+      endTransaction(commit);
+      event.setId(events_ID);
+    }
+
+    return event.getId();
   }
 
   @Override
@@ -249,7 +280,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, value);
           break;
       }
-      if (newValueId==null) {
+      if (newValueId == null) {
         executeUpdate(logValues, fieldValues);
         newValueId = getLastIdentity();
       }

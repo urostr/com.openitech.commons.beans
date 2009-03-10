@@ -1,0 +1,16 @@
+INSERT 
+INTO 
+    [EventValues] 
+    (
+        [EventId], 
+        [FieldName], 
+        [FieldValueIndex], 
+        [ValueId]
+    ) 
+    VALUES 
+    (
+        ?, 
+        ?, 
+        ?, 
+        ?
+    )
