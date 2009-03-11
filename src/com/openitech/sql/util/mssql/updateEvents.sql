@@ -3,6 +3,7 @@ UPDATE
     SET
     [IdSifranta]  = ?,
     [IdSifre]     = ?,
+    [Datum]       = ?,
     [Opomba]      = ?
 WHERE
     [Id] = ?

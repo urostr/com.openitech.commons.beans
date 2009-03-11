@@ -81,7 +81,7 @@ public class Event {
   public void setSifra(String sifra) {
     this.sifra = sifra;
   }
-  private Date datum;
+  private Date datum = java.util.Calendar.getInstance().getTime();
 
   /**
    * Get the value of datum

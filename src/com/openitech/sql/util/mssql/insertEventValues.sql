@@ -3,7 +3,7 @@ INTO
     [EventValues] 
     (
         [EventId], 
-        [FieldName], 
+        [IdPolja],
         [FieldValueIndex], 
         [ValueId]
     ) 

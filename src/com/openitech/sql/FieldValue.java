@@ -7,7 +7,11 @@ public class FieldValue extends Field {
   Object value;
 
   public FieldValue(Field field) {
-    super(field.name, field.type);
+    this(field.name, field.type);
+  }
+
+  public FieldValue(Field field, Object value) {
+    this(field.name, field.type, value);
   }
 
   public FieldValue(String name, int type) {

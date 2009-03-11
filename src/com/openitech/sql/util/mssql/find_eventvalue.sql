@@ -1,1 +1,1 @@
-SELECT COUNT(*) FROM [EventValues] WHERE [EventId]=? AND [FieldName]=? AND [FieldValueIndex]=?
+SELECT COUNT(*) FROM [EventValues] WHERE [EventId]=? AND [IdPolja]=? AND [FieldValueIndex]=?

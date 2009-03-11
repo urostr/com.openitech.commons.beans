@@ -36,6 +36,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement find_intvalue;
   PreparedStatement find_realvalue;
   PreparedStatement find_stringvalue;
+  PreparedStatement get_field;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -130,6 +131,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (updateEventValues == null) {
       updateEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEventValue.sql", "cp1250"));
     }
+    if (get_field == null) {
+      get_field = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
+    }
     int param;
     boolean success = true;
     boolean commit = false;
@@ -147,6 +151,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         insertEvents.clearParameters();
         insertEvents.setInt(param++, event.getSifrant());
         insertEvents.setString(param++, event.getSifra());
+        insertEvents.setDate(param++, new java.sql.Date(event.getDatum().getTime()));
         insertEvents.setString(param++, event.getOpomba());
         success = success && insertEvents.executeUpdate() > 0;
 
@@ -170,12 +175,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
           List<FieldValue> fieldValues = eventValues.get(field);
           for (int i = 0; i < fieldValues.size(); i++) {
             FieldValue value = fieldValues.get(i);
-            long valueId = storeValue(value.getType(), value.getValue());
+            long valueId = storeValue(value.getValueType().getTypeIndex(), value.getValue());
+            
+            param = 1;
+            get_field.setString(param, field.getName());
+            
+            ResultSet rs_field = get_field.executeQuery(); rs_field.next();
+            
+            int field_id = rs_field.getInt("Id");
 
             param = 1;
             findEventValue.clearParameters();
             findEventValue.setLong(param++, events_ID);
-            findEventValue.setString(param++, field.getName());
+            findEventValue.setInt(param++, field_id);
             findEventValue.setInt(param++, i + 1);  //indexPolja
 
             ResultSet rs = findEventValue.executeQuery(); rs.next();
@@ -185,7 +197,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               param = 1;
               insertEventValues.clearParameters();
               insertEventValues.setLong(param++, events_ID);
-              insertEventValues.setString(param++, field.getName());
+              insertEventValues.setInt(param++, field_id);
               insertEventValues.setInt(param++, i + 1);  //indexPolja
               insertEventValues.setLong(param++, valueId);
 
@@ -196,7 +208,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               updateEventValues.clearParameters();
               updateEventValues.setLong(param++, valueId);
               updateEventValues.setLong(param++, events_ID);
-              updateEventValues.setString(param++, field.getName());
+              updateEventValues.setInt(param++, field_id);
               updateEventValues.setInt(param++, i + 1);  //indexPolja
 
               success = success && updateEventValues.executeUpdate() > 0;

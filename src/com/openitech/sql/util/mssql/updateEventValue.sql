@@ -4,5 +4,5 @@ UPDATE
     [ValueId]         = ?
 WHERE
     [EventId]             = ?
-    and [FieldName]       = ?
+    and [IdPolja]       = ?
     and [FieldValueIndex] = ?

@@ -14,7 +14,7 @@ INTO
         
         ?, 
         ?, 
-        GETDATE(),
+        ?,
         ?, 
         SYSTEM_USER
     )
