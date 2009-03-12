@@ -5379,7 +5379,7 @@ public class DbDataSource implements DbNavigatorDataSource {
               columnIndex = columnMapping.get(columnName);
               if (indexed && (columnIndex != null)) {
                 if (values.containsKey(columnIndex) && values.get(columnIndex) != null) {
-                  equals = equals && (values.get(columnIndex).equals(resultSet.getObject(columnIndex)));
+                  equals = equals && Equals.equals(values.get(columnIndex),resultSet.getObject(columnIndex));
                 } else {
                   resultSet.getObject(columnIndex);
                   equals = equals && resultSet.wasNull();
@@ -5394,7 +5394,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                   if (index >= 0) {
                     primarysChecked[index] = true;
                     if (entry.getValue() != null) {
-                      equals = equals && (entry.getValue().equals(resultSet.getObject(columnName)));
+                      equals = equals && Equals.equals(entry.getValue(),resultSet.getObject(columnName));
                     } else {
                       resultSet.getObject(columnName);
                       equals = equals && resultSet.wasNull();
@@ -5403,7 +5403,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                 }
               } else {
                 if (values.containsKey(columnName) && values.get(columnName) != null) {
-                  equals = equals && (values.get(columnName).equals(resultSet.getObject(columnName)));
+                  equals = equals && Equals.equals(values.get(columnName),resultSet.getObject(columnName));
                 } else {
                   resultSet.getObject(columnName);
                   equals = equals && resultSet.wasNull();
