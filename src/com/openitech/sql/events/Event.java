@@ -121,6 +121,27 @@ public class Event {
     this.opomba = opomba;
   }
 
+  private int eventSource = Integer.MIN_VALUE;
+
+  /**
+   * Get the value of eventSource
+   *
+   * @return the value of eventSource
+   */
+  public int getEventSource() {
+    return eventSource;
+  }
+
+  /**
+   * Set the value of eventSource
+   *
+   * @param eventSource new value of eventSource
+   */
+  public void setEventSource(int eventSource) {
+    this.eventSource = eventSource;
+  }
+
+
   java.util.Map<Field, java.util.List<FieldValue>> eventValues = new java.util.LinkedHashMap<Field, java.util.List<FieldValue>> ();
 
   public void addValue(FieldValue value) {

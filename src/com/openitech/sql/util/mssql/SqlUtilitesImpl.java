@@ -151,6 +151,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
         insertEvents.clearParameters();
         insertEvents.setInt(param++, event.getSifrant());
         insertEvents.setString(param++, event.getSifra());
+        if (event.getEventSource()==Integer.MIN_VALUE) {
+          insertEvents.setNull(param++, java.sql.Types.INTEGER);
+        } else {
+          insertEvents.setInt(param++, event.getEventSource());
+        }
         insertEvents.setDate(param++, new java.sql.Date(event.getDatum().getTime()));
         insertEvents.setString(param++, event.getOpomba());
         success = success && insertEvents.executeUpdate() > 0;
@@ -164,6 +169,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
         updateEvents.setInt(param++, event.getSifrant());
         updateEvents.setString(param++, event.getSifra());
         updateEvents.setString(param++, event.getOpomba());
+        if (event.getEventSource()==Integer.MIN_VALUE) {
+          updateEvents.setNull(param++, java.sql.Types.INTEGER);
+        } else {
+          updateEvents.setInt(param++, event.getEventSource());
+        }
         updateEvents.setLong(param++, events_ID);
         
         success = success && updateEvents.executeUpdate() > 0;

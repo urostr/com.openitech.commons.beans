@@ -4,7 +4,8 @@ INTO
     (
         
         [IdSifranta], 
-        [IdSifre], 
+        [IdSifre],
+        [IdEventSource],
         [Datum], 
         [Opomba], 
         [SessionUser]
@@ -13,7 +14,8 @@ INTO
     (
         
         ?, 
-        ?, 
+        ?,
+        ?,
         ?,
         ?, 
         SYSTEM_USER
