@@ -76,7 +76,7 @@ public class RazdeliTelefonskoStevilko {
         Matcher matcherTujina002 = telTujina2Razdeljen.matcher(telefonskaStevilka);
 
         if (matcherT2.matches()) {      //T2
-            System.out.println("T2");
+          //  System.out.println("T2");
             String koda = telefonskaStevilka.substring(0, 4);
             String telefonska = telefonskaStevilka.substring(4);
             System.out.println(koda);
@@ -86,22 +86,22 @@ public class RazdeliTelefonskoStevilko {
 
             return telefon;
         } else if (matcherT22.matches()) {
-            System.out.println("matcherT22");
+           // System.out.println("matcherT22");
             String koda = telefonskaStevilka.substring(0, 4);
             String telefonska = telefonskaStevilka.substring(5);
-            System.out.println(koda);
-            System.out.println(telefonska);
+         //   System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         //----------------------------
         } else if (matcherT27.matches()) {
-            System.out.println("matcherT27");
+           // System.out.println("matcherT27");
             String koda = telefonskaStevilka.substring(0, 4);
             String telefonska = telefonskaStevilka.substring(4);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
@@ -110,92 +110,92 @@ public class RazdeliTelefonskoStevilko {
             System.out.println("matcherT272");
             String koda = telefonskaStevilka.substring(0, 4);
             String telefonska = telefonskaStevilka.substring(5);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         //------------------------------------
         } else if (matcher0817.matches()) {
-            System.out.println("matcher0817");
+         //   System.out.println("matcher0817");
             String koda = telefonskaStevilka.substring(0, 4);
             String telefonska = telefonskaStevilka.substring(4);
-            System.out.println(koda);
-            System.out.println(telefonska);
+         //   System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         } else if (matcher08172.matches()) {
-            System.out.println("matcher08172");
+          //  System.out.println("matcher08172");
             String koda = telefonskaStevilka.substring(0, 4);
             String telefonska = telefonskaStevilka.substring(5);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         //---------------------------------
         } else if (matcherMobitel.matches()) {
-            System.out.println("Mobitel");
+          //  System.out.println("Mobitel");
             String koda = telefonskaStevilka.substring(0, 3);
             String telefonska = telefonskaStevilka.substring(3);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         } else if (matcherMobitel2.matches()) {
-            System.out.println("Mobitel2");
+          //  System.out.println("Mobitel2");
             String koda = telefonskaStevilka.substring(0, 3);
             String telefonska = telefonskaStevilka.substring(4);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         //--------------------------------
         } else if (matcher064.matches()) {
-            System.out.println("matcher064");
+          //  System.out.println("matcher064");
             String koda = telefonskaStevilka.substring(0, 3);
             String telefonska = telefonskaStevilka.substring(3);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         } else if (matcher0642.matches()) {
-            System.out.println("matcher0642");
+          //  System.out.println("matcher0642");
             String koda = telefonskaStevilka.substring(0, 3);
             String telefonska = telefonskaStevilka.substring(4);
-            System.out.println(koda);
-            System.out.println(telefonska);
+         //   System.out.println(koda);
+         //   System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         //--------------------
         } else if (matcher080.matches()) {
-            System.out.println("matcher080");
+          //  System.out.println("matcher080");
             String koda = telefonskaStevilka.substring(0, 3);
             String telefonska = telefonskaStevilka.substring(3);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         } else if (matcher0802.matches()) {
-            System.out.println("matcher0802");
+          //  System.out.println("matcher0802");
             String koda = telefonskaStevilka.substring(0, 3);
             String telefonska = telefonskaStevilka.substring(4);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
@@ -203,21 +203,21 @@ public class RazdeliTelefonskoStevilko {
         //------------------------
 
         } else if (matcherStacionarna.matches()) {
-            System.out.println("Stacionarna");
+         //   System.out.println("Stacionarna");
             String koda = telefonskaStevilka.substring(0, 2);
             String telefonska = telefonskaStevilka.substring(2);
-            System.out.println(koda);
-            System.out.println(telefonska);
+         //   System.out.println(koda);
+         //   System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
             return telefon;
         } else if (matcherStacionarna2.matches()) {
-            System.out.println("Stacionarna2");
+          //  System.out.println("Stacionarna2");
             String koda = telefonskaStevilka.substring(0, 2);
             String telefonska = telefonskaStevilka.substring(3);
-            System.out.println(koda);
-            System.out.println(telefonska);
+          //  System.out.println(koda);
+          //  System.out.println(telefonska);
             telefon[0] = koda;
             telefon[1] = telefonska;
 
@@ -225,13 +225,13 @@ public class RazdeliTelefonskoStevilko {
         //----------------------------
         } else if (matcherTujinaPlusPlus.matches()) {
             if (telefonskaStevilka.length() > 6) {
-                System.out.println("Tujina ++");
-                System.out.println(telefonskaStevilka.substring(0, 5));
+            //    System.out.println("Tujina ++");
+            //    System.out.println(telefonskaStevilka.substring(0, 5));
                 String kodaDrzava = telefonskaStevilka.substring(0, 5);
 
                 String telefonska = telefonskaStevilka.substring(5);
 
-                System.out.println(telefonska);
+            //    System.out.println(telefonska);
                 telefon[0] = kodaDrzava;
                 telefon[1] = telefonska;
 
@@ -241,13 +241,13 @@ public class RazdeliTelefonskoStevilko {
             }
         } else if (matcherTujinaPlusPlus2.matches()) {
             if (telefonskaStevilka.length() > 7) {
-                System.out.println("Tujina ++");
-                System.out.println(telefonskaStevilka.substring(0, 5));
+             //   System.out.println("Tujina ++");
+             //   System.out.println(telefonskaStevilka.substring(0, 5));
                 String kodaDrzava = telefonskaStevilka.substring(0, 5);
 
                 String telefonska = telefonskaStevilka.substring(6);
 
-                System.out.println(telefonska);
+            //    System.out.println(telefonska);
                 telefon[0] = kodaDrzava;
                 telefon[1] = telefonska;
 
@@ -258,11 +258,11 @@ public class RazdeliTelefonskoStevilko {
         //----------------------------
         } else if (matcherTujina00.matches()) {
             if (telefonskaStevilka.length() > 6) {
-                System.out.println("Tujina 00");
+            //    System.out.println("Tujina 00");
                 String kodaDrzava = telefonskaStevilka.substring(0, 5);
                 String telefonska = telefonskaStevilka.substring(5);
-                System.out.println(kodaDrzava);
-                System.out.println(telefonska);
+            //    System.out.println(kodaDrzava);
+             //   System.out.println(telefonska);
                 telefon[0] = kodaDrzava;
                 telefon[1] = telefonska;
                 return telefon;
@@ -271,11 +271,11 @@ public class RazdeliTelefonskoStevilko {
             }
         } else if (matcherTujina002.matches()) {
             if (telefonskaStevilka.length() > 7) {
-                System.out.println("Tujina 00");
+            //    System.out.println("Tujina 00");
                 String kodaDrzava = telefonskaStevilka.substring(0, 5);
                 String telefonska = telefonskaStevilka.substring(6);
-                System.out.println(kodaDrzava);
-                System.out.println(telefonska);
+            //    System.out.println(kodaDrzava);
+             //   System.out.println(telefonska);
                 telefon[0] = kodaDrzava;
                 telefon[1] = telefonska;
                 return telefon;
