@@ -4225,11 +4225,14 @@ public class DbDataSource implements DbNavigatorDataSource {
           if (((SqlParameter) value).getValue()!=null) {
             statement.setObject(pos++, ((SqlParameter) value).getValue(),
                                        ((SqlParameter) value).getType());
+            if (DUMP_SQL) {
+              System.out.println("--[" + (pos - 1) + "]=" + ((SqlParameter) value).getValue().toString());
+            }
           } else {
             statement.setNull(pos++, ((SqlParameter) value).getType());
-          }
-          if (DUMP_SQL) {
-            System.out.println("--[" + (pos - 1) + "]=" + ((SqlParameter) value).getValue().toString());
+            if (DUMP_SQL) {
+              System.out.println("--[" + (pos - 1) + "]=null");
+            }
           }
         } else if ((value instanceof SubstSqlParameter) && (((SubstSqlParameter) value).getParameters().size() > 0)) {
           pos = setParameters(statement, ((SubstSqlParameter) value).getParameters(), pos, true);

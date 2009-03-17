@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Scheduler {
   public static final long DELAY = 9;
-  public static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(1);
+  private static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(1);
   
   /** Creates a new instance of Scheduler */
   protected Scheduler() {

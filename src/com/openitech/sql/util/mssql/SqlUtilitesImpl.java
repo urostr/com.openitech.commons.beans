@@ -185,7 +185,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           List<FieldValue> fieldValues = eventValues.get(field);
           for (int i = 0; i < fieldValues.size(); i++) {
             FieldValue value = fieldValues.get(i);
-            long valueId = storeValue(value.getValueType().getTypeIndex(), value.getValue());
+            Long valueId = storeValue(value.getValueType().getTypeIndex(), value.getValue());
             
             param = 1;
             get_field.setString(param, field.getName());
@@ -209,14 +209,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
               insertEventValues.setLong(param++, events_ID);
               insertEventValues.setInt(param++, field_id);
               insertEventValues.setInt(param++, i + 1);  //indexPolja
-              insertEventValues.setLong(param++, valueId);
+              if (valueId==null) {
+                insertEventValues.setNull(param++, java.sql.Types.BIGINT);
+              } else {
+                insertEventValues.setLong(param++, valueId);
+              }
 
               success = success && insertEventValues.executeUpdate() > 0;
             } else {
               //updataj event value
               param = 1;
               updateEventValues.clearParameters();
-              updateEventValues.setLong(param++, valueId);
+              if (valueId==null) {
+                updateEventValues.setNull(param++, java.sql.Types.BIGINT);
+              } else {
+                updateEventValues.setLong(param++, valueId);
+              }
               updateEventValues.setLong(param++, events_ID);
               updateEventValues.setInt(param++, field_id);
               updateEventValues.setInt(param++, i + 1);  //indexPolja
