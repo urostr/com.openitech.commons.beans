@@ -50,18 +50,20 @@ public abstract class SqlUtilities {
     if (instance == null) {
       register();
       Class implementation = implementations.get(ConnectionManager.getInstance().getDialect());
-      try {
-        instance = (SqlUtilities) implementation.newInstance();
+      if (implementation != null) {
         try {
-          instance.autocommit = ConnectionManager.getInstance().getConnection().getAutoCommit();
-        } catch (SQLException ex) {
-          //ignore it
-          instance.autocommit = true;
+          instance = (SqlUtilities) implementation.newInstance();
+          try {
+            instance.autocommit = ConnectionManager.getInstance().getConnection().getAutoCommit();
+          } catch (SQLException ex) {
+            //ignore it
+            instance.autocommit = true;
+          }
+        } catch (InstantiationException ex) {
+          Logger.getLogger(SqlUtilities.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+          Logger.getLogger(SqlUtilities.class.getName()).log(Level.SEVERE, null, ex);
         }
-      } catch (InstantiationException ex) {
-        Logger.getLogger(SqlUtilities.class.getName()).log(Level.SEVERE, null, ex);
-      } catch (IllegalAccessException ex) {
-        Logger.getLogger(SqlUtilities.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
     return instance;
@@ -276,8 +278,8 @@ public abstract class SqlUtilities {
     List<FieldValue> oldValues = new ArrayList<FieldValue>(fieldValues.length);
 
     java.util.List<String> keys = new java.util.ArrayList<String>();
-    
-    if (source!=null) {
+
+    if (source != null) {
       keys = getPrimaryKeys(source.getConnection(), tableName);
     }
 
@@ -291,11 +293,11 @@ public abstract class SqlUtilities {
           break;
         }
       }
-      value.setLogAlways(isPrimaryKey||value.isLogAlways());
+      value.setLogAlways(isPrimaryKey || value.isLogAlways());
 
       if ((operation != Operation.UPDATE) || (source != null && source.hasChanged(name)) || value.isLogAlways()) {
         newValues.add(value);
-        oldValues.add(new FieldValue(name,value.getType(), ((source == null) || (operation == Operation.INSERT)) ? null : source.getOldValue(name)));
+        oldValues.add(new FieldValue(name, value.getType(), ((source == null) || (operation == Operation.INSERT)) ? null : source.getOldValue(name)));
       }
     }
 
@@ -303,7 +305,6 @@ public abstract class SqlUtilities {
   }
 
   protected abstract void logChanges(String application, String database, String tableName, Operation operation, List<FieldValue> newValues, List<FieldValue> oldValues) throws SQLException;
-
   private java.util.Stack<Savepoint> activeSavepoints = new java.util.Stack<Savepoint>();
 
   public Savepoint beginTransaction() throws SQLException {
@@ -319,7 +320,7 @@ public abstract class SqlUtilities {
 
     return activeSavepoints.peek();
   }
-  
+
   public boolean endTransaction(boolean commit, boolean force) throws SQLException {
     if (force) {
       activeSavepoints.clear();
@@ -327,9 +328,8 @@ public abstract class SqlUtilities {
     return endTransaction(commit);
   }
 
-
   public boolean endTransaction(boolean commit) throws SQLException {
-    return endTransaction(commit, activeSavepoints.empty()?null:activeSavepoints.pop());
+    return endTransaction(commit, activeSavepoints.empty() ? null : activeSavepoints.pop());
   }
 
   public boolean endTransaction(boolean commit, Savepoint savepoint) throws SQLException {
@@ -337,16 +337,16 @@ public abstract class SqlUtilities {
 
     if (!connection.getAutoCommit()) {
       if (commit) {
-        if (savepoint!=null) {
+        if (savepoint != null) {
           connection.releaseSavepoint(savepoint);
         }
-        if (activeSavepoints.size()==0) {
+        if (activeSavepoints.size() == 0) {
           connection.commit();
         }
       } else {
         connection.rollback(savepoint);
-     }
-      if (activeSavepoints.size()==0) {
+      }
+      if (activeSavepoints.size() == 0) {
         connection.setAutoCommit(autocommit);
       }
       return true;
@@ -358,7 +358,7 @@ public abstract class SqlUtilities {
   public Map<Field, Object> getColumnValues(DbDataSource source) throws SQLException {
     ResultSetMetaData metaData = source.getMetaData();
 
-    Map< Field,Object> columnValues = new HashMap< Field,Object>();
+    Map<Field, Object> columnValues = new HashMap<Field, Object>();
     for (int field = 1; field <= metaData.getColumnCount(); field++) {
       columnValues.put(new Field(metaData.getColumnName(field), metaData.getColumnType(field)), source.getObject(field));
     }
@@ -367,8 +367,8 @@ public abstract class SqlUtilities {
   }
 
   public Map<Field, Object> getColumnValues(StoreUpdatesEvent event) throws SQLException {
-    Map< Field,Object> columnValues = getColumnValues(event.getSource());
-    if (event.getColumnValues()!=null) {
+    Map<Field, Object> columnValues = getColumnValues(event.getSource());
+    if (event.getColumnValues() != null) {
       for (Map.Entry<String, Object> entry : event.getColumnValues().entrySet()) {
         columnValues.put(new Field(entry.getKey(), event.getSource().getType(entry.getKey())), entry.getValue());
       }
@@ -384,7 +384,10 @@ public abstract class SqlUtilities {
   public abstract long getCurrentIdentity(String tableName) throws SQLException;
 
   public abstract Long storeEvent(Event event) throws SQLException;
+
   public abstract Long storeValue(int fieldType, final Object value) throws SQLException;
+
+  public abstract DbDataSource getDsSifrantModel(java.util.List<Object> parameters) throws SQLException;
 
   public static enum Operation {
 

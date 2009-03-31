@@ -55,6 +55,10 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
   public DbComboBoxModel(List<DbComboBoxEntry<K,String>> entries) {
     this.entries.addAll(entries);
   }
+
+  public DbComboBoxModel(DbComboBoxModel model) {
+    this(model.entries);
+  }
   
   public DbComboBoxModel(DbDataSource dataSource, String keyColumnName, String[] valueColumnNames) {
     this(dataSource, keyColumnName, valueColumnNames, " ");
@@ -156,6 +160,10 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
             keyColumnName != null &&
             valueColumnNames != null) {
       dataSource.lock();
+      boolean safeMode = dataSource.isSafeMode();
+      if (!dataSource.isDataLoaded()) {
+        dataSource.setSafeMode(false);
+      }
       try {
         int size = dataSource.getRowCount();
         StringBuffer result;
@@ -230,6 +238,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
       } catch (SQLException ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries from the dataSource ("+dataSource.getName()+").", ex);
       } finally {
+        dataSource.setSafeMode(safeMode);
         dataSource.unlock();
       }
     }

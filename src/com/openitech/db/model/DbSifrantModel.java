@@ -9,6 +9,7 @@
 
 package com.openitech.db.model;
 
+import com.openitech.sql.util.SqlUtilities;
 import java.sql.SQLException;
 
 /**
@@ -18,7 +19,7 @@ import java.sql.SQLException;
 public class DbSifrantModel extends DbComboBoxModel<String> {
   private final DbSifrantModel.SifrantiDataSourceDescriptionFilter fNotDefined = new DbSifrantModel.SifrantiDataSourceDescriptionFilter();
   private final DbSifrantModel.SifrantiDataSourceFilters           fGroup      = new DbSifrantModel.SifrantiDataSourceFilters();
-  private final DbDataSource dsSifrant = new DbDataSource();
+  private DbDataSource dsSifrant;
   
   /** Creates a new instance of DbSifrantModel */
   public DbSifrantModel() throws SQLException {
@@ -35,19 +36,16 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     fGroup.addRequired(fGroup.I_TYPE_OPIS_SIFRANTA,2);
     fGroup.addRequired(fGroup.I_TYPE_SKUPINA_SIFRANTA,2);
 
-    dsSifrant.setCanAddRows(false);
-    dsSifrant.setCanDeleteRows(false);
-    dsSifrant.setReadOnly(true);
-    
     java.util.List parameters = new  java.util.ArrayList();
 
     parameters.add(fNotDefined);
     parameters.add(fGroup);
-    
-    dsSifrant.setParameters(parameters);
-    dsSifrant.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant_c.sql", "cp1250"));
-    dsSifrant.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant.sql", "cp1250"));
-    dsSifrant.setQueuedDelay(0);
+
+    if (SqlUtilities.getInstance()==null) {
+      this.dsSifrant = new DbDataSource();
+    } else {
+      this.dsSifrant = SqlUtilities.getInstance().getDsSifrantModel(parameters);
+    }
     
     fNotDefined.addDataSource(dsSifrant);
     fGroup.addDataSource(dsSifrant);

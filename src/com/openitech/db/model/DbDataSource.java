@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.50 $
+ * $Revision: 1.51 $
  */
 package com.openitech.db.model;
 
@@ -58,8 +58,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -163,6 +168,26 @@ public class DbDataSource implements DbNavigatorDataSource {
     this.countStatement = count;
     this.parameters.clear();
     this.parameters.addAll(parameters);
+  }
+
+  private boolean safeMode = true;
+
+  /**
+   * Get the value of safeMode
+   *
+   * @return the value of safeMode
+   */
+  public boolean isSafeMode() {
+    return safeMode;
+  }
+
+  /**
+   * Set the value of safeMode
+   *
+   * @param safeMode new value of safeMode
+   */
+  public void setSafeMode(boolean safeMode) {
+    this.safeMode = safeMode;
   }
 
   public String getName() {
@@ -2619,6 +2644,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     int oldRow = resultSet.getRow();
     storeUpdatesEvent.getSource().doDeleteRow(resultSet);
   }
+
   /**
    * Deletes the current row from this <code>ResultSet</code> object
    * and from the underlying database.  This method cannot be called when
@@ -3349,7 +3375,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   protected void fireIntervalAdded(ListDataEvent e) {
     if (listDataListeners != null) {
-      if (java.awt.EventQueue.isDispatchThread()) {
+      if (java.awt.EventQueue.isDispatchThread()||!isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
@@ -3368,7 +3394,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   protected void fireIntervalRemoved(ListDataEvent e) {
     if (listDataListeners != null) {
-      if (java.awt.EventQueue.isDispatchThread()) {
+      if (java.awt.EventQueue.isDispatchThread()||!isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
@@ -3387,7 +3413,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   protected void fireContentsChanged(ListDataEvent e) {
     if (listDataListeners != null) {
-      if (java.awt.EventQueue.isDispatchThread()) {
+      if (java.awt.EventQueue.isDispatchThread()||!isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
@@ -3481,7 +3507,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   protected void fireActiveRowChange(ActiveRowChangeEvent e) {
     if (activeRowChangeListeners != null) {
-      if (java.awt.EventQueue.isDispatchThread()) {
+      if (java.awt.EventQueue.isDispatchThread()||!isSafeMode()) {
         java.util.List listeners = activeRowChangeListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
@@ -3627,9 +3653,9 @@ public class DbDataSource implements DbNavigatorDataSource {
       for (int c = 1; c <= columnCount; c++) {
         String columnName = metaData.getColumnName(c).toUpperCase();
         if ((updateTableName == null ||
-            (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) &&
-            (updateColumnNames.size()==0 ||
-            updateColumnNames.contains(columnName))){
+                (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) &&
+                (updateColumnNames.size() == 0 ||
+                updateColumnNames.contains(columnName))) {
           try {
             Object value = selectResultSet.getObject(c);
             oldValues.put(c, value);
@@ -4049,6 +4075,7 @@ public class DbDataSource implements DbNavigatorDataSource {
       }
     return result;
   }
+
   public boolean lock(boolean fatal) {
     return lock(fatal, false);
   }
@@ -4161,14 +4188,13 @@ public class DbDataSource implements DbNavigatorDataSource {
       fireActionPerformed(new ActionEvent(this, 1, DATA_LOADED));
     }
     if (reloaded && selectResultSet != null) {
-      if (EventQueue.isDispatchThread()) {
+      if (EventQueue.isDispatchThread()||!isSafeMode()) {
         events.run();
       } else {
         try {
           EventQueue.invokeAndWait(events);
         } catch (Exception ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
-          ;
         }
       }
     }
@@ -4222,9 +4248,9 @@ public class DbDataSource implements DbNavigatorDataSource {
       if (value instanceof SqlParameter) {
         type = ((SqlParameter) value).getType();
         if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
-          if (((SqlParameter) value).getValue()!=null) {
+          if (((SqlParameter) value).getValue() != null) {
             statement.setObject(pos++, ((SqlParameter) value).getValue(),
-                                       ((SqlParameter) value).getType());
+                    ((SqlParameter) value).getType());
             if (DUMP_SQL) {
               System.out.println("--[" + (pos - 1) + "]=" + ((SqlParameter) value).getValue().toString());
             }
@@ -4805,9 +4831,10 @@ public class DbDataSource implements DbNavigatorDataSource {
 
         if (isSeekUpdatedRow()) {
           if (!compareValues(selectResultSet, oldValues)) {
-            selectResultSet.first();
-            while (!compareValues(selectResultSet, oldValues) && !selectResultSet.isLast()) {
-              selectResultSet.next();
+            if (selectResultSet.first()) {
+              while (!compareValues(selectResultSet, oldValues) && !selectResultSet.isLast()) {
+                selectResultSet.next();
+              }
             }
           }
         }
@@ -5037,7 +5064,7 @@ public class DbDataSource implements DbNavigatorDataSource {
             (oldValue != null && newValue != null && oldValue.equals(newValue))) {
       return;
     }
-    if (EventQueue.isDispatchThread()) {
+    if (EventQueue.isDispatchThread()||!isSafeMode()) {
       changeSupport.firePropertyChange(propertyName, oldValue, newValue);
     } else {
       try {
@@ -5367,59 +5394,63 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
 
     public <K> boolean compareValues(ResultSet resultSet, Map<K, Object> values) throws SQLException {
-      boolean equals = values != null && (values.size() >= getColumnNames().size());
-      if (equals) {
-        try {
-          String columnName;
-          Integer columnIndex;
-          boolean columnValuesScan = false;
-          boolean indexed = values.keySet().iterator().next() instanceof Integer;
-          boolean[] primarysChecked = new boolean[getColumnNames().size()];
-          Arrays.fill(primarysChecked, false);
-          for (int c = 0; equals && c < primarysChecked.length; c++) {
-            if (!primarysChecked[c]) {
-              columnName = getColumnNames().get(c);
-              columnIndex = columnMapping.get(columnName);
-              if (indexed && (columnIndex != null)) {
-                if (values.containsKey(columnIndex) && values.get(columnIndex) != null) {
-                  equals = equals && Equals.equals(values.get(columnIndex),resultSet.getObject(columnIndex));
-                } else {
-                  resultSet.getObject(columnIndex);
-                  equals = equals && resultSet.wasNull();
-                }
-              } else if (indexed && !columnValuesScan) {
-                columnValuesScan = true;
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                for (Iterator<Map.Entry<K, Object>> iterator = values.entrySet().iterator(); iterator.hasNext() && equals;) {
-                  Map.Entry<K, Object> entry = iterator.next();
-                  columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue()).toUpperCase();
-                  int index = getColumnNames().indexOf(columnName);
-                  if (index >= 0) {
-                    primarysChecked[index] = true;
-                    if (entry.getValue() != null) {
-                      equals = equals && Equals.equals(entry.getValue(),resultSet.getObject(columnName));
-                    } else {
-                      resultSet.getObject(columnName);
-                      equals = equals && resultSet.wasNull();
+      if (resultSet.isAfterLast() || resultSet.isBeforeFirst()) {
+        return false;
+      } else {
+        boolean equals = values != null && (values.size() >= getColumnNames().size());
+        if (equals) {
+          try {
+            String columnName;
+            Integer columnIndex;
+            boolean columnValuesScan = false;
+            boolean indexed = values.keySet().iterator().next() instanceof Integer;
+            boolean[] primarysChecked = new boolean[getColumnNames().size()];
+            Arrays.fill(primarysChecked, false);
+            for (int c = 0; equals && c < primarysChecked.length; c++) {
+              if (!primarysChecked[c]) {
+                columnName = getColumnNames().get(c);
+                columnIndex = columnMapping.get(columnName);
+                if (indexed && (columnIndex != null)) {
+                  if (values.containsKey(columnIndex) && values.get(columnIndex) != null) {
+                    equals = equals && Equals.equals(values.get(columnIndex), resultSet.getObject(columnIndex));
+                  } else {
+                    resultSet.getObject(columnIndex);
+                    equals = equals && resultSet.wasNull();
+                  }
+                } else if (indexed && !columnValuesScan) {
+                  columnValuesScan = true;
+                  ResultSetMetaData metaData = resultSet.getMetaData();
+                  for (Iterator<Map.Entry<K, Object>> iterator = values.entrySet().iterator(); iterator.hasNext() && equals;) {
+                    Map.Entry<K, Object> entry = iterator.next();
+                    columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue()).toUpperCase();
+                    int index = getColumnNames().indexOf(columnName);
+                    if (index >= 0) {
+                      primarysChecked[index] = true;
+                      if (entry.getValue() != null) {
+                        equals = equals && Equals.equals(entry.getValue(), resultSet.getObject(columnName));
+                      } else {
+                        resultSet.getObject(columnName);
+                        equals = equals && resultSet.wasNull();
+                      }
                     }
                   }
-                }
-              } else {
-                if (values.containsKey(columnName) && values.get(columnName) != null) {
-                  equals = equals && Equals.equals(values.get(columnName),resultSet.getObject(columnName));
                 } else {
-                  resultSet.getObject(columnName);
-                  equals = equals && resultSet.wasNull();
+                  if (values.containsKey(columnName) && values.get(columnName) != null) {
+                    equals = equals && Equals.equals(values.get(columnName), resultSet.getObject(columnName));
+                  } else {
+                    resultSet.getObject(columnName);
+                    equals = equals && resultSet.wasNull();
+                  }
                 }
               }
             }
+          } catch (SQLException ex) {
+            equals = false;
+            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error comparing the primary key values.", ex);
           }
-        } catch (SQLException ex) {
-          equals = false;
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error comparing the primary key values.", ex);
         }
+        return equals;
       }
-      return equals;
     }
 
     public static List<PrimaryKey> getPrimaryKeys(PreparedStatement statement) throws SQLException {

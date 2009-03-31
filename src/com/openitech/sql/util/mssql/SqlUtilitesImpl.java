@@ -5,6 +5,7 @@
 package com.openitech.sql.util.mssql;
 
 import com.openitech.db.ConnectionManager;
+import com.openitech.db.model.DbDataSource;
 import com.openitech.sql.Field;
 import com.openitech.sql.events.Event;
 import com.openitech.sql.util.SqlUtilities;
@@ -151,7 +152,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         insertEvents.clearParameters();
         insertEvents.setInt(param++, event.getSifrant());
         insertEvents.setString(param++, event.getSifra());
-        if (event.getEventSource()==Integer.MIN_VALUE) {
+        if (event.getEventSource() == Integer.MIN_VALUE) {
           insertEvents.setNull(param++, java.sql.Types.INTEGER);
         } else {
           insertEvents.setInt(param++, event.getEventSource());
@@ -169,13 +170,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
         updateEvents.setInt(param++, event.getSifrant());
         updateEvents.setString(param++, event.getSifra());
         updateEvents.setString(param++, event.getOpomba());
-        if (event.getEventSource()==Integer.MIN_VALUE) {
+        if (event.getEventSource() == Integer.MIN_VALUE) {
           updateEvents.setNull(param++, java.sql.Types.INTEGER);
         } else {
           updateEvents.setInt(param++, event.getEventSource());
         }
         updateEvents.setLong(param++, events_ID);
-        
+
         success = success && updateEvents.executeUpdate() > 0;
       }
 
@@ -186,12 +187,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
           for (int i = 0; i < fieldValues.size(); i++) {
             FieldValue value = fieldValues.get(i);
             Long valueId = storeValue(value.getValueType().getTypeIndex(), value.getValue());
-            
+
             param = 1;
             get_field.setString(param, field.getName());
-            
-            ResultSet rs_field = get_field.executeQuery(); rs_field.next();
-            
+
+            ResultSet rs_field = get_field.executeQuery();
+            rs_field.next();
+
             int field_id = rs_field.getInt("Id");
 
             param = 1;
@@ -200,16 +202,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
             findEventValue.setInt(param++, field_id);
             findEventValue.setInt(param++, i + 1);  //indexPolja
 
-            ResultSet rs = findEventValue.executeQuery(); rs.next();
+            ResultSet rs = findEventValue.executeQuery();
+            rs.next();
 
-            if (rs.getInt(1)==0) {
+            if (rs.getInt(1) == 0) {
               //insertaj event value
               param = 1;
               insertEventValues.clearParameters();
               insertEventValues.setLong(param++, events_ID);
               insertEventValues.setInt(param++, field_id);
               insertEventValues.setInt(param++, i + 1);  //indexPolja
-              if (valueId==null) {
+              if (valueId == null) {
                 insertEventValues.setNull(param++, java.sql.Types.BIGINT);
               } else {
                 insertEventValues.setLong(param++, valueId);
@@ -220,7 +223,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               //updataj event value
               param = 1;
               updateEventValues.clearParameters();
-              if (valueId==null) {
+              if (valueId == null) {
                 updateEventValues.setNull(param++, java.sql.Types.BIGINT);
               } else {
                 updateEventValues.setLong(param++, valueId);
@@ -364,5 +367,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
     }
     return newValueId;
+  }
+
+  @Override
+  public DbDataSource getDsSifrantModel(List<Object> parameters) throws SQLException {
+    DbDataSource dsSifrant = new DbDataSource();
+    
+    dsSifrant.setCanAddRows(false);
+    dsSifrant.setCanDeleteRows(false);
+    dsSifrant.setReadOnly(true);
+
+    dsSifrant.setParameters(parameters);
+    dsSifrant.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant_c.sql", "cp1250"));
+    dsSifrant.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant.sql", "cp1250"));
+    dsSifrant.setQueuedDelay(0);
+
+    return dsSifrant;
   }
 }

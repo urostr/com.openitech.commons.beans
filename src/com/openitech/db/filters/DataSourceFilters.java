@@ -3,17 +3,24 @@ package com.openitech.db.filters;
 import com.openitech.db.model.*;
 import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.text.Document;
 
 public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
-  private static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(1);
   private static final String EMPTY = " 0=1 ";
 
   public abstract static class AbstractSeekType<E> {
@@ -606,5 +613,143 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public boolean isFilterRequired() {
     return filterRequired;
+  }
+
+  public final static class SifrantSeekType extends AbstractSeekType<String> {
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
+    /**
+     * UPPER_EQUALS has value 0
+     */
+    public static final int UPPER_EQUALS = 0;
+    private int min_length = 1;
+    private FutureTask<DbComboBoxModel> model;
+
+    public SifrantSeekType(String field, final String sifrantSkupina, final String sifrantOpis) {
+      this(field, sifrantSkupina, sifrantOpis, null);
+    }
+
+    public SifrantSeekType(String field, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined) {
+      super(field, UPPER_EQUALS, 1);
+      this.def_i_type = 1;
+      this.sifrantSkupina = sifrantSkupina;
+      this.sifrantOpis = sifrantOpis;
+      this.textNotDefined = textNotDefined == null ? "Ni doloèen" : textNotDefined;
+
+      this.model = new FutureTask<DbComboBoxModel>(new Callable<DbComboBoxModel>() {
+        @Override
+        public DbComboBoxModel call() {
+          DbSifrantModel result = null;
+          try {
+            result = new DbSifrantModel(textNotDefined);
+            result.setSifrantOpis(sifrantOpis);
+            result.setSifrantSkupina(sifrantSkupina);
+          } catch (SQLException ex) {
+            Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+          }
+          return result;
+        }
+      });
+
+    }
+
+    public SifrantSeekType(String field, FutureTask<DbComboBoxModel> model) {
+      super(field, UPPER_EQUALS, 1);
+      this.model = model;
+      this.sifrantSkupina = null;
+      this.sifrantOpis = null;
+      this.textNotDefined = null;
+    }
+    private final String textNotDefined;
+
+    /**
+     * Get the value of textNiDolocen
+     *
+     * @return the value of textNiDolocen
+     */
+    public String getTextNotDefined() {
+      return textNotDefined;
+    }
+    /**
+     * Holds value of property sifrantSkupina.
+     */
+    private final String sifrantSkupina;
+
+    /**
+     * Getter for property sifrantSkupina.
+     * @return Value of property sifrantSkupina.
+     */
+    public String getSifrantSkupina() {
+      return this.sifrantSkupina;
+    }
+    /**
+     * Holds value of property sifrantOpis.
+     */
+    private final String sifrantOpis;
+
+    /**
+     * Getter for property sifrantOpis.
+     * @return Value of property sifrantOpis.
+     */
+    public String getSifrantOpis() {
+      return this.sifrantOpis;
+    }
+
+    public DbComboBoxModel getModel() {
+      DbComboBoxModel result = null;
+      try {
+        executorService.execute(model);
+        result = model.get();
+      } catch (InterruptedException ex) {
+        Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (ExecutionException ex) {
+        Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      return result;
+    }
+
+    public boolean setValue(String value) {
+      if (value == null) {
+        value = "";
+      } else if (value.endsWith("%")) {
+        value = value.substring(0, value.length() - 1);
+      }
+      value = value.trim();
+
+      if (value.length() < min_length) {
+        value = "";
+      } else {
+        value = caseSensitive ? value : value.toUpperCase();
+      }
+      if (!Equals.equals(getValue(), value)) {
+        this.value = value;
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    public boolean hasValue() {
+      return value != null && value.length() > 0;
+    }
+    /**
+     * Holds value of property caseSensitive.
+     */
+    private boolean caseSensitive = false;
+
+    /**
+     * Getter for property caseSensitive.
+     * @return Value of property caseSensitive.
+     */
+    public boolean isCaseSensitive() {
+      return this.caseSensitive;
+    }
+
+    /**
+     * Setter for property caseSensitive.
+     * @param caseSensitive New value of property caseSensitive.
+     */
+    public void setCaseSensitive(boolean caseSensitive) {
+      this.caseSensitive = caseSensitive;
+    }
   }
 }
