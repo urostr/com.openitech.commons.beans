@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : applicationContext-jta-hibernate.xml
+    Created on : Sreda, 28 februar 2007, 23:29
+    Author     : uros
+    Description:
+        Purpose of the document follows.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xmlns:tx="http://www.springframework.org/schema/tx"  
+       xsi:schemaLocation="http://www.springframework.org/schema/beans    http://www.springframework.org/schema/beans/spring-beans.xsd    http://www.springframework.org/schema/tx    http://www.springframework.org/schema/tx/spring-tx.xsd" 
+       default-autowire="byName">
+         
+  <bean id="hibernate.dialect" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+    <property name="targetObject" ref="dataSource"/>
+    <property name="targetField"  value="hibernateDialect"/>
+  </bean>
+
+  <!-- JPA/HIBERNATE PERSISTENCE SUPPORT -->
+  <bean id="jpaDialect" class="org.springframework.orm.jpa.vendor.HibernateJpaDialect"/>
+  
+  <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <property name="jpaVendorAdapter">
+      <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+        <property name="databasePlatform">
+          <bean id="hibernate.dialect"
+                class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean" />
+        </property>
+        <property name="generateDdl" value="true"/>
+        <property name="showSql" value="true"/>
+      </bean>
+    </property>
+    <property name="dataSource" ref="dataSource"/>
+    <property name="jpaDialect" ref="jpaDialect"/>
+  </bean>
+  
+  
+  <bean id="transactionManager"
+     class="org.springframework.orm.jpa.JpaTransactionManager" >
+    <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    <property name="dataSource" ref="dataSource"/>
+  </bean>
+  
+  <tx:annotation-driven />
+  
+  <bean
+     class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
+
+</beans>

@@ -76,12 +76,33 @@ public class ConnectionManager implements DbConnection {
     return getDbConnection().containsKey(key);
   }
 
+  public String getDriverClassName() {
+    return getDbConnection().getProperty(DbConnection.DB_DRIVER_EMBEDDED, getDbConnection().getProperty(DbConnection.DB_DRIVER_NET, null));
+  }
+
+  public String getUrl() {
+    return getDbConnection().getProperty(DbConnection.DB_JDBC_EMBEDDED, getDbConnection().getProperty(DbConnection.DB_JDBC_NET, null));
+  }
+
   public String getDialect() {
     String dialect = "";
     try {
-      String url = this.getProperty("db.jdbc.net").toLowerCase();
+      String url = this.getUrl().toLowerCase();
       if (url.startsWith("jdbc:jtds:sqlserver:")) {
         dialect = "mssql";
+      }
+    } catch (NullPointerException ex) {
+      //ignore
+    }
+    return dialect;
+  }
+
+  public String getHibernateDialect() {
+    String dialect = "";
+    try {
+      String url = this.getUrl().toLowerCase();
+      if (url.startsWith("jdbc:jtds:sqlserver:")) {
+        dialect = "org.hibernate.dialect.SQLServerDialect";
       }
     } catch (NullPointerException ex) {
       //ignore

@@ -1,0 +1,103 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.openitech.db.spring;
+
+import com.openitech.db.ConnectionManager;
+import com.openitech.db.DbConnection;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Properties;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.SmartDataSource;
+import org.springframework.util.ObjectUtils;
+
+/**
+ *
+ * @author uros
+ */
+public class DbConnectionDataSource extends DriverManagerDataSource implements SmartDataSource, DisposableBean {
+
+  ConnectionManager manager = ConnectionManager.getInstance();
+
+  @Override
+  public Connection getConnection() throws SQLException {
+    return manager.getConnection();
+  }
+
+  @Override
+  public Connection getConnection(String username, String password) throws SQLException {
+    if (ObjectUtils.nullSafeEquals(username, getUsername()) &&
+            ObjectUtils.nullSafeEquals(password, getPassword())) {
+      return getConnection();
+    } else {
+      throw new SQLException("DbConnectionDataSource does not support custom username and password");
+    }
+  }
+
+  @Override
+  public Properties getConnectionProperties() {
+    return new java.util.Properties();
+  }
+
+  @Override
+  public String getDriverClassName() {
+    return manager.getProperty(DbConnection.DB_DRIVER_EMBEDDED, manager.getProperty(DbConnection.DB_DRIVER_NET, null));
+  }
+
+  @Override
+  public String getPassword() {
+    return manager.getProperty(DbConnection.DB_PASS, null);
+  }
+
+  @Override
+  public String getUrl() {
+    return manager.getProperty(DbConnection.DB_JDBC_EMBEDDED, manager.getProperty(DbConnection.DB_JDBC_NET, null));
+  }
+
+  @Override
+  public String getUsername() {
+    return manager.getProperty(DbConnection.DB_USER, null);
+  }
+
+  @Override
+  public void setConnectionProperties(Properties connectionProperties) {
+      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom connection propertites");
+  }
+
+  @Override
+  public void setDriverClassName(String driverClassName) throws CannotGetJdbcConnectionException {
+      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom driverClassName");
+  }
+
+  @Override
+  public void setPassword(String password) {
+      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom password");
+  }
+
+  @Override
+  public void setUrl(String url) {
+      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom url");
+  }
+
+  @Override
+  public void setUsername(String username) {
+      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom username");
+  }
+
+  @Override
+  public boolean shouldClose(Connection connection) {
+    return false;
+  }
+
+  @Override
+  public void destroy() throws Exception {
+  }
+
+  public String getHibernateDialect() {
+    return manager.getHibernateDialect();
+  }
+}
