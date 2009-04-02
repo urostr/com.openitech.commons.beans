@@ -146,7 +146,7 @@ public abstract class AbstractConnection implements DbConnection {
         }
         
         result.setReadOnly(false);
-        result.setAutoCommit(true);
+        result.setAutoCommit(Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")));
         
         connection = result;
       }

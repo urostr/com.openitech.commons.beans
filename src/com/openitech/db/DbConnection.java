@@ -16,6 +16,7 @@ import java.sql.Connection;
  * @author uros
  */
 public interface DbConnection {
+  String DB_AUTOCOMMIT = "db.autocommit";
   String DB_DRIVER_EMBEDDED = "db.driver.embedded";
   String DB_DRIVER_NET = "db.driver.net";
   String DB_JDBC_EMBEDDED = "db.jdbc.embedded";
