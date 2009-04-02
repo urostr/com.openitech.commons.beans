@@ -37,9 +37,8 @@ public class SpringContextManagerTest extends TestCase {
    */
   public void testGetContext() throws LoginException {
     System.out.println("getContext");
-    SpringContextManager instance = SpringContextManager.getInstance();
     LoginContextManager.getInstance().logon();
-    ConfigurableApplicationContext result = instance.getContext();
+    ConfigurableApplicationContext result = SpringContextManager.getInstance().getContext();
     assertNotNull(result);
   }
 

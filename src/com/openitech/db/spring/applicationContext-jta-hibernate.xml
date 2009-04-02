@@ -25,10 +25,7 @@
   <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
     <property name="jpaVendorAdapter">
       <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-        <property name="databasePlatform">
-          <bean id="hibernate.dialect"
-                class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean" />
-        </property>
+        <property name="databasePlatform" ref="hibernate.dialect" />
         <property name="generateDdl" value="true"/>
         <property name="showSql" value="true"/>
       </bean>

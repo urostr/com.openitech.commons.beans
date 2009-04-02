@@ -23,6 +23,10 @@ public class DbConnectionDataSource extends DriverManagerDataSource implements S
 
   ConnectionManager manager = ConnectionManager.getInstance();
 
+  public DbConnectionDataSource() {
+    this.hibernateDialect = manager.getHibernateDialect();
+  }
+
   @Override
   public Connection getConnection() throws SQLException {
     return manager.getConnection();
@@ -96,8 +100,14 @@ public class DbConnectionDataSource extends DriverManagerDataSource implements S
   @Override
   public void destroy() throws Exception {
   }
+  public String hibernateDialect;
 
+  /**
+   * Get the value of hibernateDialect
+   *
+   * @return the value of hibernateDialect
+   */
   public String getHibernateDialect() {
-    return manager.getHibernateDialect();
+    return hibernateDialect;
   }
 }

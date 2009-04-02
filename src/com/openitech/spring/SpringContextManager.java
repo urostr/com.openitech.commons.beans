@@ -95,6 +95,9 @@ public class SpringContextManager {
    * @return Value of property context.
    */
   public ConfigurableApplicationContext getContext() {
+    if ((this.context==null)&&(LoginContextManager.getInstance().isLoggedOn())) {
+      startContext(LoginContextManager.getInstance().getName());
+    }
     return this.context;
   }
   
