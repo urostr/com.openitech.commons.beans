@@ -4006,7 +4006,7 @@ public class DbDataSource implements DbNavigatorDataSource {
                 Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedCountSql + "'");
                 if (DUMP_SQL) {
                   System.out.println("############## count(*) ");
-                //              System.out.println(preparedCountSql);
+                  System.out.println(preparedCountSql);
                 }
                 ResultSet rs = executeSql(countStatement, parameters);
                 if (DUMP_SQL) {
