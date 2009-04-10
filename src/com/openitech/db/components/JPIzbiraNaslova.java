@@ -196,6 +196,10 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     }
   }
 
+  private void updateMIDs() {
+    (new RefreshMIDs()).get();
+  }
+
   private void getMIDs() {
     if (isUpdating()) {
       DataSourceEvent.submit(new RefreshMIDs());
@@ -236,6 +240,9 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
               }
 
               dbDataModel.disableFilters(!updating);
+            }
+            if (e.getActionCommand().equals(DbDataSource.UPDATE_ROW)) {
+              updateMIDs();
             }
           }
         };
