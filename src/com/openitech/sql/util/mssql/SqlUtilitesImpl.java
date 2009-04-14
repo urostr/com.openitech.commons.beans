@@ -5,6 +5,8 @@
 package com.openitech.sql.util.mssql;
 
 import com.openitech.db.ConnectionManager;
+import com.openitech.db.components.JPIzbiraNaslova;
+import com.openitech.db.components.JPIzbiraNaslova.Naslov;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.sql.Field;
 import com.openitech.sql.events.Event;
@@ -38,6 +40,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement find_realvalue;
   PreparedStatement find_stringvalue;
   PreparedStatement get_field;
+  PreparedStatement insertNeznaniNaslov;
+  PreparedStatement findHsNeznanaId;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -372,7 +376,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public DbDataSource getDsSifrantModel(List<Object> parameters) throws SQLException {
     DbDataSource dsSifrant = new DbDataSource();
-    
+
     dsSifrant.setCanAddRows(false);
     dsSifrant.setCanDeleteRows(false);
     dsSifrant.setReadOnly(true);
@@ -383,5 +387,79 @@ public class SqlUtilitesImpl extends SqlUtilities {
     dsSifrant.setQueuedDelay(0);
 
     return dsSifrant;
+  }
+
+  @Override
+  public JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException {
+    
+    SqlUtilities sqlUtility = SqlUtilities.getInstance();
+    Connection connection = ConnectionManager.getInstance().getConnection();
+    int param;
+
+    if (address.getHsMID() == null) {
+      sqlUtility.beginTransaction();
+
+      param = 1;
+      if (findHsNeznanaId == null) {
+        findHsNeznanaId = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "findHsNeznanaId.sql", "cp1250"));
+      }
+
+      findHsNeznanaId.clearParameters();
+      findHsNeznanaId.setInt(param++, (Integer) address.getPostnaStevilka().getValue());
+      findHsNeznanaId.setString(param++, (String) address.getPosta().getValue());
+      findHsNeznanaId.setString(param++, (String) address.getNaselje().getValue());
+      findHsNeznanaId.setString(param++, (String) address.getUlica().getValue());
+      findHsNeznanaId.setInt(param++, (Integer) address.getHisnaStevilka().getValue());
+      findHsNeznanaId.setString(param++, (String) address.getHisnaStevilkaDodatek().getValue());
+
+      ResultSet rsFindHsNeznanaId = findHsNeznanaId.executeQuery();
+
+      Long hs_neznana_id = null;
+
+      if (rsFindHsNeznanaId.next()) {
+        hs_neznana_id = rsFindHsNeznanaId.getLong(1);
+        if (rsFindHsNeznanaId.wasNull()) {
+          hs_neznana_id = null;
+        }
+      } else {
+        if (insertNeznaniNaslov == null) {
+          insertNeznaniNaslov = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertNeznaniNaslov.sql", "cp1250"));
+        }
+        boolean commit = true;
+        param = 1;
+        insertNeznaniNaslov.clearParameters();
+
+
+        insertNeznaniNaslov.setObject(param++, address.getPostnaStevilkaMID(), java.sql.Types.INTEGER);
+        insertNeznaniNaslov.setObject(param++, address.getPostnaStevilka(), java.sql.Types.INTEGER);
+        insertNeznaniNaslov.setObject(param++, address.getPosta().toString().toUpperCase(), java.sql.Types.VARCHAR); //pt_ime
+        insertNeznaniNaslov.setObject(param++, address.getPosta(), java.sql.Types.VARCHAR);  //pt_uime
+
+        insertNeznaniNaslov.setObject(param++, address.getNaseljeMID(), java.sql.Types.INTEGER);
+        insertNeznaniNaslov.setObject(param++, address.getNaselje().toString().toUpperCase(), java.sql.Types.VARCHAR); //na_ime
+        insertNeznaniNaslov.setObject(param++, address.getNaselje(), java.sql.Types.VARCHAR); //na_uime
+
+        insertNeznaniNaslov.setObject(param++, address.getUlicaMID(), java.sql.Types.INTEGER);
+        insertNeznaniNaslov.setObject(param++, address.getUlica().toString().toUpperCase(), java.sql.Types.VARCHAR); //ul_ime
+        insertNeznaniNaslov.setObject(param++, address.getUlica(), java.sql.Types.VARCHAR); //ul_uime
+
+        insertNeznaniNaslov.setObject(param++, address.getHisnaStevilka(), java.sql.Types.INTEGER); //ul_uime
+        insertNeznaniNaslov.setObject(param++, address.getHisnaStevilkaDodatek(), java.sql.Types.VARCHAR); //ul_uime
+        insertNeznaniNaslov.setString(param++, "Izvor");
+
+
+        boolean success = insertNeznaniNaslov.executeUpdate() > 0;
+
+        if (success) {
+          sqlUtility.endTransaction(success);
+
+          hs_neznana_id = sqlUtility.getLastIdentity();
+        }
+      }
+
+      address.setHsNeznanaMID(hs_neznana_id);
+    }
+
+    return address;
   }
 }

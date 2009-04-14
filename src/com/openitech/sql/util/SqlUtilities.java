@@ -7,6 +7,7 @@ package com.openitech.sql.util;
 import com.openitech.sql.FieldValue;
 import com.openitech.sql.Field;
 import com.openitech.db.ConnectionManager;
+import com.openitech.db.components.JPIzbiraNaslova;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.sql.events.Event;
@@ -386,6 +387,8 @@ public abstract class SqlUtilities {
   public abstract Long storeEvent(Event event) throws SQLException;
 
   public abstract Long storeValue(int fieldType, final Object value) throws SQLException;
+
+  public abstract JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException;
 
   public abstract DbDataSource getDsSifrantModel(java.util.List<Object> parameters) throws SQLException;
 

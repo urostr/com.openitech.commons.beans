@@ -15,6 +15,7 @@ import com.openitech.db.filters.Scheduler;
 import com.openitech.db.model.DbComboBoxModel.DbComboBoxEntry;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.concurrent.DataSourceEvent;
+import com.openitech.sql.FieldValue;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -167,12 +168,24 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
             int index = 0;
             foUlicaMID.updateValue(mids[index++]);
-            foUlica.updateValue(mids[index++]); if (!jtfUlice.getText().equals(foUlica.getValueAsText())) { jtfUlice.setText(foUlica.getValueAsText()); }
+            foUlica.updateValue(mids[index++]);
+            if (!jtfUlice.getText().equals(foUlica.getValueAsText())) {
+              jtfUlice.setText(foUlica.getValueAsText());
+            }
             foPostnaStevilkaMID.updateValue(mids[index++]);
-            foPostnaStevilka.updateValue(mids[index++]); if (!jtfPostnaStevilka.getText().equals(foPostnaStevilka.getValueAsText())) { jtfPostnaStevilka.setText(foPostnaStevilka.getValueAsText()); }
-            foPosta.updateValue(mids[index++]); if (!jtfPosta.getText().equals(foPosta.getValueAsText())) {  jtfPosta.setText(foPosta.getValueAsText()); }
+            foPostnaStevilka.updateValue(mids[index++]);
+            if (!jtfPostnaStevilka.getText().equals(foPostnaStevilka.getValueAsText())) {
+              jtfPostnaStevilka.setText(foPostnaStevilka.getValueAsText());
+            }
+            foPosta.updateValue(mids[index++]);
+            if (!jtfPosta.getText().equals(foPosta.getValueAsText())) {
+              jtfPosta.setText(foPosta.getValueAsText());
+            }
             foNaseljeMID.updateValue(mids[index++]);
-            foNaselje.updateValue(mids[index++]); if (!jtfNaselja.getText().equals(foNaselje.getValueAsText())) {  jtfNaselja.setText(foNaselje.getValueAsText()); }
+            foNaselje.updateValue(mids[index++]);
+            if (!jtfNaselja.getText().equals(foNaselje.getValueAsText())) {
+              jtfNaselja.setText(foNaselje.getValueAsText());
+            }
           }
 
         } catch (SQLException ex) {
@@ -841,6 +854,181 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
   public com.openitech.db.components.JDbTextField jtfUlice;
   // End of variables declaration//GEN-END:variables
 
+  public Naslov getNaslov() throws SQLException {
+    Naslov result = new Naslov();
+
+    result.dataSource = getDataSource();
+    result.hs_mid = new FieldValue(cnHisnaStevilkaMID, dataSource.getType(cnHisnaStevilkaMID), dataSource.getObject(cnHisnaStevilkaMID));
+    result.ulica = new FieldValue(cnUlica, dataSource.getType(cnUlica), dataSource.getObject(cnUlica));
+    result.ulicaMID = new FieldValue(cnUlicaMID, dataSource.getType(cnUlicaMID), dataSource.getObject(cnUlicaMID));
+
+    final Object hshd = dataSource.getObject(cnHisnaStevilka);
+
+
+    if (hshd != null) {
+      String text = hshd.toString();
+
+      Integer hs = null;
+      String hd = null;
+
+      if ((text != null) && (text.length() > 0)) {
+        text = text.trim();
+        Matcher matcher = HisnaFilterDocumentListener.pattern.matcher(text);
+
+        if (matcher.find()) {
+          if (matcher.group(2) != null && matcher.group(2).length() > 0) {
+            hs = Integer.parseInt(matcher.group(2));
+          }
+          if (matcher.group(4) != null && matcher.group(4).length() > 0) {
+            hd = matcher.group(4);
+          }
+        }
+      }
+      result.hisnaStevilka = new FieldValue(cnHisnaStevilka, dataSource.getType(cnHisnaStevilka), hs);
+      result.hisnaStevilkaDodatek = new FieldValue(hd, java.sql.Types.VARCHAR, hd);
+    }
+
+    result.postnaStevilka = new FieldValue(cnPostnaStevilka, dataSource.getType(cnPostnaStevilka), dataSource.getObject(cnPostnaStevilka));
+    result.postnaStevilkaMID = new FieldValue(cnPostnaStevilkaMID, dataSource.getType(cnPostnaStevilkaMID), dataSource.getObject(cnPostnaStevilkaMID));
+    result.posta = new FieldValue(cnPosta, dataSource.getType(cnPosta), dataSource.getObject(cnPosta));
+    result.naselje = new FieldValue(cnNaselje, dataSource.getType(cnNaselje), dataSource.getObject(cnNaselje));
+    result.naseljeMID = new FieldValue(cnNaseljeMID, dataSource.getType(cnNaseljeMID), dataSource.getObject(cnNaseljeMID));
+    //itd
+    return result;
+  }
+
+  public static class Naslov {
+
+    protected DbDataSource dataSource;
+
+    /**
+     * Get the value of dataSource
+     *
+     * @return the value of dataSource
+     */
+    public DbDataSource getDataSource() {
+      return dataSource;
+    }
+    private FieldValue hs_mid;
+
+    /**
+     * Get the value of hisnaStevilkaMID
+     *
+     * @return the value of hisnaStevilkaMID
+     */
+    public FieldValue getHsMID() {
+      return hs_mid;
+    }
+    private Long hs_neznana_mid;
+
+    /**
+     * Get the value of hs_neznana_mid
+     *
+     * @return the value of hs_neznana_mid
+     */
+    public Long getHsNeznanaMID() {
+      return hs_neznana_mid;
+    }
+
+    public void setHsNeznanaMID(Long hs_neznana_mid) {
+      this.hs_neznana_mid = hs_neznana_mid;
+    }
+
+    public boolean isHsNeznana() {
+      return hs_neznana_mid != null;
+    }
+    private FieldValue ulica;
+
+    /**
+     * Get the value of ulica
+     *
+     * @return the value of ulica
+     */
+    public FieldValue getUlica() {
+      return ulica;
+    }
+    private FieldValue hisnaStevilka;
+
+    /**
+     * Get the value of hisnaStevilka
+     *
+     * @return the value of hisnaStevilka
+     */
+    public FieldValue getHisnaStevilka() {
+      return hisnaStevilka;
+    }
+    private FieldValue postnaStevilka;
+
+    /**
+     * Get the value of postnaStevilka
+     *
+     * @return the value of postnaStevilka
+     */
+    public FieldValue getPostnaStevilka() {
+      return postnaStevilka;
+    }
+    private FieldValue posta;
+
+    /**
+     * Get the value of posta
+     *
+     * @return the value of posta
+     */
+    public FieldValue getPosta() {
+      return posta;
+    }
+    private FieldValue naselje;
+
+    /**
+     * Get the value of naselje
+     *
+     * @return the value of naselje
+     */
+    public FieldValue getNaselje() {
+      return naselje;
+    }
+    private FieldValue ulicaMID;
+
+    /**
+     * Get the value of ulicaMID
+     *
+     * @return the value of ulicaMID
+     */
+    public FieldValue getUlicaMID() {
+      return ulicaMID;
+    }
+    private FieldValue postnaStevilkaMID;
+
+    /**
+     * Get the value of postnaStevilkaMID
+     *
+     * @return the value of postnaStevilkaMID
+     */
+    public FieldValue getPostnaStevilkaMID() {
+      return postnaStevilkaMID;
+    }
+    private FieldValue naseljeMID;
+
+    /**
+     * Get the value of naseljeMID
+     *
+     * @return the value of naseljeMID
+     */
+    public FieldValue getNaseljeMID() {
+      return naseljeMID;
+    }
+    private FieldValue hisnaStevilkaDodatek;
+
+    /**
+     * Get the value of hisnaStevilkaDodatek
+     *
+     * @return the value of hisnaStevilkaDodatek
+     */
+    public FieldValue getHisnaStevilkaDodatek() {
+      return hisnaStevilkaDodatek;
+    }
+  }
+
   private static class DbDataModel {
 
     public final DbDataSource dsUlice = new DbDataSource();
@@ -1023,7 +1211,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
         ResultSet rsMid = selectHsMid.executeQuery();
         try {
           if (rsMid.next()) {
-            result = new Object[] {rsMid.getInt("ul_mid"), rsMid.getString("ul_uime"), rsMid.getInt("pt_mid"), rsMid.getInt("pt_id"), rsMid.getString("pt_uime"), rsMid.getInt("na_mid"), rsMid.getString("na_uime")};
+            result = new Object[]{rsMid.getInt("ul_mid"), rsMid.getString("ul_uime"), rsMid.getInt("pt_mid"), rsMid.getInt("pt_id"), rsMid.getString("pt_uime"), rsMid.getInt("na_mid"), rsMid.getString("na_uime")};
           }
         } finally {
           rsMid.close();
