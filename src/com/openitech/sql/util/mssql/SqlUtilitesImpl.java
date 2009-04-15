@@ -20,6 +20,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -391,12 +392,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException {
-    
+
     SqlUtilities sqlUtility = SqlUtilities.getInstance();
     Connection connection = ConnectionManager.getInstance().getConnection();
     int param;
 
-    if (address.getHsMID() == null) {
+    if (address.getHsMID().getValue() == null) {
       sqlUtility.beginTransaction();
 
       param = 1;
@@ -405,11 +406,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       findHsNeznanaId.clearParameters();
-      findHsNeznanaId.setInt(param++, (Integer) address.getPostnaStevilka().getValue());
+      findHsNeznanaId.setInt(param++, (Integer.valueOf(address.getPostnaStevilka().getValue().toString())));
       findHsNeznanaId.setString(param++, (String) address.getPosta().getValue());
       findHsNeznanaId.setString(param++, (String) address.getNaselje().getValue());
       findHsNeznanaId.setString(param++, (String) address.getUlica().getValue());
-      findHsNeznanaId.setInt(param++, (Integer) address.getHisnaStevilka().getValue());
+      findHsNeznanaId.setInt(param++, (Integer.valueOf(address.getHisnaStevilka().getValue().toString())));
       findHsNeznanaId.setString(param++, (String) address.getHisnaStevilkaDodatek().getValue());
 
       ResultSet rsFindHsNeznanaId = findHsNeznanaId.executeQuery();
@@ -430,21 +431,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
         insertNeznaniNaslov.clearParameters();
 
 
-        insertNeznaniNaslov.setObject(param++, address.getPostnaStevilkaMID(), java.sql.Types.INTEGER);
-        insertNeznaniNaslov.setObject(param++, address.getPostnaStevilka(), java.sql.Types.INTEGER);
-        insertNeznaniNaslov.setObject(param++, address.getPosta().toString().toUpperCase(), java.sql.Types.VARCHAR); //pt_ime
+        insertNeznaniNaslov.setObject(param++, address.getPostnaStevilkaMID().getValue(), java.sql.Types.INTEGER);
+        insertNeznaniNaslov.setObject(param++, address.getPostnaStevilka().getValue(), java.sql.Types.INTEGER);
+        insertNeznaniNaslov.setObject(param++, address.getPosta().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //pt_ime
         insertNeznaniNaslov.setObject(param++, address.getPosta(), java.sql.Types.VARCHAR);  //pt_uime
 
-        insertNeznaniNaslov.setObject(param++, address.getNaseljeMID(), java.sql.Types.INTEGER);
-        insertNeznaniNaslov.setObject(param++, address.getNaselje().toString().toUpperCase(), java.sql.Types.VARCHAR); //na_ime
-        insertNeznaniNaslov.setObject(param++, address.getNaselje(), java.sql.Types.VARCHAR); //na_uime
+        insertNeznaniNaslov.setObject(param++, address.getNaseljeMID().getValue(), java.sql.Types.INTEGER);
+        insertNeznaniNaslov.setObject(param++, address.getNaselje().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //na_ime
+        insertNeznaniNaslov.setObject(param++, address.getNaselje().getValue(), java.sql.Types.VARCHAR); //na_uime
 
-        insertNeznaniNaslov.setObject(param++, address.getUlicaMID(), java.sql.Types.INTEGER);
-        insertNeznaniNaslov.setObject(param++, address.getUlica().toString().toUpperCase(), java.sql.Types.VARCHAR); //ul_ime
-        insertNeznaniNaslov.setObject(param++, address.getUlica(), java.sql.Types.VARCHAR); //ul_uime
+        insertNeznaniNaslov.setObject(param++, address.getUlicaMID().getValue(), java.sql.Types.INTEGER);
+        insertNeznaniNaslov.setObject(param++, address.getUlica().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //ul_ime
+        insertNeznaniNaslov.setObject(param++, address.getUlica().getValue(), java.sql.Types.VARCHAR); //ul_uime
 
-        insertNeznaniNaslov.setObject(param++, address.getHisnaStevilka(), java.sql.Types.INTEGER); //ul_uime
-        insertNeznaniNaslov.setObject(param++, address.getHisnaStevilkaDodatek(), java.sql.Types.VARCHAR); //ul_uime
+        insertNeznaniNaslov.setObject(param++, address.getHisnaStevilka().getValue(), java.sql.Types.INTEGER); //ul_uime
+        insertNeznaniNaslov.setObject(param++, address.getHisnaStevilkaDodatek().getValue(), java.sql.Types.VARCHAR); //ul_uime
         insertNeznaniNaslov.setString(param++, "Izvor");
 
 
@@ -454,6 +455,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
           sqlUtility.endTransaction(success);
 
           hs_neznana_id = sqlUtility.getLastIdentity();
+        } else {
+          JOptionPane.showMessageDialog(null, "Napaka pri shranjevanju neznanega naslova!", "Napaka", JOptionPane.ERROR_MESSAGE);
         }
       }
 

@@ -19,9 +19,9 @@ SELECT
 FROM
     [HS_neznane]
 WHERE
-    [pt_id]  = ?,
-    [pt_ime] = ?,
-    [na_ime] = ?,
-    [ul_ime] = ?,
-    [hs]     = ?,
-    [hd]     = ?
+        [pt_id]  = ?
+    AND [pt_ime] = ?
+    AND [na_ime] = ?
+    AND [ul_ime] = ?
+    AND [hs]     = ?
+    AND [hd]     = ?

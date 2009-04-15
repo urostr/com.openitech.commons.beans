@@ -900,7 +900,17 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
   public static class Naslov {
 
     protected DbDataSource dataSource;
-
+    private FieldValue hs_mid;
+    private Long hs_neznana_mid;
+    private FieldValue ulica;
+    private FieldValue hisnaStevilka;
+    private FieldValue hisnaStevilkaDodatek;
+    private FieldValue postnaStevilka;
+    private FieldValue posta;
+    private FieldValue naselje;
+    private FieldValue ulicaMID;
+    private FieldValue postnaStevilkaMID;
+    private FieldValue naseljeMID;
     /**
      * Get the value of dataSource
      *
@@ -909,8 +919,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public DbDataSource getDataSource() {
       return dataSource;
     }
-    private FieldValue hs_mid;
-
+    
     /**
      * Get the value of hisnaStevilkaMID
      *
@@ -919,8 +928,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getHsMID() {
       return hs_mid;
     }
-    private Long hs_neznana_mid;
-
+    
     /**
      * Get the value of hs_neznana_mid
      *
@@ -937,8 +945,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public boolean isHsNeznana() {
       return hs_neznana_mid != null;
     }
-    private FieldValue ulica;
-
+    
     /**
      * Get the value of ulica
      *
@@ -947,8 +954,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getUlica() {
       return ulica;
     }
-    private FieldValue hisnaStevilka;
-
+    
     /**
      * Get the value of hisnaStevilka
      *
@@ -957,8 +963,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getHisnaStevilka() {
       return hisnaStevilka;
     }
-    private FieldValue postnaStevilka;
-
+    
     /**
      * Get the value of postnaStevilka
      *
@@ -967,8 +972,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getPostnaStevilka() {
       return postnaStevilka;
     }
-    private FieldValue posta;
-
+    
     /**
      * Get the value of posta
      *
@@ -977,8 +981,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getPosta() {
       return posta;
     }
-    private FieldValue naselje;
-
+    
     /**
      * Get the value of naselje
      *
@@ -987,8 +990,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getNaselje() {
       return naselje;
     }
-    private FieldValue ulicaMID;
-
+    
     /**
      * Get the value of ulicaMID
      *
@@ -997,8 +999,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getUlicaMID() {
       return ulicaMID;
     }
-    private FieldValue postnaStevilkaMID;
-
+    
     /**
      * Get the value of postnaStevilkaMID
      *
@@ -1007,8 +1008,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getPostnaStevilkaMID() {
       return postnaStevilkaMID;
     }
-    private FieldValue naseljeMID;
-
+    
     /**
      * Get the value of naseljeMID
      *
@@ -1017,8 +1017,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getNaseljeMID() {
       return naseljeMID;
     }
-    private FieldValue hisnaStevilkaDodatek;
-
+    
     /**
      * Get the value of hisnaStevilkaDodatek
      *
