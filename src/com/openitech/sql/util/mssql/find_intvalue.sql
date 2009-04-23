@@ -1,1 +1,1 @@
-SELECT Id FROM [VariousValues] WHERE [IntValue]=?
+SELECT Id FROM [ChangeLog].[dbo].[VariousValues] WHERE [IntValue]=?

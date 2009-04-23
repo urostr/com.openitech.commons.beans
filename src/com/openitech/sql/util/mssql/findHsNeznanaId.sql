@@ -17,7 +17,7 @@ SELECT
     [valid_from],
     [valid_to]
 FROM
-    [HS_neznane]
+    [RPE].[dbo].[HS_neznane]
 WHERE
         [pt_id]  = ?
     AND [pt_ime] = ?

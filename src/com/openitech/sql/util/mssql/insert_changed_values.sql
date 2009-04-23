@@ -1,4 +1,4 @@
-INSERT INTO [ChangeLogValues]
+INSERT INTO [ChangeLog].[dbo].[ChangeLogValues]
            ([ChangeId]
            ,[FieldName]
            ,[NewValueId]

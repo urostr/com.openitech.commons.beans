@@ -10,21 +10,21 @@ SELECT
     [PT_s].[pt_uime],
     [PT_s].[pt_id]
 FROM
-    [HS_s]
+    [RPE].[dbo].[HS_s]
 INNER JOIN
-    [NA_s]
+    [RPE].[dbo].[NA_s]
     ON
     (
         [HS_s].[na_mid] = [NA_s].[na_mid]
     )
 INNER JOIN
-    [UL_s]
+    [RPE].[dbo].[UL_s]
     ON
     (
         [HS_s].[ul_mid] = [UL_s].[ul_mid]
     )
 INNER JOIN
-    [PT_s]
+    [RPE].[dbo].[PT_s]
     ON
     (
         [HS_s].[pt_mid] = [PT_s].[pt_mid]

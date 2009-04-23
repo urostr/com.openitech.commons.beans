@@ -1,4 +1,4 @@
-INSERT INTO [VariousValues]
+INSERT INTO [ChangeLog].[dbo].[VariousValues]
            ([FieldType]
            ,[IntValue]
            ,[RealValue]

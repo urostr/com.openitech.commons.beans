@@ -1,6 +1,6 @@
 INSERT
 INTO
-    [ChangeLog]
+    [ChangeLog].[dbo].[ChangeLog]
     (
         [Application],
         [Database],

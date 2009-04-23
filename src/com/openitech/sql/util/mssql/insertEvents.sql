@@ -1,6 +1,6 @@
 INSERT 
 INTO 
-    [Events] 
+    [ChangeLog].[dbo].[Events]
     (
         
         [IdSifranta], 

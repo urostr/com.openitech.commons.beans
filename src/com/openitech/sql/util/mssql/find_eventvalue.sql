@@ -1,1 +1,1 @@
-SELECT COUNT(*) FROM [EventValues] WHERE [EventId]=? AND [IdPolja]=? AND [FieldValueIndex]=?
+SELECT COUNT(*) FROM [ChangeLog].[dbo].[EventValues] WHERE [EventId]=? AND [IdPolja]=? AND [FieldValueIndex]=?

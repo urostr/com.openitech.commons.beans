@@ -1,6 +1,6 @@
 INSERT 
 INTO 
-    [EventValues] 
+    [ChangeLog].[dbo].[EventValues]
     (
         [EventId], 
         [IdPolja],
