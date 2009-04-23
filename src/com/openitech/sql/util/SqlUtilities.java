@@ -386,6 +386,10 @@ public abstract class SqlUtilities {
 
   public abstract Long storeEvent(Event event) throws SQLException;
 
+  public Long storeValue(FieldValue.ValueType valueType, final Object value ) throws SQLException {
+    return storeValue(valueType.getTypeIndex(), value);
+  }
+  
   public abstract Long storeValue(int fieldType, final Object value) throws SQLException;
 
   public abstract JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException;
