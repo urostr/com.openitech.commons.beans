@@ -911,6 +911,26 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     private FieldValue ulicaMID;
     private FieldValue postnaStevilkaMID;
     private FieldValue naseljeMID;
+    private int izvor;
+
+    /**
+     * Get the value of izvor
+     *
+     * @return the value of izvor
+     */
+    public int getIzvor() {
+      return izvor;
+    }
+
+    /**
+     * Set the value of izvor
+     *
+     * @param izvor new value of izvor
+     */
+    public void setIzvor(int izvor) {
+      this.izvor = izvor;
+    }
+
     /**
      * Get the value of dataSource
      *

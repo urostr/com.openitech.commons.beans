@@ -446,7 +446,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
         insertNeznaniNaslov.setObject(param++, address.getHisnaStevilka().getValue(), java.sql.Types.INTEGER); //ul_uime
         insertNeznaniNaslov.setObject(param++, address.getHisnaStevilkaDodatek().getValue(), java.sql.Types.VARCHAR); //ul_uime
-        insertNeznaniNaslov.setString(param++, "Izvor");
+        insertNeznaniNaslov.setInt(param++, address.getIzvor());
 
 
         boolean success = insertNeznaniNaslov.executeUpdate() > 0;
