@@ -347,6 +347,9 @@ public abstract class SqlUtilities {
       } else {
         connection.rollback(savepoint);
       }
+      if (savepoint != null) {
+        activeSavepoints.remove(savepoint);
+      }
       if (activeSavepoints.size() == 0) {
         connection.setAutoCommit(autocommit);
       }
