@@ -1046,6 +1046,54 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     public FieldValue getHisnaStevilkaDodatek() {
       return hisnaStevilkaDodatek;
     }
+
+    public void setDataSource(DbDataSource dataSource) {
+      this.dataSource = dataSource;
+    }
+
+    public void setHisnaStevilka(FieldValue hisnaStevilka) {
+      this.hisnaStevilka = hisnaStevilka;
+    }
+
+    public void setHisnaStevilkaDodatek(FieldValue hisnaStevilkaDodatek) {
+      this.hisnaStevilkaDodatek = hisnaStevilkaDodatek;
+    }
+
+    public void setHs_mid(FieldValue hs_mid) {
+      this.hs_mid = hs_mid;
+    }
+
+    public void setHs_neznana_mid(Long hs_neznana_mid) {
+      this.hs_neznana_mid = hs_neznana_mid;
+    }
+
+    public void setNaselje(FieldValue naselje) {
+      this.naselje = naselje;
+    }
+
+    public void setNaseljeMID(FieldValue naseljeMID) {
+      this.naseljeMID = naseljeMID;
+    }
+
+    public void setPosta(FieldValue posta) {
+      this.posta = posta;
+    }
+
+    public void setPostnaStevilka(FieldValue postnaStevilka) {
+      this.postnaStevilka = postnaStevilka;
+    }
+
+    public void setPostnaStevilkaMID(FieldValue postnaStevilkaMID) {
+      this.postnaStevilkaMID = postnaStevilkaMID;
+    }
+
+    public void setUlica(FieldValue ulica) {
+      this.ulica = ulica;
+    }
+
+    public void setUlicaMID(FieldValue ulicaMID) {
+      this.ulicaMID = ulicaMID;
+    }
   }
 
   private static class DbDataModel {
