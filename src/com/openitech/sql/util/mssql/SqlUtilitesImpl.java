@@ -143,11 +143,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
     int param;
     boolean success = true;
     boolean commit = false;
+    boolean isTransaction = isTransaction();
     // <editor-fold defaultstate="collapsed" desc="Shrani">
 
     long events_ID = 0;
     try {
-      beginTransaction();
+      if (!isTransaction) {
+        beginTransaction();
+      }
 
       boolean insert = event.getId() == -1;
 
@@ -245,7 +248,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       commit = success;
     } finally {
-      endTransaction(commit);
+      if (!isTransaction) {
+        endTransaction(commit);
+      }
       event.setId(events_ID);
     }
 

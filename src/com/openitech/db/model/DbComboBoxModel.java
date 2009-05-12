@@ -262,7 +262,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    */
   public void setSelectedItem(Object anItem) {
     Object selectItem = null;
-    if (anItem instanceof String) {
+    if ((entries != null) && (anItem != null) && (anItem instanceof String)) {
       for (DbComboBoxEntry<K, String> entry : entries) {
         if (entry.value.equals((String) anItem)) {
           selectItem = entry;
@@ -273,7 +273,9 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
       selectItem = anItem;
     }
     selectedItem = selectItem;
-    selectedIndex = entries.indexOf(selectItem);
+    if (entries != null) {
+      selectedIndex = entries.indexOf(selectItem);
+    }
   }
 
   /**

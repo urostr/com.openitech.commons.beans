@@ -333,6 +333,10 @@ public abstract class SqlUtilities {
     return endTransaction(commit, activeSavepoints.empty() ? null : activeSavepoints.pop());
   }
 
+  public boolean isTransaction() {
+    return !activeSavepoints.empty();
+  }
+
   public boolean endTransaction(boolean commit, Savepoint savepoint) throws SQLException {
     Connection connection = ConnectionManager.getInstance().getConnection();
 
