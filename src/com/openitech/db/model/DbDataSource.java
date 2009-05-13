@@ -17,6 +17,8 @@ import com.openitech.db.model.concurrent.ConcurrentEvent;
 import com.openitech.db.model.concurrent.DataSourceActiveRowChangeEvent;
 import com.openitech.db.model.concurrent.DataSourceEvent;
 import com.openitech.db.model.concurrent.DataSourceListDataEvent;
+import com.openitech.db.model.concurrent.PendingSqlParameter;
+import com.openitech.db.model.concurrent.PendingValue;
 import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
 import com.openitech.ref.WeakListenerList;
@@ -169,7 +171,6 @@ public class DbDataSource implements DbNavigatorDataSource {
     this.parameters.clear();
     this.parameters.addAll(parameters);
   }
-
   private boolean safeMode = true;
 
   /**
@@ -3375,7 +3376,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   protected void fireIntervalAdded(ListDataEvent e) {
     if (listDataListeners != null) {
-      if (java.awt.EventQueue.isDispatchThread()||!isSafeMode()) {
+      if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
@@ -3394,7 +3395,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   protected void fireIntervalRemoved(ListDataEvent e) {
     if (listDataListeners != null) {
-      if (java.awt.EventQueue.isDispatchThread()||!isSafeMode()) {
+      if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
@@ -3413,7 +3414,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   protected void fireContentsChanged(ListDataEvent e) {
     if (listDataListeners != null) {
-      if (java.awt.EventQueue.isDispatchThread()||!isSafeMode()) {
+      if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
@@ -3507,7 +3508,7 @@ public class DbDataSource implements DbNavigatorDataSource {
 
   protected void fireActiveRowChange(ActiveRowChangeEvent e) {
     if (activeRowChangeListeners != null) {
-      if (java.awt.EventQueue.isDispatchThread()||!isSafeMode()) {
+      if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = activeRowChangeListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
@@ -4188,7 +4189,7 @@ public class DbDataSource implements DbNavigatorDataSource {
       fireActionPerformed(new ActionEvent(this, 1, DATA_LOADED));
     }
     if (reloaded && selectResultSet != null) {
-      if (EventQueue.isDispatchThread()||!isSafeMode()) {
+      if (EventQueue.isDispatchThread() || !isSafeMode()) {
         events.run();
       } else {
         try {
@@ -4304,7 +4305,11 @@ public class DbDataSource implements DbNavigatorDataSource {
             ResultSet.CONCUR_READ_ONLY,
             ResultSet.HOLD_CURSORS_OVER_COMMIT);
 
-    return executeQuery(statement, parameters);
+    try {
+      return executeQuery(statement, parameters);
+    } finally {
+      statement.close();
+    }
   }
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
@@ -4433,16 +4438,48 @@ public class DbDataSource implements DbNavigatorDataSource {
             Object value;
             for (int row = min; !selectResultSet.isAfterLast() && (row <= max); row++) {
               if (!cache.containsKey(new CacheKey(row, columnName))) {
+                java.util.Map<String, Boolean> pending = new HashMap<String, Boolean>();
                 for (int c = 0; c < columnNames.length; c++) {
                   cn = columnNames[c].toUpperCase();
-                  value = selectResultSet.getObject(cn);
-                  if (selectResultSet.wasNull()) {
-                    value = null;
+                  pending.put(cn, isPending(cn, row));
+                }
+
+                for (int c = 0; c < columnNames.length; c++) {
+                  cn = columnNames[c].toUpperCase();
+                  if (!pending.get(cn)) {
+                    value = selectResultSet.getObject(cn);
+                    if (selectResultSet.wasNull()) {
+                      value = null;
+                    }
+                    cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, value));
+
+                    if ((row == rowIndex) && cn.equals(columnName)) {
+                      result = value;
+                    }
                   }
-                  cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, value));
+                }
+                //get pending values
+                for (int c = 0; c < columnNames.length; c++) {
+                  cn = columnNames[c].toUpperCase();
+                  if (pending.get(cn)) {
+                    PendingSqlParameter pendingSqlParameter = getPendingSqlParameter(cn);
+                    if (pendingSqlParameter != null) {
+                      java.util.List<Object> parameters = new java.util.ArrayList<Object>();
+                      for (String keyField : pendingSqlParameter.getParentKeyFields()) {
+                        parameters.add(cache.get(new CacheKey(row, keyField)).value);
+                      }
+                      java.util.List<PendingValue> pendingValues = pendingSqlParameter.getPendingValues(parameters);
+                      for (PendingValue pendingValue : pendingValues) {
+                        cache.put(new CacheKey(row, pendingValue.getFieldName()), new CacheEntry<String, Object>(this, pendingValue.getFieldName(), pendingValue.getValue()));
+                        pending.put(pendingValue.getFieldName(), false);
+                      }
+                    }
+                  }
 
                   if ((row == rowIndex) && cn.equals(columnName)) {
-                    result = value;
+                    if (cache.containsKey(ck) && ((ce = cache.get(ck)) != null)) {
+                      result = ce.value;
+                    }
                   }
                 }
               }
@@ -4728,6 +4765,10 @@ public class DbDataSource implements DbNavigatorDataSource {
         selectResultSet.absolute(row);
       }
 
+      if (isPending(columnName, row)) {
+        return (T) getValueAt(row, columnName);
+      }
+
       if (String.class.isAssignableFrom(type)) {
         result = selectResultSet.getString(columnName);
       } else if (Number.class.isAssignableFrom(type)) {
@@ -4768,6 +4809,45 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
 
     return result == null ? nullValue : (T) result;
+  }
+
+  public boolean isPending(String columnName) throws SQLException {
+    return isPending(columnName, getRow());
+  }
+
+  public boolean isPending(String columnName, int row) throws SQLException {
+    columnName = columnName.toUpperCase();
+    CacheKey ck = new CacheKey(row, columnName);
+
+    if (wasUpdated(row, columnName)) {
+      return false;
+    } else if (cache.containsKey(ck)) {
+      return false;
+    } else {
+      boolean result = false;
+      for (Object parameter : parameters) {
+        if (parameter instanceof PendingSqlParameter) {
+          result = result || ((PendingSqlParameter) parameter).isPending(columnName);
+        }
+      }
+
+      return result;
+    }
+  }
+
+  private PendingSqlParameter getPendingSqlParameter(String columnName) {
+    columnName = columnName.toUpperCase();
+    PendingSqlParameter result = null;
+    Iterator<Object> i = parameters.iterator();
+    while (result == null && i.hasNext()) {
+      Object parameter = i.next();
+      if ((parameter instanceof PendingSqlParameter) &&
+              ((PendingSqlParameter) parameter).isPending(columnName)) {
+        result = (PendingSqlParameter) parameter;
+      }
+    }
+
+    return result;
   }
 
   private void storeUpdates(boolean insert) throws SQLException {
@@ -5064,7 +5144,7 @@ public class DbDataSource implements DbNavigatorDataSource {
             (oldValue != null && newValue != null && oldValue.equals(newValue))) {
       return;
     }
-    if (EventQueue.isDispatchThread()||!isSafeMode()) {
+    if (EventQueue.isDispatchThread() || !isSafeMode()) {
       changeSupport.firePropertyChange(propertyName, oldValue, newValue);
     } else {
       try {

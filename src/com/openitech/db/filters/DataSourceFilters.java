@@ -555,6 +555,40 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     throw new UnsupportedOperationException("Can't set value");
   }
 
+  public boolean hasValue() {
+    boolean result = false;
+    boolean do_seek = true;
+    if (!required.isEmpty()) {
+      do_seek = false;
+      for (RequiredFields type : required) {
+        if (seek_types.contains(type.field) && type.field.hasValue()) {
+          if (type.no_fields > 1) {
+            int count = 1;
+            for (AbstractSeekType seek : seek_types) {
+              if (!seek.equals(type.field) && seek.hasValue()) {
+                count++;
+              }
+            }
+            do_seek = count >= type.no_fields;
+          } else {
+            do_seek = true;
+          }
+          if (do_seek) {
+            break;
+          }
+        }
+      }
+    }
+
+    if (do_seek) {
+      for (AbstractSeekType seek_type : seek_types) {
+        result = result || seek_type.hasValue();
+      }
+    }
+
+    return result;
+  }
+
   /**
    * Setter for property itype.
    * @param itype New value of property itype.
@@ -616,6 +650,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   }
 
   public final static class SifrantSeekType extends AbstractSeekType<String> {
+
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
     /**
      * UPPER_EQUALS has value 0
@@ -636,6 +671,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       this.textNotDefined = textNotDefined == null ? "Ni doloèen" : textNotDefined;
 
       this.model = new FutureTask<DbComboBoxModel>(new Callable<DbComboBoxModel>() {
+
         @Override
         public DbComboBoxModel call() {
           DbSifrantModel result = null;

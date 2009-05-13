@@ -199,6 +199,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
         jcbSifrant.setModel(sifranti.get(item));
         ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
       } else {
+        if (item.getSeekType()>=jcbType.getItemCount()) {
+          item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
+        }
         jcbType.setSelectedIndex(item.getSeekType());
         jtfValue.setDocument(documents.get(item)[0]);
         ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "TEXTFIELD_CARD");
