@@ -318,6 +318,11 @@ public abstract class SqlUtilities {
     }
 
     activeSavepoints.push(connection.setSavepoint());
+    if (activeSavepoints.size()>1) {
+      Logger.getLogger(SqlUtilities.class.getName()).info("-- SET SAVEPOINT ("+activeSavepoints.peek().toString()+") -- ");
+    } else {
+      Logger.getLogger(SqlUtilities.class.getName()).info("-- BEGIN TRANSACTION ("+activeSavepoints.peek().toString()+") -- ");
+    }
 
     return activeSavepoints.peek();
   }
@@ -347,9 +352,17 @@ public abstract class SqlUtilities {
         }
         if (activeSavepoints.size() == 0) {
           connection.commit();
+          Logger.getLogger(SqlUtilities.class.getName()).info("-- COMMIT TRANSACTION -- ");
+        } else if (savepoint != null) {
+          Logger.getLogger(SqlUtilities.class.getName()).info("-- RELEASE SAVEPOINT ("+savepoint.toString()+") -- ");
         }
-      } else {
+      } else if (savepoint != null) {
         connection.rollback(savepoint);
+        Logger.getLogger(SqlUtilities.class.getName()).info("-- ROLLBACK TO SAVEPOINT ("+savepoint.toString()+") -- ");
+      } else {
+        activeSavepoints.clear();
+        connection.rollback();
+        Logger.getLogger(SqlUtilities.class.getName()).info("-- ROLLBACK TRANSACTION -- ");
       }
       if (savepoint != null) {
         activeSavepoints.remove(savepoint);
