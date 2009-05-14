@@ -19,6 +19,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.sql.Clob;
 import java.util.Arrays;
 import java.util.Date;
 import java.sql.SQLException;
@@ -124,6 +125,13 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver {
 
   public String getValueAsText() {
     Object result = getValue();
+    if(result instanceof Clob){
+      try {
+        result = ((Clob) result).getSubString(1L, (int) ((Clob) result).length());
+      } catch (SQLException ex) {
+        Logger.getLogger(DbFieldObserver.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
     return (result == null) ? "" : result.toString();
   }
 
