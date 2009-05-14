@@ -8,7 +8,6 @@
 package com.openitech.db.model;
 
 import com.openitech.Settings;
-import com.openitech.db.ConnectionManager;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.StoreUpdatesEvent;
@@ -17,10 +16,7 @@ import com.openitech.db.model.concurrent.ConcurrentEvent;
 import com.openitech.db.model.concurrent.DataSourceActiveRowChangeEvent;
 import com.openitech.db.model.concurrent.DataSourceEvent;
 import com.openitech.db.model.concurrent.DataSourceListDataEvent;
-import com.openitech.db.model.concurrent.PendingSqlParameter;
-import com.openitech.db.model.concurrent.PendingValue;
-import com.openitech.formats.FormatFactory;
-import com.openitech.util.Equals;
+import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.util.OwnerFrame;
 import java.awt.EventQueue;
@@ -31,7 +27,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.InputStream;
 import java.io.Reader;
-import java.lang.ref.SoftReference;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
@@ -40,19 +35,19 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
-import java.sql.ParameterMetaData;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,18 +55,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.sql.RowSet;
+import javax.sql.RowSetListener;
 import javax.swing.JOptionPane;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
@@ -80,7 +71,7 @@ import javax.swing.event.ListDataListener;
  *
  * @author uros
  */
-public class DbDataSource implements DbNavigatorDataSource {
+public class DbDataSource implements DbNavigatorDataSource, RowSet  {
 
   public static boolean DUMP_SQL = false;
   public final static String MOVE_TO_INSERT_ROW = "moveToInsertRow";
@@ -93,12 +84,9 @@ public class DbDataSource implements DbNavigatorDataSource {
   public final static String STORE_UPDATES = "storeUpdates";
   public final static String LOAD_DATA = "loadData";
   public final static String DATA_LOADED = "dataLoaded";
-  private String selectSql;
-  private String countSql;
-  private String preparedSelectSql;
-  private String preparedCountSql;
-  private String updateTableName;
+
   private String componentName;
+
   private transient WeakListenerList activeRowChangeListeners;
   private transient WeakListenerList storeUpdatesListeners;
   private transient WeakListenerList listDataListeners;
@@ -114,42 +102,27 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @see #firePropertyChange
    */
   private PropertyChangeSupport changeSupport;
-  private transient PreparedStatement selectStatement;
-  private transient PreparedStatement countStatement;
-  private List<PrimaryKey> primaryKeys;
-  private transient ResultSet selectResultSet = null;
-  private int count = 0;
-  private final List<Object> parameters = new ArrayList<Object>();
+
+  protected final List<Object> parameters = new ArrayList<Object>();
   private Map<String, Object> defaultValues = new HashMap<String, Object>();
-  private Map<Integer, Map<String, Object>> storedUpdates = new HashMap<Integer, Map<String, Object>>();
-  private boolean readOnly = false;
-  private boolean inserting = false;
-  private transient ResultSetMetaData metaData = null;
-  private DbDataSourceHashMap<String, Integer> columnMapping = new DbDataSourceHashMap<String, Integer>();
+
   private boolean canAddRows = true;
   private boolean canDeleteRows = true;
   private Pattern namePattern = Pattern.compile(".*from\\W*(\\w*)\\W.*");
   private String name = "";
-  private boolean[] storedResult = new boolean[]{false, false};
   private final ReentrantLock available = new ReentrantLock();
-  private final Semaphore semaphore = new Semaphore(1);
-  private transient Map<CacheKey, CacheEntry<String, Object>> cache = new HashMap<CacheKey, CacheEntry<String, Object>>();
-  private final Runnable events = new RunnableEvents(this);
+
   private long queuedDelay = 108;
-  private int fetchFize = 54;
-  private Connection connection = null;
-  private boolean refreshPending = false;
+
   private boolean reloadsOnEventQueue = false;
   private boolean cacheStatements = true;
-  private transient Map<String, PreparedStatement> cachedStatements = new HashMap<String, PreparedStatement>();
-  /**
-   * Holds value of property uniqueID.
-   */
-  private String[] uniqueID;
   private boolean autoInsert = false;
+
+  private DbDataSourceFactory.DbDataSourceImpl implementation;
 
   /** Creates a new instance of DbDataSource */
   public DbDataSource() {
+    this(null,null);
   }
 
   public DbDataSource(String selectSql) {
@@ -157,20 +130,23 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
 
   public DbDataSource(String selectSql, String countSql) {
+    this(selectSql, countSql, DbDataSourceFactory.getInstance().getDbDataSourceClass());
+  }
+
+  public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
+    implementation = DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass);
     try {
-      setCountSql(countSql);
-      setSelectSql(selectSql);
+      if (countSql!=null) {
+        setCountSql(countSql);
+      }
+      if (selectSql!=null) {
+        setSelectSql(selectSql);
+      }
     } catch (SQLException ex) {
       throw (IllegalArgumentException) (new IllegalArgumentException("Failed to create a DbDataSource instance")).initCause(ex);
     }
   }
 
-  public DbDataSource(PreparedStatement select, PreparedStatement count, List<Object> parameters) {
-    this.selectStatement = select;
-    this.countStatement = count;
-    this.parameters.clear();
-    this.parameters.addAll(parameters);
-  }
   private boolean safeMode = true;
 
   /**
@@ -207,12 +183,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateFloat(String columnName, float x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateFloat(columnName, x);
   }
 
   /**
@@ -227,12 +200,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateFloat(int columnIndex, float x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateFloat(columnIndex, x);
   }
 
   /**
@@ -252,8 +222,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Date getDate(String columnName, Calendar cal) throws SQLException {
-    throw new SQLException("Unsupported operation.");
+    return implementation.getDate(columnName, cal);
   }
 
   /**
@@ -273,8 +244,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-    throw new SQLException("Unsupported operation.");
+    return implementation.getDate(columnIndex, cal);
   }
 
   /**
@@ -294,8 +266,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Time getTime(String columnName, Calendar cal) throws SQLException {
-    throw new SQLException("Unsupported operation.");
+    return implementation.getTime(columnName, cal);
   }
 
   /**
@@ -315,8 +288,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Time getTime(int columnIndex, Calendar cal) throws SQLException {
-    throw new SQLException("Unsupported operation.");
+    return implementation.getTime(columnIndex, cal);
   }
 
   /**
@@ -336,8 +310,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Timestamp getTimestamp(String columnName, Calendar cal) throws SQLException {
-    throw new SQLException("Unsupported operation.");
+    return implementation.getTimestamp(columnName, cal);
   }
 
   /**
@@ -357,8 +332,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
-    throw new SQLException("Unsupported operation.");
+    return implementation.getTimestamp(columnIndex, cal);
   }
 
   /**
@@ -378,8 +354,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Object getObject(String columnName, Map<String, Class<?>> map) throws SQLException {
-    throw new SQLException("Unsupported operation.");
+    return implementation.getObject(columnName, map);
   }
 
   /**
@@ -399,8 +376,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Object getObject(int columnIndex, Map<String, Class<?>> map) throws SQLException {
-    throw new SQLException("Unsupported operation.");
+    return implementation.getObject(columnIndex, map);
   }
 
   /**
@@ -415,12 +393,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateDate(String columnName, Date x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateDate(columnName, x);
   }
 
   /**
@@ -435,12 +410,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateShort(int columnIndex, short x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateShort(columnIndex, x);
   }
 
   /**
@@ -456,12 +428,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateBlob(String columnName, Blob x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBlob(columnName, x);
   }
 
   /**
@@ -477,12 +446,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateArray(String columnName, Array x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateArray(columnName, x);
   }
 
   /**
@@ -497,12 +463,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateDouble(int columnIndex, double x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateDouble(columnIndex, x);
   }
 
   /**
@@ -518,12 +481,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateTimestamp(String columnName, Timestamp x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateTimestamp(columnName, x);
   }
 
   /**
@@ -538,12 +498,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateTime(int columnIndex, Time x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateTime(columnIndex, x);
   }
 
   /**
@@ -559,12 +516,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBigDecimal(String columnName, BigDecimal x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBigDecimal(columnName, x);
   }
 
   /**
@@ -579,12 +533,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateDouble(String columnName, double x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateDouble(columnName, x);
   }
 
   /**
@@ -598,12 +549,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateNull(String columnName) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, null);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateNull(columnName);
   }
 
   /**
@@ -616,13 +564,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public long getLong(String columnName) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnName, 0l, Number.class);
-      return value == null ? null : value.longValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getLong(columnName);
   }
 
   /**
@@ -635,13 +579,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public int getInt(String columnName) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnName, 0, Number.class);
-      return value == null ? null : value.intValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getInt(columnName);
   }
 
   /**
@@ -654,13 +594,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public float getFloat(String columnName) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnName, 0f, Number.class);
-      return value == null ? null : value.floatValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getFloat(columnName);
   }
 
   /**
@@ -673,13 +609,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public double getDouble(String columnName) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnName, 0d, Number.class);
-      return value == null ? null : value.doubleValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getDouble(columnName);
   }
 
   /**
@@ -692,12 +624,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Date getDate(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, Date.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getDate(columnName);
   }
 
   /**
@@ -711,12 +640,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Clob getClob(String colName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), colName, null, Clob.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getClob(colName);
   }
 
   /**
@@ -731,12 +657,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Reader getCharacterStream(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, Reader.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getCharacterStream(columnName);
   }
 
   /**
@@ -750,12 +673,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public byte[] getBytes(String columnName) throws SQLException {
-    if (loadData()) {
-      return (byte[]) getStoredValue(getRow(), columnName, new byte[]{}, Object.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBytes(columnName);
   }
 
   /**
@@ -780,12 +700,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * the value returned is <code>null</code>.
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public InputStream getAsciiStream(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, InputStream.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getAsciiStream(columnName);
   }
 
   /**
@@ -797,12 +714,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if the <code>ResultSet</code> object
    * does not contain <code>columnName</code> or a database access error occurs
    */
+  @Override
   public int findColumn(String columnName) throws SQLException {
-    if (loadData()) {
-      return selectResultSet.findColumn(columnName);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.findColumn(columnName);
   }
 
   /**
@@ -817,12 +731,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public BigDecimal getBigDecimal(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, BigDecimal.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBigDecimal(columnName);
   }
 
   /**
@@ -846,12 +757,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * if the value is SQL <code>NULL</code>, the result is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public InputStream getBinaryStream(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, InputStream.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBinaryStream(columnName);
   }
 
   /**
@@ -865,12 +773,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Blob getBlob(String colName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), colName, null, Blob.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBlob(colName);
   }
 
   /**
@@ -883,12 +788,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>false</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public boolean getBoolean(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, false, Boolean.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBoolean(columnName);
   }
 
   /**
@@ -901,13 +803,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public byte getByte(String columnName) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnName, (byte) 0, Number.class);
-      return value == null ? null : value.byteValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getByte(columnName);
   }
 
   /**
@@ -936,12 +834,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @return a <code>java.lang.Object</code> holding the column value
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Object getObject(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, Object.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getObject(columnName);
   }
 
   /**
@@ -955,12 +850,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Ref getRef(String colName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), colName, null, Ref.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getRef(colName);
   }
 
   /**
@@ -973,13 +865,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public short getShort(String columnName) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnName, (short) 0, Number.class);
-      return value == null ? null : value.shortValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getShort(columnName);
   }
 
   /**
@@ -992,12 +880,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public String getString(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, String.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getString(columnName);
   }
 
   /**
@@ -1011,12 +896,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * the value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Time getTime(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, Time.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getTime(columnName);
   }
 
   /**
@@ -1029,12 +911,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, Timestamp.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getTimestamp(columnName);
   }
 
   /**
@@ -1051,12 +930,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *            or if a URL is malformed
    * @since 1.4
    */
+  @Override
   public URL getURL(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, URL.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getURL(columnName);
   }
 
   /**
@@ -1088,7 +964,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    */
   @Deprecated
   public InputStream getUnicodeStream(String columnName) throws SQLException {
-    throw new RuntimeException("Unsupported operation");
+    return implementation.getUnicodeStream(columnName);
   }
 
   /**
@@ -1104,12 +980,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBytes(String columnName, byte[] x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBytes(columnName, x);
   }
 
   /**
@@ -1125,12 +998,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateRef(String columnName, Ref x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateRef(columnName, x);
   }
 
   /**
@@ -1145,12 +1015,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateNull(int columnIndex) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, null);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateNull(columnIndex);
   }
 
   /**
@@ -1179,12 +1046,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @return a <code>java.lang.Object</code> holding the column value
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Object getObject(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, Object.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getObject(columnIndex);
   }
 
   /**
@@ -1197,13 +1061,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public long getLong(int columnIndex) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnIndex, 0l, Number.class);
-      return value == null ? null : value.longValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getLong(columnIndex);
   }
 
   /**
@@ -1216,13 +1076,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public int getInt(int columnIndex) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnIndex, 0, Number.class);
-      return value == null ? null : value.intValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getInt(columnIndex);
   }
 
   /**
@@ -1235,13 +1091,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public float getFloat(int columnIndex) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnIndex, 0f, Number.class);
-      return value == null ? null : value.floatValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getFloat(columnIndex);
   }
 
   /**
@@ -1254,13 +1106,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public double getDouble(int columnIndex) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnIndex, 0d, Number.class);
-      return value == null ? null : value.doubleValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getDouble(columnIndex);
   }
 
   /**
@@ -1273,12 +1121,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Date getDate(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, Date.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getDate(columnIndex);
   }
 
   /**
@@ -1292,12 +1137,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Clob getClob(int i) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), i, null, Clob.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getClob(i);
   }
 
   /**
@@ -1312,12 +1154,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Reader getCharacterStream(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, Reader.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getCharacterStream(columnIndex);
   }
 
   /**
@@ -1331,12 +1170,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public byte[] getBytes(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return (byte[]) getStoredValue(getRow(), columnIndex, new byte[]{}, Object.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBytes(columnIndex);
   }
 
   /**
@@ -1362,12 +1198,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public InputStream getAsciiStream(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, InputStream.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getAsciiStream(columnIndex);
   }
 
   /**
@@ -1381,12 +1214,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Array getArray(String columnName) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, Array.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getArray(columnName);
   }
 
   /**
@@ -1400,12 +1230,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Array getArray(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, Array.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getArray(columnIndex);
   }
 
   /**
@@ -1442,24 +1269,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * occurs, or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean absolute(int row) throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      int oldRow = getOpenSelectResultSet().getRow();
-      boolean res = selectResultSet.absolute(row);
-      if (res) {
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-      }
-      return res;
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.absolute(row);
   }
 
   /**
@@ -1474,12 +1286,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, BigDecimal.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return getBigDecimal(columnIndex);
   }
 
   /**
@@ -1503,12 +1312,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *         <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, InputStream.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBinaryStream(columnIndex);
   }
 
   /**
@@ -1522,12 +1328,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Blob getBlob(int i) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), i, null, Blob.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBlob(i);
   }
 
   /**
@@ -1540,12 +1343,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>false</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public boolean getBoolean(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, false, Boolean.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBoolean(columnIndex);
   }
 
   /**
@@ -1558,13 +1358,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public byte getByte(int columnIndex) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnIndex, (byte) 0, Number.class);
-      return value == null ? null : value.byteValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getByte(columnIndex);
   }
 
   /**
@@ -1578,12 +1374,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Ref getRef(int i) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), i, null, Ref.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getRef(i);
   }
 
   /**
@@ -1596,13 +1389,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public short getShort(int columnIndex) throws SQLException {
-    if (loadData()) {
-      Number value = getStoredValue(getRow(), columnIndex, (short) 0, Number.class);
-      return value == null ? null : value.shortValue();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getShort(columnIndex);
   }
 
   /**
@@ -1615,12 +1404,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public String getString(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, String.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getString(columnIndex);
   }
 
   /**
@@ -1633,12 +1419,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Time getTime(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, Time.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getTime(columnIndex);
   }
 
   /**
@@ -1651,12 +1434,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Timestamp getTimestamp(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, Timestamp.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getTimestamp(columnIndex);
   }
 
   /**
@@ -1673,12 +1453,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *            or if a URL is malformed
    * @since 1.4
    */
+  @Override
   public URL getURL(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, URL.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getURL(columnIndex);
   }
 
   /**
@@ -1710,8 +1487,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *              <code>getUnicodeStream</code>
    */
   @Deprecated
+  @Override
   public InputStream getUnicodeStream(int columnIndex) throws SQLException {
-    throw new RuntimeException("Unsupported operation");
+    return implementation.getUnicodeStream(columnIndex);
   }
 
   /**
@@ -1736,24 +1514,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *            <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean relative(int rows) throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      int oldRow = getOpenSelectResultSet().getRow();
-      boolean res = selectResultSet.relative(rows);
-      if (res) {
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-      }
-      return res;
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.relative(rows);
   }
 
   /**
@@ -1775,12 +1538,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @see #getFetchDirection
    * @since 1.2
    */
+  @Override
   public void setFetchDirection(int direction) throws SQLException {
-    if (isDataLoaded()) {
-      selectResultSet.setFetchDirection(direction);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.setFetchDirection(direction);
   }
 
   /**
@@ -1800,10 +1560,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @since 1.2
    */
   public void setFetchSize(int rows) throws SQLException {
-    this.fetchFize = rows;
-    if (isDataLoaded()) {
-      selectResultSet.setFetchSize(rows);
-    }
+    implementation.setFetchSize(rows);
   }
 
   /**
@@ -1818,12 +1575,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBoolean(String columnName, boolean x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBoolean(columnName, x);
   }
 
   /**
@@ -1838,12 +1592,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateObject(String columnName, Object x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateObject(columnName, x);
   }
 
   /**
@@ -1858,12 +1609,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateDate(int columnIndex, Date x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateDate(columnIndex, x);
   }
 
   /**
@@ -1879,12 +1627,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateClob(String columnName, Clob x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateClob(columnName, x);
   }
 
   /**
@@ -1900,12 +1645,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateTimestamp(columnIndex, x);
   }
 
   /**
@@ -1920,12 +1662,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateByte(String columnName, byte x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateByte(columnName, x);
   }
 
   /**
@@ -1940,12 +1679,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateShort(String columnName, short x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateShort(columnName, x);
   }
 
   /**
@@ -1960,12 +1696,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateLong(String columnName, long x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateLong(columnName, x);
   }
 
   /**
@@ -1980,12 +1713,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateRef(int columnIndex, Ref x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateRef(columnIndex, x);
   }
 
   /**
@@ -2000,13 +1730,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateArray(int columnIndex, Array x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
-
+    implementation.updateArray(columnIndex, x);
   }
 
   /**
@@ -2022,12 +1748,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBigDecimal(columnIndex, x);
   }
 
   /**
@@ -2042,12 +1765,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateClob(int columnIndex, Clob x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateClob(columnIndex, x);
   }
 
   /**
@@ -2062,12 +1782,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateLong(int columnIndex, long x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateLong(columnIndex, x);
   }
 
   /**
@@ -2082,12 +1799,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBytes(int columnIndex, byte[] x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBytes(columnIndex, x);
   }
 
   /**
@@ -2102,12 +1816,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateByte(int columnIndex, byte x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateByte(columnIndex, x);
   }
 
   /**
@@ -2122,12 +1833,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateTime(String columnName, Time x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateTime(columnName, x);
   }
 
   /**
@@ -2142,12 +1850,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateBlob(int columnIndex, Blob x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBlob(columnIndex, x);
   }
 
   /**
@@ -2162,12 +1867,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateString(int columnIndex, String x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateString(columnIndex, x);
   }
 
   /**
@@ -2186,12 +1888,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateObject(String columnName, Object x, int scale) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, new Scale("updateObject", x, scale));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateObject(columnName, x, scale);
   }
 
   /**
@@ -2206,12 +1905,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateObject(int columnIndex, Object x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateObject(columnIndex, x);
   }
 
   /**
@@ -2226,12 +1922,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateInt(String columnName, int x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateInt(columnName, x);
   }
 
   /**
@@ -2248,12 +1941,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateCharacterStream(String columnName, Reader reader, int length) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, new Scale("updateCharacterStream", reader, length));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateCharacterStream(columnName, reader, length);
   }
 
   /**
@@ -2270,12 +1960,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, new Scale("updateBinaryStream", x, length));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBinaryStream(columnName, x, length);
   }
 
   /**
@@ -2291,12 +1978,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @deprecated
    */
   @Deprecated
+  @Override
   public BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnName, null, BigDecimal.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getBigDecimal(columnName, scale);
   }
 
   /**
@@ -2313,12 +1997,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateAsciiStream(String columnName, InputStream x, int length) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, new Scale("updateAsciiStream", x, length));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateAsciiStream(columnName, x, length);
   }
 
   /**
@@ -2333,12 +2014,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBoolean(int columnIndex, boolean x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBoolean(columnIndex, x);
   }
 
   /**
@@ -2353,12 +2031,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *         <code>NULL</code> and <code>false</code> otherwise
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public boolean wasNull() throws SQLException {
-    if (isDataLoaded()) {
-      return storedResult[0] ? storedResult[1] : selectResultSet.wasNull();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.wasNull();
   }
 
   /**
@@ -2373,12 +2048,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateString(String columnName, String x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnName, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateString(columnName, x);
   }
 
   public boolean canUpdateRow() {
@@ -2401,21 +2073,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * if this method is called when the cursor is on the insert row
    * @since 1.2
    */
+  @Override
   public void updateRow() throws SQLException {
-    boolean storeUpdates = true;
-    try {
-      fireActionPerformed(new ActionEvent(this, 1, UPDATE_ROW));
-    } catch (Exception err) {
-      storeUpdates = false;
-    }
-    if (storeUpdates) {
-      storeUpdates(rowInserted());
-    }
-    try {
-      fireActionPerformed(new ActionEvent(this, 1, ROW_UPDATED));
-    } catch (Exception err) {
-      //
-    }
+    implementation.updateRow();
   }
 
   /**
@@ -2434,12 +2094,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateObject(int columnIndex, Object x, int scale) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, new Scale("updateObject", x, scale));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateObject(columnIndex, x, scale);
   }
 
   /**
@@ -2454,12 +2111,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateInt(int columnIndex, int x) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, x);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateInt(columnIndex, x);
   }
 
   /**
@@ -2475,12 +2129,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, new Scale("updateCharacterStream", x, length));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateCharacterStream(columnIndex, x, length);
   }
 
   /**
@@ -2497,12 +2148,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, new Scale("updateBinaryStream", x, length));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateBinaryStream(columnIndex, x, length);
   }
 
   /**
@@ -2512,12 +2160,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @return the description of this <code>ResultSet</code> object's columns
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    if (this.metaData != null) {
-      return this.metaData;
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getMetaData();
   }
 
   /**
@@ -2530,7 +2175,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @since 1.2
    */
   public int getFetchSize() throws SQLException {
-    return this.fetchFize;
+    return implementation.getFetchSize();
   }
 
   /**
@@ -2543,11 +2188,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @since 1.2
    */
   public int getFetchDirection() throws SQLException {
-    if (loadData()) {
-      return getOpenSelectResultSet().getFetchDirection();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getFetchDirection();
   }
 
   /**
@@ -2574,11 +2215,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    */
   public String getCursorName() throws SQLException {
-    if (loadData()) {
-      return getOpenSelectResultSet().getCursorName();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getCursorName();
   }
 
   /**
@@ -2592,12 +2229,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public int getConcurrency() throws SQLException {
-    if (loadData()) {
-      return getOpenSelectResultSet().getConcurrency();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getConcurrency();
   }
 
   /**
@@ -2610,40 +2244,17 @@ public class DbDataSource implements DbNavigatorDataSource {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean first() throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      int oldRow = getOpenSelectResultSet().getRow();
-      boolean res = selectResultSet.first();
-      if (res) {
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-      }
-      return res;
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.first();
   }
 
-  private void doDeleteRow(ResultSet resultSet) throws SQLException {
-    PreparedStatement delete;
-    PrimaryKey key;
-    for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
-      key = pk.next();
-      delete = key.getDeleteStatement(resultSet);
-      delete.execute();
-    }
+  protected void doDeleteRow() throws SQLException {
+    implementation.doDeleteRow();
   }
 
   public static void deleteRow(StoreUpdatesEvent storeUpdatesEvent) throws SQLException {
-    ResultSet resultSet = storeUpdatesEvent.getSource().getOpenSelectResultSet();
-    int oldRow = resultSet.getRow();
-    storeUpdatesEvent.getSource().doDeleteRow(resultSet);
+    storeUpdatesEvent.getSource().doDeleteRow();
   }
 
   /**
@@ -2655,39 +2266,10 @@ public class DbDataSource implements DbNavigatorDataSource {
    * or if this method is called when the cursor is on the insert row
    * @since 1.2
    */
+  @Override
   public void deleteRow() throws SQLException {
     if (canDeleteRows) {
-      if (isDataLoaded()) {
-        boolean wasinserting = inserting;
-        if (rowUpdated()) {
-          cancelRowUpdates();
-        }
-        if (!wasinserting) {
-          boolean deleteRow = true;
-          try {
-            fireActionPerformed(new ActionEvent(this, 1, DELETE_ROW));
-          } catch (Exception err) {
-            deleteRow = false;
-          }
-          if (deleteRow) {
-            ResultSet resultSet = getOpenSelectResultSet();
-            int oldRow = resultSet.getRow();
-            if (isUpdateRowFireOnly()) {
-              fireDeleteRow(new StoreUpdatesEvent(this, getRow(), false, null, null));
-            } else {
-              doDeleteRow(resultSet);
-            }
-            try {
-              fireActionPerformed(new ActionEvent(this, 1, ROW_DELETED));
-            } catch (Exception err) {
-              //
-            }
-            reload(oldRow);
-          }
-        }
-      } else {
-        throw new SQLException("Ni pripravljenih podatkov.");
-      }
+      implementation.deleteRow();
     }
   }
 
@@ -2706,15 +2288,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public void close() throws SQLException {
-    if (isDataLoaded()) {
-      selectResultSet.close();
-      selectResultSet = null;
-      fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-      fireActiveRowChange(new ActiveRowChangeEvent(this, -1, -1));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.close();
   }
 
   /**
@@ -2725,12 +2301,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public void clearWarnings() throws SQLException {
-    if (isDataLoaded()) {
-      selectResultSet.clearWarnings();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.clearWarnings();
   }
 
   /**
@@ -2748,25 +2321,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    *            on the insert row
    * @since 1.2
    */
+  @Override
   public void cancelRowUpdates() throws SQLException {
-    if (isDataLoaded()) {
-      boolean cancelUpdates = true;
-      try {
-        fireActionPerformed(new ActionEvent(this, 1, CANCEL_UPDATES));
-      } catch (Exception err) {
-        cancelUpdates = false;
-      }
-      if (cancelUpdates) {
-        storedUpdates.remove(new Integer(getRow()));
-        if (inserting) {
-          inserting = false;
-          fireIntervalRemoved(new ListDataEvent(this, ListDataEvent.INTERVAL_REMOVED, getRowCount(), getRowCount()));
-        }
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), selectResultSet.getRow()));
-      }
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.cancelRowUpdates();
   }
 
   /**
@@ -2778,22 +2335,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public void beforeFirst() throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      int oldRow = getOpenSelectResultSet().getRow();
-      ;
-      selectResultSet.beforeFirst();
-      fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.beforeFirst();
   }
 
   /**
@@ -2805,22 +2349,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public void afterLast() throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      int oldRow = getOpenSelectResultSet().getRow();
-      ;
-      selectResultSet.afterLast();
-      fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.afterLast();
   }
 
   /**
@@ -2836,12 +2367,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @deprecated
    */
   @Deprecated
+  @Override
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-    if (loadData()) {
-      return getStoredValue(getRow(), columnIndex, null, BigDecimal.class);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return getBigDecimal(columnIndex, scale);
   }
 
   /**
@@ -2852,12 +2380,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public int getRow() throws SQLException {
-    if (loadData()) {
-      return inserting ? getRowCount() : getOpenSelectResultSet().getRow();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getRow();
   }
 
   /**
@@ -2873,8 +2398,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Statement getStatement() throws SQLException {
-    return this.selectStatement;
+    return implementation.getStatement();
   }
 
   /**
@@ -2888,28 +2414,17 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public int getType() throws SQLException {
-    if (loadData()) {
-      return getOpenSelectResultSet().getType();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getType();
   }
 
   public int getType(int columnIndex) throws SQLException {
-    if (getMetaData() != null) {
-      return getMetaData().getColumnType(columnIndex);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getType(columnIndex);
   }
 
   public int getType(String columnName) throws SQLException {
-    if (getMetaData() != null) {
-      return getMetaData().getColumnType(columnMapping.checkedGet(columnName));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getType(columnName);
   }
 
   /**
@@ -2935,12 +2450,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs or this method is
    *            called on a closed result set
    */
+  @Override
   public SQLWarning getWarnings() throws SQLException {
-    if (isDataLoaded()) {
-      return getOpenSelectResultSet().getWarnings();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getWarnings();
   }
 
   /**
@@ -2954,8 +2466,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * the insert row have been given a value
    * @since 1.2
    */
+  @Override
   public void insertRow() throws SQLException {
-    updateRow();
+    implementation.insertRow();
   }
 
   /**
@@ -2968,12 +2481,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public boolean isAfterLast() throws SQLException {
-    if (isDataLoaded()) {
-      return inserting ? false : selectResultSet.isAfterLast();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.isAfterLast();
   }
 
   /**
@@ -2986,12 +2496,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public boolean isBeforeFirst() throws SQLException {
-    if (isDataLoaded()) {
-      return inserting ? false : selectResultSet.isBeforeFirst();
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.isBeforeFirst();
   }
 
   /**
@@ -3003,12 +2510,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public boolean isFirst() throws SQLException {
-    if (isDataLoaded()) {
-      return inserting ? false : selectResultSet.isFirst() || (getRowCount() == 0);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.isFirst();
   }
 
   /**
@@ -3024,12 +2528,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public boolean isLast() throws SQLException {
-    if (isDataLoaded()) {
-      return inserting ? true : selectResultSet.isLast() || (getRowCount() == 0);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.isLast();
   }
 
   /**
@@ -3042,24 +2543,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean last() throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      int oldRow = getOpenSelectResultSet().getRow();
-      boolean res = selectResultSet.last();
-      if (res) {
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-      }
-      return res;
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.last();
   }
 
   /**
@@ -3071,23 +2557,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * or the result set is not updatable
    * @since 1.2
    */
+  @Override
   public void moveToCurrentRow() throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      int oldRow = getOpenSelectResultSet().getRow();
-      selectResultSet.moveToCurrentRow();
-      if (selectResultSet.getRow() != oldRow) {
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-      }
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.moveToCurrentRow();
   }
 
   /**
@@ -3111,43 +2583,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * or the result set is not updatable
    * @since 1.2
    */
+  @Override
   public void moveToInsertRow() throws SQLException {
-    if (canAddRows) {
-      if (loadData()) {
-        if (rowUpdated()) {
-          if (canUpdateRow()) {
-            updateRow();
-          } else {
-            cancelRowUpdates();
-          }
-        }
-
-        boolean moveToInsertRow = true;
-        try {
-          fireActionPerformed(new ActionEvent(this, 1, MOVE_TO_INSERT_ROW));
-        } catch (Exception err) {
-          moveToInsertRow = false;
-        }
-        if (moveToInsertRow) {
-          int oldRow = getOpenSelectResultSet().getRow();
-          inserting = true;
-          ResultSetMetaData metaData = getMetaData();
-          int columnCount = metaData.getColumnCount();
-          String columnName;
-          storedUpdates.remove(new Integer(getRow()));
-          for (int c = 1; c <= columnCount; c++) {
-            columnName = metaData.getColumnName(c);
-            storeUpdate(columnName, defaultValues.containsKey(columnName) ? defaultValues.get(columnName) : null, false);
-          }
-
-          fireIntervalAdded(new ListDataEvent(this, ListDataEvent.INTERVAL_ADDED, getRowCount() - 1, getRowCount() - 1));
-          fireActiveRowChange(new ActiveRowChangeEvent(this, getRow(), oldRow));
-          fireActionPerformed(new ActionEvent(this, 1, ROW_INSERTED));
-        }
-      } else {
-        throw new SQLException("Ni pripravljenih podatkov.");
-      }
-    }
+    implementation.moveToInsertRow();
   }
 
   /**
@@ -3166,28 +2604,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * <code>false</code> if there are no more rows
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public boolean next() throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      if (!isLast()) {
-        int oldRow = getOpenSelectResultSet().getRow();
-        boolean res = selectResultSet.next();
-        if (res) {
-          fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-        }
-        return res;
-      } else {
-        return false;
-      }
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.next();
   }
 
   /**
@@ -3200,29 +2619,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean previous() throws SQLException {
-    if (loadData()) {
-      if (rowUpdated()) {
-        if (canUpdateRow()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      if (!isFirst()) {
-        int oldRow = getOpenSelectResultSet().getRow();
-        ;
-        boolean res = selectResultSet.previous();
-        if (res) {
-          fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), oldRow));
-        }
-        return res;
-      } else {
-        return false;
-      }
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.previous();
   }
 
   /**
@@ -3250,18 +2649,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * occurs or if this method is called when the cursor is on the insert row
    * @since 1.2
    */
+  @Override
   public void refreshRow() throws SQLException {
-    if (isDataLoaded()) {
-      if (rowUpdated()) {
-        cancelRowUpdates();
-      }
-      getOpenSelectResultSet().refreshRow();
-      int row = selectResultSet.getRow();
-      fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, row - 1, row - 1));
-      fireActiveRowChange(new ActiveRowChangeEvent(this, row, row));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.refreshRow();
   }
 
   /**
@@ -3276,12 +2666,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @see DatabaseMetaData#deletesAreDetected
    * @since 1.2
    */
+  @Override
   public boolean rowDeleted() throws SQLException {
-    if (isDataLoaded()) {
-      return false; //vedno bomo takoj zbrisali vrstico
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.rowDeleted();
   }
 
   /**
@@ -3295,12 +2682,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @see DatabaseMetaData#insertsAreDetected
    * @since 1.2
    */
+  @Override
   public boolean rowInserted() throws SQLException {
-    if (isDataLoaded()) {
-      return inserting;
-    } else {
-      return false;
-    }
+    return implementation.rowInserted();
   }
 
   /**
@@ -3313,23 +2697,13 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @see DatabaseMetaData#updatesAreDetected
    * @since 1.2
    */
+  @Override
   public boolean rowUpdated() throws SQLException {
-    if (isDataLoaded()) {
-      return storedUpdates.containsKey(new Integer(getRow()));
-    } else {
-      return false;
-    }
+    return implementation.rowUpdated();
   }
 
   public void startUpdate() throws SQLException {
-    if (isDataLoaded()) {
-      if ((getRowCount() > 0) && !rowUpdated()) {
-        storedUpdates.put(new Integer(getRow()), new HashMap<String, Object>());
-        fireFieldValueChanged(new ActiveRowChangeEvent(this, "", -1));
-      }
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.startUpdate();
   }
 
   /**
@@ -3346,12 +2720,9 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
-    if (isDataLoaded()) {
-      storeUpdate(columnIndex, new Scale("updateAsciiStream", x, length));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.updateAsciiStream(columnIndex, x, length);
   }
 
   public synchronized void removeListDataListener(ListDataListener l) {
@@ -3374,7 +2745,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  protected void fireIntervalAdded(ListDataEvent e) {
+  public void fireIntervalAdded(ListDataEvent e) {
     if (listDataListeners != null) {
       if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
@@ -3386,14 +2757,13 @@ public class DbDataSource implements DbNavigatorDataSource {
         try {
           java.awt.EventQueue.invokeAndWait(new FireIntervalAdded(this, e));
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireIntervalAdded from '" + selectSql + "'", ex);
-          ;
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireIntervalAdded from '" + componentName + "'", ex);
         }
       }
     }
   }
 
-  protected void fireIntervalRemoved(ListDataEvent e) {
+  public void fireIntervalRemoved(ListDataEvent e) {
     if (listDataListeners != null) {
       if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
@@ -3405,14 +2775,13 @@ public class DbDataSource implements DbNavigatorDataSource {
         try {
           java.awt.EventQueue.invokeAndWait(new FireIntervalRemoved(this, e));
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireIntervalRemoved from '" + selectSql + "'", ex);
-          ;
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireIntervalRemoved from '" + componentName + "'", ex);
         }
       }
     }
   }
 
-  protected void fireContentsChanged(ListDataEvent e) {
+  public void fireContentsChanged(ListDataEvent e) {
     if (listDataListeners != null) {
       if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
@@ -3424,8 +2793,7 @@ public class DbDataSource implements DbNavigatorDataSource {
         try {
           java.awt.EventQueue.invokeAndWait(new FireContentsChanged(this, e));
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireContentsChanged from '" + selectSql + "'", ex);
-          ;
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireContentsChanged from '" + componentName + "'", ex);
         }
       }
     }
@@ -3445,7 +2813,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  protected void fireActionPerformed(ActionEvent e) {
+  public void fireActionPerformed(ActionEvent e) {
     if (actionListeners != null) {
       java.util.List listeners = actionListeners.elementsList();
       int count = listeners.size();
@@ -3469,7 +2837,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  protected void fireStoreUpdates(StoreUpdatesEvent e) throws SQLException {
+  public void fireStoreUpdates(StoreUpdatesEvent e) throws SQLException {
     if (storeUpdatesListeners != null) {
       java.util.List listeners = storeUpdatesListeners.elementsList();
       int count = listeners.size();
@@ -3479,7 +2847,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  protected void fireDeleteRow(StoreUpdatesEvent e) throws SQLException {
+  public void fireDeleteRow(StoreUpdatesEvent e) throws SQLException {
     if (storeUpdatesListeners != null) {
       java.util.List listeners = storeUpdatesListeners.elementsList();
       int count = listeners.size();
@@ -3506,7 +2874,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  protected void fireActiveRowChange(ActiveRowChangeEvent e) {
+  public void fireActiveRowChange(ActiveRowChangeEvent e) {
     if (activeRowChangeListeners != null) {
       if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = activeRowChangeListeners.elementsList();
@@ -3518,14 +2886,14 @@ public class DbDataSource implements DbNavigatorDataSource {
         try {
           java.awt.EventQueue.invokeAndWait(new FireActiveRowChanged(this, e));
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireActiveRowChange from '" + selectSql + "'", ex);
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireActiveRowChange from '" + componentName + "'", ex);
           ;
         }
       }
     }
   }
 
-  protected void fireFieldValueChanged(ActiveRowChangeEvent e) {
+  public void fireFieldValueChanged(ActiveRowChangeEvent e) {
     if (activeRowChangeListeners != null) {
       java.util.List listeners = activeRowChangeListeners.elementsList();
       int count = listeners.size();
@@ -3553,237 +2921,13 @@ public class DbDataSource implements DbNavigatorDataSource {
     storeUpdatesEvent.getSource().doStoreUpdates(storeUpdatesEvent.isInsert(), columnValues, oldValues, storeUpdatesEvent.getRow());
   }
 
-  private void doStoreUpdates(boolean insert, Map<String, Object> columnValues, Map<Integer, Object> oldValues, Integer row) throws SQLException {
-    Logger.getLogger(Settings.LOGGER).entering(this.getClass().toString(), "storeUpdates", insert);
-    Scale scaledValue;
-    Entry<String, Object> entry;
-
-    int columnCount = getColumnCount();
-
-    String delimiterLeft = getDelimiterLeft();
-    String delimiterRight = getDelimiterRight();
-
-    if (insert) {
-      String schemaName = null;
-      String tableName = updateTableName;
-
-      StringBuffer columns = new StringBuffer();
-      StringBuffer values = new StringBuffer();
-
-      ResultSetMetaData metaData = getMetaData();
-      List<String> skipValues = new ArrayList<String>();
-
-      int columnIndex;
-
-      for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-        entry = i.next();
-        columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
-        if (!isSingleTableSelect()) {
-          if (schemaName == null) {
-            schemaName = metaData.getSchemaName(columnIndex);
-          } else if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex))) {
-            throw new SQLException("Insert on different schemas not supported.");
-          }
-          if (tableName == null) {
-            tableName = metaData.getTableName(columnIndex);
-          } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
-            if (updateTableName == null) {
-              throw new SQLException("Insert on different tables not supported.");
-            } else if (!updateColumnNames.contains(entry.getKey())) {
-              skipValues.add(entry.getKey());
-              continue;
-            }
-          }
-        }
-        if (entry.getValue() != null || metaData.isNullable(columnIndex) != ResultSetMetaData.columnNoNulls) {
-          columns.append(columns.length() > 0 ? "," : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight);
-          values.append(values.length() > 0 ? "," : "").append("?");
-        } else {
-          skipValues.add(entry.getKey());
-          Logger.getLogger(Settings.LOGGER).info("Skipping null value: '" + entry.getKey() + "'");
-        }
-      }
-
-      StringBuffer sql = new StringBuffer();
-
-      sql.append("INSERT INTO ");
-      if (schemaName.length() > 0) {
-        sql.append(delimiterLeft).append(schemaName).append(delimiterRight).append(".");
-      }
-      sql.append(delimiterLeft).append(tableName).append(delimiterRight).append(" (").append(columns).append(") ");
-      sql.append("VALUES (").append(values).append(")");
-
-      PreparedStatement insertStatement = getConnection().prepareStatement(sql.toString());
-      try {
-        ParameterMetaData parameterMetaData = insertStatement.getParameterMetaData();
-
-        int p = 1;
-
-        for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-          entry = i.next();
-          if (skipValues.indexOf(entry.getKey()) == -1) {
-            /*if (entry.getValue()==null)
-            insertStatement.setNull(p, parameterMetaData.getParameterType(p++));
-            else//*/
-            if (entry.getValue() instanceof Scale) {
-              Scale scale = (Scale) entry.getValue();
-              if (scale.method.equals("updateCharacterStream")) {
-                insertStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
-              } else if (scale.method.equals("updateBinaryStream")) {
-                insertStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
-              } else if (scale.method.equals("updateAsciiStream")) {
-                insertStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
-              } else {
-                insertStatement.setObject(p++, scale.x, scale.scale);
-              }
-            } else {
-              insertStatement.setObject(p++, entry.getValue(), getType(entry.getKey()));
-
-            }
-            oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-          }
-        }
-        Logger.getLogger(Settings.LOGGER).info("Executing insert : '" + sql + "'");
-        insertStatement.executeUpdate();
-      } finally {
-        insertStatement.close();
-      }
-    } else {
-      ResultSetMetaData metaData = selectResultSet.getMetaData();
-      List<String> skipColumns = new ArrayList<String>();
-      for (int c = 1; c <= columnCount; c++) {
-        String columnName = metaData.getColumnName(c).toUpperCase();
-        if ((updateTableName == null ||
-                (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) &&
-                (updateColumnNames.size() == 0 ||
-                updateColumnNames.contains(columnName))) {
-          try {
-            Object value = selectResultSet.getObject(c);
-            oldValues.put(c, value);
-          } catch (Exception err) {
-            Logger.getLogger(Settings.LOGGER).info("Skipping illegal value for: '" + columnName + "'");
-            skipColumns.add(columnName);
-          }
-        } else {
-          skipColumns.add(columnName);
-        }
-      }
-      PrimaryKey key;
-      for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
-        key = pk.next();
-        ResultSet updateResultSet = key.getUpdateResultSet(getOpenSelectResultSet());
-
-        if (updateResultSet != null) {
-          try {
-            for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-              entry = i.next();
-              if (skipColumns.indexOf(entry.getKey()) == -1) {
-                if (key.isUpdateColumn(entry.getKey())) {
-                  if (entry.getValue() instanceof Scale) {
-                    scaledValue = (Scale) entry.getValue();
-                    if (scaledValue.method.equals("updateAsciiStream")) {
-                      updateResultSet.updateAsciiStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                    } else if (scaledValue.method.equals("updateBinaryStream")) {
-                      updateResultSet.updateBinaryStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                    } else if (scaledValue.method.equals("updateCharacterStream")) {
-                      updateResultSet.updateCharacterStream(entry.getKey(), (Reader) scaledValue.x, scaledValue.scale);
-                    } else {
-                      updateResultSet.updateObject(entry.getKey(), scaledValue.x, scaledValue.scale);
-                    }
-                  } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
-                    if (entry.getValue() instanceof java.util.Date) {
-                      updateResultSet.updateDate(entry.getKey(), new java.sql.Date(((java.util.Date) entry.getValue()).getTime()));
-                    } else if (entry.getValue() == null) {
-                      updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                    } else {
-                      try {
-                        updateResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
-                      } catch (ParseException ex) {
-                        updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                      }
-                    }
-                  } else {
-                    updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                  }
-                  cache.remove(new CacheKey(row.intValue(), entry.getKey()));
-                  oldValues.put(columnMapping.checkedGet(entry.getKey()), updateResultSet.getObject(entry.getKey()));
-                }
-              }
-            }
-
-            updateResultSet.updateRow();
-          } finally {
-            updateResultSet.close();
-          }
-        } else {
-          int updateCount = 0;
-          StringBuffer set = new StringBuffer(540);
-          for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-            entry = i.next();
-            if ((skipColumns.indexOf(entry.getKey()) == -1) && (metaData.getTableName(columnMapping.checkedGet(entry.getKey()).intValue()).equalsIgnoreCase(key.table))) {
-              set.append(set.length() > 0 ? ", " : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight).append(" = ?");
-              updateCount++;
-            }
-          }
-
-          if (updateCount > 0) {
-            StringBuffer where = new StringBuffer();
-
-            for (String c : key.getColumnNames()) {
-              where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
-            }
-            String sql = "UPDATE " + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
-
-            PreparedStatement updateStatement = getConnection().prepareStatement(sql.toString());
-            try {
-              ParameterMetaData parameterMetaData = updateStatement.getParameterMetaData();
-
-              int p = 1;
-
-              for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-                entry = i.next();
-                if (skipColumns.indexOf(entry.getKey()) == -1) {
-                  if (entry.getValue() == null) {
-                    updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                  } else if (entry.getValue() instanceof Scale) {
-                    Scale scale = (Scale) entry.getValue();
-                    if (scale.method.equals("updateCharacterStream")) {
-                      updateStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
-                    } else if (scale.method.equals("updateBinaryStream")) {
-                      updateStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
-                    } else if (scale.method.equals("updateAsciiStream")) {
-                      updateStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
-                    } else {
-                      updateStatement.setObject(p++, scale.x, scale.scale);
-                    }
-                  } else {
-                    updateStatement.setObject(p++, entry.getValue());
-                  }
-                  oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-                }
-              }
-              for (String c : key.getColumnNames()) {
-                Object value = selectResultSet.getObject(c);
-                if (value == null) {
-                  updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                } else {
-                  updateStatement.setObject(p++, value);
-                }
-                oldValues.put(columnMapping.checkedGet(c).intValue(), value);
-              }
-              Logger.getLogger(Settings.LOGGER).info("Executing update : '" + sql + "'");
-              updateStatement.executeUpdate();
-            } finally {
-              updateStatement.close();
-            }
-          }
-        }
-      }
-    }
+  protected void doStoreUpdates(boolean insert, Map<String, Object> columnValues, Map<Integer, Object> oldValues, Integer row) throws SQLException {
+    implementation.doStoreUpdates(insert, columnValues, oldValues, row);
   }
 
-  private void setName() {
+  public void setName() {
     if (componentName == null || componentName.length() == 0) {
+      String selectSql = implementation.getSelectSql();
       if (selectSql != null) {
         Matcher matcher = namePattern.matcher(selectSql.toLowerCase().replaceAll("[\\r|\\n]", " "));
         String name = selectSql.substring(0, Math.min(selectSql.length(), 9));
@@ -3806,105 +2950,27 @@ public class DbDataSource implements DbNavigatorDataSource {
   public void filterChanged() throws SQLException {
     lock();
     try {
-      setSelectSql(this.selectSql);
-      setCountSql(this.countSql);
+      setSelectSql(implementation.getSelectSql());
+      setCountSql(implementation.getCountSql());
     } finally {
       unlock();
     }
   }
 
   public void setUpdateTableName(String updateTableName) {
-    this.updateTableName = updateTableName;
-    if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
-      this.primaryKeys = this.getPrimaryKeys();
-    }
-  }
-
-  private List<PrimaryKey> getPrimaryKeys() {
-    List<PrimaryKey> result = new ArrayList<PrimaryKey>();
-    if (this.selectStatement != null) {
-      try {
-        result = PrimaryKey.getPrimaryKeys(this.selectStatement);
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getPrimaryKeys from '" + selectSql + "'", ex);
-        ;
-        result = new ArrayList<PrimaryKey>();
-      }
-    }
-    if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
-      PrimaryKey pk = new PrimaryKey(getUniqueID(), getUpdateTableName());
-      pk.connection = this.getConnection();
-      result.add(pk);
-    }
-    return result;
+    implementation.setUpdateTableName(updateTableName);
   }
 
   public String getUpdateTableName() {
-    return updateTableName;
+    return implementation.getUpdateTableName();
   }
 
   public void setSelectSql(String selectSql) throws SQLException {
-    String oldvalue = this.selectSql;
-    try {
-      semaphore.acquire();
-      this.selectSql = selectSql;
-      String sql = substParameters(selectSql, parameters);
-      Logger.getLogger(Settings.LOGGER).finest(
-              "\n################# SELECT SQL #################\n" +
-              sql +
-              "\n################# ########## #################");
-      if (sql != null && sql.length() > 0 && getConnection() != null) {
-        if (cachedStatements.containsKey(sql)) {
-          selectStatement = cachedStatements.get(sql);
-          preparedSelectSql = sql;
-        } else if ((this.selectStatement == null) || (!sql.equals(preparedSelectSql))) {
-          if (this.selectStatement != null) {
-            if (isCacheStatements()) {
-              cachedStatements.put(preparedSelectSql, selectStatement);
-            } else {
-              selectStatement.close();
-            }
-          }
-          this.selectStatement = getConnection().prepareStatement(sql,
-                  ResultSet.TYPE_SCROLL_INSENSITIVE,
-                  ResultSet.CONCUR_READ_ONLY,
-                  ResultSet.HOLD_CURSORS_OVER_COMMIT);
-          this.selectStatement.setFetchSize(1008);
-          preparedSelectSql = sql;
-          this.metaData = null;
-          this.columnMapping.clear();
-
-          this.metaData = selectStatement.getMetaData();
-          int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
-          for (int c = 1; c <= columnCount; c++) {
-            this.columnMapping.put(this.metaData.getColumnName(c), c);
-          }
-          primaryKeys = this.getPrimaryKeys();
-
-          setName();
-          Logger.getLogger(Settings.LOGGER).info("Successfully prepared the selectSql.");
-        }
-      } else {
-        this.selectStatement = null;
-      }
-      this.count = -1;
-      if (this.selectResultSet != null) {
-        this.selectResultSet.close();
-      }
-      this.selectResultSet = null;
-    } catch (InterruptedException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
-    } finally {
-      semaphore.release();
-      if (countSql == null) {
-        setCountSql("SELECT COUNT(*) FROM (" + this.selectSql + ") c");
-      }
-    }
-    firePropertyChange("selectSql", oldvalue, this.selectSql);
+    implementation.setSelectSql(selectSql);
   }
 
   public int getColumnIndex(String columnName) throws SQLException {
-    return columnMapping.checkedGet(columnName).intValue();
+    return implementation.getColumnIndex(columnName);
   }
 
   public void setCacheStatements(boolean cacheStatements) {
@@ -3916,152 +2982,31 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
 
   public void setCountSql(String countSql) throws SQLException {
-    String oldvalue = this.countSql;
-    try {
-      semaphore.acquire();
-      this.countSql = countSql;
-      String sql = substParameters(countSql, parameters);
-      Logger.getLogger(Settings.LOGGER).finest(
-              "\n################# COUNT SQL #################\n" +
-              sql +
-              "\n################# ######### #################");
-      if (sql != null && sql.length() > 0 && getConnection() != null) {
-        if (cachedStatements.containsKey(sql)) {
-          countStatement = cachedStatements.get(sql);
-          preparedCountSql = sql;
-        } else if ((this.countStatement == null) || (!sql.equals(preparedCountSql))) {
-          if (this.countStatement != null) {
-            if (isCacheStatements()) {
-              cachedStatements.put(preparedCountSql, countStatement);
-            } else {
-              countStatement.close();
-            }
-          }
-          countStatement = getConnection().prepareStatement(sql,
-                  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
-          countStatement.setFetchSize(1);
-          preparedCountSql = sql;
-        }
-      } else {
-        countStatement = null;
-      }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + countSql + "'", ex);
-      ;
-    } finally {
-      semaphore.release();
-    }
-    firePropertyChange("countSql", oldvalue, this.countSql);
+    implementation.setCountSql(countSql);
   }
 
   public String getSelectSql() {
-    return selectSql;
+    return implementation.getSelectSql();
   }
 
   public String getCountSql() {
-    return countSql;
+    return implementation.getCountSql();
   }
 
   public Connection getConnection() {
-    if (this.connection == null) {
-      return ConnectionManager.getInstance() != null ? ConnectionManager.getInstance().getConnection() : null;
-    } else {
-      return this.connection;
-    }
+    return implementation.getConnection();
   }
 
   public void setConnection(Connection connection) throws SQLException {
-    if (this.connection != connection) {
-      for (PreparedStatement statement : cachedStatements.values()) {
-        statement.close();
-      }
-      cachedStatements.clear();
-    }
-    this.connection = connection;
-    if (selectStatement != null && !selectStatement.getConnection().equals(connection)) {
-      if (this.selectStatement != null) {
-        this.selectStatement.close();
-        this.selectStatement = null;
-      }
-      if (this.countStatement != null) {
-        this.countStatement.close();
-        this.countStatement = null;
-      }
-      setSelectSql(this.selectSql);
-      if ((this.countStatement == null) && (countSql != null)) {
-        setCountSql(countSql);
-      }
-    }
+    implementation.setConnection(connection);
   }
 
+  @Override
   public int getRowCount() {
-    int newCount = this.count;
-    if (!isDataLoaded() && refreshPending) {
-      return -1;
-    } else {
-      if (this.count == -1) {
-        if (lock(false)) {
-          try {
-            if (this.count == -1) {
-              if (countStatement != null) {
-                Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedCountSql + "'");
-                if (DUMP_SQL) {
-                  System.out.println("############## count(*) ");
-                  System.out.println(preparedCountSql);
-                }
-                ResultSet rs = executeSql(countStatement, parameters);
-                if (DUMP_SQL) {
-                  System.out.println("##############");
-                }
-                if (rs.first()) {
-                  newCount = rs.getInt(1);
-                }
-              } else if (selectStatement != null) {
-                if (selectResultSet == null) {
-                  try {
-                    Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedSelectSql + "'");
-                    if (DUMP_SQL) {
-                      System.out.println("##############");
-                      System.out.println(preparedSelectSql);
-                    }
-                    selectResultSet = executeSql(selectStatement, parameters);
-                    if (DUMP_SQL) {
-                      System.out.println("##############");
-                    }
-                    selectResultSet.setFetchSize(getFetchSize());
-                    selectResultSet.first();
-                  } catch (SQLException ex) {
-                    Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:" + preparedSelectSql, ex);
-                    selectResultSet = null;
-                  }
-                }
-
-                if (selectResultSet != null) {
-                  int row = selectResultSet.getRow();
-                  selectResultSet.last();
-                  newCount = selectResultSet.getRow();
-                  if (row > 0) {
-                    selectResultSet.absolute(row);
-                  }
-                }
-              }
-            }
-          } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count from \n:" + preparedCountSql, ex);
-            newCount = this.count;
-          } finally {
-            unlock();
-            this.count = newCount;
-          }
-        } else {
-          return -1;
-        }
-      }
-
-      return newCount + (inserting ? 1 : 0);
-    }
+    return implementation.getRowCount();
   }
 
+  @Override
   public boolean lock() {
     return lock(true);
   }
@@ -4077,6 +3022,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     return result;
   }
 
+  @Override
   public boolean lock(boolean fatal) {
     return lock(fatal, false);
   }
@@ -4106,6 +3052,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     return result;
   }
 
+  @Override
   public void unlock() {
     available.unlock();
     if (DUMP_SQL) {
@@ -4123,8 +3070,9 @@ public class DbDataSource implements DbNavigatorDataSource {
     this.reloadsOnEventQueue = reloadsOnEventQueue;
   }
 
+  @Override
   public boolean isDataLoaded() {
-    return selectResultSet != null;
+    return implementation.isDataLoaded();
   }
 
   private boolean loadData(boolean reload) {
@@ -4132,81 +3080,15 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
 
   private boolean loadData(boolean reload, int oldRow) {
-    boolean reloaded = false;
-    if (reload) {
-      lock();
-      try {
-        if (selectResultSet != null) {
-          selectResultSet.close();
-        }
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
-      } finally {
-        selectResultSet = null;
-        unlock();
-      }
-    }
-    if ((selectResultSet == null) && selectStatement != null) {
-      lock();
-      try {
-        fireActionPerformed(new ActionEvent(this, 1, LOAD_DATA));
-        try {
-          Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedSelectSql + "'");
-          if (DUMP_SQL) {
-            System.out.println("##############");
-            System.out.println(preparedSelectSql);
-          }
-          long timer = System.currentTimeMillis();
-          selectResultSet = executeSql(selectStatement, parameters);
-          System.out.println(getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
-          if (DUMP_SQL) {
-            System.out.println("##############");
-          }
-          selectResultSet.setFetchSize(getFetchSize());
-          selectResultSet.first();
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:" + preparedSelectSql, ex);
-          selectResultSet = null;
-        } finally {
-          inserting = false;
-          count = -1;
-          storedUpdates.clear();
-          cache.clear();
-          reloaded = true;
-          getRowCount();
-        }
-      } finally {
-        unlock();
-        Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
-      }
-      if (oldRow > 0 && getRowCount() > 0) {
-        try {
-          selectResultSet.absolute(Math.min(oldRow, getRowCount()));
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
-        }
-      }
-      fireActionPerformed(new ActionEvent(this, 1, DATA_LOADED));
-    }
-    if (reloaded && selectResultSet != null) {
-      if (EventQueue.isDispatchThread() || !isSafeMode()) {
-        events.run();
-      } else {
-        try {
-          EventQueue.invokeAndWait(events);
-        } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
-        }
-      }
-    }
-    return selectResultSet != null;
-
+    return implementation.loadData(reload, oldRow);
   }
 
+  @Override
   public boolean loadData() {
     return loadData(false);
   }
 
+  @Override
   public boolean reload() {
     return loadData(true);
   }
@@ -4235,100 +3117,20 @@ public class DbDataSource implements DbNavigatorDataSource {
     return sql;
   }
 
-  private static int setParameters(PreparedStatement statement, List<?> parameters, int pos, boolean subset) throws SQLException {
-    if (!subset) {
-      statement.clearParameters();
-    }
-    ParameterMetaData metaData = statement.getParameterMetaData();
-    int parameterCount = metaData.getParameterCount();
-    Object value;
-    Integer type;
-
-    for (Iterator values = parameters.iterator(); (pos <= parameterCount) && values.hasNext();) {
-      value = values.next();
-      if (value instanceof SqlParameter) {
-        type = ((SqlParameter) value).getType();
-        if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
-          if (((SqlParameter) value).getValue() != null) {
-            statement.setObject(pos++, ((SqlParameter) value).getValue(),
-                    ((SqlParameter) value).getType());
-            if (DUMP_SQL) {
-              System.out.println("--[" + (pos - 1) + "]=" + ((SqlParameter) value).getValue().toString());
-            }
-          } else {
-            statement.setNull(pos++, ((SqlParameter) value).getType());
-            if (DUMP_SQL) {
-              System.out.println("--[" + (pos - 1) + "]=null");
-            }
-          }
-        } else if ((value instanceof SubstSqlParameter) && (((SubstSqlParameter) value).getParameters().size() > 0)) {
-          pos = setParameters(statement, ((SubstSqlParameter) value).getParameters(), pos, true);
-        }
-      } else {
-        if (value == null) {
-          statement.setNull(pos, metaData.getParameterType(pos++));
-          if (DUMP_SQL) {
-            System.out.println("--[" + (pos - 1) + "]=null");
-          }
-        } else {
-          statement.setObject(pos++, value);
-          if (DUMP_SQL) {
-            System.out.println("--[" + (pos - 1) + "]=" + value.toString());
-          }
-        }
-      }
-    }
-    while ((pos <= parameterCount) && !subset) {
-      statement.setNull(pos, metaData.getParameterType(pos++));
-    }
-    return pos;
-  }
-
-  private ResultSet executeSql(PreparedStatement statement, List<?> parameters) throws SQLException {
-    ResultSet rs = null;
-    try {
-      semaphore.acquireUninterruptibly();
-
-      rs = executeQuery(statement, parameters);
-    } finally {
-      semaphore.release();
-    }
-
-
-    return rs;
-  }
-
   public static ResultSet executeQuery(String selectSQL, List<?> parameters) throws SQLException {
-    String sql = substParameters(selectSQL, parameters);
-    PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql,
-            ResultSet.TYPE_SCROLL_INSENSITIVE,
-            ResultSet.CONCUR_READ_ONLY,
-            ResultSet.HOLD_CURSORS_OVER_COMMIT);
-
-    try {
-      return executeQuery(statement, parameters);
-    } finally {
-      statement.close();
-    }
+    return SQLDataSource.executeQuery(selectSQL, parameters);
   }
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
-    setParameters(statement, parameters, 1, false);
-
-    return statement.executeQuery();
+    return SQLDataSource.executeQuery(statement, parameters);
   }
 
   public static int executeUpdate(String selectSQL, List<?> parameters) throws SQLException {
-    String sql = substParameters(selectSQL, parameters);
-    PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql);
-
-    return executeUpdate(statement, parameters);
+    return SQLDataSource.executeUpdate(selectSQL, parameters);
   }
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
-    setParameters(statement, parameters, 1, false);
-
-    return statement.executeUpdate();
+    return SQLDataSource.executeUpdate(statement, parameters);
   }
 
   public boolean setParameters(Map<String, Object> parametersMap) {
@@ -4395,7 +3197,7 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
 
   public int getColumnCount() throws SQLException {
-    return getMetaData().getColumnCount();
+    return implementation.getColumnCount();
   }
 
   public boolean isColumnReadOnly(String columnName) {
@@ -4403,153 +3205,23 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
 
   public Object getValueAt(int rowIndex, int columnIndex) throws SQLException {
-    return getValueAt(rowIndex, getMetaData().getColumnName(columnIndex));
+    return implementation.getValueAt(rowIndex, columnIndex);
   }
 
   public Object getValueAt(int rowIndex, String columnName) throws SQLException {
-    String[] columns = this.getValueColumns.toArray(new String[this.getValueColumns.size() + 1]);
-    columns[this.getValueColumns.size()] = columnName;
-    return getValueAt(rowIndex, columnName, columns);
+    return implementation.getValueAt(rowIndex, columnName);
   }
 
   public Object getValueAt(int rowIndex, String columnName, String... columnNames) throws SQLException {
-    if (!isDataLoaded() && refreshPending) {
-      return null;
-    } else if (loadData()) {
-      Object result = null;
-      columnName = columnName.toUpperCase();
-
-      if (wasUpdated(rowIndex, columnName)) {
-        result = getStoredValue(rowIndex, columnName, null, Object.class);
-      } else {
-        CacheKey ck = new CacheKey(rowIndex, columnName);
-        CacheEntry ce;
-        if (cache.containsKey(ck) && ((ce = cache.get(ck)) != null)) {
-          result = ce.value;
-        } else {
-          lock();
-          try {
-            int oldRow = getOpenSelectResultSet().getRow();
-
-            int max = Math.min(rowIndex + getFetchSize(), getRowCount());
-            int min = Math.max(max - getFetchSize(), 1);
-            selectResultSet.absolute(min);
-            String cn;
-            Object value;
-            for (int row = min; !selectResultSet.isAfterLast() && (row <= max); row++) {
-              if (!cache.containsKey(new CacheKey(row, columnName))) {
-                java.util.Map<String, Boolean> pending = new HashMap<String, Boolean>();
-                for (int c = 0; c < columnNames.length; c++) {
-                  cn = columnNames[c].toUpperCase();
-                  pending.put(cn, isPending(cn, row));
-                }
-
-                for (int c = 0; c < columnNames.length; c++) {
-                  cn = columnNames[c].toUpperCase();
-                  if (!pending.get(cn)) {
-                    value = selectResultSet.getObject(cn);
-                    if (selectResultSet.wasNull()) {
-                      value = null;
-                    }
-                    cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, value));
-
-                    if ((row == rowIndex) && cn.equals(columnName)) {
-                      result = value;
-                    }
-                  }
-                }
-                //get pending values
-                for (int c = 0; c < columnNames.length; c++) {
-                  cn = columnNames[c].toUpperCase();
-                  if (pending.get(cn)) {
-                    PendingSqlParameter pendingSqlParameter = getPendingSqlParameter(cn);
-                    if (pendingSqlParameter != null) {
-                      java.util.List<Object> parameters = new java.util.ArrayList<Object>();
-                      for (String keyField : pendingSqlParameter.getParentKeyFields()) {
-                        parameters.add(cache.get(new CacheKey(row, keyField)).value);
-                      }
-                      java.util.List<PendingValue> pendingValues = pendingSqlParameter.getPendingValues(parameters);
-                      for (PendingValue pendingValue : pendingValues) {
-                        cache.put(new CacheKey(row, pendingValue.getFieldName()), new CacheEntry<String, Object>(this, pendingValue.getFieldName(), pendingValue.getValue()));
-                        pending.put(pendingValue.getFieldName(), false);
-                      }
-                    }
-                  }
-
-                  if ((row == rowIndex) && cn.equals(columnName)) {
-                    if (cache.containsKey(ck) && ((ce = cache.get(ck)) != null)) {
-                      result = ce.value;
-                    }
-                  }
-                }
-              }
-              selectResultSet.next();
-            }
-            selectResultSet.absolute(oldRow);
-          } finally {
-            unlock();
-          }
-        }
-      }
-      return result;
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getValueAt(rowIndex, columnName, columnNames);
   }
 
   public ResultSet getResultSet() throws SQLException {
-    java.sql.PreparedStatement resultStatement = getConnection().prepareStatement(preparedSelectSql,
-            ResultSet.TYPE_SCROLL_INSENSITIVE,
-            ResultSet.CONCUR_READ_ONLY,
-            ResultSet.HOLD_CURSORS_OVER_COMMIT);
-    resultStatement.setFetchSize(1008);
-
-
-    if (DUMP_SQL) {
-      System.out.println("##############");
-      System.out.println(preparedSelectSql);
-    }
-    ResultSet result = executeSql(resultStatement, parameters);
-    if (DUMP_SQL) {
-      System.out.println("##############");
-    }
-
-    return result;
-  }
-
-  private ResultSet getOpenSelectResultSet() throws SQLException {
-    if (isDataLoaded()) {
-      int oldRow = 1;
-      boolean check = false;
-      try {
-        oldRow = selectResultSet.getRow();
-      } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, ex.getMessage());
-        check = true;
-      }
-      if (check) {
-        lock();
-        try {
-          selectResultSet.relative(0);
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
-          selectResultSet = executeSql(selectStatement, parameters);
-          selectResultSet.setFetchSize(getFetchSize());
-          selectResultSet.absolute(oldRow);
-        } finally {
-          unlock();
-        }
-      }
-    }
-    return selectResultSet;
+    return implementation.getResultSet();
   }
 
   public String getColumnName(int columnIndex) throws SQLException {
-    if (loadData()) {
-      return getOpenSelectResultSet().getMetaData().getColumnName(columnIndex);
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    return implementation.getColumnName(columnIndex);
   }
 
   public void setAutoInsert(boolean autoInsert) {
@@ -4561,133 +3233,39 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
 
   public void setReadOnly(boolean readOnly) {
-    this.readOnly = readOnly;
+    implementation.setReadOnly(readOnly);
   }
 
   public boolean isReadOnly() {
-    return readOnly || DataSourceEvent.isRefreshing(this);
+    return implementation.isReadOnly();
   }
 
   public boolean isUpdating() throws SQLException {
-    return rowInserted() || rowUpdated();
+    return implementation.isUpdating();
   }
 
   public void updateRefreshPending() {
-    boolean refreshPending = DataSourceEvent.isRefreshing(this);
-    if (this.refreshPending != refreshPending) {
-      this.refreshPending = refreshPending;
-      try {
-        if (isDataLoaded()) {
-          int row = getRow();
-          fireActiveRowChange(new ActiveRowChangeEvent(this, row, row));
-        }
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).warning("Couldn't update pending refresh.");
-      }
-    }
+    implementation.updateRefreshPending();
   }
 
   public Map<Integer, Map<String, Object>> getStoredUpdates() {
-    return java.util.Collections.unmodifiableMap(storedUpdates);
-  }
-
-  private void storeUpdate(int columnIndex, Object value) throws SQLException {
-    storeUpdate(getMetaData().getColumnName(columnIndex), value);
-  }
-
-  private void storeUpdate(String columnName, Object value) throws SQLException {
-    storeUpdate(columnName, value, true);
-  }
-
-  private void storeUpdate(String columnName, Object value, boolean notify) throws SQLException {
-    if (getRowCount() == 0 && !readOnly && autoInsert) {
-      moveToInsertRow();
-    }
-    if (getRow() > 0 && !readOnly) {
-      columnName = columnName.toUpperCase();
-      Integer row = new Integer(getRow());
-      boolean isUpdating = inserting || storedUpdates.containsKey(row);
-      if (isUpdating || !Equals.equals(value, getOpenSelectResultSet().getObject(columnName))) {
-        Map<String, Object> columnValues;
-        if (storedUpdates.containsKey(row)) {
-          columnValues = storedUpdates.get(row);
-        } else {
-          columnValues = new HashMap<String, Object>();
-        }
-
-        //if (!Equals.equals(value, columnValues.get(columnName))) {//ta pogoj ne vraca null-e, ce prej ni neke vrednosti, zato ga ne rabimo
-        columnValues.put(columnName, value);
-        storedUpdates.put(row, columnValues);
-
-        if (notify) {
-          fireFieldValueChanged(new ActiveRowChangeEvent(this, columnName, -1));
-        }
-      // }
-      }
-    }
-  }
-
-  private boolean compareValues(ResultSet resultSet, Map<Integer, Object> values) throws SQLException {
-    boolean equals = false;
-    if (primaryKeys.size() == 1) {
-      equals = primaryKeys.get(0).compareValues(resultSet, values);
-    } else if (uniqueID != null && uniqueID.length > 0) {
-      equals = true;
-      for (String column : uniqueID) {
-        Integer c = new Integer(columnMapping.checkedGet(column).intValue());
-
-        if (values.containsKey(c) && values.get(c) != null) {
-          equals = equals && com.openitech.util.Equals.equals(values.get(c), resultSet.getObject(c));
-        } else {
-          resultSet.getObject(c);
-          equals = equals && resultSet.wasNull();
-        }
-        if (!equals) {
-          break;
-        }
-      }
-    } else {
-      ResultSetMetaData metaData = resultSet.getMetaData();
-      int columnCount = metaData.getColumnCount();
-      equals = columnCount == values.size();
-      for (int c = 1; c <= columnCount && equals; c++) {
-        if (values.containsKey(c) && values.get(c) != null) {
-          equals = equals && com.openitech.util.Equals.equals(values.get(c), resultSet.getObject(c));
-        } else {
-          resultSet.getObject(c);
-          equals = equals && resultSet.wasNull();
-        }
-      }
-    }
-    return equals;
+    return implementation.getStoredUpdates();
   }
 
   public boolean hasChanged(int columnIndex) throws SQLException {
-    if (inserting) {
-      return true;
-    } else if (wasUpdated(columnIndex)) {
-      return !com.openitech.util.Equals.equals(getOpenSelectResultSet().getObject(columnIndex), getObject(columnIndex));
-    } else {
-      return false;
-    }
+    return implementation.hasChanged(columnIndex);
   }
 
   public boolean hasChanged(String columnName) throws SQLException {
-    if (inserting) {
-      return true;
-    } else if (wasUpdated(columnName)) {
-      return !com.openitech.util.Equals.equals(getOpenSelectResultSet().getObject(columnName), getObject(columnName));
-    } else {
-      return false;
-    }
+    return implementation.hasChanged(columnName);
   }
 
   public Object getOldValue(int columnIndex) throws SQLException {
-    return getOpenSelectResultSet().getObject(columnIndex);
+    return implementation.getOldValue(columnIndex);
   }
 
   public Object getOldValue(String columnName) throws SQLException {
-    return getOpenSelectResultSet().getObject(columnName);
+    return implementation.getOldValue(columnName);
   }
 
   public boolean wasUpdated(int columnIndex) throws SQLException {
@@ -4698,117 +3276,8 @@ public class DbDataSource implements DbNavigatorDataSource {
     return wasUpdated(getRow(), columnName);
   }
 
-  private boolean wasUpdated(int row, int columnIndex) throws SQLException {
-    return wasUpdated(row, getMetaData().getColumnName(columnIndex));
-  }
-
   private boolean wasUpdated(int row, String columnName) throws SQLException {
-    boolean result = false;
-
-    if (row == getRow() && inserting) {
-      result = true;
-    } else {
-      Integer r = new Integer(row);
-      if (storedUpdates.containsKey(r)) {
-        result = storedUpdates.get(r).containsKey(columnName.toUpperCase());
-      }
-
-      if (!result) {
-        storedResult[0] = false;
-      }
-    }
-
-    return result;
-  }
-
-  private Object getStoredValue(int columnIndex) throws SQLException {
-    return getStoredValue(getRow(), getMetaData().getColumnName(columnIndex), null, Object.class);
-  }
-
-  private Object getStoredValue(String columnName) throws SQLException {
-    return getStoredValue(getRow(), columnName, null, Object.class);
-  }
-
-  private <T> T getStoredValue(int row, int columnIndex, T nullValue, Class<? extends T> type) throws SQLException {
-    return getStoredValue(row, getMetaData().getColumnName(columnIndex), nullValue, type);
-  }
-
-  private <T> T getStoredValue(int row, String columnName, T nullValue, Class<? extends T> type) throws SQLException {
-    columnName = columnName.toUpperCase();
-    Object result = nullValue;
-    Integer r = new Integer(row);
-    if (storedUpdates.containsKey(r)) {
-      if (storedUpdates.get(r).containsKey(columnName)) {
-        result = storedUpdates.get(r).get(columnName);
-        storedResult[0] = true;
-        if (storedResult[1] = (result == null)) {
-          result = nullValue;
-        } else if (type.equals(String.class)) {
-          result = result.toString();
-        } else if (result instanceof Scale) {
-          result = ((Scale) result).x;
-        }
-
-        return (T) result;
-      }
-    }
-
-    if (row == 0) {
-      storedResult[0] = true;
-    } else {
-      storedResult[0] = false;
-
-      int oldrow = selectResultSet.getRow();
-
-      if (oldrow != row) {
-        getOpenSelectResultSet();
-        selectResultSet.absolute(row);
-      }
-
-      if (isPending(columnName, row)) {
-        return (T) getValueAt(row, columnName);
-      }
-
-      if (String.class.isAssignableFrom(type)) {
-        result = selectResultSet.getString(columnName);
-      } else if (Number.class.isAssignableFrom(type)) {
-        if (Integer.class.isAssignableFrom(type)) {
-          result = selectResultSet.getInt(columnName);
-        } else if (Short.class.isAssignableFrom(type)) {
-          result = selectResultSet.getShort(columnName);
-        } else if (Double.class.isAssignableFrom(type)) {
-          result = selectResultSet.getDouble(columnName);
-        } else if (Byte.class.isAssignableFrom(type)) {
-          result = selectResultSet.getByte(columnName);
-        } else if (Float.class.isAssignableFrom(type)) {
-          result = selectResultSet.getFloat(columnName);
-        } else if (Long.class.isAssignableFrom(type)) {
-          result = selectResultSet.getLong(columnName);
-        } else {
-          result = selectResultSet.getBigDecimal(columnName);
-        }
-      } else if (Boolean.class.isAssignableFrom(type)) {
-        result = selectResultSet.getBoolean(columnName);
-      } else if (Date.class.isAssignableFrom(type)) {
-        if (Time.class.isAssignableFrom(type)) {
-          result = selectResultSet.getTime(columnName);
-        } else if (Timestamp.class.isAssignableFrom(type)) {
-          result = selectResultSet.getTimestamp(columnName);
-        } else {
-          result = selectResultSet.getDate(columnName);
-        }
-      } else if (nullValue instanceof byte[]) {
-        result = selectResultSet.getBytes(columnName);
-      } else {
-        result = selectResultSet.getObject(columnName);
-      }
-
-      if (oldrow != row) {
-        selectResultSet.absolute(oldrow);
-      }
-    }
-
-    return result == null ? nullValue : (T) result;
+    return implementation.wasUpdated(row, columnName);
   }
 
   public boolean isPending(String columnName) throws SQLException {
@@ -4816,118 +3285,11 @@ public class DbDataSource implements DbNavigatorDataSource {
   }
 
   public boolean isPending(String columnName, int row) throws SQLException {
-    columnName = columnName.toUpperCase();
-    CacheKey ck = new CacheKey(row, columnName);
-
-    if (wasUpdated(row, columnName)) {
-      return false;
-    } else if (cache.containsKey(ck)) {
-      return false;
-    } else {
-      boolean result = false;
-      for (Object parameter : parameters) {
-        if (parameter instanceof PendingSqlParameter) {
-          result = result || ((PendingSqlParameter) parameter).isPending(columnName);
-        }
-      }
-
-      return result;
-    }
-  }
-
-  private PendingSqlParameter getPendingSqlParameter(String columnName) {
-    columnName = columnName.toUpperCase();
-    PendingSqlParameter result = null;
-    Iterator<Object> i = parameters.iterator();
-    while (result == null && i.hasNext()) {
-      Object parameter = i.next();
-      if ((parameter instanceof PendingSqlParameter) &&
-              ((PendingSqlParameter) parameter).isPending(columnName)) {
-        result = (PendingSqlParameter) parameter;
-      }
-    }
-
-    return result;
+    return implementation.isPending(columnName, row);
   }
 
   private void storeUpdates(boolean insert) throws SQLException {
-    if (isDataLoaded()) {
-      Integer row = new Integer(getRow());
-      Map<String, Object> columnValues = storedUpdates.get(row);
-      Map.Entry<String, Object> entry;
-      Map<Integer, Object> oldValues = new HashMap<Integer, Object>();
-
-      if (insert) {
-        for (Iterator<Map.Entry<String, Object>> i = defaultValues.entrySet().iterator(); i.hasNext();) {
-          entry = i.next();
-          columnValues.put(entry.getKey(), entry.getValue());
-        }
-      }
-
-      if (storedUpdates.containsKey(row)) {
-        if (isUpdateRowFireOnly()) {
-          lock();
-          boolean readOnly = isReadOnly();
-          setReadOnly(true);
-          try {
-            for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-              entry = i.next();
-              oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-            }
-            if (uniqueID != null) {
-              for (String column : uniqueID) {
-                oldValues.put(columnMapping.checkedGet(column).intValue(), getObject(column));
-              }
-            }
-            fireStoreUpdates(new StoreUpdatesEvent(this, row, insert, columnValues, oldValues));
-          } finally {
-            unlock();
-            setReadOnly(readOnly);
-          }
-        } else {
-          doStoreUpdates(insert, columnValues, oldValues, row);
-        } //if (storedUpdates.containsKey(row))
-
-        storedUpdates.remove(row);
-        cache.clear();
-        inserting = false;
-
-        int selectedrow = selectResultSet.getRow();
-
-        if (selectResultSet != null) {
-          selectResultSet.close();
-        }
-        selectResultSet = executeSql(selectStatement, parameters);
-        selectResultSet.setFetchSize(getFetchSize());
-        if (selectedrow > 0) {
-          try {
-            selectResultSet.absolute(selectedrow);
-          } catch (SQLException ex) {
-            selectResultSet.first();
-          }
-        } else {
-          selectResultSet.first();
-        }
-
-        if (isSeekUpdatedRow()) {
-          if (!compareValues(selectResultSet, oldValues)) {
-            if (selectResultSet.first()) {
-              while (!compareValues(selectResultSet, oldValues) && !selectResultSet.isLast()) {
-                selectResultSet.next();
-              }
-            }
-          }
-        }
-
-        count = -1; //reset row count
-
-        fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-        fireActiveRowChange(new ActiveRowChangeEvent(this, selectResultSet.getRow(), -1));
-        Logger.getLogger(Settings.LOGGER).exiting(this.getClass().toString(), "storeUpdates", insert);
-      }
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
-    }
+    implementation.storeUpdates(insert);
   }
 
   public boolean isCanAddRows() {
@@ -5137,7 +3499,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @param oldValue the property's previous value
    * @param newValue the property's new value
    */
-  protected void firePropertyChange(String propertyName,
+  public void firePropertyChange(String propertyName,
           Object oldValue, Object newValue) {
     PropertyChangeSupport changeSupport = this.changeSupport;
     if (changeSupport == null ||
@@ -5150,7 +3512,7 @@ public class DbDataSource implements DbNavigatorDataSource {
       try {
         java.awt.EventQueue.invokeAndWait(new FirePropertyChanged(this, propertyName, oldValue, newValue));
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't firePropertyChange from '" + selectSql + "'", ex);
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't firePropertyChange from '" + componentName + "'", ex);
         ;
       }
     }
@@ -5166,7 +3528,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @param oldValue the property's previous value
    * @param newValue the property's new value
    */
-  protected void firePropertyChange(String propertyName,
+  public void firePropertyChange(String propertyName,
           boolean oldValue, boolean newValue) {
     PropertyChangeSupport changeSupport = this.changeSupport;
     if (changeSupport == null || oldValue == newValue) {
@@ -5185,7 +3547,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @param oldValue the property's previous value
    * @param newValue the property's new value
    */
-  protected void firePropertyChange(String propertyName,
+  public void firePropertyChange(String propertyName,
           int oldValue, int newValue) {
     PropertyChangeSupport changeSupport = this.changeSupport;
     if (changeSupport == null || oldValue == newValue) {
@@ -5302,385 +3664,820 @@ public class DbDataSource implements DbNavigatorDataSource {
     firePropertyChange(propertyName, new Double(oldValue), new Double(newValue));
   }
 
-  private class Scale {
-
-    String method;
-    Object x;
-    int scale;
-
-    Scale(String method, Object x, int scale) {
-      this.method = method;
-      this.x = x;
-      this.scale = scale;
-    }
+  @Override
+  public String getUrl() throws SQLException {
+    return implementation.getUrl();
   }
 
-  private class DbDataSourceHashMap<K, V> extends HashMap<K, V> {
-
-    /**
-     * Returns the value to which the specified key is mapped in this identity
-     * hash map, or <tt>null</tt> if the map contains no mapping for this key.
-     * A return value of <tt>null</tt> does not <i>necessarily</i> indicate
-     * that the map contains no mapping for the key; it is also possible that
-     * the map explicitly maps the key to <tt>null</tt>. The
-     * <tt>containsKey</tt> method may be used to distinguish these two cases.
-     *
-     *
-     * @param key the key whose associated value is to be returned.
-     * @return the value to which this map maps the specified key, or
-     *          <tt>null</tt> if the map contains no mapping for this key.
-     * @see #put(Object, Object)
-     */
-    public V checkedGet(Object key) throws SQLException {
-      if ((key != null) && (key instanceof String)) {
-        key = ((String) key).toUpperCase();
-      }
-
-      if (containsKey(key)) {
-        return get(key);
-      } else {
-        throw new SQLException("DbDataSource for '" + selectSql + "' does not contain '" + key.toString() + "'.");
-      }
-    }
-
-    public V put(K key, V value) {
-      if (key instanceof String) {
-        return super.put((K) (((String) key).toUpperCase()), value);
-      } else {
-        return super.put(key, value);
-      }
-    }
+  @Override
+  public void setUrl(String url) throws SQLException {
+    implementation.setUrl(url);
   }
 
-  private static class PrimaryKey {
-
-    String table = "NULL";
-    List<String> columnNames = new ArrayList<String>();
-    PreparedStatement delete = null;
-    PreparedStatement update = null;
-    Map<String, Integer> columnMapping = new HashMap<String, Integer>();
-    int hashcode;
-    boolean updateFailed = false;
-    boolean virtual = false;
-    Connection connection;
-
-    public PrimaryKey(String[] uniqueID, String table) {
-      this.virtual = true;
-      this.table = table;
-      this.connection = null;
-      for (String s : uniqueID) {
-        columnNames.add(s.toUpperCase());
-      }
-      hashcode = table.hashCode();
-    }
-
-    public PrimaryKey(Connection connection, String table) throws SQLException {
-      this.virtual = false;
-      this.table = table;
-      this.connection = connection;
-      hashcode = table.hashCode();
-    }
-
-    public List<String> getColumnNames() throws SQLException {
-      if (this.columnNames.size() == 0) {
-        DatabaseMetaData metaData = connection.getMetaData();
-        try {
-
-          ResultSet rs = metaData.getPrimaryKeys(null, null, table);
-
-          while (rs.next() && !rs.isAfterLast()) {
-            if (rs.getString("TABLE_NAME").equalsIgnoreCase(table)) {
-              columnNames.add(rs.getString("COLUMN_NAME").toUpperCase());
-            } else {
-              throw new SQLException("Couldn't retrieve primary keys for '" + table + "'");
-            }
-          }
-        } catch (SQLException ex) {
-          this.columnNames.clear();
-          Logger.getLogger(Settings.LOGGER).log(Level.FINE, "Couldn't retrieve primary keys for '" + table + "'");
-        }
-      }
-      return columnNames;
-    }
-
-    public PreparedStatement getDeleteStatement(ResultSet data) throws SQLException {
-      if (delete == null) {
-        StringBuffer sql = new StringBuffer();
-
-        for (Iterator<String> c = columnNames.iterator(); c.hasNext();) {
-          sql.append(sql.length() > 0 ? " AND " : "").append(c.next()).append("=? ");
-        }
-
-        sql.insert(0, "DELETE FROM " + table + " WHERE ");
-
-        delete = connection.prepareStatement(sql.toString());
-      }
-
-      delete.clearParameters();
-      int p = 1;
-      for (Iterator<String> c = getColumnNames().iterator(); c.hasNext();) {
-        delete.setObject(p++, data.getObject(c.next()));
-      }
-
-
-      return delete;
-    }
-
-    public ResultSet getUpdateResultSet(ResultSet data) throws SQLException {
-      ResultSet result = null;
-      if (connection != null && !virtual) {
-        if (update == null) {
-          StringBuffer sql = new StringBuffer();
-
-          for (String c : columnNames) {
-            sql.append(sql.length() > 0 ? " AND " : "").append(c).append("=? ");
-          }
-
-          sql.insert(0, "SELECT * FROM " + table + " WHERE ");
-          sql.append(" FOR UPDATE");
-
-          update = connection.prepareStatement(sql.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-
-          this.columnMapping.clear();
-          ResultSetMetaData metaData = update.getMetaData();
-          int columnCount = metaData.getColumnCount();
-          for (int c = 1; c <= columnCount; c++) {
-            this.columnMapping.put(metaData.getColumnName(c).toUpperCase(), c);
-          }
-        }
-
-        update.clearParameters();
-        int p = 1;
-        for (String c : columnNames) {
-          update.setObject(p++, data.getObject(c));
-        }
-
-        if (!updateFailed) {
-          try {
-            result = update.executeQuery();
-            result.next();
-          } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.INFO, "The table '" + table + "' can't be updated with through a resulSet");
-            updateFailed = true;
-          }
-        }
-      }
-
-      return result;
-    }
-
-    public boolean isUpdateColumn(String columnName) {
-      return columnMapping.containsKey(columnName.toUpperCase());
-    }
-
-    public <K> boolean compareValues(ResultSet resultSet, Map<K, Object> values) throws SQLException {
-      if (resultSet.isAfterLast() || resultSet.isBeforeFirst()) {
-        return false;
-      } else {
-        boolean equals = values != null && (values.size() >= getColumnNames().size());
-        if (equals) {
-          try {
-            String columnName;
-            Integer columnIndex;
-            boolean columnValuesScan = false;
-            boolean indexed = values.keySet().iterator().next() instanceof Integer;
-            boolean[] primarysChecked = new boolean[getColumnNames().size()];
-            Arrays.fill(primarysChecked, false);
-            for (int c = 0; equals && c < primarysChecked.length; c++) {
-              if (!primarysChecked[c]) {
-                columnName = getColumnNames().get(c);
-                columnIndex = columnMapping.get(columnName);
-                if (indexed && (columnIndex != null)) {
-                  if (values.containsKey(columnIndex) && values.get(columnIndex) != null) {
-                    equals = equals && Equals.equals(values.get(columnIndex), resultSet.getObject(columnIndex));
-                  } else {
-                    resultSet.getObject(columnIndex);
-                    equals = equals && resultSet.wasNull();
-                  }
-                } else if (indexed && !columnValuesScan) {
-                  columnValuesScan = true;
-                  ResultSetMetaData metaData = resultSet.getMetaData();
-                  for (Iterator<Map.Entry<K, Object>> iterator = values.entrySet().iterator(); iterator.hasNext() && equals;) {
-                    Map.Entry<K, Object> entry = iterator.next();
-                    columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue()).toUpperCase();
-                    int index = getColumnNames().indexOf(columnName);
-                    if (index >= 0) {
-                      primarysChecked[index] = true;
-                      if (entry.getValue() != null) {
-                        equals = equals && Equals.equals(entry.getValue(), resultSet.getObject(columnName));
-                      } else {
-                        resultSet.getObject(columnName);
-                        equals = equals && resultSet.wasNull();
-                      }
-                    }
-                  }
-                } else {
-                  if (values.containsKey(columnName) && values.get(columnName) != null) {
-                    equals = equals && Equals.equals(values.get(columnName), resultSet.getObject(columnName));
-                  } else {
-                    resultSet.getObject(columnName);
-                    equals = equals && resultSet.wasNull();
-                  }
-                }
-              }
-            }
-          } catch (SQLException ex) {
-            equals = false;
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error comparing the primary key values.", ex);
-          }
-        }
-        return equals;
-      }
-    }
-
-    public static List<PrimaryKey> getPrimaryKeys(PreparedStatement statement) throws SQLException {
-      List<PrimaryKey> result = new ArrayList<PrimaryKey>();
-      ResultSetMetaData metaData = statement.getMetaData();
-      if (metaData != null) {
-        int columnCount = metaData.getColumnCount();
-
-        List<PrimaryKey> keys = new ArrayList<PrimaryKey>();
-        Map<String, String> columnTables = new HashMap<String, String>();
-        String table;
-        PrimaryKey key;
-
-        for (int c = 1; c <= columnCount; c++) {
-          table = metaData.getTableName(c);
-          if (table != null) {
-            columnTables.put(metaData.getColumnName(c).toUpperCase(), table);
-            if (keys.indexOf(key = new PrimaryKey(statement.getConnection(), table)) < 0) {
-              keys.add(key);
-            }
-          }
-        }
-
-
-        for (Iterator<PrimaryKey> pk = keys.iterator(); pk.hasNext();) {
-          key = pk.next();
-          boolean valid = !key.getColumnNames().isEmpty();
-          for (Iterator<String> c = key.getColumnNames().iterator(); valid && c.hasNext();) {
-            String columnName = c.next();
-            valid = columnTables.containsKey(columnName) && columnTables.get(columnName).equals(key.table);
-          }
-          if (valid) {
-            result.add(key);
-          }
-        }
-      }
-
-      return result;
-    }
-
-    public boolean equals(Object obj) {
-      if (obj instanceof PrimaryKey) {
-        return Equals.equals(this.table, ((PrimaryKey) obj).table);
-      } else {
-        return Equals.equals(this.table, obj);
-      }
-    }
-
-    /**
-
-     * Returns a hash code value for the object. This method is
-     * supported for the benefit of hashtables such as those provided by
-     * <code>java.util.Hashtable</code>.
-     * <p>
-     * The general contract of <code>hashCode</code> is:
-     * <ul>
-     * <li>Whenever it is invoked on the same object more than once during
-     *     an execution of a Java application, the <tt>hashCode</tt> method
-     *     must consistently return the same integer, provided no information
-     *     used in <tt>equals</tt> comparisons on the object is modified.
-     *     This integer need not remain consistent from one execution of an
-     *     application to another execution of the same application.
-     * <li>If two objects are equal according to the <tt>equals(Object)</tt>
-     *     method, then calling the <code>hashCode</code> method on each of
-     *     the two objects must produce the same integer result.
-     * <li>It is <em>not</em> required that if two objects are unequal
-     *     according to the {@link java.lang.Object#equals(java.lang.Object)}
-     *     method, then calling the <tt>hashCode</tt> method on each of the
-     *     two objects must produce distinct integer results.  However, the
-     *     programmer should be aware that producing distinct integer results
-     *     for unequal objects may improve the performance of hashtables.
-     * </ul>
-     * <p>
-     * As much as is reasonably practical, the hashCode method defined by
-     * class <tt>Object</tt> does return distinct integers for distinct
-     * objects. (This is typically implemented by converting the internal
-     * address of the object into an integer, but this implementation
-     * technique is not required by the
-     * Java<font size="-2"><sup>TM</sup></font> programming language.)
-     *
-     *
-     * @return a hash code value for this object.
-     * @see java.lang.Object#equals(java.lang.Object)
-     * @see java.util.Hashtable
-     */
-    public int hashCode() {
-      return hashcode;
-    }
+  @Override
+  public String getDataSourceName() {
+    return implementation.getDataSourceName();
   }
 
-  private static class CacheKey {
-
-    int row;
-    String columnName;
-    int hash;
-
-    private CacheKey(int row, String columnName) {
-      this.row = row;
-      this.columnName = columnName;
-      //this.columnName = columnName.toUpperCase();
-      this.hash = ("" + row + "#" + this.columnName).hashCode();
-    }
-
-    public boolean equals(Object obj) {
-      if (obj != null && (obj instanceof CacheKey)) {
-        return (((CacheKey) obj).row == row) && (((CacheKey) obj).columnName.equals(columnName));
-      } else {
-        return super.equals(obj);
-      }
-    }
-
-    public int hashCode() {
-      return this.hash;
-    }
+  @Override
+  public void setDataSourceName(String name) throws SQLException {
+    setName(name);
+    implementation.setDataSourceName(name);
   }
 
-  private static class CacheEntry<K, V> extends SoftReference<DbDataSource> {
+  @Override
+  public String getUsername() {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 
-    K key;
-    V value;
+  @Override
+  public void setUsername(String name) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 
-    private CacheEntry(DbDataSource referent, K key, V value) {
-      super(referent);
-      this.key = key;
-      this.value = value;
-    }
+  @Override
+  public String getPassword() {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 
-    public boolean equals(Object obj) {
-      if (obj != null && (obj instanceof CacheEntry)) {
-        if ((key != null) && (key instanceof Number)) {
-          return ((Number) this.key).doubleValue() == ((Number) ((CacheEntry) obj).key).doubleValue();
-        } else {
-          return Equals.equals(this.key, ((CacheEntry) obj).key);
-        }
-      } else {
-        return Equals.equals(this.key, obj);
-      }
-    }
+  @Override
+  public void setPassword(String password) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 
-    public String toString() {
-      return value.toString();
-    }
+  @Override
+  public int getTransactionIsolation() {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 
-    public K getKey() {
-      return key;
-    }
+  @Override
+  public void setTransactionIsolation(int level) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 
-    public V getValue() {
-      return value;
-    }
+  @Override
+  public Map<String, Class<?>> getTypeMap() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public String getCommand() {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setCommand(String cmd) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public int getMaxFieldSize() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setMaxFieldSize(int max) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public int getMaxRows() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setMaxRows(int max) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public boolean getEscapeProcessing() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setEscapeProcessing(boolean enable) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public int getQueryTimeout() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setQueryTimeout(int seconds) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setType(int type) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setConcurrency(int concurrency) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNull(int parameterIndex, int sqlType) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNull(String parameterName, int sqlType) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNull(String parameterName, int sqlType, String typeName) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBoolean(int parameterIndex, boolean x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBoolean(String parameterName, boolean x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setByte(int parameterIndex, byte x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setByte(String parameterName, byte x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setShort(int parameterIndex, short x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setShort(String parameterName, short x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setInt(int parameterIndex, int x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setInt(String parameterName, int x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setLong(int parameterIndex, long x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setLong(String parameterName, long x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setFloat(int parameterIndex, float x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setFloat(String parameterName, float x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setDouble(int parameterIndex, double x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setDouble(String parameterName, double x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBigDecimal(String parameterName, BigDecimal x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setString(int parameterIndex, String x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setString(String parameterName, String x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBytes(int parameterIndex, byte[] x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBytes(String parameterName, byte[] x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setDate(int parameterIndex, Date x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTime(int parameterIndex, Time x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTimestamp(String parameterName, Timestamp x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setAsciiStream(String parameterName, InputStream x, int length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBinaryStream(String parameterName, InputStream x, int length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setCharacterStream(String parameterName, Reader reader, int length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setCharacterStream(String parameterName, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setObject(int parameterIndex, Object x, int targetSqlType, int scaleOrLength) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setObject(String parameterName, Object x, int targetSqlType, int scale) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setObject(String parameterName, Object x, int targetSqlType) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setObject(String parameterName, Object x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setObject(int parameterIndex, Object x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setRef(int i, Ref x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBlob(int i, Blob x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBlob(String parameterName, InputStream inputStream, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBlob(String parameterName, Blob x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setBlob(String parameterName, InputStream inputStream) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setClob(int i, Clob x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setClob(int parameterIndex, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setClob(String parameterName, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setClob(String parameterName, Clob x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setClob(String parameterName, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setArray(int i, Array x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setDate(String parameterName, Date x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setDate(String parameterName, Date x, Calendar cal) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTime(String parameterName, Time x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTime(String parameterName, Time x, Calendar cal) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setTimestamp(String parameterName, Timestamp x, Calendar cal) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void clearParameters() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void execute() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void addRowSetListener(RowSetListener listener) {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void removeRowSetListener(RowSetListener listener) {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setSQLXML(String parameterName, SQLXML xmlObject) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setRowId(int parameterIndex, RowId x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setRowId(String parameterName, RowId x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNString(int parameterIndex, String value) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNString(String parameterName, String value) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNCharacterStream(String parameterName, Reader value, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNCharacterStream(String parameterName, Reader value) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNClob(String parameterName, NClob value) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNClob(String parameterName, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNClob(String parameterName, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNClob(int parameterIndex, NClob value) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setNClob(int parameterIndex, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void setURL(int parameterIndex, URL x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public RowId getRowId(int columnIndex) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public RowId getRowId(String columnLabel) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateRowId(int columnIndex, RowId x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateRowId(String columnLabel, RowId x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public int getHoldability() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public boolean isClosed() throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNString(int columnIndex, String nString) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNString(String columnLabel, String nString) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNClob(String columnLabel, NClob nClob) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public NClob getNClob(int columnIndex) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public NClob getNClob(String columnLabel) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public SQLXML getSQLXML(int columnIndex) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public SQLXML getSQLXML(String columnLabel) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public String getNString(int columnIndex) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public String getNString(String columnLabel) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public Reader getNCharacterStream(int columnIndex) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public Reader getNCharacterStream(String columnLabel) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateBinaryStream(int columnIndex, InputStream x, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNCharacterStream(int columnIndex, Reader x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNCharacterStream(String columnLabel, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateClob(int columnIndex, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateClob(String columnLabel, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNClob(int columnIndex, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void updateNClob(String columnLabel, Reader reader) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public <T> T unwrap(Class<T> iface) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public boolean isWrapperFor(Class<?> iface) throws SQLException {
+    throw new UnsupportedOperationException("Not supported yet.");
   }
 
   public static class SqlParameter<T> {
@@ -6183,33 +4980,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  private final static class RunnableEvents implements Runnable {
-
-    DbDataSource owner;
-
-    RunnableEvents(DbDataSource owner) {
-      this.owner = owner;
-    }
-
-    public void run() {
-      Logger.getLogger(Settings.LOGGER).fine("Firing events '" + owner.selectSql + "'");
-      owner.refreshPending = DataSourceEvent.isRefreshing(owner);
-      owner.fireContentsChanged(new ListDataEvent(owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-      int pos = 0;
-      if (owner.getRowCount() > 0) {
-        try {
-          if (owner.selectResultSet != null) {
-            pos = owner.selectResultSet.getRow();
-          }
-        } catch (SQLException err) {
-          pos = 0;
-        }
-      }
-      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, pos, -1));
-    }
-  };
-
-  private final static class FireFieldValueChanged implements Runnable {
+  protected final static class FireFieldValueChanged implements Runnable {
 
     DbDataSource owner;
     ActiveRowChangeEvent e;
@@ -6228,7 +4999,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  private final static class FireActiveRowChanged implements Runnable {
+  protected final static class FireActiveRowChanged implements Runnable {
 
     DbDataSource owner;
     ActiveRowChangeEvent e;
@@ -6247,7 +5018,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  private final static class FireIntervalRemoved implements Runnable {
+  protected final static class FireIntervalRemoved implements Runnable {
 
     DbDataSource owner;
     ListDataEvent e;
@@ -6266,7 +5037,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  private final static class FireIntervalAdded implements Runnable {
+  protected final static class FireIntervalAdded implements Runnable {
 
     DbDataSource owner;
     ListDataEvent e;
@@ -6285,7 +5056,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  private final static class FireContentsChanged implements Runnable {
+  protected final static class FireContentsChanged implements Runnable {
 
     DbDataSource owner;
     ListDataEvent e;
@@ -6304,7 +5075,7 @@ public class DbDataSource implements DbNavigatorDataSource {
     }
   }
 
-  private final static class FirePropertyChanged implements Runnable {
+  protected final static class FirePropertyChanged implements Runnable {
 
     DbDataSource owner;
     String propertyName;
@@ -6369,7 +5140,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @return Value of property uniqueID.
    */
   public String[] getUniqueID() {
-    return this.uniqueID;
+    return implementation.getUniqueID();
   }
 
   /**
@@ -6377,10 +5148,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @param uniqueID New value of property uniqueID.
    */
   public void setUniqueID(String[] uniqueID) {
-    this.uniqueID = uniqueID;
-    if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
-      this.primaryKeys = this.getPrimaryKeys();
-    }
+    implementation.setUniqueID(uniqueID);
   }
   /**
    * Holds value of property busyLabel.
@@ -6402,22 +5170,13 @@ public class DbDataSource implements DbNavigatorDataSource {
   public void setBusyLabel(String busyLabel) {
     this.busyLabel = busyLabel;
   }
-  /**
-   * Holds value of property delimiterLeft.
-   */
-  private String delimiterLeft = null;
 
   /**
    * Getter for property leftDelimiter.
    * @return Value of property leftDelimiter.
    */
   public String getDelimiterLeft() {
-    ConnectionManager cm = ConnectionManager.getInstance();
-    if ((this.delimiterLeft == null) && (cm != null) && (cm.getConnection() != null)) {
-      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_LEFT, "");
-    } else {
-      return this.delimiterLeft;
-    }
+    return implementation.getDelimiterLeft();
   }
 
   /**
@@ -6425,24 +5184,15 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @param leftDelimiter New value of property leftDelimiter.
    */
   public void setDelimiterLeft(String delimiterLeft) {
-    this.delimiterLeft = delimiterLeft;
+    implementation.setDelimiterLeft(delimiterLeft);
   }
-  /**
-   * Holds value of property delimiterRight.
-   */
-  private String delimiterRight;
 
   /**
    * Getter for property rightDelimiter.
    * @return Value of property rightDelimiter.
    */
   public String getDelimiterRight() {
-    ConnectionManager cm = ConnectionManager.getInstance();
-    if ((this.delimiterLeft == null) && (cm != null) && (cm.getConnection() != null)) {
-      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_RIGHT, "");
-    } else {
-      return this.delimiterRight;
-    }
+    return implementation.getDelimiterRight();
   }
 
   /**
@@ -6450,48 +5200,31 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @param rightDelimiter New value of property rightDelimiter.
    */
   public void setDelimiterRight(String delimiterRight) {
-    this.delimiterRight = delimiterRight;
+    implementation.setDelimiterRight(delimiterRight);
   }
-  /**
-   * Holds value of property updateColumnNames.
-   */
-  private java.util.Set<String> updateColumnNames = new java.util.HashSet<String>();
-  private java.util.Set<String> updateColumnNamesCS = new java.util.HashSet<String>(); //case sensitive
 
   /**
    * Getter for property updateFieldNames.
    * @return Value of property updateFieldNames.
    */
   public java.util.Set<String> getUpdateColumnNames() {
-    return Collections.unmodifiableSet(updateColumnNamesCS);
+    return implementation.getUpdateColumnNames();
   }
 
   public void addUpdateColumnName(String... fieldNames) {
-    for (String fieldName : fieldNames) {
-      updateColumnNamesCS.add(fieldName);
-      updateColumnNames.add(fieldName);
-      updateColumnNames.add(fieldName.toUpperCase());
-    }
+    implementation.addUpdateColumnName(fieldNames);
   }
 
   public void removeUpdateColumnName(String... fieldNames) {
-    for (String fieldName : fieldNames) {
-      updateColumnNamesCS.remove(fieldName);
-      updateColumnNames.remove(fieldName);
-      updateColumnNames.remove(fieldName.toUpperCase());
-    }
+    implementation.removeUpdateColumnName(fieldNames);
   }
-  /**
-   * Holds value of property getValueColumns.
-   */
-  private List<String> getValueColumns = new ArrayList<String>();
 
   /**
    * Getter for property getValueColumns.
    * @return Value of property getValueColumns.
    */
   public String[] getGetValueColumns() {
-    return getValueColumns.toArray(new String[getValueColumns.size()]);
+    return implementation.getGetValueColumns();
   }
 
   /**
@@ -6499,10 +5232,7 @@ public class DbDataSource implements DbNavigatorDataSource {
    * @param getValueColumns New value of property getValueColumns.
    */
   public void setGetValueColumns(String[] columns) {
-    getValueColumns.clear();
-    for (String column : columns) {
-      getValueColumns.add(column);
-    }
+    implementation.setGetValueColumns(columns);
   }
   /**
    * Holds value of property seekUpdatedRow.
