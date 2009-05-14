@@ -69,26 +69,20 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   private String selectSql;
   private String countSql;
-
   private String preparedSelectSql;
   private String preparedCountSql;
   private String updateTableName;
-
   private transient PreparedStatement selectStatement;
   private transient PreparedStatement countStatement;
   private List<PrimaryKey> primaryKeys;
   private transient ResultSet selectResultSet = null;
   private int count = 0;
   private int fetchSize = 54;
-  
   private Map<Integer, Map<String, Object>> storedUpdates = new HashMap<Integer, Map<String, Object>>();
-
   private boolean inserting = false;
   private transient ResultSetMetaData metaData = null;
   private DbDataSourceHashMap<String, Integer> columnMapping = new DbDataSourceHashMap<String, Integer>();
-
   private boolean[] storedResult = new boolean[]{false, false};
-
   private final Semaphore semaphore = new Semaphore(1);
   private transient Map<CacheKey, CacheEntry<String, Object>> cache = new HashMap<CacheKey, CacheEntry<String, Object>>();
   private final Runnable events = new RunnableEvents(this);
@@ -102,12 +96,10 @@ public class SQLDataSource implements DbDataSourceImpl {
   DbDataSource owner;
   private boolean readOnly = false;
 
-
   /** Creates a new instance of DbDataSource */
   public SQLDataSource(DbDataSource owner) {
     this.owner = owner;
   }
-
   /**
    * Holds value of property updateColumnNames.
    */
@@ -140,12 +132,11 @@ public class SQLDataSource implements DbDataSourceImpl {
       updateColumnNames.remove(fieldName.toUpperCase());
     }
   }
-
   /**
    * Holds value of property getValueColumns.
    */
   private List<String> getValueColumns = new ArrayList<String>();
-  
+
   /**
    * Getter for property getValueColumns.
    * @return Value of property getValueColumns.
@@ -4792,12 +4783,28 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   @Override
   public String getDataSourceName() {
-    throw new UnsupportedOperationException("Not supported yet.");
+    if (loadData()) {
+      try {
+        if (getOpenSelectResultSet() instanceof javax.sql.RowSet) {
+          return ((javax.sql.RowSet) getOpenSelectResultSet()).getDataSourceName();
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(SQLDataSource.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+
+    return owner.getName();
   }
 
   @Override
   public void setDataSourceName(String name) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    if (isDataLoaded()) {
+      if (getOpenSelectResultSet() instanceof javax.sql.RowSet) {
+        ((javax.sql.RowSet) getOpenSelectResultSet()).setDataSourceName(name);
+      }
+    } else {
+      throw new SQLException("Ni pripravljenih podatkov.");
+    }
   }
 
   @Override
@@ -5780,7 +5787,6 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.primaryKeys = this.getPrimaryKeys();
     }
   }
-
   /**
    * Holds value of property delimiterLeft.
    */
