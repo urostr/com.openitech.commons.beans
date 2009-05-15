@@ -12,8 +12,10 @@ import com.openitech.Settings;
 import com.openitech.util.Equals;
 import com.openitech.ref.events.ListDataWeakListener;
 import com.openitech.ref.events.PropertyChangeWeakListener;
+import java.awt.EventQueue;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -149,7 +151,21 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
 
   private void UpdateEntries() {
     try {
-      UpdateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+      if (EventQueue.isDispatchThread()) {
+        UpdateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+      } else {
+        EventQueue.invokeAndWait(new Runnable() {
+
+          @Override
+          public void run() {
+            try {
+              UpdateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+            } catch (Exception ex) {
+              Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries.", ex);
+            }
+          }
+        });
+      }
     } catch (Exception ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries.", ex);
     }

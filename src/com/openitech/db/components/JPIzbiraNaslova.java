@@ -868,24 +868,10 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     if (hshd != null) {
       String text = hshd.toString();
 
-      Integer hs = null;
-      String hd = null;
-
-      if ((text != null) && (text.length() > 0)) {
-        text = text.trim();
-        Matcher matcher = HisnaFilterDocumentListener.pattern.matcher(text);
-
-        if (matcher.find()) {
-          if (matcher.group(2) != null && matcher.group(2).length() > 0) {
-            hs = Integer.parseInt(matcher.group(2));
-          }
-          if (matcher.group(4) != null && matcher.group(4).length() > 0) {
-            hd = matcher.group(4);
-          }
-        }
-      }
-      result.hisnaStevilka = new FieldValue(cnHisnaStevilka, dataSource.getType(cnHisnaStevilka), hs);
-      result.hisnaStevilkaDodatek = new FieldValue(hd, java.sql.Types.VARCHAR, hd);
+      FieldValue[] hshd_v = Naslov.splitHS_HD(text, new FieldValue(cnHisnaStevilka, dataSource.getType(cnHisnaStevilka), null),
+                                                  new FieldValue("HD", java.sql.Types.VARCHAR, null));
+      result.hisnaStevilka = hshd_v[0];
+      result.hisnaStevilkaDodatek = hshd_v[1];
     }
 
     result.postnaStevilka = new FieldValue(cnPostnaStevilka, dataSource.getType(cnPostnaStevilka), dataSource.getObject(cnPostnaStevilka));
@@ -1093,6 +1079,32 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
 
     public void setUlicaMID(FieldValue ulicaMID) {
       this.ulicaMID = ulicaMID;
+    }
+
+    public static FieldValue[] splitHS_HD(Object hshd, FieldValue hs, FieldValue hd) {
+      String text = hshd!=null?hshd.toString():null;
+      
+      Integer hs_v = null;
+      String hd_v = null;
+
+      if ((text != null) && (text.length() > 0)) {
+        text = text.trim();
+        Matcher matcher = HisnaFilterDocumentListener.pattern.matcher(text);
+
+        if (matcher.find()) {
+          if (matcher.group(2) != null && matcher.group(2).length() > 0) {
+            hs_v = Integer.parseInt(matcher.group(2));
+          }
+          if (matcher.group(4) != null && matcher.group(4).length() > 0) {
+            hd_v = matcher.group(4);
+          }
+        }
+
+        hs.setValue(hs_v);
+        hd.setValue(hd_v);
+      }
+
+      return new FieldValue[] { hs, hd };
     }
   }
 
