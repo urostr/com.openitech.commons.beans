@@ -29,12 +29,17 @@ import org.w3c.dom.Document;
 public class SpringApplicationContext extends GenericApplicationContext {
 
   PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-  private final String[] contextDefinition;
+  private String[] contextDefinition;
   private final Logger logger = Logger.getLogger(SpringApplicationContext.class.getName());
 
   /** Creates a new instance of SpringApplicationContext */
   public SpringApplicationContext() {
-    this.contextDefinition = SpringApplicationContextPath.CONTEXT_DEFINITION;
+    try {
+      this.contextDefinition = SpringApplicationContextPath.getContextDefinition();
+    } catch (Exception ex) {
+      this.contextDefinition = SpringApplicationContextPath.CONTEXT_DEFINITION;
+      Logger.getLogger(SpringApplicationContext.class.getName()).log(Level.SEVERE, null, ex);
+    }
   }
 
   public SpringApplicationContext(String[] contextDefinition) {

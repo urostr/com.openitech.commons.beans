@@ -67,9 +67,20 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
    *
    * @param pendingSQL new value of pendingSQL
    */
+  public void setPendingSQL(String pendingSQL) {
+    setPendingSQL(pendingSQL, (String[]) null);
+  }
+
+  /**
+   * Set the value of pendingSQL
+   *
+   * @param pendingSQL new value of pendingSQL
+   */
   public void setPendingSQL(String pendingSQL, String... fieldNames) {
     this.pendingSQL = pendingSQL;
-    setPendingFields(fieldNames);
+    if (fieldNames!=null) {
+      setPendingFields(fieldNames);
+    }
     updateValue();
   }
   private String deferredSQL;
@@ -88,6 +99,15 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
    *
    * @param deferredSQL new value of deferredSQL
    */
+  public void setDeferredSQL(String deferredSQL) {
+    setDeferredSQL(deferredSQL, (String[]) null);
+  }
+
+  /**
+   * Set the value of deferredSQL
+   *
+   * @param deferredSQL new value of deferredSQL
+   */
   public void setDeferredSQL(String deferredSQL, String... parentFieldNames) {
     this.deferredSQL = deferredSQL;
     if (deferredStatement != null) {
@@ -98,7 +118,9 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
       }
       deferredStatement = null;
     }
-    setParentFields(parentFieldNames);
+    if (parentFieldNames!=null) {
+      setParentFields(parentFieldNames);
+    }
     updateValue();
   }
 
@@ -115,6 +137,11 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
 
   public Set<String> getParentKeyFields() {
     return Collections.unmodifiableSet(parentKeyFields);
+  }
+
+  public void setParentKeyFields(Set<String> parentKeyFields) {
+    this.parentKeyFields.clear();
+    this.parentKeyFields.addAll(parentKeyFields);
   }
 
   public java.util.List<PendingValue> getPendingValues(java.util.List<Object> parameters) throws SQLException {
@@ -184,6 +211,11 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
     } else {
       return Collections.unmodifiableSet(pendingFields);
     }
+  }
+
+  public void setPendingFields(Set<String> pendingFields) {
+    this.pendingFields.clear();
+    this.pendingFields.addAll(pendingFields);
   }
 
   private void setPendingFields(String... fieldNames) {
