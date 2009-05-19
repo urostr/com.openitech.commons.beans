@@ -130,11 +130,17 @@ public class FieldValue extends Field {
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
+        case Types.NCHAR:
+        case Types.NVARCHAR:
           if (value != null && value.toString().length() > 108) {
             result = ClobValue;
           } else {
             result = StringValue;
           }
+          break;
+        case Types.CLOB:
+        case Types.NCLOB:
+          result = ClobValue;
           break;
         case Types.DATE:
         case Types.TIME:
