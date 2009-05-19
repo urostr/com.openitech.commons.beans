@@ -45,6 +45,17 @@ public enum PropertyType {
     public Class getTypeClass() {
       return String.class;
     }
+  },
+  XML {
+    @Override
+    public int getContentType() {
+      return 5;
+    }
+
+    @Override
+    public Class getTypeClass() {
+      return String.class;
+    }
   };
 
   public abstract int getContentType();
