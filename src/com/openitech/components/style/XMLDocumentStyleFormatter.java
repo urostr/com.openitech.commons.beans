@@ -1,6 +1,6 @@
 /*
  * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * and read the template in the editor.
  */
 package com.openitech.components.style;
 
@@ -37,63 +37,63 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
    */
   class Buffer {
 
-    int tailleMax = 200;
-    String sbuff;
-    int debut, fin; // fin n'inclut pas le dernier caractère du buffer
+    int maxSize = 200;
+    String stringBuffer;
+    int goal, end; // does not end the last character of the buffer
 
     public Buffer() {
-      lire(0);
+      read(0);
     }
 
-    public void lire(final int ind) {
-      int lg = tailleMax;
+    public void read(final int ind) {
+      int lg = maxSize;
       if (ind + lg > srcdoc.getLength()) {
         lg = srcdoc.getLength() - ind;
       }
       try {
-        sbuff = srcdoc.getText(ind, lg);
+        stringBuffer = srcdoc.getText(ind, lg);
       } catch (final BadLocationException ex) {
         ex.printStackTrace();
       }
-      if (sbuff.length() != lg) {
-        System.out.println("Buffer.lire: erreur: " + sbuff.length() + " != " + lg);
+      if (stringBuffer.length() != lg) {
+        System.out.println("Buffer.read: error: " + stringBuffer.length() + " != " + lg);
       }
-      debut = ind;
-      fin = ind + lg;
+      goal = ind;
+      end = ind + lg;
     }
 
     public char getChar(final int p) {
       if (p >= srcdoc.getLength()) {
         return (' ');
       }
-      if (p >= fin) {
-        lire(p);
-      } else if (p < debut) {
-        int p2 = p - tailleMax + 1;
+      if (p >= end) {
+        read(p);
+      } else if (p < goal) {
+        int p2 = p - maxSize + 1;
         if (p2 < 0) {
           p2 = 0;
         }
-        lire(p2);
+        read(p2);
       }
-      return (sbuff.charAt(p - debut));
+      return (stringBuffer.charAt(p - goal));
     }
 
     public boolean subEquals(final String s, final int ind) {
       if (ind >= srcdoc.getLength()) {
-        System.out.println("erreur dans Buffer.subEquals: ind >= srcdoc.getLength() : " + ind + " >= " + srcdoc.getLength());
+        System.out.println("Error in Buffer.subEquals: ind >= srcdoc.getLength() : " + ind + " >= " + srcdoc.getLength());
       }
       final int lg = s.length();
       if (ind + lg >= srcdoc.getLength()) {
         return (false);
       }
-      if (lg > tailleMax) {
-        System.out.println("erreur dans Buffer.subEquals: " + lg + " > taille maxi (" + tailleMax + ")");
+      if (lg > maxSize) {
+        System.out.println("Error in Buffer.subEquals: " + lg + " >  max size(" + maxSize + ")");
       }
-      if (ind < debut || ind + lg > fin) {
-        lire(ind);
+      if (ind < goal || ind + lg > end) {
+        read(ind);
       }
-      for (int i = 0, j = ind - debut; i < lg; i++, j++) {
-        if (s.charAt(i) != sbuff.charAt(j)) {
+      for (int i = 0, j = ind - goal; i < lg; i++, j++) {
+        if (s.charAt(i) != stringBuffer.charAt(j)) {
           return (false);
         }
       }
@@ -102,7 +102,7 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
   }
 
   /**
-   * Spécifie la taille des tabulations, en équivalent-caractères (on utilise la taille du 'w' comme référence)
+   * Specifies the size of tabs, equivalent characters (using the size of the 'w' as a reference)
    */
   public void setTabs(final int charactersPerTab) {
     final FontMetrics fm = tpXML.getFontMetrics(tpXML.getFont());
@@ -123,127 +123,128 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
     srcdoc.setParagraphAttributes(0, length, attributes, false);
   }
 
-  public void toutColorier() {
-    colorier(srcdoc, 0, srcdoc.getLength());
+  public void colorAll() {
+    coloring(srcdoc, 0, srcdoc.getLength());
   }
 
-  public void colorier(StyledDocument srcdoc, final int debut, final int fin) {
+  public void coloring(StyledDocument srcdoc, final int goal, final int end) {
     final Buffer buff = new Buffer();
-    if (buff.subEquals("\n", debut)) {
-      if (fin - debut > 1) {
-        srcdoc.setCharacterAttributes(debut + 1, fin - debut - 1, styleTexte, false);
+    if (buff.subEquals("\n", goal)) {
+      if (end - goal > 1) {
+        srcdoc.setCharacterAttributes(goal + 1, end - goal - 1, styleTexte, false);
       }
     } else {
-      srcdoc.setCharacterAttributes(debut, fin - debut, styleTexte, false);
+      srcdoc.setCharacterAttributes(goal, end - goal, styleTexte, false);
     }
 
-    boolean dansNomElement = false;
-    boolean dansNomAttribut = false;
-    boolean avantValeurAttribut = false;
-    char carValeurAttribut = '"';
-    boolean dansValeurAttribut = false;
-    boolean dansEntite = false;
-    boolean dansCommentaire = false;
-    int debutzone = debut;
-    for (int ic = debut; ic < fin; ic++) {
-      if (dansCommentaire) {
+    boolean inElementName = false;
+    boolean inAttributeName = false;
+    boolean attributeValueBefore = false;
+    char valueForField = '"';
+    boolean valueInField = false;
+    boolean inProject = false;
+    boolean inComentary = false;
+    int goalArea = goal;
+    for (int ic = goal; ic < end; ic++) {
+      if (inComentary) {
         if (buff.subEquals("-->", ic)) {
-          dansCommentaire = false;
+          inComentary = false;
           ic += 2;
-          srcdoc.setCharacterAttributes(debutzone, ic - debutzone + 1, styleCommentaire, false);
+          srcdoc.setCharacterAttributes(goalArea, ic - goalArea + 1, styleCommentaire, false);
         }
-      } else if (dansNomElement) {
+      } else if (inElementName) {
         final char c = buff.getChar(ic);
         if (c == ' ' || c == '\n') {
-          dansNomElement = false;
-          srcdoc.setCharacterAttributes(debutzone, ic - debutzone, styleElement, false);
-          dansNomAttribut = true;
-          debutzone = ic + 1;
-        } else if (c == '>' || ic == fin - 1) {
-          dansNomElement = false;
-          srcdoc.setCharacterAttributes(debutzone, ic - debutzone + 1, styleElement, false);
+          inElementName = false;
+          srcdoc.setCharacterAttributes(goalArea, ic - goalArea, styleElement, false);
+          inAttributeName = true;
+          goalArea = ic + 1;
+        } else if (c == '>' || ic == end - 1) {
+          inElementName = false;
+          srcdoc.setCharacterAttributes(goalArea, ic - goalArea + 1, styleElement, false);
         }
-      } else if (dansNomAttribut) {
+      } else if (inAttributeName) {
         final char c = buff.getChar(ic);
-        if (c == '>' || ic == fin - 1) {
-          dansNomAttribut = false;
-          srcdoc.setCharacterAttributes(debutzone, ic - debutzone + 1, styleElement, false);
+        if (c == '>' || ic == end - 1) {
+          inAttributeName = false;
+          srcdoc.setCharacterAttributes(goalArea, ic - goalArea + 1, styleElement, false);
         } else if (c == '=') {
-          dansNomAttribut = false;
-          srcdoc.setCharacterAttributes(debutzone, ic - debutzone, styleNomAttribut, false);
-          avantValeurAttribut = true;
+          inAttributeName = false;
+          srcdoc.setCharacterAttributes(goalArea, ic - goalArea, styleNomAttribut, false);
+          attributeValueBefore = true;
         }
-      } else if (avantValeurAttribut) {
+      } else if (attributeValueBefore) {
         final char c = buff.getChar(ic);
         if (c == '"' || c == '\'') {
-          avantValeurAttribut = false;
-          dansValeurAttribut = true;
-          carValeurAttribut = c;
-          debutzone = ic;
+          attributeValueBefore = false;
+          valueInField = true;
+          valueForField = c;
+          goalArea = ic;
         }
-      } else if (dansValeurAttribut) {
+      } else if (valueInField) {
         final char c = buff.getChar(ic);
-        if (c == carValeurAttribut || ic == fin - 1) {
-          dansValeurAttribut = false;
-          srcdoc.setCharacterAttributes(debutzone, ic - debutzone + 1, styleValeurAttribut, false);
-          dansNomAttribut = true;
-          debutzone = ic + 1;
+        if (c == valueForField || ic == end - 1) {
+          valueInField = false;
+          srcdoc.setCharacterAttributes(goalArea, ic - goalArea + 1, styleValeurAttribut, false);
+          inAttributeName = true;
+          goalArea = ic + 1;
         }
-      } else if (dansEntite) {
+      } else if (inProject) {
         final char c = buff.getChar(ic);
-        if (c == ';' || c == ' ' || c == '\n' || ic == fin - 1) {
-          dansEntite = false;
-          srcdoc.setCharacterAttributes(debutzone, ic - debutzone + 1, styleEntite, false);
+        if (c == ';' || c == ' ' || c == '\n' || ic == end - 1) {
+          inProject = false;
+          srcdoc.setCharacterAttributes(goalArea, ic - goalArea + 1, styleEntite, false);
         }
       } else {
         final char c = buff.getChar(ic);
         if (c == '<') {
           if (buff.subEquals("<!--", ic)) {
-            dansCommentaire = true;
+            inComentary = true;
           } else {
-            dansNomElement = true;
+            inElementName = true;
           }
-          debutzone = ic;
+          goalArea = ic;
         } else if (c == '>') {
           srcdoc.setCharacterAttributes(ic, 1, styleElement, false);
         } else if (c == '&' || c == '%') {
-          dansEntite = true;
-          debutzone = ic;
+          inProject = true;
+          goalArea = ic;
         }
 
       }
     }
 
-    // si on est toujours dans un commentaire à la fin de la zone, on continue à colorier au-delà
-    if (dansCommentaire) {
-      for (int ic = fin; ic < srcdoc.getLength() && dansCommentaire; ic++) {
+    // if one is always in a comment at the end of the zone, continues to coloring in Delrez
+    if (inComentary) {
+      for (int ic = end; ic < srcdoc.getLength() && inComentary; ic++) {
         if (buff.subEquals("-->", ic)) {
-          dansCommentaire = false;
+          inComentary = false;
           ic += 2;
-          srcdoc.setCharacterAttributes(debutzone, ic - debutzone + 1, styleCommentaire, false);
+          srcdoc.setCharacterAttributes(goalArea, ic - goalArea + 1, styleCommentaire, false);
         }
       }
-      if (dansCommentaire) {
-        srcdoc.setCharacterAttributes(debutzone, srcdoc.getLength() - debutzone, styleCommentaire, false);
+      if (inComentary) {
+        srcdoc.setCharacterAttributes(goalArea, srcdoc.getLength() - goalArea, styleCommentaire, false);
       }
     }
   }
 
+  @Override
   public void applyStyle(JTextPane component) {
     this.tpXML = component;
     this.srcdoc = (StyledDocument) component.getDocument();
-    // dsWorkSpace.updateString("Config", cl.getSubString(1L, (int) cl.length()));
+
     setTabs(4);
     // Monaco font looks much better than the default Courier on MacOS X with Java 1.4.1
     final String[] fontnames = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-    boolean trouv = false;
+    boolean found = false;
     for (final String element : fontnames) {
       if ("Monaco".equals(element)) {
-        trouv = true;
+        found = true;
         break;
       }
     }
-    if (trouv) {
+    if (found) {
       final Style defaultStyle = tpXML.getStyle(StyleContext.DEFAULT_STYLE);
       StyleConstants.setFontFamily(defaultStyle, "Monaco");
       StyleConstants.setFontSize(defaultStyle, 12);
@@ -251,19 +252,19 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
 
     final Style defaultStyle = tpXML.getStyle(StyleContext.DEFAULT_STYLE);
     styleElement = tpXML.addStyle(null, defaultStyle);
-    StyleConstants.setForeground(styleElement, new Color(150, 0, 0)); // rouge foncé
+    StyleConstants.setForeground(styleElement, new Color(150, 0, 0)); // dark red
     styleNomAttribut = tpXML.addStyle(null, defaultStyle);
-    StyleConstants.setForeground(styleNomAttribut, new Color(0, 0, 150)); // bleu foncé
+    StyleConstants.setForeground(styleNomAttribut, new Color(0, 0, 150)); // dark blue
     styleValeurAttribut = tpXML.addStyle(null, defaultStyle);
-    StyleConstants.setForeground(styleValeurAttribut, new Color(0, 100, 0)); // vert foncé
+    StyleConstants.setForeground(styleValeurAttribut, new Color(0, 100, 0)); // dark green
     styleEntite = tpXML.addStyle(null, defaultStyle);
-    StyleConstants.setForeground(styleEntite, new Color(0, 100, 100)); // cyan foncé
+    StyleConstants.setForeground(styleEntite, new Color(0, 100, 100)); // dark cyan
     styleCommentaire = tpXML.addStyle(null, defaultStyle);
-    StyleConstants.setForeground(styleCommentaire, Color.gray); // gris
+    StyleConstants.setForeground(styleCommentaire, Color.gray); // gray
     styleTexte = tpXML.addStyle(null, defaultStyle);
-    StyleConstants.setForeground(styleTexte, Color.black); // noir
+    StyleConstants.setForeground(styleTexte, Color.black); // black
 
-    toutColorier();
+    colorAll();
 
   }
 }

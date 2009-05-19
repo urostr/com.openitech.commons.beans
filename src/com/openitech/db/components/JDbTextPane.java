@@ -29,6 +29,8 @@ import java.awt.*;
 
 
 import java.awt.event.FocusEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -115,6 +117,16 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
+
+    addPropertyChangeListener(new PropertyChangeListener() {
+
+      @Override
+      public void propertyChange(PropertyChangeEvent evt) {
+        if (getDocumentStyleFormatter() != null) {
+          getDocumentStyleFormatter().applyStyle(JDbTextPane.this);
+        }
+      }
+    });
   }
 
   /**
@@ -133,11 +145,13 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
     EventQueue.invokeLater(selector);
   }
 
+  @Override
   public void setDataSource(DbDataSource dataSource) {
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
   }
 
+  @Override
   public DbDataSource getDataSource() {
     return dbFieldObserver.getDataSource();
   }
@@ -146,10 +160,12 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
     return dbFieldObserver;
   }
 
+  @Override
   public void setColumnName(String columnName) {
     dbFieldObserver.setColumnName(columnName);
   }
 
+  @Override
   public String getColumnName() {
     return dbFieldObserver.getColumnName();
   }
@@ -182,9 +198,10 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
   @Override
   public void setText(String t) {
     super.setText(t);
-    if (getDocumentStyleFormatter()!=null) {
+    if (getDocumentStyleFormatter() != null) {
       getDocumentStyleFormatter().applyStyle(this);
     }
+
   }
 
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
@@ -217,6 +234,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
    *
    * @param e the document event
    */
+  @Override
   public void removeUpdate(DocumentEvent e) {
     updateColumn();
   }
@@ -228,6 +246,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
    *
    * @param e the document event
    */
+  @Override
   public void insertUpdate(DocumentEvent e) {
     updateColumn();
   }
@@ -238,6 +257,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
    *
    * @param e the document event
    */
+  @Override
   public void changedUpdate(DocumentEvent e) {
     updateColumn();
   }
@@ -251,6 +271,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
    *   be narrowed to a <code>StyledDocument</code> which is the
    *   required type of model for this text component
    */
+  @Override
   public void setDocument(Document doc) {
     if (getDocument() != null && documentWeakListener != null) {
       getDocument().removeDocumentListener(documentWeakListener);
