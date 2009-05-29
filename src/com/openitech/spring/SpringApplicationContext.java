@@ -49,7 +49,7 @@ public class SpringApplicationContext extends GenericApplicationContext {
   @Override
   public void refresh() throws BeansException, IllegalStateException {
     XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader(this);
-    xmlReader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_NONE);
+    xmlReader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
     for (String location : contextDefinition) {
       Resource[] resources;
       String description = null;

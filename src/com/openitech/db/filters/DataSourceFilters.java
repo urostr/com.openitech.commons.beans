@@ -649,6 +649,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     return filterRequired;
   }
 
+  public static interface Factory<T extends DataSourceFilters> {
+    public T newInstance(String replace);
+  }
+
   public final static class SifrantSeekType extends AbstractSeekType<String> {
 
     private static final ExecutorService executorService = Executors.newCachedThreadPool();

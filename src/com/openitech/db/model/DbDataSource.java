@@ -133,6 +133,10 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
     this(selectSql, countSql, DbDataSourceFactory.getInstance().getDbDataSourceClass());
   }
 
+  public DbDataSource(PreparedStatement psEvidenca, PreparedStatement psEvidencaCount, List<Object> parameters) {
+    implementation = new SQLDataSource(this, psEvidenca, psEvidencaCount, parameters);
+  }
+
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
     implementation = DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass);
     try {
@@ -3131,6 +3135,14 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
     return SQLDataSource.executeUpdate(statement, parameters);
+  }
+
+  public static boolean execute(String selectSQL, List<?> parameters) throws SQLException {
+    return SQLDataSource.execute(selectSQL, parameters);
+  }
+
+  public static boolean execute(PreparedStatement statement, List<?> parameters) throws SQLException {
+    return SQLDataSource.execute(statement, parameters);
   }
 
   public boolean setParameters(Map<String, Object> parametersMap) {

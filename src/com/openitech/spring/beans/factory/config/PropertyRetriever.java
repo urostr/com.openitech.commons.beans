@@ -11,5 +11,6 @@ package com.openitech.spring.beans.factory.config;
  */
 public interface PropertyRetriever {
 
+  public Object getValue(PropertyType type, String properyName);
   public Object getValue(PropertyType type, String properyName, String charsetName);
 }

@@ -21,10 +21,12 @@ import org.springframework.util.ObjectUtils;
  */
 public class DbConnectionDataSource extends DriverManagerDataSource implements SmartDataSource, DisposableBean {
 
+  public final Connection connection;
   ConnectionManager manager = ConnectionManager.getInstance();
 
   public DbConnectionDataSource() {
     this.hibernateDialect = manager.getHibernateDialect();
+    this.connection = manager.getConnection();
   }
 
   @Override
@@ -47,7 +49,6 @@ public class DbConnectionDataSource extends DriverManagerDataSource implements S
     return new java.util.Properties();
   }
 
-  @Override
   public String getDriverClassName() {
     return manager.getProperty(DbConnection.DB_DRIVER_EMBEDDED, manager.getProperty(DbConnection.DB_DRIVER_NET, null));
   }
@@ -69,27 +70,27 @@ public class DbConnectionDataSource extends DriverManagerDataSource implements S
 
   @Override
   public void setConnectionProperties(Properties connectionProperties) {
-      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom connection propertites");
+    throw new UnsupportedOperationException("DbConnectionDataSource does not support custom connection propertites");
   }
 
   @Override
   public void setDriverClassName(String driverClassName) throws CannotGetJdbcConnectionException {
-      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom driverClassName");
+    throw new UnsupportedOperationException("DbConnectionDataSource does not support custom driverClassName");
   }
 
   @Override
   public void setPassword(String password) {
-      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom password");
+    throw new UnsupportedOperationException("DbConnectionDataSource does not support custom password");
   }
 
   @Override
   public void setUrl(String url) {
-      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom url");
+    throw new UnsupportedOperationException("DbConnectionDataSource does not support custom url");
   }
 
   @Override
   public void setUsername(String username) {
-      throw new UnsupportedOperationException("DbConnectionDataSource does not support custom username");
+    throw new UnsupportedOperationException("DbConnectionDataSource does not support custom username");
   }
 
   @Override
@@ -100,7 +101,7 @@ public class DbConnectionDataSource extends DriverManagerDataSource implements S
   @Override
   public void destroy() throws Exception {
   }
-  public String hibernateDialect;
+  public final String hibernateDialect;
 
   /**
    * Get the value of hibernateDialect

@@ -12,10 +12,10 @@
        default-autowire="byName">
 
   <bean id="dataSource" class="com.openitech.db.spring.DbConnectionDataSource" />
+  <bean id="sqlPropertyRetriever" class="com.openitech.sql.properties.SqlPropertyRetriever" />
   <bean id="dataSource.connection" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
     <property name="targetObject" ref="dataSource"/>
     <property name="targetField"  value="connection"/>
   </bean>
   <bean id="sqlPropertyRetriever" class="com.openitech.sql.properties.SqlPropertyRetriever" />
-
 </beans>

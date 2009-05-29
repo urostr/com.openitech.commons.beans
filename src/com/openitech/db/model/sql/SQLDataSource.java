@@ -106,6 +106,12 @@ public class SQLDataSource implements DbDataSourceImpl {
   private java.util.Set<String> updateColumnNames = new java.util.HashSet<String>();
   private java.util.Set<String> updateColumnNamesCS = new java.util.HashSet<String>(); //case sensitive
 
+  public SQLDataSource(DbDataSource owner, PreparedStatement psEvidenca, PreparedStatement psEvidencaCount, List<Object> params) {
+    this.owner = owner;
+    this.selectStatement = psEvidenca;
+    this.countStatement = psEvidencaCount;
+    owner.setParameters(params, false);
+  }
   /**
    * Getter for property updateFieldNames.
    * @return Value of property updateFieldNames.
@@ -3988,6 +3994,19 @@ public class SQLDataSource implements DbDataSourceImpl {
     setParameters(statement, parameters, 1, false);
 
     return statement.executeQuery();
+  }
+
+  public static boolean execute(String selectSQL, List<?> parameters) throws SQLException {
+    String sql = substParameters(selectSQL, parameters);
+    PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql);
+
+    return execute(statement, parameters);
+  }
+
+  public static boolean execute(PreparedStatement statement, List<?> parameters) throws SQLException {
+    setParameters(statement, parameters, 1, false);
+
+    return statement.execute();
   }
 
   public static int executeUpdate(String selectSQL, List<?> parameters) throws SQLException {
