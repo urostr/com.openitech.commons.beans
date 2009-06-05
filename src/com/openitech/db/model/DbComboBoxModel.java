@@ -13,6 +13,7 @@ import com.openitech.util.Equals;
 import com.openitech.ref.events.ListDataWeakListener;
 import com.openitech.ref.events.PropertyChangeWeakListener;
 import java.awt.EventQueue;
+import java.awt.Toolkit;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
@@ -47,6 +48,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
   private transient ListDataWeakListener listDataWeakListener = new ListDataWeakListener(this);
   private transient PropertyChangeListener propertyChangeWeakListener = new PropertyChangeWeakListener(this);
   private boolean updatingEntries = false;
+  private boolean waitForEventQueue = true;
 
   /** Creates a new instance of DbComboBoxModel */
   public DbComboBoxModel() {
@@ -75,7 +77,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     String oldvalue = this.keyColumnName;
     this.keyColumnName = keyColumnName;
     if ((oldvalue != null && !oldvalue.equals(keyColumnName)) || (oldvalue != keyColumnName)) {
-      UpdateEntries();
+      UpdateEntries(false);
     }
   }
 
@@ -85,7 +87,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
 
   public void setValueColumnNames(String[] valueColumnNames) {
     this.valueColumnNames = valueColumnNames;
-    UpdateEntries();
+    UpdateEntries(false);
   }
 
   public String[] getValueColumnNames() {
@@ -94,7 +96,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
 
   public void setExtendedValueColumnNames(String[] extendedValueColumnNames) {
     this.extendedValueColumnNames = extendedValueColumnNames;
-    UpdateEntries();
+    UpdateEntries(false);
   }
 
   public String[] getExtendedValueColumnNames() {
@@ -108,7 +110,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     String[] oldvalue = this.separator;
     this.separator = separator;
     if (oldvalue != null && !java.util.Arrays.equals(oldvalue, separator)) {
-      UpdateEntries();
+      UpdateEntries(false);
     }
   }
 
@@ -135,13 +137,18 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
       oldvalue.removePropertyChangeListener("selectSql", propertyChangeWeakListener);
     }
     this.dataSource = dataSource;
-    if (dataSource != null) {
-      dataSource.setReloadsOnEventQueue(true);
-      dataSource.addListDataListener(listDataWeakListener);
-      dataSource.addPropertyChangeListener("selectSql", propertyChangeWeakListener);
-    }
-    if (oldvalue != dataSource) {
-      UpdateEntries();
+    try {
+      waitForEventQueue = false;
+      if (dataSource != null) {
+        dataSource.setReloadsOnEventQueue(true);
+        dataSource.addListDataListener(listDataWeakListener);
+        dataSource.addPropertyChangeListener("selectSql", propertyChangeWeakListener);
+      }
+      if (oldvalue != dataSource) {
+        UpdateEntries();
+      }
+    } finally {
+      waitForEventQueue = true;
     }
   }
 
@@ -150,11 +157,27 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
   }
 
   private void UpdateEntries() {
+    UpdateEntries(waitForEventQueue);
+  }
+
+  private void UpdateEntries(boolean wait) {
     try {
       if (EventQueue.isDispatchThread()) {
         UpdateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-      } else {
+      } else if (wait) {
         EventQueue.invokeAndWait(new Runnable() {
+
+          @Override
+          public void run() {
+            try {
+              UpdateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+            } catch (Exception ex) {
+              Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries.", ex);
+            }
+          }
+        });
+      } else {
+        EventQueue.invokeLater(new Runnable() {
 
           @Override
           public void run() {

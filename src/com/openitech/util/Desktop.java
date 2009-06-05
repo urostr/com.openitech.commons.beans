@@ -53,6 +53,7 @@ public class Desktop {
   private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
   public static void open(final java.io.File file) {
+    System.out.println("Opening "+file.getAbsolutePath());
     if (file.exists()) {
       executorService.execute(new Runnable() {
 
@@ -73,6 +74,8 @@ public class Desktop {
           }
         }
       });
+    } else {
+      System.out.println("File does not exist.");
     }
   }
 }

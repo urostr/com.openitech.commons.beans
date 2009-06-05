@@ -18,16 +18,16 @@ import java.io.IOException;
  * @version $Revision: 1.4 $
  */
 public class PdfViewer {
-  private static PdfViewer instance = null;
 
+  private static PdfViewer instance = null;
   private boolean canViewPDFs;
   private boolean jdic;
-  private String acroread = System.getProperty("acroread.bin","");
+  private String acroread = System.getProperty("acroread.bin", "");
 
   private PdfViewer() {
     jdic = Desktop.isFileOpenSupported();
-    canViewPDFs = (acroread.length()>0) ||
-                  ((System.getProperty("view.pdfs","false").equals("true")) && jdic);
+    canViewPDFs = (acroread.length() > 0) ||
+            ((System.getProperty("view.pdfs", "false").equals("true")) && jdic);
   }
 
   public static void clear() {
@@ -35,8 +35,9 @@ public class PdfViewer {
   }
 
   public static PdfViewer getInstance() {
-    if (instance==null)
+    if (instance == null) {
       instance = new PdfViewer();
+    }
     return instance;
   }
 
@@ -45,15 +46,11 @@ public class PdfViewer {
   }
 
   public void openPDF(File fPDF) throws InvocationTargetException,
-      IllegalArgumentException, IllegalAccessException, IOException {
-    if (fPDF.exists() && canViewPDFs) {
-        if (jdic&&(acroread.length()==0)) {
-          Desktop.open(fPDF);
-        } else {
-          Runtime.getRuntime().exec(new String[] { acroread, fPDF.getAbsolutePath() });
-        }
+          IllegalArgumentException, IllegalAccessException, IOException {
+    if (jdic && (acroread.length() == 0)) {
+      Desktop.open(fPDF);
+    } else if (fPDF.exists() && canViewPDFs) {
+      Runtime.getRuntime().exec(new String[]{acroread, fPDF.getAbsolutePath()});
     }
   }
-
-
 }

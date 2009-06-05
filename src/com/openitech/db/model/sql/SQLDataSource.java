@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  */
 package com.openitech.db.model.sql;
 
