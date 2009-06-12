@@ -333,42 +333,42 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     });
 
     foHisnaStevilka.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foHisnaStevilkaFieldValueChanged(evt);
-      }
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
     foUlica.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foUlicaFieldValueChanged(evt);
-      }
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
     foNaselje.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foNaseljeFieldValueChanged(evt);
-      }
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
     foPostnaStevilkaMID.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foPostnaStevilkaMIDFieldValueChanged(evt);
-      }
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
     foPosta.addActiveRowChangeListener(new com.openitech.db.events.ActiveRowChangeListener() {
+      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
+      }
       public void fieldValueChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
         foPostaFieldValueChanged(evt);
-      }
-      public void activeRowChanged(com.openitech.db.events.ActiveRowChangeEvent evt) {
       }
     });
 
@@ -426,7 +426,6 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     add(jtfPostnaStevilka, new java.awt.GridBagConstraints());
 
     jtfPosta.setAutoCompleteModel(cmPoste);
-    jtfPosta.setValidator(new ValidatorPosta());
     jtfPosta.addItemListener(new java.awt.event.ItemListener() {
       public void itemStateChanged(java.awt.event.ItemEvent evt) {
         jtfPostaItemStateChanged(evt);
