@@ -2,5 +2,4 @@ other {
    com.openitech.auth.jaas.LocalLoginModule requisite
         storePass="true"
         tryFirstPass="true";
-   com.sun.security.auth.module.NTLoginModule optional;
 };
