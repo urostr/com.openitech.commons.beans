@@ -510,7 +510,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     try {
       if (rs.next()) {
         Event result = new Event(rs.getInt("IdSifranta"),
-                                 rs.getString("IdSifre"));
+                rs.getString("IdSifre"));
         result.setEventSource(rs.getInt("IdEventSource"));
         result.setDatum(rs.getDate("Datum"));
         java.sql.Clob opomba = rs.getClob("Opomba");
@@ -519,19 +519,25 @@ public class SqlUtilitesImpl extends SqlUtilities {
         }
         do {
           switch (rs.getInt("FieldType")) {
-            case 1: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("IntValue")));
-                    break;
-            case 2: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getDouble("RealValue")));
-                    break;
-            case 3: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getString("StringValue")));
-                    break;
-            case 4: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DATE, rs.getDate("DateValue")));
-                    break;
-            case 5: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getBlob("ObjectValue")));
-                    break;
-            case 6: java.sql.Clob value = rs.getClob("ClobValue");
-                    result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, value.getSubString(1L, (int) value.length())));
-                    break;
+            case 1:
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("IntValue")));
+              break;
+            case 2:
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getDouble("RealValue")));
+              break;
+            case 3:
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getString("StringValue")));
+              break;
+            case 4:
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DATE, rs.getDate("DateValue")));
+              break;
+            case 5:
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getBlob("ObjectValue")));
+              break;
+            case 6:
+              java.sql.Clob value = rs.getClob("ClobValue");
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, value.getSubString(1L, (int) value.length())));
+              break;
           }
         } while (rs.next());
         return result;
@@ -609,11 +615,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       ResultSet rs = SQLDataSource.executeQuery(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_values.sql", "cp1250"), parameters);
-
-      if (rs.next()) {
-        return findEvent(rs.getLong("Id"));
-      } else {
-        return null;
+      try {
+        if (rs.next()) {
+          return findEvent(rs.getLong("Id"));
+        } else {
+          return null;
+        }
+      } finally {
+        rs.close();
       }
     } else {
       return findEvent(event.getId());
