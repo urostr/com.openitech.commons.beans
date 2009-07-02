@@ -1,10 +1,19 @@
 package com.openitech.sql;
 
+/**
+ *
+ * @author uros
+ */
 public class Field {
 
   String name;
   int type;
 
+  /**
+   *
+   * @param name fieldName
+   * @param type fieldType java.sql.Type
+   */
   public Field(String name, int type) {
     super();
     this.name = name;
@@ -26,10 +35,18 @@ public class Field {
     return true;
   }
 
+  /**
+   *
+   * @return field name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   *
+   * @return field type
+   */
   public int getType() {
     return type;
   }

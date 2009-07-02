@@ -8,6 +8,7 @@ import com.openitech.db.ConnectionManager;
 import com.openitech.db.components.JPIzbiraNaslova;
 import com.openitech.db.components.JPIzbiraNaslova.Naslov;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.sql.Field;
 import com.openitech.sql.events.Event;
 import com.openitech.sql.util.SqlUtilities;
@@ -34,6 +35,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement updateEvents;
   PreparedStatement insertEvents;
   PreparedStatement findEventValue;
+  PreparedStatement findEventById;
   PreparedStatement insertEventValues;
   PreparedStatement updateEventValues;
   PreparedStatement find_datevalue;
@@ -402,7 +404,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     Connection connection = ConnectionManager.getInstance().getConnection();
     int param;
 
-    if (address.getHsMID()==null || address.getHsMID().getValue() == null) {
+    if (address.getHsMID() == null || address.getHsMID().getValue() == null) {
       param = 1;
       if (findHsNeznanaId == null) {
         findHsNeznanaId = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "findHsNeznanaId.sql", "cp1250"));
@@ -419,7 +421,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //
 //      findHsNeznanaId.executeQuery();
 
-      ResultSet rsFindHsNeznanaId = executeQuery(findHsNeznanaId, 
+      ResultSet rsFindHsNeznanaId = executeQuery(findHsNeznanaId,
               address.getPostnaStevilka(),
               address.getPosta(),
               address.getNaselje(),
@@ -454,7 +456,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           insertNeznaniNaslov.setObject(param++, address.getPosta().getValue(), java.sql.Types.VARCHAR);  //pt_uime
 
           insertNeznaniNaslov.setObject(param++, address.getNaseljeMID().getValue(), java.sql.Types.INTEGER);
-          if ((address.getNaselje()==null)||(address.getNaselje().getValue()==null)) {
+          if ((address.getNaselje() == null) || (address.getNaselje().getValue() == null)) {
             insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
             insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
           } else {
@@ -466,12 +468,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
           insertNeznaniNaslov.setObject(param++, address.getUlica().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //ul_ime
           insertNeznaniNaslov.setObject(param++, address.getUlica().getValue(), java.sql.Types.VARCHAR); //ul_uime
 
-          if (address.getHisnaStevilka()==null) {
+          if (address.getHisnaStevilka() == null) {
             insertNeznaniNaslov.setNull(param++, java.sql.Types.INTEGER);
           } else {
             insertNeznaniNaslov.setObject(param++, address.getHisnaStevilka().getValue(), java.sql.Types.INTEGER); //ul_uime
           }
-          if (address.getHisnaStevilkaDodatek()==null) {
+          if (address.getHisnaStevilkaDodatek() == null) {
             insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
           } else {
             insertNeznaniNaslov.setObject(param++, address.getHisnaStevilkaDodatek().getValue(), java.sql.Types.VARCHAR); //ul_uime
@@ -498,5 +500,123 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     return address;
+  }
+
+  public Event findEvent(Long eventId) throws SQLException {
+    if (findEventById == null) {
+      findEventById = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_id.sql", "cp1250"));
+    }
+    ResultSet rs = executeQuery(findEventById, new FieldValue("ID", java.sql.Types.BIGINT, eventId));
+    try {
+      if (rs.next()) {
+        Event result = new Event(rs.getInt("IdSifranta"),
+                                 rs.getString("IdSifre"));
+        result.setEventSource(rs.getInt("IdEventSource"));
+        result.setDatum(rs.getDate("Datum"));
+        java.sql.Clob opomba = rs.getClob("Opomba");
+        if (!rs.wasNull()) {
+          result.setOpomba(opomba.getSubString(1L, (int) opomba.length()));
+        }
+        do {
+          switch (rs.getInt("FieldType")) {
+            case 1: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("IntValue")));
+                    break;
+            case 2: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getDouble("RealValue")));
+                    break;
+            case 3: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getString("StringValue")));
+                    break;
+            case 4: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DATE, rs.getDate("DateValue")));
+                    break;
+            case 5: result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getBlob("ObjectValue")));
+                    break;
+            case 6: java.sql.Clob value = rs.getClob("ClobValue");
+                    result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, value.getSubString(1L, (int) value.length())));
+                    break;
+          }
+        } while (rs.next());
+        return result;
+      } else {
+        return null;
+      }
+    } finally {
+      rs.close();
+    }
+  }
+
+  @Override
+  public Event findEvent(Event event) throws SQLException {
+    if (event.getId() < 0) {
+      StringBuilder sb = new StringBuilder(500);
+      java.util.List parameters = new java.util.ArrayList<Object>();
+      DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
+      parameters.add(sqlFind);
+      for (Field f : event.getEventValues().keySet()) {
+        final String ev_alias = "ev_" + f.getName();
+        final String vp_alias = "vp_" + f.getName();
+        final String val_alias = "val_" + f.getName();
+        sb.append("INNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
+        sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]").append(") ");
+        sb.append("INNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
+        sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
+        sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
+        sb.append("INNER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+        sb.append(ev_alias).append("[ValueId] = ").append(val_alias).append(".[Id]");
+        List<FieldValue> values = event.getEventValues().get(f);
+        if (values != null) {
+          sb.append(" AND (");
+          boolean first = true;
+          for (FieldValue fv : values) {
+            int tipPolja = fv.getValueType().getTypeIndex();
+            if (first) {
+              first = false;
+            } else {
+              sb.append(" OR ");
+            }
+            switch (tipPolja) {
+              case 1: //Integer
+                sb.append(val_alias).append(".IntValue = ? ");
+                break;
+              case 2: //Real
+                sb.append(val_alias).append(".RealValue = ? ");
+                break;
+              case 3: //String
+                sb.append(val_alias).append(".StringValue = ? ");
+                break;
+              case 4: //Date
+                sb.append(val_alias).append(".DateValue = ? ");
+                break;
+              case 6: //Clob
+                sb.append(val_alias).append(".ClobValue = ? ");
+                break;
+            }
+            parameters.add(fv.getValue());
+          }
+          sb.append(")");
+        }
+        sb.append(") ");
+      }
+      sqlFind.setValue(sb.toString());
+      parameters.add(event.getSifrant());
+      parameters.add(event.getSifra());
+      parameters.add(event.getEventSource());
+      DbDataSource.SubstSqlParameter sqlFindDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
+      parameters.add(sqlFindDate);
+      if (event.getDatum() == null) {
+        sqlFindDate.setValue("");
+      } else {
+        sqlFindDate.setValue(" AND ev.DATUM = ?");
+        parameters.add(event.getDatum());
+      }
+
+      ResultSet rs = SQLDataSource.executeQuery(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_values.sql", "cp1250"), parameters);
+
+      if (rs.next()) {
+        return findEvent(rs.getLong("Id"));
+      } else {
+        return null;
+      }
+    } else {
+      return findEvent(event.getId());
+    }
   }
 }

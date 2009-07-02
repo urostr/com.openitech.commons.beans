@@ -404,6 +404,28 @@ public abstract class SqlUtilities {
 
   public abstract long getCurrentIdentity(String tableName) throws SQLException;
 
+  public Event findEvent(int sifrant, String sifra,  FieldValue... fieldValues) throws SQLException {
+    Event search = new Event(sifrant, sifra);
+    if (fieldValues!=null) {
+      for(FieldValue fieldValue:fieldValues) {
+        search.addValue(fieldValue);
+      }
+    }
+    return findEvent(search);
+  }
+
+  public abstract Event findEvent(Event event) throws SQLException;
+
+  public Long updateEvent(Event event) throws SQLException {
+    Event find = findEvent(event);
+    if (find!=null) {
+      event.setId(find.getId());
+      return storeEvent(find);
+    } else {
+      return storeEvent(event);
+    }
+  }
+
   public abstract Long storeEvent(Event event) throws SQLException;
 
   public Long storeValue(FieldValue.ValueType valueType, final Object value ) throws SQLException {
