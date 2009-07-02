@@ -25,9 +25,17 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   public DbSifrantModel() throws SQLException {
     this("Ni doloèen");
   }
-  
+
   public DbSifrantModel(String textNotDefined) throws SQLException {
+    this(textNotDefined, "");
+  }
+  
+  public DbSifrantModel(String textNotDefined, String dataBase) throws SQLException {
     super(null, "IdSifre", new String[] {"Opis"});
+    if (textNotDefined==null) {
+      textNotDefined = "Ni doloèen";
+    }
+    this.dataBase = dataBase;
     init();
   }
   
@@ -44,7 +52,7 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     if (SqlUtilities.getInstance()==null) {
       this.dsSifrant = new DbDataSource();
     } else {
-      this.dsSifrant = SqlUtilities.getInstance().getDsSifrantModel(parameters);
+      this.dsSifrant = SqlUtilities.getInstance().getDsSifrantModel(dataBase, parameters);
     }
     
     fNotDefined.addDataSource(dsSifrant);
@@ -147,4 +155,6 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     dsSifrant.setName(sifrantOpis);
     fGroup.setSeekValue(fGroup.I_TYPE_OPIS_SIFRANTA, this.sifrantOpis);
   }
+
+  private String dataBase;
 }

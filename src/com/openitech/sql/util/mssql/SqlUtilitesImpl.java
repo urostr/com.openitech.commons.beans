@@ -382,14 +382,33 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public DbDataSource getDsSifrantModel(List<Object> parameters) throws SQLException {
+  public DbDataSource getDsSifrantModel(String dataBase, List<Object> parameters) throws SQLException {
     DbDataSource dsSifrant = new DbDataSource();
 
     dsSifrant.setCanAddRows(false);
     dsSifrant.setCanDeleteRows(false);
     dsSifrant.setReadOnly(true);
 
-    dsSifrant.setParameters(parameters);
+    java.util.List params = new java.util.ArrayList();
+    params.add(parameters.get(0));
+
+    DbDataSource.SubstSqlParameter tb_sifranti = new DbDataSource.SubstSqlParameter("<%tb_sifranti%>");
+    if ((dataBase==null)||(dataBase.length()==0)) {
+      tb_sifranti.setValue("");
+    } else {
+      tb_sifranti.setValue(dataBase+".[Sifranti] AS ");
+    }
+    params.add(tb_sifranti);
+    DbDataSource.SubstSqlParameter tb_seznam_sifrantov = new DbDataSource.SubstSqlParameter("<%tb_seznam_sifrantov%>");
+    if ((dataBase==null)||(dataBase.length()==0)) {
+      tb_seznam_sifrantov.setValue("");
+    } else {
+      tb_seznam_sifrantov.setValue(dataBase+".[SeznamSifrantov] AS ");
+    }
+    params.add(tb_seznam_sifrantov);
+    params.add(parameters.get(1));
+
+    dsSifrant.setParameters(params);
     dsSifrant.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant_c.sql", "cp1250"));
     dsSifrant.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant.sql", "cp1250"));
     dsSifrant.setQueuedDelay(0);

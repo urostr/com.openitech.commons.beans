@@ -436,7 +436,11 @@ public abstract class SqlUtilities {
 
   public abstract JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException;
 
-  public abstract DbDataSource getDsSifrantModel(java.util.List<Object> parameters) throws SQLException;
+  public DbDataSource getDsSifrantModel(java.util.List<Object> parameters) throws SQLException {
+    return getDsSifrantModel("", parameters);
+  }
+
+  public abstract DbDataSource getDsSifrantModel(String dataBase, java.util.List<Object> parameters) throws SQLException;
 
   public static enum Operation {
 

@@ -14,8 +14,8 @@ UNION ALL
     Sifranti.IdSifre,
     Sifranti.Opis
 FROM 
-    Sifranti 
-INNER JOIN SeznamSifrantov ON (
+    <%tb_sifranti%> Sifranti
+INNER JOIN <%tb_seznam_sifrantov%> SeznamSifrantov ON (
     SeznamSifrantov.Id=Sifranti.IdSifranta
     <%DbSifrantModelFilter%> AND
     SeznamSifrantov.validFrom<=CURRENT_TIMESTAMP AND
