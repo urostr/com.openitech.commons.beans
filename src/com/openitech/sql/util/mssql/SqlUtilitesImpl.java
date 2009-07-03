@@ -576,16 +576,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
       DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
       parameters.add(sqlFind);
       for (Field f : event.getEventValues().keySet()) {
-        final String ev_alias = "ev_" + f.getName();
-        final String vp_alias = "vp_" + f.getName();
-        final String val_alias = "val_" + f.getName();
+        final String ev_alias = "[ev_" + f.getName()+"]";
+        final String vp_alias = "[vp_" + f.getName()+"]";
+        final String val_alias = "[val_" + f.getName()+"]";
         sb.append("INNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]").append(") ");
         sb.append("INNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
         sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
         sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
         sb.append("INNER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
-        sb.append(ev_alias).append("[ValueId] = ").append(val_alias).append(".[Id]");
+        sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
         List<FieldValue> values = event.getEventValues().get(f);
         if (values != null) {
           sb.append(" AND (");
@@ -636,7 +636,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       ResultSet rs = SQLDataSource.executeQuery(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_values.sql", "cp1250"), parameters);
       try {
         if (rs.next()) {
-          return findEvent(rs.getLong("Id"));
+          event.setId(rs.getLong("Id"));
+          return findEvent(event.getId());
         } else {
           return null;
         }

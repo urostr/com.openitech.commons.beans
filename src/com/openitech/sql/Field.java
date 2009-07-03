@@ -25,7 +25,7 @@ public class Field {
     if (obj == null) {
       return false;
     }
-    if (!obj.getClass().isInstance(this)) {
+    if (!this.getClass().isAssignableFrom(obj.getClass())) {
       return false;
     }
     final Field other = (Field) obj;

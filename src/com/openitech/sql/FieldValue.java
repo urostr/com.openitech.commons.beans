@@ -70,12 +70,22 @@ public class FieldValue extends Field {
       public int getTypeIndex() {
         return 1;
       }
+
+      @Override
+      public int getSqlType() {
+        return java.sql.Types.INTEGER;
+      }
     },
     RealValue {
 
       @Override
       public int getTypeIndex() {
         return 2;
+      }
+
+      @Override
+      public int getSqlType() {
+        return java.sql.Types.DOUBLE;
       }
     },
     StringValue {
@@ -84,6 +94,11 @@ public class FieldValue extends Field {
       public int getTypeIndex() {
         return 3;
       }
+
+      @Override
+      public int getSqlType() {
+        return java.sql.Types.VARCHAR;
+      }
     },
     DateValue {
 
@@ -91,12 +106,23 @@ public class FieldValue extends Field {
       public int getTypeIndex() {
         return 4;
       }
+
+      @Override
+      public int getSqlType() {
+        return java.sql.Types.DATE;
+      }
+
     },
     ObjectValue {
 
       @Override
       public int getTypeIndex() {
         return 5;
+      }
+
+      @Override
+      public int getSqlType() {
+        return java.sql.Types.BLOB;
       }
     },
     ClobValue {
@@ -105,9 +131,27 @@ public class FieldValue extends Field {
       public int getTypeIndex() {
         return 6;
       }
+
+      @Override
+      public int getSqlType() {
+        return java.sql.Types.CLOB;
+      }
+
+
     };
 
     public abstract int getTypeIndex();
+    public abstract int getSqlType();
+
+    public static ValueType valueOf(int valueType) {
+      ValueType result = null;
+      for (ValueType vt:values()) {
+        if (vt.getTypeIndex()==valueType) {
+          result = vt;
+        }
+      }
+      return result;
+    }
 
     public static ValueType getType(int type, Object value) {
       ValueType result = null;

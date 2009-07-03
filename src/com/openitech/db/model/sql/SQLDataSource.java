@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  */
 package com.openitech.db.model.sql;
 
@@ -3983,11 +3983,11 @@ public class SQLDataSource implements DbDataSourceImpl {
             ResultSet.CONCUR_READ_ONLY,
             ResultSet.HOLD_CURSORS_OVER_COMMIT);
 
-    try {
+    //try {
       return executeQuery(statement, parameters);
-    } finally {
-      statement.close();
-    }
+    //} finally {
+    //  statement.close();
+    //}
   }
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
