@@ -77,7 +77,7 @@
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jXDatePicker2" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="26" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -132,7 +132,7 @@
                   <Group type="102" attributes="0">
                       <Component id="jcbType" min="-2" pref="108" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jtfValue" pref="158" max="32767" attributes="0"/>
+                      <Component id="jtfValue" pref="108" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -187,7 +187,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jtfSifrant" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jcbSifrant" pref="228" max="32767" attributes="0"/>
+                      <Component id="jcbSifrant" pref="154" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>

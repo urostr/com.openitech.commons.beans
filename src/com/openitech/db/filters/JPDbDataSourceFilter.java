@@ -14,7 +14,6 @@ import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 import com.openitech.db.filters.FilterDocumentListener;
 import com.openitech.db.model.DbComboBoxModel;
-import com.openitech.db.model.DbSifrantModel;
 import com.openitech.formats.FormatFactory;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
@@ -29,7 +28,6 @@ import java.util.logging.Logger;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.event.DocumentEvent;
 import javax.swing.text.BadLocationException;
 
