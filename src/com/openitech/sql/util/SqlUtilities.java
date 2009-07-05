@@ -420,10 +420,8 @@ public abstract class SqlUtilities {
     Event find = findEvent(event);
     if (find!=null) {
       event.setId(find.getId());
-      return storeEvent(find);
-    } else {
-      return storeEvent(event);
     }
+    return storeEvent(event);
   }
 
   public abstract Long storeEvent(Event event) throws SQLException;
