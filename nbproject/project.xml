@@ -10,6 +10,7 @@
             </source-roots>
             <test-roots>
                 <root id="test.src.dir"/>
+                <root id="test.jozart.dir" name="Test (Jozart)"/>
             </test-roots>
         </data>
     </configuration>

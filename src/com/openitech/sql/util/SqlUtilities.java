@@ -417,11 +417,14 @@ public abstract class SqlUtilities {
   public abstract Event findEvent(Event event) throws SQLException;
 
   public Long updateEvent(Event event) throws SQLException {
-    Event find = findEvent(event);
+    return updateEvent(event, event); //event vsebuje eventId oz. se dodaja
+  }
+  public Long updateEvent(Event newValues, Event oldValues) throws SQLException {
+    Event find = findEvent(oldValues);
     if (find!=null) {
-      event.setId(find.getId());
+      newValues.setId(find.getId());
     }
-    return storeEvent(event);
+    return storeEvent(newValues);
   }
 
   public abstract Long storeEvent(Event event) throws SQLException;

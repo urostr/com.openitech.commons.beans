@@ -179,12 +179,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
         updateEvents.clearParameters();
         updateEvents.setInt(param++, event.getSifrant());
         updateEvents.setString(param++, event.getSifra());
-        updateEvents.setString(param++, event.getOpomba());
         if (event.getEventSource() == Integer.MIN_VALUE) {
           updateEvents.setNull(param++, java.sql.Types.INTEGER);
         } else {
           updateEvents.setInt(param++, event.getEventSource());
         }
+        updateEvents.setDate(param++, new java.sql.Date(event.getDatum().getTime()));
+        updateEvents.setString(param++, event.getOpomba());
         updateEvents.setLong(param++, events_ID);
 
         success = success && updateEvents.executeUpdate() > 0;
@@ -530,6 +531,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (rs.next()) {
         Event result = new Event(rs.getInt("IdSifranta"),
                 rs.getString("IdSifre"));
+        result.setId(eventId);
         result.setEventSource(rs.getInt("IdEventSource"));
         result.setDatum(rs.getDate("Datum"));
         java.sql.Clob opomba = rs.getClob("Opomba");
@@ -570,7 +572,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public Event findEvent(Event event) throws SQLException {
-    if (event.getId() < 0) {
+    if (event.getId() <= 0) {
       StringBuilder sb = new StringBuilder(500);
       java.util.List parameters = new java.util.ArrayList<Object>();
       DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");

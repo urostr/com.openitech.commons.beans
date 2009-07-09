@@ -112,6 +112,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     this.countStatement = psEvidencaCount;
     owner.setParameters(params, false);
   }
+
   /**
    * Getter for property updateFieldNames.
    * @return Value of property updateFieldNames.
@@ -3983,11 +3984,17 @@ public class SQLDataSource implements DbDataSourceImpl {
             ResultSet.CONCUR_READ_ONLY,
             ResultSet.HOLD_CURSORS_OVER_COMMIT);
 
-    //try {
+    try {
+      if (DbDataSource.DUMP_SQL) {
+        System.out.println("##############");
+        System.out.println(sql);
+      }
       return executeQuery(statement, parameters);
-    //} finally {
-    //  statement.close();
-    //}
+    } finally {
+      if (DbDataSource.DUMP_SQL) {
+        System.out.println("##############");
+      }
+    }
   }
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
