@@ -16,6 +16,8 @@ import java.util.Map;
  * @author uros
  */
 public class Event {
+  public static final Field EVENT_SOURCE = new Field("EVENT_SOURCE", java.sql.Types.INTEGER);
+  public static final Field EVENT_DATE = new Field("EVENT_DATE", java.sql.Types.DATE);
 
   public Event(int sifrant, String sifra) {
     this.sifrant = sifrant;
@@ -166,6 +168,27 @@ public class Event {
     }
     return fieldValues;
   }
+
+  private Field[] primaryKey;
+
+  /**
+   * Get the value of primaryKey
+   *
+   * @return the value of primaryKey
+   */
+  public Field[] getPrimaryKey() {
+    return primaryKey;
+  }
+
+  /**
+   * Set the value of primaryKey
+   *
+   * @param primaryKey new value of primaryKey
+   */
+  public void setPrimaryKey(Field... primaryKey) {
+    this.primaryKey = primaryKey;
+  }
+
 
   @Override
   public boolean equals(Object obj) {

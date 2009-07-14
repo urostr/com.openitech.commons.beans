@@ -7,4 +7,4 @@ SELECT DISTINCT
 FROM
     [ChangeLog].[dbo].[Events] ev
 <%ev_values_filter%>
-WHERE ev.[IdSifranta] = ? AND ev.[IdSifre] = ? AND ev.[IdEventSource] = ? <%ev_date_filter%>
+WHERE ev.[IdSifranta] = ? AND ev.[IdSifre] = ? <%ev_source_filter%> <%ev_date_filter%>

@@ -109,6 +109,9 @@ public class JWProgressMonitor extends javax.swing.JDialog {
   
   public void next() {
     setProgress(++progress);
+    if ((progress % 100)==0) {
+      pack();
+    }
   }
 
   public void setTitle(String title) {

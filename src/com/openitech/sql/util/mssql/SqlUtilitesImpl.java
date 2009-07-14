@@ -394,17 +394,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
     params.add(parameters.get(0));
 
     DbDataSource.SubstSqlParameter tb_sifranti = new DbDataSource.SubstSqlParameter("<%tb_sifranti%>");
-    if ((dataBase==null)||(dataBase.length()==0)) {
+    if ((dataBase == null) || (dataBase.length() == 0)) {
       tb_sifranti.setValue("");
     } else {
-      tb_sifranti.setValue(dataBase+".[Sifranti] AS ");
+      tb_sifranti.setValue(dataBase + ".[Sifranti] AS ");
     }
     params.add(tb_sifranti);
     DbDataSource.SubstSqlParameter tb_seznam_sifrantov = new DbDataSource.SubstSqlParameter("<%tb_seznam_sifrantov%>");
-    if ((dataBase==null)||(dataBase.length()==0)) {
+    if ((dataBase == null) || (dataBase.length() == 0)) {
       tb_seznam_sifrantov.setValue("");
     } else {
-      tb_seznam_sifrantov.setValue(dataBase+".[SeznamSifrantov] AS ");
+      tb_seznam_sifrantov.setValue(dataBase + ".[SeznamSifrantov] AS ");
     }
     params.add(tb_seznam_sifrantov);
     params.add(parameters.get(1));
@@ -573,78 +573,112 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public Event findEvent(Event event) throws SQLException {
     if (event.getId() <= 0) {
+      java.util.Set<Field> primaryKey = new java.util.HashSet<Field>();
+      if (event.getPrimaryKey() != null) {
+        for (Field pk : event.getPrimaryKey()) {
+          primaryKey.add(pk);
+        }
+      } else {
+        primaryKey.addAll(event.getEventValues().keySet());
+        primaryKey.add(Event.EVENT_DATE);
+        primaryKey.add(Event.EVENT_SOURCE);
+      }
       StringBuilder sb = new StringBuilder(500);
       java.util.List parameters = new java.util.ArrayList<Object>();
       DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
       parameters.add(sqlFind);
+      int valuesSet = 0;
       for (Field f : event.getEventValues().keySet()) {
-        final String ev_alias = "[ev_" + f.getName()+"]";
-        final String vp_alias = "[vp_" + f.getName()+"]";
-        final String val_alias = "[val_" + f.getName()+"]";
-        sb.append("INNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
-        sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]").append(") ");
-        sb.append("INNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
-        sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
-        sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
-        sb.append("INNER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
-        sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
-        List<FieldValue> values = event.getEventValues().get(f);
-        if (values != null) {
-          sb.append(" AND (");
-          boolean first = true;
-          for (FieldValue fv : values) {
-            int tipPolja = fv.getValueType().getTypeIndex();
-            if (first) {
-              first = false;
-            } else {
-              sb.append(" OR ");
+        if (primaryKey.contains(f)) {
+          valuesSet++;
+          final String ev_alias = "[ev_" + f.getName() + "]";
+          final String vp_alias = "[vp_" + f.getName() + "]";
+          final String val_alias = "[val_" + f.getName() + "]";
+          sb.append("INNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
+          sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]").append(") ");
+          sb.append("INNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
+          sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
+          sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
+          sb.append("INNER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+          sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
+          List<FieldValue> values = event.getEventValues().get(f);
+          if (values != null) {
+            sb.append(" AND (");
+            boolean first = true;
+            for (FieldValue fv : values) {
+              int tipPolja = fv.getValueType().getTypeIndex();
+              if (first) {
+                first = false;
+              } else {
+                sb.append(" OR ");
+              }
+              switch (tipPolja) {
+                case 1: //Integer
+                  sb.append(val_alias).append(".IntValue = ? ");
+                  break;
+                case 2: //Real
+                  sb.append(val_alias).append(".RealValue = ? ");
+                  break;
+                case 3: //String
+                  sb.append(val_alias).append(".StringValue = ? ");
+                  break;
+                case 4: //Date
+                  sb.append(val_alias).append(".DateValue = ? ");
+                  break;
+                case 6: //Clob
+                  sb.append(val_alias).append(".ClobValue = ? ");
+                  break;
+              }
+              parameters.add(fv.getValue());
             }
-            switch (tipPolja) {
-              case 1: //Integer
-                sb.append(val_alias).append(".IntValue = ? ");
-                break;
-              case 2: //Real
-                sb.append(val_alias).append(".RealValue = ? ");
-                break;
-              case 3: //String
-                sb.append(val_alias).append(".StringValue = ? ");
-                break;
-              case 4: //Date
-                sb.append(val_alias).append(".DateValue = ? ");
-                break;
-              case 6: //Clob
-                sb.append(val_alias).append(".ClobValue = ? ");
-                break;
-            }
-            parameters.add(fv.getValue());
+            sb.append(")");
           }
-          sb.append(")");
+          sb.append(") ");
         }
-        sb.append(") ");
       }
-      sqlFind.setValue(sb.toString());
-      parameters.add(event.getSifrant());
-      parameters.add(event.getSifra());
-      parameters.add(event.getEventSource());
-      DbDataSource.SubstSqlParameter sqlFindDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
-      parameters.add(sqlFindDate);
-      if (event.getDatum() == null) {
-        sqlFindDate.setValue("");
-      } else {
-        sqlFindDate.setValue(" AND ev.DATUM = ?");
-        parameters.add(event.getDatum());
+      
+      //ce niso bile nastavljene vse vrednosti PK-ja potem ne iscemo 
+      boolean seek = true;
+
+      if (event.getPrimaryKey() != null) {
+        seek = valuesSet == primaryKey.size();
       }
 
-      ResultSet rs = SQLDataSource.executeQuery(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_values.sql", "cp1250"), parameters);
-      try {
-        if (rs.next()) {
-          event.setId(rs.getLong("Id"));
-          return findEvent(event.getId());
+      if (seek) {
+        sqlFind.setValue(sb.toString());
+        parameters.add(event.getSifrant());
+        parameters.add(event.getSifra());
+        DbDataSource.SubstSqlParameter sqlFindEventSource = new DbDataSource.SubstSqlParameter("<%ev_source_filter%>");
+        parameters.add(sqlFindEventSource);
+        if (!primaryKey.contains(Event.EVENT_SOURCE)) {
+          sqlFindEventSource.setValue("");
         } else {
-          return null;
+          sqlFindEventSource.setValue(" AND ev.[IdEventSource] = ?");
+          parameters.add(event.getEventSource());
         }
-      } finally {
-        rs.close();
+        DbDataSource.SubstSqlParameter sqlFindDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
+        parameters.add(sqlFindDate);
+        if ((event.getDatum() == null) ||
+                (!primaryKey.contains(Event.EVENT_DATE))) {
+          sqlFindDate.setValue("");
+        } else {
+          sqlFindDate.setValue(" AND ev.DATUM = ?");
+          parameters.add(event.getDatum());
+        }
+
+        ResultSet rs = SQLDataSource.executeQuery(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_values.sql", "cp1250"), parameters);
+        try {
+          if (rs.next()) {
+            event.setId(rs.getLong("Id"));
+            return findEvent(event.getId());
+          } else {
+            return null;
+          }
+        } finally {
+          rs.close();
+        }
+      } else {
+        return null;
       }
     } else {
       return findEvent(event.getId());

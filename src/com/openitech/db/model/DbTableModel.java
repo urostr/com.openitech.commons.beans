@@ -94,6 +94,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   public void setValuesAsString(boolean valuesAsString) {
     this.valuesAsString = valuesAsString;
   }
+
   /**
    * Returns the value for the cell at <code>columnIndex</code> and
    * <code>rowIndex</code>.
@@ -106,16 +107,16 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     try {
       if (this.dataSource != null) {
 //        dataSource.lock();
-      boolean safeMode = dataSource.isSafeMode();
-      if (!dataSource.isDataLoaded()) {
-        dataSource.setSafeMode(false);
-      }
-      try {
-        Object result = columnDescriptors[columnIndex].getValueAt(rowIndex, columnIndex);
-
-        if (result!=null) {
-          return isValuesAsString()?result.toString():result;
+        boolean safeMode = dataSource.isSafeMode();
+        if (!dataSource.isDataLoaded()) {
+          dataSource.setSafeMode(false);
         }
+        try {
+          Object result = columnDescriptors[columnIndex].getValueAt(rowIndex, columnIndex);
+
+          if (result != null) {
+            return isValuesAsString() ? result.toString() : result;
+          }
         } finally {
           dataSource.setSafeMode(safeMode);
         }
@@ -718,6 +719,51 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         return result;
       }
 
+      private String getValueAsString() {
+        try {
+          if (dataSource != null) {
+            StringBuffer result = new StringBuffer();
+            String lastSeparator = separators.size() > 0 ? separators.get(separators.size() - 1) : " ";
+            Iterator<String> separator = separators.iterator();
+
+            for (String columnName : columnNames) {
+              if (result.length() > 0) {
+                result.append(separator.hasNext() ? separator.next() : lastSeparator);
+              }
+
+              Object value = dataSource.getValueAt(rowIndex + 1, columnName, rowColumnNames);
+
+              if (value instanceof java.util.Date) {
+                value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
+              } else if (value instanceof java.lang.Number) {
+                if ((value instanceof java.math.BigDecimal) ||
+                        (value instanceof java.lang.Double) ||
+                        (value instanceof java.lang.Float)) {
+                  value = DECIMAL_FORMAT.format((java.lang.Number) value);
+                } else {
+                  value = INTEGER_FORMAT.format((java.lang.Number) value);
+                }
+              }
+
+              result.append(value == null ? "" : value);
+            }
+            if (function != null) {
+              Object value = getFunctionValue();
+              if (value != null) {
+                if (result.length() > 0) {
+                  result.append(separator.hasNext() ? separator.next() : lastSeparator);
+                }
+                result.append(value == null ? "" : value);
+              }
+            }
+            return result.toString();
+          }
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "]");
+        }
+        return null;
+      }
+
       public Object getValue() {
         try {
           if (dataSource != null) {
@@ -820,8 +866,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
       @Override
       public String toString() {
-        Object value = this.getValue();
-        return value == null ? null : value.toString();
+        return getValueAsString();
       }
 
       @Override
