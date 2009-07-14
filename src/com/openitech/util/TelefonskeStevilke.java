@@ -152,7 +152,7 @@ public class TelefonskeStevilke {
      * @return the value of gsm
      */
     public boolean isGsm() {
-      return gsm || (!tujina);
+      return gsm && (!tujina);
     }
 
     @Override

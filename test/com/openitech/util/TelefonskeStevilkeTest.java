@@ -39,6 +39,10 @@ public class TelefonskeStevilkeTest extends TestCase {
 
     result = TelefonskeStevilke.getTelefon("+38641765030");
     assertEquals(expResult, result);
+
+    expResult = new Telefon("386", "1", "8323960");
+    result = TelefonskeStevilke.getTelefon("+38618323960");
+    assertEquals(expResult, result);
   }
 
 }
