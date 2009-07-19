@@ -196,6 +196,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
         jtfSifrant.setDocument(documents.get(item)[0]);
         jcbSifrant.setModel(sifranti.get(item));
         ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
+      } else if (item.getSeekType()==com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
+        jtfPreformattedValue.setDocument(documents.get(item)[0]);
+        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "PREFORMATTED_CARD");
       } else {
         if (item.getSeekType()>=jcbType.getItemCount()) {
           item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
@@ -241,6 +244,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
     jpSifrantPanel = new javax.swing.JPanel();
     jtfSifrant = new com.openitech.db.components.JDbTextField();
     jcbSifrant = new com.openitech.db.components.JDbComboBox();
+    jpPreformattedField = new javax.swing.JPanel();
+    jtfPreformattedValue = new com.openitech.db.components.JDbTextField();
 
     jtfDateValueOd.setSearchField(true);
 
@@ -282,7 +287,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
         .addComponent(jLabel2)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(26, Short.MAX_VALUE))
+        .addContainerGap(80, Short.MAX_VALUE))
     );
     jpDateFieldLayout.setVerticalGroup(
       jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -314,7 +319,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       .addGroup(jpTextFieldLayout.createSequentialGroup()
         .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE))
+        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 334, Short.MAX_VALUE))
     );
     jpTextFieldLayout.setVerticalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -343,7 +348,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
       .addGroup(jpSifrantPanelLayout.createSequentialGroup()
         .addComponent(jtfSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 228, Short.MAX_VALUE))
+        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE))
     );
     jpSifrantPanelLayout.setVerticalGroup(
       jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -353,6 +358,22 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
     );
 
     jpFilterValues.add(jpSifrantPanel, "SIFRANT_CARD");
+
+    jtfPreformattedValue.setColumns(20);
+    jtfPreformattedValue.setSearchField(true);
+
+    javax.swing.GroupLayout jpPreformattedFieldLayout = new javax.swing.GroupLayout(jpPreformattedField);
+    jpPreformattedField.setLayout(jpPreformattedFieldLayout);
+    jpPreformattedFieldLayout.setHorizontalGroup(
+      jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 448, Short.MAX_VALUE)
+    );
+    jpPreformattedFieldLayout.setVerticalGroup(
+      jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+    );
+
+    jpFilterValues.add(jpPreformattedField, "PREFORMATTED_CARD");
 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
@@ -399,10 +420,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel {
   private javax.swing.JComboBox jcbType;
   private javax.swing.JPanel jpDateField;
   private javax.swing.JPanel jpFilterValues;
+  private javax.swing.JPanel jpPreformattedField;
   private javax.swing.JPanel jpSifrantPanel;
   private javax.swing.JPanel jpTextField;
   private com.openitech.db.components.JDbDateTextField jtfDateValueDo;
   private com.openitech.db.components.JDbDateTextField jtfDateValueOd;
+  private com.openitech.db.components.JDbTextField jtfPreformattedValue;
   private com.openitech.db.components.JDbTextField jtfSifrant;
   private com.openitech.db.components.JDbTextField jtfValue;
   private com.openitech.db.model.DbSifrantModel smSifrant;
