@@ -84,7 +84,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
       focusWeakListener = new FocusWeakListener(this, "this_focusGained", null);
       documentWeakListener = new DocumentWeakListener(this);
-    //propertyChangeWeakListener = new PropertyChangeWeakListener(this);
+      //propertyChangeWeakListener = new PropertyChangeWeakListener(this);
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
     }
@@ -94,7 +94,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     this.getDocument().addDocumentListener(documentWeakListener);
     this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2, 2, 2, 2));
     this.setFont((java.awt.Font) UIManager.getDefaults().get("TextField.font"));
-  //this.addPropertyChangeListener("value", propertyChangeWeakListener);
+    //this.addPropertyChangeListener("value", propertyChangeWeakListener);
   }
 
   public void this_focusGained(FocusEvent e) {
@@ -169,12 +169,12 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   }
 
   public void setDataSource(DbDataSource dataSource) {
-    if (dataSource!=null) {
+    if (dataSource != null) {
       dataSource.removeActionListener(actionWeakListener);
     }
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
-    if (dataSource!=null) {
+    if (dataSource != null) {
       dataSource.addActionListener(actionWeakListener);
     }
   }
@@ -306,34 +306,66 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     DbDataSource dataSource = getDataSource();
     if (validator == null) {
       return true;
-    } else if (dataSource != null){
+    } else if (dataSource != null) {
       try {
-        return (dataSource.isDataLoaded()&&(dataSource.rowUpdated() || dataSource.rowInserted()))?validator.isValid(value):true;
+        return (dataSource.isDataLoaded() && (dataSource.rowUpdated() || dataSource.rowInserted())) ? validator.isValid(value) : true;
       } catch (SQLException ex) {
         Logger.getLogger(JDbTextField.class.getName()).log(Level.SEVERE, null, ex);
         return validator.isValid(value);
       }
-    } else
+    } else {
       return validator.isValid(value);
+    }
   }
 
+  private boolean isAJXDataPickerSetEditorCall() {
+    boolean result = false;
+
+    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+
+    for (StackTraceElement element : stackTrace) {
+      if (element.getClassName().contains("JXDatePicker") &&
+              element.getMethodName().equals("setEditor")) {
+        result = true;
+        EventQueue.invokeLater(new Runnable() {
+
+          @Override
+          public void run() {
+            disableColumnUpdates = true;
+            try {
+              firePropertyChange("value", null, dbFieldObserver.getValueAsDate());
+            } finally {
+              disableColumnUpdates = false;
+            }
+          }
+        });
+        break;
+      }
+    }
+
+    return result;
+  }
+  private boolean disableColumnUpdates = false;
+
   private void updateColumn() {
-    if (!dbFieldObserver.isUpdatingFieldValue()) {
-      activeRowChangeWeakListener.setEnabled(false);
-      try {
-        boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
-        if (valid && c_default_bg != null) {
-          super.setBackground(c_default_bg);
-        } else if (!valid) {
-          super.setBackground(java.awt.Color.yellow);
+    if (!disableColumnUpdates) {
+      if (!isAJXDataPickerSetEditorCall() && !dbFieldObserver.isUpdatingFieldValue()) {
+        activeRowChangeWeakListener.setEnabled(false);
+        try {
+          boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
+          if (valid && c_default_bg != null) {
+            super.setBackground(c_default_bg);
+          } else if (!valid) {
+            super.setBackground(java.awt.Color.yellow);
+          }
+          if (valid) {
+            dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : this.getValue());
+          }
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+        } finally {
+          activeRowChangeWeakListener.setEnabled(true);
         }
-        if (valid) {
-          dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : this.getValue());
-        }
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
-      } finally {
-        activeRowChangeWeakListener.setEnabled(true);
       }
     }
   }
@@ -344,12 +376,12 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     } else if ((dbFieldObserver != null) && !dbFieldObserver.isUpdatingFieldValue()) {
       dbFieldObserver.startUpdate();
     }
-  /*else
-  try {
-  commitEdit();
-  } catch (ParseException ex) {
-  Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't update the formatted value. ["+ex.getMessage()+"]");
-  }//*/
+    /*else
+    try {
+    commitEdit();
+    } catch (ParseException ex) {
+    Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't update the formatted value. ["+ex.getMessage()+"]");
+    }//*/
   }
 
   public void setValue(Object value) {
@@ -546,14 +578,17 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     }
     super.setDocument(doc);
     if (getDocument() != null && documentWeakListener != null) {
+      documentWeakListener.setEnabled(false);
       try {
-        if (doc.getLength()==0) {
-          setValue(null);
-        } else if (getFormatter()!=null) {
-          setValue(getFormatter().stringToValue(doc.getText(0, doc.getLength())));
+        if (doc.getLength() == 0) {
+          super.setValue(null);
+        } else if (getFormatter() != null) {
+          super.setValue(getFormatter().stringToValue(doc.getText(0, doc.getLength())));
         }
       } catch (Exception ex) {
         Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.SEVERE, null, ex);
+      } finally {
+        documentWeakListener.setEnabled(true);
       }
       getDocument().addDocumentListener(documentWeakListener);
     }
@@ -811,11 +846,10 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       int i, c;
       Object obj;
 
-      for (i = 0                  ,
-        c = autoCompleteModel.getSize();
-         i < c;i++ ) {
-            obj = autoCompleteModel.getElementAt(i);
-            if ( obj != null && obj.equals(sObject)) {
+      for (i = 0, c = autoCompleteModel.getSize();
+              i < c; i++) {
+        obj = autoCompleteModel.getElementAt(i);
+        if (obj != null && obj.equals(sObject)) {
           return i;
         }
       }
