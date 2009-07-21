@@ -349,7 +349,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
 
   private void updateColumn() {
     if (!disableColumnUpdates) {
-      if (!isAJXDataPickerSetEditorCall() && !dbFieldObserver.isUpdatingFieldValue()) {
+      if (!dbFieldObserver.isUpdatingFieldValue()) {
         activeRowChangeWeakListener.setEnabled(false);
         try {
           boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
@@ -385,12 +385,14 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   }
 
   public void setValue(Object value) {
-    documentWeakListener.setEnabled(false);
-    try {
-      super.setValue(value);
-      updateColumn();
-    } finally {
-      documentWeakListener.setEnabled(true);
+    if (!isAJXDataPickerSetEditorCall()) {
+      documentWeakListener.setEnabled(false);
+      try {
+        super.setValue(value);
+        updateColumn();
+      } finally {
+        documentWeakListener.setEnabled(true);
+      }
     }
   }
 
