@@ -32,7 +32,7 @@ import javax.swing.SwingUtilities;
  *
  * @author uros
  */
-public class DbFieldObserver implements com.openitech.db.FieldObserver {
+public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.Serializable {
 
   private transient DbDataSource dataSource = null;
   private String columnName = null;

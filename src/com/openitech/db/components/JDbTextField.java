@@ -265,6 +265,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
   public void setSearchField(boolean searchField) {
     this.searchField = searchField;
     this.putClientProperty("Quaqua.TextField.style", searchField ? "search" : "normal");
+    this.putClientProperty("JTextField.variant", searchField ? "search" : null);
   }
 
   /**

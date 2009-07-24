@@ -7,6 +7,7 @@ package com.openitech.sql.events;
 
 import com.openitech.sql.Field;
 import com.openitech.sql.FieldValue;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,11 @@ public class Event {
   public static final Field EVENT_DATE = new Field("EVENT_DATE", java.sql.Types.DATE);
 
   public Event(int sifrant, String sifra) {
+    this(null, sifrant, sifra);
+  }
+  
+  public Event(Event parent, int sifrant, String sifra) {
+    this.parent = parent;
     this.sifrant = sifrant;
     this.sifra = sifra;
   }
@@ -42,6 +48,17 @@ public class Event {
    */
   public void setId(long id) {
     this.id = id;
+  }
+  
+  private final Event parent;
+
+  /**
+   * Get the value of parent
+   *
+   * @return the value of parent
+   */
+  public Event getParent() {
+    return parent;
   }
   
   private int sifrant;
@@ -156,6 +173,16 @@ public class Event {
 
   public Map<Field, List<FieldValue>> getEventValues() {
     return eventValues;
+  }
+
+  public List<FieldValue> getFieldValues() {
+    List<FieldValue> result = new java.util.ArrayList<FieldValue>();
+
+    for (java.util.Map.Entry<Field, java.util.List<FieldValue>> entry: eventValues.entrySet()) {
+      result.addAll(entry.getValue());
+    }
+
+    return Collections.unmodifiableList(result);
   }
   
   private List<FieldValue> getFieldValues(FieldValue value) {
