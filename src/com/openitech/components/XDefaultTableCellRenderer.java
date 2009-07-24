@@ -189,16 +189,20 @@ public class XDefaultTableCellRenderer extends JXLabel
    */
   @Override
   public boolean isOpaque() {
-    Color back = getBackground();
-    Component p = getParent();
-    if (p != null) {
-      p = p.getParent();
+    if (getBackgroundPainter() == null) {
+      Color back = getBackground();
+      Component p = getParent();
+      if (p != null) {
+        p = p.getParent();
+      }
+      // p should now be the JTable.
+      boolean colorMatch = (back != null) && (p != null) &&
+              back.equals(p.getBackground()) &&
+              p.isOpaque();
+      return !colorMatch;
+    } else {
+      return super.isOpaque();
     }
-    // p should now be the JTable.
-    boolean colorMatch = (back != null) && (p != null) &&
-            back.equals(p.getBackground()) &&
-            p.isOpaque();
-    return !colorMatch && super.isOpaque();
   }
 
   /**
