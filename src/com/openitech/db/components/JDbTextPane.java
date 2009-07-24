@@ -97,6 +97,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
   private transient DocumentWeakListener documentWeakListener;
   private transient FocusWeakListener focusWeakListener;
+  private String previousText = "";
 
   /**
    * Creates a new <code>JDbTextPane</code>.  A new instance of
@@ -190,6 +191,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
     documentWeakListener.setEnabled(false);
     try {
       setText(dbFieldObserver.getValueAsText());
+      previousText = getText();
     } finally {
       documentWeakListener.setEnabled(true);
     }
@@ -197,11 +199,12 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
 
   @Override
   public void setText(String t) {
+    previousText = t;
     super.setText(t);
     if (getDocumentStyleFormatter() != null) {
       getDocumentStyleFormatter().applyStyle(this);
     }
-
+    
   }
 
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
@@ -214,6 +217,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
   }
 
   private void updateColumn() {
+    // if (hasChanged()) {
     activeRowChangeWeakListener.setEnabled(false);
     try {
       if ((validator == null) || (validator != null && validator.isValid(this.getText()))) {
@@ -224,6 +228,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
     } finally {
       activeRowChangeWeakListener.setEnabled(true);
     }
+    // }
   }
 
   /**
@@ -236,7 +241,9 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
    */
   @Override
   public void removeUpdate(DocumentEvent e) {
-    updateColumn();
+    if (hasChanged()) {
+      updateColumn();
+    }
   }
 
   /**
@@ -248,7 +255,9 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
    */
   @Override
   public void insertUpdate(DocumentEvent e) {
-    updateColumn();
+    if (hasChanged()) {
+      updateColumn();
+    }
   }
 
   /**
@@ -259,7 +268,9 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
    */
   @Override
   public void changedUpdate(DocumentEvent e) {
-    updateColumn();
+    if (hasChanged()) {
+      updateColumn();
+    }
   }
 
   /**
@@ -303,6 +314,16 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
    */
   public void setDocumentStyleFormatter(JTextPaneStyleFormatter documentStyleFormatter) {
     this.documentStyleFormatter = documentStyleFormatter;
+  }
+
+  public boolean hasChanged() {
+    System.out.println("getText() = " + getText());
+    System.out.println("previous = " + previousText);
+    if (getText().equals(previousText) || getText().equals("")|| getText().equals(" ") || getText()==null) {
+      return false;
+    }
+    previousText = getText();
+    return true;
   }
 }
 
