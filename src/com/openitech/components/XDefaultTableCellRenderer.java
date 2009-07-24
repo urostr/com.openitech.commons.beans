@@ -80,8 +80,8 @@ public class XDefaultTableCellRenderer extends JXLabel
   // to after its foreground and background colors have been set
   // to the selection background color.
   // These ivars will be made protected when their names are finalized.
-  private Color unselectedForeground;
-  private Color unselectedBackground;
+  protected Color unselectedForeground;
+  protected Color unselectedBackground;
 
   /**
    * Creates a default table cell renderer.
@@ -100,6 +100,10 @@ public class XDefaultTableCellRenderer extends JXLabel
     }
   }
 
+  protected void setComponentForeground(Color c) {
+    super.setForeground(c);
+  }
+
   /**
    * Overrides <code>JComponent.setForeground</code> to assign
    * the unselected-foreground color to the specified color.
@@ -107,8 +111,12 @@ public class XDefaultTableCellRenderer extends JXLabel
    * @param c set the foreground color to this value
    */
   public void setForeground(Color c) {
-    super.setForeground(c);
+    setComponentForeground(c);
     unselectedForeground = c;
+  }
+
+  private void setComponentBackground(Color c) {
+    super.setBackground(c);
   }
 
   /**
@@ -118,7 +126,7 @@ public class XDefaultTableCellRenderer extends JXLabel
    * @param c set the background color to this value
    */
   public void setBackground(Color c) {
-    super.setBackground(c);
+    setComponentBackground(c);
     unselectedBackground = c;
   }
 
@@ -158,63 +166,11 @@ public class XDefaultTableCellRenderer extends JXLabel
    * @return the default table cell renderer
    * @see javax.swing.JComponent#isPaintingForPrint()
    */
+  @Override
   public Component getTableCellRendererComponent(JTable table, Object value,
           boolean isSelected, boolean hasFocus, int row, int column) {
 
-    Color fg = null;
-    Color bg = null;
-
-    JTable.DropLocation dropLocation = table.getDropLocation();
-    if (dropLocation != null && !dropLocation.isInsertRow() && !dropLocation.isInsertColumn() && dropLocation.getRow() == row && dropLocation.getColumn() == column) {
-
-      fg = UIManager.getColor("Table.dropCellForeground");
-      bg = UIManager.getColor("Table.dropCellBackground");
-
-      isSelected = true;
-    }
-
-    if (isSelected) {
-      super.setForeground(fg == null ? table.getSelectionForeground()
-              : fg);
-      super.setBackground(bg == null ? table.getSelectionBackground()
-              : bg);
-    } else {
-      super.setForeground(unselectedForeground != null
-              ? unselectedForeground
-              : table.getForeground());
-      super.setBackground(unselectedBackground != null
-              ? unselectedBackground
-              : table.getBackground());
-    }
-
-    setFont(table.getFont());
-
-    if (hasFocus) {
-      Border border = null;
-      if (isSelected) {
-        border = UIManager.getBorder("Table.focusSelectedCellHighlightBorder");
-      }
-      if (border == null) {
-        border = UIManager.getBorder("Table.focusCellHighlightBorder");
-      }
-      setBorder(border);
-
-      if (!isSelected && table.isCellEditable(row, column)) {
-        Color col;
-        col = UIManager.getColor("Table.focusCellForeground");
-        if (col != null) {
-          super.setForeground(col);
-        }
-        col = UIManager.getColor("Table.focusCellBackground");
-        if (col != null) {
-          super.setBackground(col);
-        }
-      }
-    } else {
-      setBorder(getNoFocusBorder());
-    }
-
-    setValue(value);
+    prepareTableCellRendererComponent(table, row, column, isSelected, hasFocus, value);
 
     return this;
   }
@@ -231,6 +187,7 @@ public class XDefaultTableCellRenderer extends JXLabel
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
+  @Override
   public boolean isOpaque() {
     Color back = getBackground();
     Component p = getParent();
@@ -315,6 +272,49 @@ public class XDefaultTableCellRenderer extends JXLabel
    * for more information.
    */
   public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
+  }
+
+  protected void prepareTableCellRendererComponent(JTable table, int row, int column, boolean isSelected, boolean hasFocus, Object value) {
+    Color fg = null;
+    Color bg = null;
+    JTable.DropLocation dropLocation = table.getDropLocation();
+    if (dropLocation != null && !dropLocation.isInsertRow() && !dropLocation.isInsertColumn() && dropLocation.getRow() == row && dropLocation.getColumn() == column) {
+      fg = UIManager.getColor("Table.dropCellForeground");
+      bg = UIManager.getColor("Table.dropCellBackground");
+      isSelected = true;
+    }
+    if (isSelected) {
+      super.setForeground(fg == null ? table.getSelectionForeground() : fg);
+      super.setBackground(bg == null ? table.getSelectionBackground() : bg);
+    } else {
+      super.setForeground(unselectedForeground != null ? unselectedForeground : table.getForeground());
+      super.setBackground(unselectedBackground != null ? unselectedBackground : table.getBackground());
+    }
+    setFont(table.getFont());
+    if (hasFocus) {
+      Border border = null;
+      if (isSelected) {
+        border = UIManager.getBorder("Table.focusSelectedCellHighlightBorder");
+      }
+      if (border == null) {
+        border = UIManager.getBorder("Table.focusCellHighlightBorder");
+      }
+      setBorder(border);
+      if (!isSelected && table.isCellEditable(row, column)) {
+        Color col;
+        col = UIManager.getColor("Table.focusCellForeground");
+        if (col != null) {
+          super.setForeground(col);
+        }
+        col = UIManager.getColor("Table.focusCellBackground");
+        if (col != null) {
+          super.setBackground(col);
+        }
+      }
+    } else {
+      setBorder(getNoFocusBorder());
+    }
+    setValue(value);
   }
 
   /**
