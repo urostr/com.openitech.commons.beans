@@ -8,9 +8,7 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
-import com.openitech.autocomplete.AutoCompleteComboBoxModelAdaptor;
 import com.openitech.autocomplete.AutoCompleteDecorator;
-import com.openitech.autocomplete.AutoCompleteDocument;
 import com.openitech.autocomplete.AutoCompleteTextComponent;
 import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
@@ -21,6 +19,7 @@ import com.openitech.db.model.DbFieldObserver;
 import com.openitech.ref.events.ActionWeakListener;
 import com.openitech.ref.events.DocumentWeakListener;
 import com.openitech.ref.events.FocusWeakListener;
+import com.openitech.util.Equals;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
@@ -33,6 +32,7 @@ import javax.swing.ComboBoxModel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.EventListenerList;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.PopupMenuEvent;
@@ -103,12 +103,12 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
   }
 
   public void setDataSource(DbDataSource dataSource) {
-    if (dataSource!=null) {
+    if (dataSource != null) {
       dataSource.removeActionListener(actionWeakListener);
     }
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
-    if (dataSource!=null) {
+    if (dataSource != null) {
       dataSource.addActionListener(actionWeakListener);
     }
   }
@@ -155,6 +155,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
       }
     }
   }
+
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     documentWeakListener.setEnabled(false);
     try {
@@ -183,33 +184,36 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
     DbDataSource dataSource = getDataSource();
     if (validator == null) {
       return true;
-    } else if (dataSource != null){
+    } else if (dataSource != null) {
       try {
-        return (dataSource.isDataLoaded()&&(dataSource.rowUpdated() || dataSource.rowInserted()))?validator.isValid(value):true;
+        return (dataSource.isDataLoaded() && (dataSource.rowUpdated() || dataSource.rowInserted())) ? validator.isValid(value) : true;
       } catch (SQLException ex) {
         Logger.getLogger(JDbTextField.class.getName()).log(Level.SEVERE, null, ex);
         return validator.isValid(value);
       }
-    } else
+    } else {
       return validator.isValid(value);
+    }
   }
 
   private void updateColumn() {
-    activeRowChangeWeakListener.setEnabled(false);
-    try {
-      boolean valid = isValid(this.getText());
-      if (valid && c_default_bg != null) {
-        super.setBackground(c_default_bg);
-      } else if (!valid) {
-        super.setBackground(java.awt.Color.yellow);
+    if (!Equals.equals(dbFieldObserver.getValueAsText(), this.getText())) {
+      activeRowChangeWeakListener.setEnabled(false);
+      try {
+        boolean valid = isValid(this.getText());
+        if (valid && c_default_bg != null) {
+          super.setBackground(c_default_bg);
+        } else if (!valid) {
+          super.setBackground(java.awt.Color.yellow);
+        }
+        if (valid) {
+          dbFieldObserver.updateValue(this.getText());
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+      } finally {
+        activeRowChangeWeakListener.setEnabled(true);
       }
-      if (valid) {
-        dbFieldObserver.updateValue(this.getText());
-      }
-    } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
-    } finally {
-      activeRowChangeWeakListener.setEnabled(true);
     }
   }
 
@@ -543,11 +547,10 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
       int i, c;
       Object obj;
 
-      for (i = 0                        ,
-        c = autoCompleteModel.getSize();
-         i < c;i++ ) {
-            obj = autoCompleteModel.getElementAt(i);
-            if ( obj != null && obj.equals(sObject)) {
+      for (i = 0, c = autoCompleteModel.getSize();
+              i < c; i++) {
+        obj = autoCompleteModel.getElementAt(i);
+        if (obj != null && obj.equals(sObject)) {
           return i;
         }
       }

@@ -5,7 +5,6 @@
  *
  * $Revision $
  */
-
 package com.openitech.db.components;
 
 import com.openitech.Settings;
@@ -16,6 +15,7 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.ref.events.DocumentWeakListener;
 import com.openitech.ref.events.FocusWeakListener;
+import com.openitech.util.Equals;
 import java.awt.EventQueue;
 import java.awt.event.FocusEvent;
 import java.sql.SQLException;
@@ -31,23 +31,22 @@ import javax.swing.text.Document;
  * @author uros
  */
 public class JDbTextArea extends JTextArea implements DocumentListener, FieldObserver {
+
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;
   private final Selector selector = new Selector(this);
-  
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
   private transient DocumentWeakListener documentWeakListener;
   private transient FocusWeakListener focusWeakListener;
-  
-  
+
   /** Creates a new instance of JDbTextArea */
   public JDbTextArea() {
     try {
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null);
-      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null);
-      focusWeakListener = new FocusWeakListener(this,"this_focusGained", null);
+      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
+      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
+      focusWeakListener = new FocusWeakListener(this, "this_focusGained", null);
       documentWeakListener = new DocumentWeakListener(this);
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
@@ -57,48 +56,48 @@ public class JDbTextArea extends JTextArea implements DocumentListener, FieldObs
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
   }
-  
+
   public void this_focusGained(FocusEvent e) {
     EventQueue.invokeLater(selector);
   }
-  
+
   public void setDataSource(DbDataSource dataSource) {
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
   }
-  
+
   public DbDataSource getDataSource() {
     return dbFieldObserver.getDataSource();
   }
-  
+
   public DbFieldObserver getDbFieldObserver() {
     return dbFieldObserver;
   }
-  
+
   public void setColumnName(String columnName) {
     dbFieldObserver.setColumnName(columnName);
   }
-  
+
   public String getColumnName() {
     return dbFieldObserver.getColumnName();
   }
-  
+
   public void setToolTipColumnName(String columnName) {
     dbFieldObserverToolTip.setColumnName(columnName);
   }
-  
+
   public String getToolTipColumnName() {
     return dbFieldObserverToolTip.getColumnName();
   }
-  
+
   public void setValidator(Validator validator) {
     this.validator = validator;
   }
-  
+
   public Validator getValidator() {
     return validator;
   }
-  
+
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     documentWeakListener.setEnabled(false);
     try {
@@ -107,27 +106,31 @@ public class JDbTextArea extends JTextArea implements DocumentListener, FieldObs
       documentWeakListener.setEnabled(true);
     }
   }
-  
+
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
-    String tip  = dbFieldObserverToolTip.getValueAsText();
-    if (!dbFieldObserverToolTip.wasNull()&&tip.length()>0) {
-      this.setToolTipText("Pomo\u010d : "+tip);
-    } else
+    String tip = dbFieldObserverToolTip.getValueAsText();
+    if (!dbFieldObserverToolTip.wasNull() && tip.length() > 0) {
+      this.setToolTipText("Pomo\u010d : " + tip);
+    } else {
       this.setToolTipText(null);
-  }
-  
-  private void updateColumn() {
-    activeRowChangeWeakListener.setEnabled(false);
-    try {
-      if ((validator==null)||(validator!=null&&validator.isValid(this.getText())))
-        dbFieldObserver.updateValue(this.getText());
-    } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
-    } finally {
-      activeRowChangeWeakListener.setEnabled(true);
     }
   }
-  
+
+  private void updateColumn() {
+    if (!Equals.equals(dbFieldObserver.getValueAsText(), this.getText())) {
+      activeRowChangeWeakListener.setEnabled(false);
+      try {
+        if ((validator == null) || (validator != null && validator.isValid(this.getText()))) {
+          dbFieldObserver.updateValue(this.getText());
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+      } finally {
+        activeRowChangeWeakListener.setEnabled(true);
+      }
+    }
+  }
+
   /**
    * Gives notification that a portion of the document has been
    * removed.  The range is given in terms of what the view last
@@ -139,7 +142,7 @@ public class JDbTextArea extends JTextArea implements DocumentListener, FieldObs
   public void removeUpdate(DocumentEvent e) {
     updateColumn();
   }
-  
+
   /**
    * Gives notification that there was an insert into the document.  The
    * range given by the DocumentEvent bounds the freshly inserted region.
@@ -150,7 +153,7 @@ public class JDbTextArea extends JTextArea implements DocumentListener, FieldObs
   public void insertUpdate(DocumentEvent e) {
     updateColumn();
   }
-  
+
   /**
    * Gives notification that an attribute or set of attributes changed.
    *
@@ -175,10 +178,12 @@ public class JDbTextArea extends JTextArea implements DocumentListener, FieldObs
    *       expert: true
    */
   public void setDocument(Document doc) {
-    if (getDocument()!=null&&documentWeakListener!=null)
+    if (getDocument() != null && documentWeakListener != null) {
       getDocument().removeDocumentListener(documentWeakListener);
+    }
     super.setDocument(doc);
-    if (getDocument()!=null&&documentWeakListener!=null)
+    if (getDocument() != null && documentWeakListener != null) {
       getDocument().addDocumentListener(documentWeakListener);
+    }
   }
 }
