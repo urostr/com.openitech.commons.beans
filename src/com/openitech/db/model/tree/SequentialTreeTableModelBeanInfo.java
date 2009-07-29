@@ -1,22 +1,22 @@
 /*
- * DbTreeTableModelBeanInfo.java
+ * SequentialTreeTableModelBeanInfo.java
  *
  * Created on Sobota, 12 januar 2008, 20:31
  */
 
-package com.openitech.db.model;
+package com.openitech.db.model.tree;
 
 import java.beans.*;
 
 /**
  * @author uros
  */
-public class DbTreeTableModelBeanInfo extends SimpleBeanInfo {
+public class SequentialTreeTableModelBeanInfo extends SimpleBeanInfo {
   
     // Bean descriptor//GEN-FIRST:BeanDescriptor
     /*lazy BeanDescriptor*/
     private static BeanDescriptor getBdescriptor(){
-        BeanDescriptor beanDescriptor = new BeanDescriptor  ( com.openitech.db.model.DbTreeTableModel.class , null ); // NOI18N//GEN-HEADEREND:BeanDescriptor
+        BeanDescriptor beanDescriptor = new BeanDescriptor  ( com.openitech.db.model.tree.SequentialTreeTableModel.class , null ); // NOI18N//GEN-HEADEREND:BeanDescriptor
     
     // Here you can add code for customizing the BeanDescriptor.
     
@@ -32,7 +32,7 @@ public class DbTreeTableModelBeanInfo extends SimpleBeanInfo {
         PropertyDescriptor[] properties = new PropertyDescriptor[1];
     
         try {
-            properties[PROPERTY_nodeColumns] = new PropertyDescriptor ( "nodeColumns", com.openitech.db.model.DbTreeTableModel.class, "getNodeColumns", "setNodeColumns" ); // NOI18N
+            properties[PROPERTY_nodeColumns] = new PropertyDescriptor ( "nodeColumns", com.openitech.db.model.tree.SequentialTreeTableModel.class, "getNodeColumns", "setNodeColumns" ); // NOI18N
             properties[PROPERTY_nodeColumns].setPreferred ( true );
         }
         catch(IntrospectionException e) {
@@ -94,69 +94,69 @@ public class DbTreeTableModelBeanInfo extends SimpleBeanInfo {
         MethodDescriptor[] methods = new MethodDescriptor[32];
     
         try {
-            methods[METHOD_activeRowChanged0] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("activeRowChanged", new Class[] {com.openitech.db.events.ActiveRowChangeEvent.class})); // NOI18N
+            methods[METHOD_activeRowChanged0] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("activeRowChanged", new Class[] {com.openitech.db.events.ActiveRowChangeEvent.class})); // NOI18N
             methods[METHOD_activeRowChanged0].setDisplayName ( "" );
-            methods[METHOD_contentsChanged1] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("contentsChanged", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
+            methods[METHOD_contentsChanged1] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("contentsChanged", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
             methods[METHOD_contentsChanged1].setDisplayName ( "" );
-            methods[METHOD_fieldValueChanged2] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("fieldValueChanged", new Class[] {com.openitech.db.events.ActiveRowChangeEvent.class})); // NOI18N
+            methods[METHOD_fieldValueChanged2] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("fieldValueChanged", new Class[] {com.openitech.db.events.ActiveRowChangeEvent.class})); // NOI18N
             methods[METHOD_fieldValueChanged2].setDisplayName ( "" );
-            methods[METHOD_findColumn3] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("findColumn", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_findColumn3] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("findColumn", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_findColumn3].setDisplayName ( "" );
-            methods[METHOD_fireTableCellUpdated4] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("fireTableCellUpdated", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_fireTableCellUpdated4] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("fireTableCellUpdated", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
             methods[METHOD_fireTableCellUpdated4].setDisplayName ( "" );
-            methods[METHOD_fireTableChanged5] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("fireTableChanged", new Class[] {javax.swing.event.TableModelEvent.class})); // NOI18N
+            methods[METHOD_fireTableChanged5] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("fireTableChanged", new Class[] {javax.swing.event.TableModelEvent.class})); // NOI18N
             methods[METHOD_fireTableChanged5].setDisplayName ( "" );
-            methods[METHOD_fireTableDataChanged6] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("fireTableDataChanged", new Class[] {})); // NOI18N
+            methods[METHOD_fireTableDataChanged6] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("fireTableDataChanged", new Class[] {})); // NOI18N
             methods[METHOD_fireTableDataChanged6].setDisplayName ( "" );
-            methods[METHOD_fireTableRowsDeleted7] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("fireTableRowsDeleted", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_fireTableRowsDeleted7] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("fireTableRowsDeleted", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
             methods[METHOD_fireTableRowsDeleted7].setDisplayName ( "" );
-            methods[METHOD_fireTableRowsInserted8] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("fireTableRowsInserted", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_fireTableRowsInserted8] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("fireTableRowsInserted", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
             methods[METHOD_fireTableRowsInserted8].setDisplayName ( "" );
-            methods[METHOD_fireTableRowsUpdated9] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("fireTableRowsUpdated", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
+            methods[METHOD_fireTableRowsUpdated9] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("fireTableRowsUpdated", new Class[] {Integer.TYPE, Integer.TYPE})); // NOI18N
             methods[METHOD_fireTableRowsUpdated9].setDisplayName ( "" );
-            methods[METHOD_fireTableStructureChanged10] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("fireTableStructureChanged", new Class[] {})); // NOI18N
+            methods[METHOD_fireTableStructureChanged10] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("fireTableStructureChanged", new Class[] {})); // NOI18N
             methods[METHOD_fireTableStructureChanged10].setDisplayName ( "" );
-            methods[METHOD_getChild11] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("getChild", new Class[] {java.lang.Object.class, Integer.TYPE})); // NOI18N
+            methods[METHOD_getChild11] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("getChild", new Class[] {java.lang.Object.class, Integer.TYPE})); // NOI18N
             methods[METHOD_getChild11].setDisplayName ( "" );
-            methods[METHOD_getChildCount12] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("getChildCount", new Class[] {java.lang.Object.class})); // NOI18N
+            methods[METHOD_getChildCount12] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("getChildCount", new Class[] {java.lang.Object.class})); // NOI18N
             methods[METHOD_getChildCount12].setDisplayName ( "" );
-            methods[METHOD_getIndexOfChild13] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("getIndexOfChild", new Class[] {java.lang.Object.class, java.lang.Object.class})); // NOI18N
+            methods[METHOD_getIndexOfChild13] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("getIndexOfChild", new Class[] {java.lang.Object.class, java.lang.Object.class})); // NOI18N
             methods[METHOD_getIndexOfChild13].setDisplayName ( "" );
-            methods[METHOD_getListeners14] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("getListeners", new Class[] {java.lang.Class.class})); // NOI18N
+            methods[METHOD_getListeners14] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("getListeners", new Class[] {java.lang.Class.class})); // NOI18N
             methods[METHOD_getListeners14].setDisplayName ( "" );
-            methods[METHOD_getPathToRoot15] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("getPathToRoot", new Class[] {org.jdesktop.swingx.treetable.TreeTableNode.class})); // NOI18N
+            methods[METHOD_getPathToRoot15] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("getPathToRoot", new Class[] {org.jdesktop.swingx.treetable.TreeTableNode.class})); // NOI18N
             methods[METHOD_getPathToRoot15].setDisplayName ( "" );
-            methods[METHOD_getValueAt16] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("getValueAt", new Class[] {java.lang.Object.class, Integer.TYPE})); // NOI18N
+            methods[METHOD_getValueAt16] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("getValueAt", new Class[] {java.lang.Object.class, Integer.TYPE})); // NOI18N
             methods[METHOD_getValueAt16].setDisplayName ( "" );
-            methods[METHOD_intervalAdded17] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("intervalAdded", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
+            methods[METHOD_intervalAdded17] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("intervalAdded", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
             methods[METHOD_intervalAdded17].setDisplayName ( "" );
-            methods[METHOD_intervalRemoved18] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("intervalRemoved", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
+            methods[METHOD_intervalRemoved18] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("intervalRemoved", new Class[] {javax.swing.event.ListDataEvent.class})); // NOI18N
             methods[METHOD_intervalRemoved18].setDisplayName ( "" );
-            methods[METHOD_isCellEditable19] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("isCellEditable", new Class[] {java.lang.Object.class, Integer.TYPE})); // NOI18N
+            methods[METHOD_isCellEditable19] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("isCellEditable", new Class[] {java.lang.Object.class, Integer.TYPE})); // NOI18N
             methods[METHOD_isCellEditable19].setDisplayName ( "" );
-            methods[METHOD_isLeaf20] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("isLeaf", new Class[] {java.lang.Object.class})); // NOI18N
+            methods[METHOD_isLeaf20] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("isLeaf", new Class[] {java.lang.Object.class})); // NOI18N
             methods[METHOD_isLeaf20].setDisplayName ( "" );
-            methods[METHOD_putAllEditors21] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("putAllEditors", new Class[] {java.util.Map.class})); // NOI18N
+            methods[METHOD_putAllEditors21] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("putAllEditors", new Class[] {java.util.Map.class})); // NOI18N
             methods[METHOD_putAllEditors21].setDisplayName ( "" );
-            methods[METHOD_putAllFunctions22] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("putAllFunctions", new Class[] {java.util.Map.class})); // NOI18N
+            methods[METHOD_putAllFunctions22] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("putAllFunctions", new Class[] {java.util.Map.class})); // NOI18N
             methods[METHOD_putAllFunctions22].setDisplayName ( "" );
-            methods[METHOD_putAllRenderers23] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("putAllRenderers", new Class[] {java.util.Map.class})); // NOI18N
+            methods[METHOD_putAllRenderers23] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("putAllRenderers", new Class[] {java.util.Map.class})); // NOI18N
             methods[METHOD_putAllRenderers23].setDisplayName ( "" );
-            methods[METHOD_putEditor24] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("putEditor", new Class[] {java.lang.String.class, java.lang.Class.class})); // NOI18N
+            methods[METHOD_putEditor24] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("putEditor", new Class[] {java.lang.String.class, java.lang.Class.class})); // NOI18N
             methods[METHOD_putEditor24].setDisplayName ( "" );
-            methods[METHOD_putFunction25] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("putFunction", new Class[] {java.lang.String.class, com.openitech.db.model.DbTableModel.ColumnDescriptor.ValueMethod.Method.class})); // NOI18N
+            methods[METHOD_putFunction25] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("putFunction", new Class[] {java.lang.String.class, com.openitech.db.model.DbTableModel.ColumnDescriptor.ValueMethod.Method.class})); // NOI18N
             methods[METHOD_putFunction25].setDisplayName ( "" );
-            methods[METHOD_putRenderer26] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("putRenderer", new Class[] {java.lang.String.class, java.lang.Class.class})); // NOI18N
+            methods[METHOD_putRenderer26] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("putRenderer", new Class[] {java.lang.String.class, java.lang.Class.class})); // NOI18N
             methods[METHOD_putRenderer26].setDisplayName ( "" );
-            methods[METHOD_removeEditor27] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("removeEditor", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_removeEditor27] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("removeEditor", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_removeEditor27].setDisplayName ( "" );
-            methods[METHOD_removeFunction28] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("removeFunction", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_removeFunction28] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("removeFunction", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_removeFunction28].setDisplayName ( "" );
-            methods[METHOD_removeRenderer29] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("removeRenderer", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_removeRenderer29] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("removeRenderer", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_removeRenderer29].setDisplayName ( "" );
-            methods[METHOD_setValueAt30] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("setValueAt", new Class[] {java.lang.Object.class, java.lang.Object.class, Integer.TYPE})); // NOI18N
+            methods[METHOD_setValueAt30] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("setValueAt", new Class[] {java.lang.Object.class, java.lang.Object.class, Integer.TYPE})); // NOI18N
             methods[METHOD_setValueAt30].setDisplayName ( "" );
-            methods[METHOD_valueForPathChanged31] = new MethodDescriptor ( com.openitech.db.model.DbTreeTableModel.class.getMethod("valueForPathChanged", new Class[] {javax.swing.tree.TreePath.class, java.lang.Object.class})); // NOI18N
+            methods[METHOD_valueForPathChanged31] = new MethodDescriptor ( com.openitech.db.model.tree.SequentialTreeTableModel.class.getMethod("valueForPathChanged", new Class[] {javax.swing.tree.TreePath.class, java.lang.Object.class})); // NOI18N
             methods[METHOD_valueForPathChanged31].setDisplayName ( "" );
         }
         catch( Exception e) {}//GEN-HEADEREND:Methods
@@ -171,7 +171,7 @@ public class DbTreeTableModelBeanInfo extends SimpleBeanInfo {
   
   
     public BeanInfo[] getAdditionalBeanInfo() {//GEN-FIRST:Superclass
-        Class superclass = com.openitech.db.model.DbTreeTableModel.class.getSuperclass();
+        Class superclass = com.openitech.db.model.tree.SequentialTreeTableModel.class.getSuperclass();
         BeanInfo sbi = null;
         try {
             sbi = Introspector.getBeanInfo(superclass);//GEN-HEADEREND:Superclass

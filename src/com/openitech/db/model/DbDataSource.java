@@ -133,8 +133,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
     this(selectSql, countSql, DbDataSourceFactory.getInstance().getDbDataSourceClass());
   }
 
-  public DbDataSource(PreparedStatement psEvidenca, PreparedStatement psEvidencaCount, List<Object> parameters) {
-    implementation = new SQLDataSource(this, psEvidenca, psEvidencaCount, parameters);
+  public DbDataSource(PreparedStatement selectStatement, PreparedStatement countStatement, List<Object> parameters) {
+    implementation = new SQLDataSource(this, selectStatement, countStatement, parameters);
   }
 
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {

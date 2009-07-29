@@ -698,6 +698,10 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         this.editor = editor;
       }
 
+      public ValueMethod(Method function, DbDataSource dataSource, int rowIndex, int columnIndex, List<String> columnNames, List<String> separators, String[] rowColumnNames) {
+        this(null, null, function, dataSource, rowIndex, columnIndex, columnNames, separators, rowColumnNames);
+      }
+
       public Method getFunction() {
         return function;
       }

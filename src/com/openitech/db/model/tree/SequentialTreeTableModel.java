@@ -1,16 +1,16 @@
 /*
- * DbTreeTableModel.java
+ * SequentialTreeTableModel.java
  *
  * Created on Sobota, 12 januar 2008, 12:14
  *
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-package com.openitech.db.model;
+package com.openitech.db.model.tree;
 
+import com.openitech.db.model.*;
 import com.openitech.Settings;
 import com.openitech.db.filters.Scheduler;
-import com.openitech.ref.events.ListDataWeakListener;
 import java.awt.EventQueue;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ import org.jdesktop.swingx.treetable.TreeTableNode;
  *
  * @author uros
  */
-public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
+public class SequentialTreeTableModel extends DbTableModel implements TreeTableModel {
 
   /**
    * Provides support for event dispatching.
@@ -46,8 +46,8 @@ public class DbTreeTableModel extends DbTableModel implements TreeTableModel {
    */
   private int nodeColumns = 2;
 
-  /** Creates a new instance of DbTreeTableModel */
-  public DbTreeTableModel() {
+  /** Creates a new instance of SequentialTreeTableModel */
+  public SequentialTreeTableModel() {
     this.modelSupport = new TreeModelSupport(this);
   }
 
