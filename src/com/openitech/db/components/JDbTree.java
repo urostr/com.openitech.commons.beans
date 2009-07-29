@@ -36,6 +36,8 @@ public class JDbTree extends javax.swing.JTree {
 
   public JDbTree(DbTreeNodeType type) {
     super(new DbTreeNode(type, null));
+    final DefaultTreeModel model = (DefaultTreeModel) super.getModel();
+    model.setAsksAllowsChildren(true);
     addTreeExpansionListener(new TreeExpansionListener() {
 
       @Override

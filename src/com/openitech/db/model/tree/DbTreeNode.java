@@ -9,7 +9,7 @@ public class DbTreeNode extends DefaultMutableTreeNode {
   protected java.util.List<Object> key;
 
   public DbTreeNode(DbTreeNodeType type, List<Object> key) {
-    super();
+    super(type==null?"NULL":type.getName(), true);
     this.type = type;
     this.key = key == null ? new java.util.ArrayList<Object>(): key;
   }
