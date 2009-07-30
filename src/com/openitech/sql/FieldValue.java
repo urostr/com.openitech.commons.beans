@@ -138,6 +138,20 @@ public class FieldValue extends Field {
       }
 
 
+    },
+    BitValue {
+
+      @Override
+      public int getTypeIndex() {
+        return 7;
+      }
+
+      @Override
+      public int getSqlType() {
+        return java.sql.Types.BOOLEAN;
+      }
+
+
     };
 
     public abstract int getTypeIndex();
