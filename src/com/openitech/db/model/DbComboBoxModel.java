@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
@@ -35,7 +36,7 @@ import javax.swing.event.ListDataListener;
  *
  * @author uros
  */
-public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxModel, ListDataListener, PropertyChangeListener {
+public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxModel, ListDataListener, PropertyChangeListener, Iterable<DbComboBoxModel.DbComboBoxEntry<K, String>> {
 
   private final Vector<DbComboBoxEntry<K, String>> entries = new Vector<DbComboBoxEntry<K, String>>();
   private String keyColumnName = null;
@@ -397,6 +398,11 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    */
   public void propertyChange(PropertyChangeEvent evt) {
     UpdateEntries();
+  }
+
+  @Override
+  public Iterator<DbComboBoxEntry<K, String>> iterator() {
+    return entries.iterator();
   }
 
   public static class DbComboBoxEntry<K, V> {
