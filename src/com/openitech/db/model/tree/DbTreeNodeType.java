@@ -1,6 +1,9 @@
 package com.openitech.db.model.tree;
 
 import com.openitech.db.model.DbDataSource;
+import com.openitech.util.Equals;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +40,11 @@ public final class DbTreeNodeType implements CharSequence, Comparable<CharSequen
    * @param dataSource new value of dataSource
    */
   public void setDataSource(DbDataSource dataSource) {
-    this.dataSource = dataSource;
+    if (!Equals.equals(this.dataSource, dataSource)) {
+      DbDataSource oldValue = this.dataSource;
+      this.dataSource = dataSource;
+      propertyChangeSupport.firePropertyChange("dataSource", oldValue, dataSource);
+    }
   }
 
   /**
@@ -59,6 +66,7 @@ public final class DbTreeNodeType implements CharSequence, Comparable<CharSequen
     for (String keyColumn : keyColumns) {
       this.keyColumns.add(keyColumn);
     }
+    propertyChangeSupport.firePropertyChange("keyColumns", null, keyColumns);
   }
 
   /**
@@ -80,6 +88,7 @@ public final class DbTreeNodeType implements CharSequence, Comparable<CharSequen
     for (String separator : separators) {
       this.separators.add(separator);
     }
+    propertyChangeSupport.firePropertyChange("separators", null, separators);
   }
 
   /**
@@ -100,6 +109,7 @@ public final class DbTreeNodeType implements CharSequence, Comparable<CharSequen
     for (String columnName : columnNames) {
       this.columnNames.add(columnName);
     }
+    propertyChangeSupport.firePropertyChange("columnNames", null, columnNames);
   }
 
   /**
@@ -117,7 +127,9 @@ public final class DbTreeNodeType implements CharSequence, Comparable<CharSequen
    * @param nextType new value of nextType
    */
   public void setNextType(DbTreeNodeType nextType) {
+    DbTreeNodeType oldValue = this.nextType;
     this.nextType = nextType;
+    propertyChangeSupport.firePropertyChange("nextType", oldValue, nextType);
   }
 
   /**
@@ -178,5 +190,25 @@ public final class DbTreeNodeType implements CharSequence, Comparable<CharSequen
     int hash = 5;
     hash = 61 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0);
     return hash;
+  }
+
+  private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+
+  /**
+   * Add PropertyChangeListener.
+   *
+   * @param listener
+   */
+  public void addPropertyChangeListener(PropertyChangeListener listener) {
+    propertyChangeSupport.addPropertyChangeListener(listener);
+  }
+
+  /**
+   * Remove PropertyChangeListener.
+   *
+   * @param listener
+   */
+  public void removePropertyChangeListener(PropertyChangeListener listener) {
+    propertyChangeSupport.removePropertyChangeListener(listener);
   }
 }

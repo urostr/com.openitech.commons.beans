@@ -52,6 +52,9 @@ public class DbTreeNodeFactory implements TreeNodeFactory<DbTreeNode> {
             key.add(nodeSource.getValueAt(nodeSource.getRow(), keyColumn, columnNames));
           }
           DbTreeNode child = new DbTreeNode(nodeType.getNextType(), java.util.Collections.unmodifiableList(key));
+          for (String columnName:columnNames) {
+            child.put(columnName, nodeSource.getValueAt(nodeSource.getRow(), columnName));
+          }
 
           child.setUserObject(value.toString());
 
