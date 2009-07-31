@@ -8,6 +8,8 @@ import com.openitech.db.model.tree.DbTreeNode;
 import com.openitech.db.model.tree.DbTreeNodeFactory;
 import com.openitech.db.model.tree.DbTreeNodeType;
 import com.openitech.db.model.tree.TreeNodeFactory;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -18,6 +20,7 @@ import javax.swing.event.TreeExpansionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 
 /**
  *
@@ -54,6 +57,26 @@ public class JDbTree extends javax.swing.JTree {
 
       public void valueChanged(TreeSelectionEvent evt) {
         jTreeValueChanged(evt);
+      }
+    });
+    addMouseListener(new MouseAdapter() {
+
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        if ((e.getClickCount() > 1) && (getSelectionPath() != null)) {
+          stopWorker();
+
+          final DefaultTreeModel model = (DefaultTreeModel) JDbTree.this.getModel();
+          final DefaultMutableTreeNode node = (DefaultMutableTreeNode) getSelectionPath().getLastPathComponent();
+
+          node.removeAllChildren();
+          
+          model.setAsksAllowsChildren(false);
+          model.nodeStructureChanged(node);
+          model.setAsksAllowsChildren(true);
+
+          startWorker(factory, node);
+        }
       }
     });
   }
