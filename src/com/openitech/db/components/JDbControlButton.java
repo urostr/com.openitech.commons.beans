@@ -238,7 +238,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.deleteRow();
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error deleting the record.", ex);
-          StringBuffer message = new StringBuffer();
+          StringBuilder message = new StringBuilder();
           message.append("Napaka pri brisanju zapisa!\n\n");
           message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());
           JOptionPane.showMessageDialog(parentComponent, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);
@@ -264,7 +264,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.updateRow();
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error storing updated the record.", ex);
-          StringBuffer message = new StringBuffer();
+          StringBuilder message = new StringBuilder();
           message.append("Napaka pri potrjevanju vnosa!\n\n");
           message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());
           JOptionPane.showMessageDialog(parentComponent, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);

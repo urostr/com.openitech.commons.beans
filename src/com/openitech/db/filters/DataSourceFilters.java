@@ -2,6 +2,7 @@ package com.openitech.db.filters;
 
 import com.openitech.db.model.*;
 import com.openitech.formats.FormatFactory;
+import com.openitech.sql.events.Event;
 import com.openitech.util.Equals;
 import java.sql.SQLException;
 import java.text.MessageFormat;
@@ -174,8 +175,9 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       return i_type;
     }
 
-    public StringBuffer getSQLSegment() {
-      return formati[i_type].format(new Object[]{field}, new StringBuffer(27), null);
+    public StringBuilder getSQLSegment() {
+      StringBuffer sb = formati[i_type].format(new Object[]{field}, new StringBuffer(27), null);
+      return new StringBuilder(sb);
     }
 
     @Override
@@ -419,6 +421,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       super(field, i_type, p_count);
     }
 
+    @Override
     public boolean setValue(java.lang.Integer value) {
       if (!Equals.equals(getValue(), value)) {
         this.value = value;
@@ -428,6 +431,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       }
     }
 
+    @Override
     public boolean hasValue() {
       return value != null && value.intValue() != Integer.MIN_VALUE && value.intValue() != Integer.MAX_VALUE;
     }
@@ -473,7 +477,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   }
 
   private void setParameters(boolean notify) {
-    StringBuffer value = new StringBuffer(108);
+    StringBuilder value = new StringBuilder(108);
 
     parameters.clear();
 
@@ -508,7 +512,11 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
           if (seek.hasValue()) {
             value.append(value.length() > 0 ? " and " : "").append(seek.getSQLSegment());
             for (int p = 1; p <= seek.p_count; p++) {
-              if (seek.getValue() instanceof java.util.List) {
+              if (seek instanceof ValuesList) {
+                for (Object v : ((ValuesList) seek).getValues()) {
+                  parameters.add(v);
+                }
+              } else if (seek.getValue() instanceof java.util.List) {
                 for (Object v : (java.util.List) seek.getValue()) {
                   parameters.add(v);
                 }
@@ -551,6 +559,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
+  @Override
   public void setValue(String value) {
     throw new UnsupportedOperationException("Can't set value");
   }
@@ -650,6 +659,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   }
 
   public static interface Factory<T extends DataSourceFilters> {
+
     public T newInstance(String replace);
   }
 
@@ -790,6 +800,34 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      */
     public void setCaseSensitive(boolean caseSensitive) {
       this.caseSensitive = caseSensitive;
+    }
+  }
+
+  //TODO: FINISH THE EVENT FILTER, USING THE EventQuery and SqlUtilites class
+  public final static class EventSeekType extends DataSourceFilters.AbstractSeekType<Event> implements ValuesList {
+    private String eventProperty;
+
+    public EventSeekType(String field, String eventProperty) {
+      super(field, PREFORMATTED, 1);
+      this.eventProperty = eventProperty;
+    }
+
+    @Override
+    public boolean setValue(Event value) {
+      if (!Equals.equals(getValue(), value)) {
+        this.value = value;
+        if (value!=null) {
+
+        }
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    @Override
+    public List getValues() {
+      throw new UnsupportedOperationException("Not supported yet.");
     }
   }
 }

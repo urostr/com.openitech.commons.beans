@@ -1,10 +1,10 @@
 package com.openitech.sql;
 
+import com.openitech.util.Equals;
 import java.sql.Types;
 
 public class FieldValue extends Field {
 
-  Object value;
 
   public FieldValue(Field field) {
     this(field.name, field.type);
@@ -23,13 +23,30 @@ public class FieldValue extends Field {
     this.value = value;
   }
 
+  private Object value;
+
+  /**
+   * Get the value of value
+   *
+   * @return the value of value
+   */
   public Object getValue() {
     return value;
   }
 
+  /**
+   * Set the value of value
+   *
+   * @param value new value of value
+   */
   public void setValue(Object value) {
-    this.value = value;
+    if (!Equals.equals(this.value, value)) {
+      Object oldValue = this.value;
+      this.value = value;
+      propertyChangeSupport.firePropertyChange("value", oldValue, value);
+    }
   }
+
 
   public boolean isNull() {
     return value == null;
@@ -165,6 +182,10 @@ public class FieldValue extends Field {
         }
       }
       return result;
+    }
+
+    public static ValueType getType(int type) {
+      return getType(type, null);
     }
 
     public static ValueType getType(int type, Object value) {

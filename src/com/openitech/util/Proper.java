@@ -24,7 +24,7 @@ public class Proper {
     if (text==null)
       return null;
     else if (text.toString().equals(text.toString().toUpperCase())) {        
-      StringBuffer result = new StringBuffer(((CharSequence) text).length());
+      StringBuilder result = new StringBuilder(((CharSequence) text).length());
       String veznik;
       
       java.util.regex.Matcher matcher = formatter.matcher(text);

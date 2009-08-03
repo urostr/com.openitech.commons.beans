@@ -64,7 +64,7 @@ public class ReadInputStream {
     }
 
 
-    StringBuffer sb = new StringBuffer(108);
+    StringBuilder sb = new StringBuilder(108);
     String ls = System.getProperty("line.separator");
 
     int token;

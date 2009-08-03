@@ -1,10 +1,12 @@
-SELECT DISTINCT
+SELECT DISTINCT TOP 100 PERCENT
     ev.[Id],
     ev.[IdSifranta],
     ev.[IdSifre],
     ev.[IdEventSource],
     ev.[Datum]
-FROM
+<%ev_field_results%>
+FROM (SELECT ev.* FROM
     [ChangeLog].[dbo].[Events] ev
+WHERE <%ev_type_filter%> <%ev_source_filter%> <%ev_date_filter%>) ev
 <%ev_values_filter%>
-WHERE ev.[IdSifranta] = ? AND ev.[IdSifre] = ? <%ev_source_filter%> <%ev_date_filter%>
+ORDER BY ev.[Datum] DESC

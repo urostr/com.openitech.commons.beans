@@ -206,7 +206,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
       }
       try {
         int size = dataSource.getRowCount();
-        StringBuffer result;
+        StringBuilder result;
         Set<String> columns;
         java.util.Map<String, Integer> columnIndex;
         List values;
@@ -243,7 +243,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
 
         for (int row = min; row <= max; row++) {
           key = (K) dataSource.getValueAt(row, keyColumnName, valueColumns);
-          result = new StringBuffer();
+          result = new StringBuilder();
           values = new ArrayList();
           columnIndex = new java.util.HashMap<String, Integer>();
 

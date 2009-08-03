@@ -38,7 +38,7 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
   class Buffer {
 
     int maxSize = 200;
-    String stringBuffer;
+    String StringBuilder;
     int goal, end; // does not end the last character of the buffer
 
     public Buffer() {
@@ -51,12 +51,12 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
         lg = srcdoc.getLength() - ind;
       }
       try {
-        stringBuffer = srcdoc.getText(ind, lg);
+        StringBuilder = srcdoc.getText(ind, lg);
       } catch (final BadLocationException ex) {
         ex.printStackTrace();
       }
-      if (stringBuffer.length() != lg) {
-        System.out.println("Buffer.read: error: " + stringBuffer.length() + " != " + lg);
+      if (StringBuilder.length() != lg) {
+        System.out.println("Buffer.read: error: " + StringBuilder.length() + " != " + lg);
       }
       goal = ind;
       end = ind + lg;
@@ -75,7 +75,7 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
         }
         read(p2);
       }
-      return (stringBuffer.charAt(p - goal));
+      return (StringBuilder.charAt(p - goal));
     }
 
     public boolean subEquals(final String s, final int ind) {
@@ -93,7 +93,7 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
         read(ind);
       }
       for (int i = 0, j = ind - goal; i < lg; i++, j++) {
-        if (s.charAt(i) != stringBuffer.charAt(j)) {
+        if (s.charAt(i) != StringBuilder.charAt(j)) {
           return (false);
         }
       }

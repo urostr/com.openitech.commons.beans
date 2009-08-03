@@ -11,6 +11,7 @@ import com.openitech.db.components.JPIzbiraNaslova;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.sql.events.Event;
+import com.openitech.sql.events.EventQuery;
 import com.openitech.util.Equals;
 import java.sql.Connection;
 import java.sql.ResultSetMetaData;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -318,10 +320,10 @@ public abstract class SqlUtilities {
     }
 
     activeSavepoints.push(connection.setSavepoint());
-    if (activeSavepoints.size()>1) {
-      System.err.println("-- SET SAVEPOINT ("+activeSavepoints.peek().toString()+") -- ");
+    if (activeSavepoints.size() > 1) {
+      System.err.println("-- SET SAVEPOINT (" + activeSavepoints.peek().toString() + ") -- ");
     } else {
-      System.err.println("-- BEGIN TRANSACTION ("+activeSavepoints.peek().toString()+") -- ");
+      System.err.println("-- BEGIN TRANSACTION (" + activeSavepoints.peek().toString() + ") -- ");
     }
 
     return activeSavepoints.peek();
@@ -354,11 +356,11 @@ public abstract class SqlUtilities {
           connection.commit();
           System.err.println("-- COMMIT TRANSACTION -- ");
         } else if (savepoint != null) {
-          System.err.println("-- RELEASE SAVEPOINT ("+savepoint.toString()+") -- ");
+          System.err.println("-- RELEASE SAVEPOINT (" + savepoint.toString() + ") -- ");
         }
       } else if (savepoint != null) {
         connection.rollback(savepoint);
-        System.err.println("-- ROLLBACK TO SAVEPOINT ("+savepoint.toString()+") -- ");
+        System.err.println("-- ROLLBACK TO SAVEPOINT (" + savepoint.toString() + ") -- ");
       } else {
         activeSavepoints.clear();
         connection.rollback();
@@ -404,10 +406,10 @@ public abstract class SqlUtilities {
 
   public abstract long getCurrentIdentity(String tableName) throws SQLException;
 
-  public Event findEvent(int sifrant, String sifra,  FieldValue... fieldValues) throws SQLException {
+  public Event findEvent(int sifrant, String sifra, FieldValue... fieldValues) throws SQLException {
     Event search = new Event(sifrant, sifra);
-    if (fieldValues!=null) {
-      for(FieldValue fieldValue:fieldValues) {
+    if (fieldValues != null) {
+      for (FieldValue fieldValue : fieldValues) {
         search.addValue(fieldValue);
       }
     }
@@ -419,20 +421,22 @@ public abstract class SqlUtilities {
   public Long updateEvent(Event event) throws SQLException {
     return updateEvent(event, event); //event vsebuje eventId oz. se dodaja
   }
+
   public Long updateEvent(Event newValues, Event oldValues) throws SQLException {
     Event find = findEvent(oldValues);
-    if (find!=null) {
+    if (find != null) {
       newValues.setId(find.getId());
     }
     return storeEvent(newValues);
   }
 
   public abstract Long storeEvent(Event event) throws SQLException;
+  public abstract java.sql.ResultSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException;
 
-  public Long storeValue(FieldValue.ValueType valueType, final Object value ) throws SQLException {
+  public Long storeValue(FieldValue.ValueType valueType, final Object value) throws SQLException {
     return storeValue(valueType.getTypeIndex(), value);
   }
-  
+
   public abstract Long storeValue(int fieldType, final Object value) throws SQLException;
 
   public abstract JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException;
@@ -442,6 +446,12 @@ public abstract class SqlUtilities {
   }
 
   public abstract DbDataSource getDsSifrantModel(String dataBase, java.util.List<Object> parameters) throws SQLException;
+
+  public EventQuery prepareEventQuery(Event event, Set<Field> searchFields, Set<Field> resultFields) {
+    return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), event.getSifra());
+  }
+  
+  public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra);
 
   public static enum Operation {
 

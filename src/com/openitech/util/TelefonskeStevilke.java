@@ -17,7 +17,7 @@ public class TelefonskeStevilke {
   private static final String TL_SLOVENIJA = "386";
 
   public static Telefon getTelefon(String telefonskaStevilka) {
-    StringBuffer digits = new StringBuffer(telefonskaStevilka.length());
+    StringBuilder digits = new StringBuilder(telefonskaStevilka.length());
     for (int pos = 0; pos < telefonskaStevilka.length(); pos++) {
       if (Character.isDigit(telefonskaStevilka.charAt(pos)) || (telefonskaStevilka.charAt(pos) == '+')) {
         digits.append(telefonskaStevilka.charAt(pos));

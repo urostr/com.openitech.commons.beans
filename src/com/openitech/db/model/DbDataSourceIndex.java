@@ -94,7 +94,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
       fo.removeActiveRowChangeListener(fieldListener);
     }
     fields.clear();
-    StringBuffer key = new StringBuffer(54);
+    StringBuilder key = new StringBuilder(54);
     if (dataSource != null) {
       for (String column : keys) {
         DbFieldObserver fo = new DbFieldObserver();
@@ -378,7 +378,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     private String key = "";
 
     public DbIndexKey(Object... keyValues) {
-      StringBuffer key = new StringBuffer(27);
+      StringBuilder key = new StringBuilder(27);
       for (Object value : keyValues) {
         if (value == null) {
           this.keyValuesList.add(NULL);
@@ -396,7 +396,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     }
 
     public DbIndexKey(DbDataSource dataSource, List<String> keys, int row) throws SQLException {
-      StringBuffer key = new StringBuffer(27);
+      StringBuilder key = new StringBuilder(27);
       for (String column : keys) {
         Object value = row>dataSource.getRowCount()?null:dataSource.getValueAt(row, column, keys.toArray(new String[keys.size()]));
         if (value == null) {

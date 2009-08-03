@@ -64,18 +64,20 @@ public class JDbTree extends javax.swing.JTree {
       @Override
       public void mouseClicked(MouseEvent e) {
         if ((e.getClickCount() > 1) && (getSelectionPath() != null)) {
-          stopWorker();
-
           final DefaultTreeModel model = (DefaultTreeModel) JDbTree.this.getModel();
           final DefaultMutableTreeNode node = (DefaultMutableTreeNode) getSelectionPath().getLastPathComponent();
 
-          node.removeAllChildren();
-          
-          model.setAsksAllowsChildren(false);
-          model.nodeStructureChanged(node);
-          model.setAsksAllowsChildren(true);
+          if (model.getRoot().equals(node)) {
+            e.consume();
+            stopWorker();
+            node.removeAllChildren();
 
-          startWorker(factory, node);
+            model.setAsksAllowsChildren(false);
+            model.nodeStructureChanged(node);
+            model.setAsksAllowsChildren(true);
+
+            startWorker(factory, node);
+          }
         }
       }
     });

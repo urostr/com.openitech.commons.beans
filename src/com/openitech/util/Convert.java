@@ -24,7 +24,7 @@ public class Convert {
     if (convert==null)
       return null ;
     else {
-      StringBuffer ret = new StringBuffer(convert.length());
+      StringBuilder ret = new StringBuilder(convert.length());
       char add;
 
       for (int i=0; i<convert.length(); i++) {
@@ -51,7 +51,7 @@ public class Convert {
     if (convert==null)
       return null ;
     else {
-      StringBuffer ret = new StringBuffer(convert.length());
+      StringBuilder ret = new StringBuilder(convert.length());
       char add;
 
       for (int i=0; i<convert.length(); i++) {

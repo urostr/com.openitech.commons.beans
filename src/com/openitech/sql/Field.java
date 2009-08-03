@@ -1,5 +1,8 @@
 package com.openitech.sql;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+
 /**
  *
  * @author uros
@@ -25,7 +28,7 @@ public class Field {
     if (obj == null) {
       return false;
     }
-    if (!obj.getClass().isAssignableFrom(this.getClass())) {
+    if (!this.getClass().isAssignableFrom(obj.getClass())) {
       return false;
     }
     final Field other = (Field) obj;
@@ -56,5 +59,25 @@ public class Field {
     int hash = 7;
     hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0);
     return hash;
+  }
+  
+  protected PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+
+  /**
+   * Add PropertyChangeListener.
+   *
+   * @param listener
+   */
+  public void addPropertyChangeListener(PropertyChangeListener listener) {
+    propertyChangeSupport.addPropertyChangeListener(listener);
+  }
+
+  /**
+   * Remove PropertyChangeListener.
+   *
+   * @param listener
+   */
+  public void removePropertyChangeListener(PropertyChangeListener listener) {
+    propertyChangeSupport.removePropertyChangeListener(listener);
   }
 }

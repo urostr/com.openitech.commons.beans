@@ -210,7 +210,7 @@ public class Configuration extends javax.security.auth.login.Configuration {
       
       // create the new element
       if (Logger.getLogger(CLASS_NAME).isLoggable(Level.CONFIG)) {
-        StringBuffer config = new StringBuffer(108);
+        StringBuilder config = new StringBuilder(108);
         config.append("\t\t" + moduleClass + ", " + sflag);
         java.util.Iterator<String> i = options.keySet().iterator();
         while (i.hasNext()) {

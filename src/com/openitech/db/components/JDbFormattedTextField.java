@@ -497,7 +497,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     } catch (ParseException ex) {
       if (getText().length() > 0) {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error updating the value. [" + ex.getMessage() + "]");
-        StringBuffer message = new StringBuffer();
+        StringBuilder message = new StringBuilder();
         message.append("Napaka pri vnosu podatkov!\n");
         message.append(getText().substring(0, ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n");
         message.append(ex.getMessage());

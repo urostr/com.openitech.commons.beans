@@ -3337,8 +3337,8 @@ public class SQLDataSource implements DbDataSourceImpl {
       String schemaName = null;
       String tableName = updateTableName;
 
-      StringBuffer columns = new StringBuffer();
-      StringBuffer values = new StringBuffer();
+      StringBuilder columns = new StringBuilder();
+      StringBuilder values = new StringBuilder();
 
       ResultSetMetaData metaData = getMetaData();
       List<String> skipValues = new ArrayList<String>();
@@ -3374,7 +3374,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
 
-      StringBuffer sql = new StringBuffer();
+      StringBuilder sql = new StringBuilder();
 
       sql.append("INSERT INTO ");
       if (schemaName.length() > 0) {
@@ -3487,7 +3487,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           }
         } else {
           int updateCount = 0;
-          StringBuffer set = new StringBuffer(540);
+          StringBuilder set = new StringBuilder(540);
           for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
             entry = i.next();
             if ((skipColumns.indexOf(entry.getKey()) == -1) && (metaData.getTableName(columnMapping.checkedGet(entry.getKey()).intValue()).equalsIgnoreCase(key.table))) {
@@ -3497,7 +3497,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           }
 
           if (updateCount > 0) {
-            StringBuffer where = new StringBuffer();
+            StringBuilder where = new StringBuilder();
 
             for (String c : key.getColumnNames()) {
               where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
@@ -3652,7 +3652,15 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public int getColumnIndex(String columnName) throws SQLException {
-    return columnMapping.checkedGet(columnName).intValue();
+    if ((columnName != null) && (columnName instanceof String)) {
+      columnName = ((String) columnName).toUpperCase();
+    }
+
+    if (columnMapping.containsKey(columnName)) {
+      return columnMapping.checkedGet(columnName).intValue();
+    } else {
+      return Integer.MIN_VALUE;
+    }
   }
 
   public void setCountSql(String countSql) throws SQLException {
@@ -4237,7 +4245,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         if (notify) {
           owner.fireFieldValueChanged(new ActiveRowChangeEvent(owner, columnName, -1));
         }
-      // }
+        // }
       }
     }
   }
@@ -5491,7 +5499,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
     public PreparedStatement getDeleteStatement(ResultSet data) throws SQLException {
       if (delete == null) {
-        StringBuffer sql = new StringBuffer();
+        StringBuilder sql = new StringBuilder();
 
         for (Iterator<String> c = columnNames.iterator(); c.hasNext();) {
           sql.append(sql.length() > 0 ? " AND " : "").append(c.next()).append("=? ");
@@ -5516,7 +5524,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       ResultSet result = null;
       if (connection != null && !virtual) {
         if (update == null) {
-          StringBuffer sql = new StringBuffer();
+          StringBuilder sql = new StringBuilder();
 
           for (String c : columnNames) {
             sql.append(sql.length() > 0 ? " AND " : "").append(c).append("=? ");

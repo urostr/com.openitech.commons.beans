@@ -70,11 +70,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   private transient WeakListenerList activeRowChangeListeners;
   private String separator = " ";
   private boolean valuesAsString = false;
+  private boolean autoInsertRow = false;
 
   /** Creates a new instance of DbTableModel */
   public DbTableModel() {
     renderersMap.put("DATE_TIME", DbTableModel.DateTimeRenderer.class);
-  //rendererInstances.put("DATE_TIME", new DbTableModel.DateTimeRenderer());
+    //rendererInstances.put("DATE_TIME", new DbTableModel.DateTimeRenderer());
   }
 
   /**
@@ -128,6 +129,24 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   }
 
   /**
+   * Get the value of autoInsertRow
+   *
+   * @return the value of autoInsertRow
+   */
+  public boolean isAutoInsertRow() {
+    return autoInsertRow;
+  }
+
+  /**
+   * Set the value of autoInsertRow
+   *
+   * @param autoInsertRow new value of autoInsertRow
+   */
+  public void setAutoInsertRow(boolean autoInsertRow) {
+    this.autoInsertRow = autoInsertRow;
+  }
+
+  /**
    * Returns the number of rows in the model. A
    * <code>JTable</code> uses this function to determine how many rows it
    * should display.  This function should be quick, as it
@@ -138,7 +157,13 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
    * @see #getColumnCount
    */
   public int getRowCount() {
-    return this.dataSource == null ? 0 : this.dataSource.getRowCount();
+    int result = this.dataSource == null ? 0 : this.dataSource.getRowCount();
+
+    if ((autoInsertRow) && (result == 0)) {
+      result = 1;
+    }
+
+    return result;
   }
 
   /**
@@ -293,12 +318,21 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     return renderersMap.put(key, method);
   }
 
+  public TableCellRenderer putRendererInstance(String key, TableCellRenderer renderer) {
+    return rendererInstances.put(key, renderer);
+  }
+
   public Class<? extends TableCellRenderer> removeRenderer(String key) {
+    rendererInstances.remove(key);
     return renderersMap.remove(key);
   }
 
   public void putAllEditors(Map<String, Class<? extends TableCellEditor>> map) {
     editorsMap.putAll(map);
+  }
+
+  public TableCellEditor putEditorInstance(String key, TableCellEditor editor) {
+    return editorInstances.put(key, editor);
   }
 
   public Class<? extends TableCellEditor> putEditor(String key, Class<? extends TableCellEditor> method) {
@@ -553,10 +587,11 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         Map<String, TableCellRenderer> rendererInstances = owner.rendererInstances;
 
         if (rendererInstances.containsKey(rendererKey)) {
-          renderer = rendererInstances.get(rendererInstances);
+          renderer = rendererInstances.get(rendererKey);
         } else if (renderersMap.containsKey(rendererKey)) {
           try {
             renderer = renderersMap.get(rendererKey).newInstance();
+            rendererInstances.put(rendererKey, renderer);
           } catch (Exception err) {
             renderer = null;
           }
@@ -574,22 +609,23 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     }
 
     public TableCellEditor getCellEditor() {
-      TableCellEditor renderer = null;
+      TableCellEditor editor = null;
       String editorKey = getEditorKey();
 
       Map<String, Class<? extends TableCellEditor>> editorsMap = owner.editorsMap;
       Map<String, TableCellEditor> editorInstances = owner.editorInstances;
 
       if (editorInstances.containsKey(editorKey)) {
-        renderer = editorInstances.get(editorInstances);
+        editor = editorInstances.get(editorKey);
       } else if (editorsMap.containsKey(editorKey)) {
         try {
-          renderer = editorsMap.get(editorKey).newInstance();
+          editor = editorsMap.get(editorKey).newInstance();
+          editorInstances.put(editorKey, editor);
         } catch (Exception err) {
-          renderer = null;
+          editor = null;
         }
       }
-      return renderer;
+      return editor;
     }
 
     public void setEditable(boolean editable) {
@@ -726,7 +762,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       private String getValueAsString() {
         try {
           if (dataSource != null) {
-            StringBuffer result = new StringBuffer();
+            StringBuilder result = new StringBuilder();
             String lastSeparator = separators.size() > 0 ? separators.get(separators.size() - 1) : " ";
             Iterator<String> separator = separators.iterator();
 
@@ -735,7 +771,11 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
                 result.append(separator.hasNext() ? separator.next() : lastSeparator);
               }
 
-              Object value = dataSource.getValueAt(rowIndex + 1, columnName, rowColumnNames);
+
+              Object value = null;
+              if ((rowIndex + 1) <= dataSource.getRowCount()) {
+                value = dataSource.getValueAt(rowIndex + 1, columnName, rowColumnNames);
+              }
 
               if (value instanceof java.util.Date) {
                 value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
@@ -761,66 +801,6 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
               }
             }
             return result.toString();
-          }
-        } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "]");
-        }
-        return null;
-      }
-
-      public Object getValue() {
-        try {
-          if (dataSource != null) {
-            if (renderer == null) {
-              StringBuffer result = new StringBuffer();
-              String lastSeparator = separators.size() > 0 ? separators.get(separators.size() - 1) : " ";
-              Iterator<String> separator = separators.iterator();
-
-              for (String columnName : columnNames) {
-                if (result.length() > 0) {
-                  result.append(separator.hasNext() ? separator.next() : lastSeparator);
-                }
-
-                Object value = dataSource.getValueAt(rowIndex + 1, columnName, rowColumnNames);
-
-                if (value instanceof java.util.Date) {
-                  value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
-                } else if (value instanceof java.lang.Number) {
-                  if ((value instanceof java.math.BigDecimal) ||
-                          (value instanceof java.lang.Double) ||
-                          (value instanceof java.lang.Float)) {
-                    value = DECIMAL_FORMAT.format((java.lang.Number) value);
-                  } else {
-                    value = INTEGER_FORMAT.format((java.lang.Number) value);
-                  }
-                }
-
-                result.append(value == null ? "" : value);
-              }
-              if (function != null) {
-                Object value = getFunctionValue();
-                if (value != null) {
-                  if (result.length() > 0) {
-                    result.append(separator.hasNext() ? separator.next() : lastSeparator);
-                  }
-                  result.append(value == null ? "" : value);
-                }
-              }
-              return result.toString();
-            } else {
-              java.util.List<Object> result = new java.util.ArrayList<Object>();
-              for (String columnName : columnNames) {
-                result.add(dataSource.getValueAt(rowIndex + 1, columnName, rowColumnNames));
-              }
-
-              if (result.size() == 0) {
-                return null;
-              } else if (result.size() == 1) {
-                return result.get(0);
-              } else {
-                return result;
-              }
-            }
           }
         } catch (Exception ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "]");

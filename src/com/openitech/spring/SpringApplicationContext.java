@@ -67,7 +67,7 @@ public class SpringApplicationContext extends GenericApplicationContext {
 
           char[] cb = new char[1024];
           int count;
-          StringBuffer document = new StringBuffer();
+          StringBuilder document = new StringBuilder();
 
           do {
           count = reader.read(cb);

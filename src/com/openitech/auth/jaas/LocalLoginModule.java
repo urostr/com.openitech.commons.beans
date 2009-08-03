@@ -455,7 +455,7 @@ public class LocalLoginModule implements LoginModule {
       logger.finest("\t\t[LocalLoginModule] " +
               "user entered username: " +
               username);
-      StringBuffer message = new StringBuffer();
+      StringBuilder message = new StringBuilder();
       message.append("\t\t[LocalLoginModule] " +
               "user entered password: ");
       message.append(password);

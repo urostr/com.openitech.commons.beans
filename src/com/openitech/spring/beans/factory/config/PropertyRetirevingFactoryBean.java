@@ -111,7 +111,7 @@ public class PropertyRetirevingFactoryBean implements FactoryBean, BeanNameAware
 
   @Override
   public void afterPropertiesSet() throws IllegalArgumentException {
-    StringBuffer message = new StringBuffer();
+    StringBuilder message = new StringBuilder();
 		if (this.remotePropertyRetriever == null) {
       message.append("remotePropertyRetriever is required");
     }
