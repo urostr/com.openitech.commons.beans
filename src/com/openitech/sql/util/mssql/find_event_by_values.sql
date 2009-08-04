@@ -1,5 +1,6 @@
 SELECT DISTINCT TOP 100 PERCENT
     ev.[Id],
+    ev.[Id] as [EventId],
     ev.[IdSifranta],
     ev.[IdSifre],
     ev.[IdEventSource],

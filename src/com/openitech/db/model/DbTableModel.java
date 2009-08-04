@@ -128,6 +128,20 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     return null;
   }
 
+  @Override
+  public boolean isCellEditable(int rowIndex, int columnIndex) {
+    if (getDataSource()==null) {
+      return false;
+    } else {
+      boolean editable = columnDescriptors[columnIndex].isEditable()&&(columnDescriptors[columnIndex].getCellEditor()!=null);
+      if ((rowIndex+1)>getDataSource().getRowCount()) {
+        editable = editable && getDataSource().isAutoInsert();
+      }
+      return editable;
+    }
+  }
+
+
   /**
    * Get the value of autoInsertRow
    *
@@ -215,6 +229,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
           if (descriptor.getEditorKey() == null) {
             descriptor.setEditorKey(matcher.lookingAt() ? matcher.group(1) : null);
+            descriptor.setEditable(true);
           }
 
           matcher = columnPattern.matcher(parameter);

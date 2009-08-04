@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import com.openitech.components.JMnemonicButton;
+import com.openitech.util.Equals;
 
 /**
  *
@@ -337,16 +338,18 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   }//GEN-LAST:event_jbFirstActionPerformed
 
   public void setDataSource(com.openitech.db.model.DbNavigatorDataSource dataSource) {
-    if (this.dataSource != null) {
-      this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-      this.dataSource.removePropertyChangeListener("model", propertyChangeWeakListener);
-    }
-    this.dataSource = dataSource;
-    if (this.dataSource != null) {
-      this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
-      this.dataSource.addPropertyChangeListener("model", propertyChangeWeakListener);
-      if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
-        checkButtons();
+    if (!Equals.equals(this.dataSource, dataSource)) {
+      if (this.dataSource != null) {
+        this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
+        this.dataSource.removePropertyChangeListener("model", propertyChangeWeakListener);
+      }
+      this.dataSource = dataSource;
+      if (this.dataSource != null) {
+        this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+        this.dataSource.addPropertyChangeListener("model", propertyChangeWeakListener);
+        if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
+          checkButtons();
+        }
       }
     }
   }
@@ -472,7 +475,6 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   public void propertyChange(PropertyChangeEvent evt) {
     setDataSource(getDataSource());
   }
-
   // Variables declaration - do not modify//GEN-BEGIN:variables
   public com.openitech.components.JMnemonicButton jbAdd;
   public com.openitech.components.JMnemonicButton jbCancel;
