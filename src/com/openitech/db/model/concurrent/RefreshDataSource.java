@@ -31,12 +31,11 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
   
   public RefreshDataSource(DbDataSource dataSource) {
-    super(new Event(dataSource, Event.Type.REFRESH, dataSource.isReloadsOnEventQueue()));
-    this.suspend = new Event(dataSource, Event.Type.SUSPEND);
+    this(dataSource, false);
   }
   
   public RefreshDataSource(DbDataSource dataSource, boolean filterChange) {
-    this(dataSource,null,null,filterChange, dataSource.isReloadsOnEventQueue());
+    this(dataSource,dataSource.getParameters(),dataSource.getDefaultValues(),filterChange, dataSource.isReloadsOnEventQueue());
   }
 
   public RefreshDataSource(DbDataSource dataSource, List<Object> parameters, Map<String,Object> defaults) {

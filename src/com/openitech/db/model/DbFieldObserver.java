@@ -113,6 +113,9 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
       try {
         if (dataSource.getRowCount() > 0) {
           result = dataSource.getObject(columnName);
+          if (dataSource.wasNull()) {
+            result = null;
+          }
         }
       } catch (Exception ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. " + ex.getMessage());
