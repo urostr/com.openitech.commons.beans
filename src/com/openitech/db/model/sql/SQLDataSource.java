@@ -2719,19 +2719,21 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public void cancelRowUpdates() throws SQLException {
     if (isDataLoaded()) {
-      boolean cancelUpdates = true;
-      try {
-        owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.CANCEL_UPDATES));
-      } catch (Exception err) {
-        cancelUpdates = false;
-      }
-      if (cancelUpdates) {
-        storedUpdates.remove(new Integer(getRow()));
-        if (inserting) {
-          inserting = false;
-          owner.fireIntervalRemoved(new ListDataEvent(this, ListDataEvent.INTERVAL_REMOVED, getRowCount(), getRowCount()));
+      if (isUpdating()) {
+        boolean cancelUpdates = true;
+        try {
+          owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.CANCEL_UPDATES));
+        } catch (Exception err) {
+          cancelUpdates = false;
         }
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), selectResultSet.getRow()));
+        if (cancelUpdates) {
+          storedUpdates.remove(new Integer(getRow()));
+          if (inserting) {
+            inserting = false;
+            owner.fireIntervalRemoved(new ListDataEvent(this, ListDataEvent.INTERVAL_REMOVED, getRowCount(), getRowCount()));
+          }
+          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), selectResultSet.getRow()));
+        }
       }
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -4191,6 +4193,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public boolean isUpdating() throws SQLException {
     return rowInserted() || rowUpdated();
   }
