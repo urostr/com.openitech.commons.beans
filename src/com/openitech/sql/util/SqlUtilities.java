@@ -426,6 +426,8 @@ public abstract class SqlUtilities {
     Event find = findEvent(oldValues);
     if (find != null) {
       newValues.setId(find.getId());
+      newValues.setEventSource(find.getEventSource());
+      newValues.setDatum(find.getDatum());
     }
     return storeEvent(newValues);
   }
