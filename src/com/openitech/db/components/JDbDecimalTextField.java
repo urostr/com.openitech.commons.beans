@@ -39,7 +39,7 @@ public class JDbDecimalTextField extends JDbIntegerTextField {
   /** Creates a new instance of JDbIntegerTextField */
   public JDbDecimalTextField(int length, int decimals, boolean autosize) {
     super(autosize);
-    this.decimals=decimals;
+    this.decimals=Math.max(decimals,1);
     setLength(length);
   }
 
@@ -50,7 +50,7 @@ public class JDbDecimalTextField extends JDbIntegerTextField {
   }
 
   public void setDecimals(int decimals) {
-    this.decimals = decimals;
+    this.decimals=Math.max(decimals,1);
     updateFormat();
   }
 
