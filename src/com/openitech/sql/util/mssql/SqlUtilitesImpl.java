@@ -16,6 +16,7 @@ import com.openitech.sql.events.EventQuery;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.sql.FieldValue;
 import com.openitech.util.ReadInputStream;
+import com.sun.rowset.CachedRowSetImpl;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.JOptionPane;
 
 /**
@@ -596,7 +598,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         primaryKey.add(Event.EVENT_SOURCE);
       }
       java.util.List parameters = new java.util.ArrayList<Object>();
-      int valuesSet = prepareSearchParameters(parameters, new HashMap<Field, DbDataSource.SqlParameter<Object>>(), event, primaryKey, new java.util.HashSet<Field>(), event.getSifrant(), event.getSifra());
+      int valuesSet = prepareSearchParameters(parameters, new HashMap<Field, DbDataSource.SqlParameter<Object>>(), event, primaryKey, new java.util.HashSet<Field>(), event.getSifrant(), event.getSifra(), true);
 
       //ce niso bile nastavljene vse vrednosti PK-ja potem ne iscemo 
       boolean seek = true;
@@ -627,7 +629,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public PreparedStatement getGeneratedFields;
 
   @Override
-  public ResultSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException {
+  public ResultSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException {
     if (getGeneratedFields == null) {
       getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
     }
@@ -636,7 +638,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
     getGeneratedFields.setInt(param++, idSifranta);
     getGeneratedFields.setBoolean(param++, idSifre == null);
     getGeneratedFields.setString(param++, idSifre);
-    return getGeneratedFields.executeQuery();
+    getGeneratedFields.setBoolean(param++, !visibleOnly);
+    CachedRowSet rs = new CachedRowSetImpl();
+    rs.populate(getGeneratedFields.executeQuery());
+
+    return rs;
   }
 
   private Map<NamedFieldIds, NamedFieldIds> getEventFields(int idSifranta, String idSifre) throws SQLException {
@@ -688,18 +694,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra) {
+  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean validOnly) {
     StringBuilder sb = new StringBuilder(500);
     StringBuilder sbresult = new StringBuilder(500);
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
     parameters.add(sqlResultFields);
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
     parameters.add(sqlFindEventType);
+    String validFrom = validOnly ? " AND GETDATE()>=ev.validFrom " : "" ;
     if (sifra == null) {
-      sqlFindEventType.setValue("ev.[IdSifranta] = ?");
+      sqlFindEventType.setValue("ev.[IdSifranta] = ?" + validFrom);
       parameters.add(sifrant);
     } else {
-      sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
+      sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?" + validFrom);
       parameters.add(sifrant);
       parameters.add(sifra);
     }
@@ -722,6 +729,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
     parameters.add(sqlFind);
+
+    DbDataSource.SubstSqlParameter sqlValidOnly = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
+    parameters.add(sqlValidOnly);
+    if (validOnly) {
+      sqlValidOnly.setValue("WHERE (ev.[validTo] IS NULL OR ev.[ValidTo] >= GETDATE())");
+    } else {
+      sqlValidOnly.setValue("");
+    }
+
     int valuesSet = 0;
     Map<NamedFieldIds, NamedFieldIds> fieldNames;
     try {
@@ -733,92 +749,92 @@ public class SqlUtilitesImpl extends SqlUtilities {
     for (Field f : searchFields) {
       //event.getEventValues().keySet()) {
 //      if (searchFields.contains(f)) {
-        valuesSet++;
-        final String ev_alias = "[ev_" + f.getName() + "]";
-        final String vp_alias = "[vp_" + f.getName() + "]";
-        final String val_alias = "[val_" + f.getName() + "]";
-        sb.append("INNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
-        sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
-        NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
-        if (fieldNames.containsKey(fn)) {
-          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
-        } else {
-          sb.append(") ");
-          sb.append("INNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
-          sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
-          sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
-        }
-        sb.append("INNER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
-        sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
-        List<FieldValue> values;
-        if (event.getEventValues().containsKey(f)) {
-          values = event.getEventValues().get(f);
-        } else {
-          values = new java.util.ArrayList<FieldValue>();
-          values.add(new FieldValue(f));
-        }
-//        if (values != null) {
-        sb.append(" AND (");
-        boolean first = true;
-        for (FieldValue fv : values) {
-          int tipPolja = fv.getValueType().getTypeIndex();
-          if (first) {
-            first = false;
-          } else {
-            sb.append(" OR ");
-          }
-          switch (tipPolja) {
-            case 1:
-              //Integer
-              sb.append(val_alias).append(".IntValue = ? ");
-              if (resultFields.contains(f)) {
-                sbresult.append(", ").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
-              }
-              break;
-            case 2:
-              //Real
-              sb.append(val_alias).append(".RealValue = ? ");
-              if (resultFields.contains(f)) {
-                sbresult.append(", ").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
-              }
-              break;
-            case 3:
-              //String
-              sb.append(val_alias).append(".StringValue = ? ");
-              if (resultFields.contains(f)) {
-                sbresult.append(", ").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
-              }
-              break;
-            case 4:
-              //Date
-              sb.append(val_alias).append(".DateValue = ? ");
-              if (resultFields.contains(f)) {
-                sbresult.append(", ").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
-              }
-              break;
-            case 6:
-              //Clob
-              sb.append(val_alias).append(".ClobValue = ? ");
-              if (resultFields.contains(f)) {
-                sbresult.append(", ").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
-              }
-              break;
-            case 7:
-              //Boolean
-              sb.append(val_alias).append(".IntValue = ? ");
-              if (resultFields.contains(f)) {
-                sbresult.append(", ").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
-              }
-          }
-          DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
-          parameter.setType(fv.getType());
-          parameter.setValue(fv.getValue());
-          parameters.add(parameter);
-          namedParameters.put(f, parameter);
-        }
-        sb.append(")");
-//        }
+      valuesSet++;
+      final String ev_alias = "[ev_" + f.getName() + "]";
+      final String vp_alias = "[vp_" + f.getName() + "]";
+      final String val_alias = "[val_" + f.getName() + "]";
+      sb.append("\nINNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
+      sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
+      NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
+      if (fieldNames.containsKey(fn)) {
+        sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
+      } else {
         sb.append(") ");
+        sb.append("\nINNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
+        sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
+        sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
+      }
+      sb.append("\nINNER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+      sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
+      List<FieldValue> values;
+      if (event.getEventValues().containsKey(f)) {
+        values = event.getEventValues().get(f);
+      } else {
+        values = new java.util.ArrayList<FieldValue>();
+        values.add(new FieldValue(f));
+      }
+//        if (values != null) {
+      sb.append(" AND (");
+      boolean first = true;
+      for (FieldValue fv : values) {
+        int tipPolja = fv.getValueType().getTypeIndex();
+        if (first) {
+          first = false;
+        } else {
+          sb.append(" OR ");
+        }
+        switch (tipPolja) {
+          case 1:
+            //Integer
+            sb.append(val_alias).append(".IntValue = ? ");
+            if (resultFields.contains(f)) {
+              sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
+            }
+            break;
+          case 2:
+            //Real
+            sb.append(val_alias).append(".RealValue = ? ");
+            if (resultFields.contains(f)) {
+              sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
+            }
+            break;
+          case 3:
+            //String
+            sb.append(val_alias).append(".StringValue = ? ");
+            if (resultFields.contains(f)) {
+              sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
+            }
+            break;
+          case 4:
+            //Date
+            sb.append(val_alias).append(".DateValue = ? ");
+            if (resultFields.contains(f)) {
+              sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
+            }
+            break;
+          case 6:
+            //Clob
+            sb.append(val_alias).append(".ClobValue = ? ");
+            if (resultFields.contains(f)) {
+              sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
+            }
+            break;
+          case 7:
+            //Boolean
+            sb.append(val_alias).append(".IntValue = ? ");
+            if (resultFields.contains(f)) {
+              sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
+            }
+        }
+        DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
+        parameter.setType(fv.getType());
+        parameter.setValue(fv.getValue());
+        parameters.add(parameter);
+        namedParameters.put(f, parameter);
+      }
+      sb.append(")");
+//        }
+      sb.append(") ");
 //      }
     }
     for (Field f : resultFields) {
@@ -826,44 +842,44 @@ public class SqlUtilitesImpl extends SqlUtilities {
         final String ev_alias = "[ev_" + f.getName() + "]";
         final String vp_alias = "[vp_" + f.getName() + "]";
         final String val_alias = "[val_" + f.getName() + "]";
-        sb.append("INNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
+        sb.append("\nLEFT OUTER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
         if (fieldNames.containsKey(fn)) {
           sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
         } else {
           sb.append(") ");
-          sb.append("INNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
+          sb.append("\nLEFT OUTER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
           sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
           sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
         }
-        sb.append("LEFT OUTER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+        sb.append("\nLEFT OUTER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
         sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
 
         int tipPolja = FieldValue.ValueType.getType(f.getType()).getTypeIndex();
         switch (tipPolja) {
           case 1:
-            sbresult.append(", ").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
             break;
           case 2:
             //Real
-            sbresult.append(", ").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
             break;
           case 3:
             //String
-            sbresult.append(", ").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
             break;
           case 4:
             //Date
-            sbresult.append(", ").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
             break;
           case 6:
             //Clob
-            sbresult.append(", ").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
             break;
           case 7:
             //Boolean
-            sbresult.append(", ").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
         }
       }
     }
@@ -884,7 +900,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     result.sifrant = sifrant;
     result.sifra = sifra;
-    result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra);
+    result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, true);
 
     return result;
   }

@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  * <p>Copyright: Copyright (c) 2003</p>
  * <p>Company: Prosoft-Consulting d.o.o.</p>
  * @author Uroš Trojar
- * $Revision: 1.6 $
+ * $Revision: 1.7 $
  */
 public class ReadInputStream {
 

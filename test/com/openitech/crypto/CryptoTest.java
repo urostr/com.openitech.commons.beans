@@ -24,8 +24,6 @@ public class CryptoTest extends TestCase {
     super(testName);
   }
   
-  // TODO add test methods here. The name must begin with 'test'. For example:
-  // public void testHello() {}
   public void testGenerateKey() {
     try {
       KeyGenerator kgen = KeyGenerator.getInstance("DES");

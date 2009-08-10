@@ -146,6 +146,10 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         if (dataSource.getRowCount() > 0) {
           result = dataSource.getInt(columnName);
         }
+
+        if (dataSource.wasNull()) {
+          result = Integer.MIN_VALUE;
+        }
       } catch (Exception ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
         result = 0;
@@ -162,6 +166,10 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
       try {
         if (dataSource.getRowCount() > 0) {
           result = dataSource.getDouble(columnName);
+        }
+
+        if (dataSource.wasNull()) {
+          result = Double.MIN_VALUE;
         }
       } catch (SQLException ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");

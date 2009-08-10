@@ -29,8 +29,6 @@ public class RegExTest extends TestCase {
   protected void tearDown() throws Exception {
   }
   
-  // TODO add test methods here. The name must begin with 'test'. For example:
-  // public void testHello() {}
   public void testMatch() {
      Matcher match = column.matcher("$C{NAZIV}$S{-}$C{KRAJ}");
     assertTrue(match.find());

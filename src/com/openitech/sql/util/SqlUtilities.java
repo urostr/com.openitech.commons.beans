@@ -433,7 +433,12 @@ public abstract class SqlUtilities {
   }
 
   public abstract Long storeEvent(Event event) throws SQLException;
-  public abstract java.sql.ResultSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException;
+
+  public java.sql.ResultSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException {
+    return getGeneratedFields(idSifranta, idSifre, false);
+  }
+
+  public abstract java.sql.ResultSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException;
 
   public Long storeValue(FieldValue.ValueType valueType, final Object value) throws SQLException {
     return storeValue(valueType.getTypeIndex(), value);
@@ -452,7 +457,7 @@ public abstract class SqlUtilities {
   public EventQuery prepareEventQuery(Event event, Set<Field> searchFields, Set<Field> resultFields) {
     return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), event.getSifra());
   }
-  
+
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra);
 
   public static enum Operation {

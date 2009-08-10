@@ -28,9 +28,6 @@ public class PatternTest extends TestCase {
   protected void tearDown() throws Exception {
   }
   
-  // TODO add test methods here. The name must begin with 'test'. For example:
-  // public void testHello() {}
-  
   public void testSetName() {
     DbDataSource dsNaselja = new DbDataSource();
     

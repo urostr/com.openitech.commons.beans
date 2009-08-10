@@ -5,6 +5,7 @@ SELECT
     SifrantiPolja.[Opis],
     SifrantiPolja.[TabName],
     CountTabNames.StTabNames,
+    SifrantiPolja.FieldValueIndex,
     SifrantiPolja.[ZapSt],
     SifrantiPolja.[NewLine],
     SifrantiPolja.[IdPolja],
@@ -12,9 +13,10 @@ SELECT
     SifrantiPolja.[Potrebno],
     SifrantiPolja.[ShowInTable],
     SifrantiPolja.[PrimaryKey],
+    SifrantiPolja.[UporabiPrivzetoVrednost],
     SifrantiPolja.[validFrom],
     SifrantiPolja.[validTo],
-    SifrantVnosnihPolj.[ImePolja],
+    SifrantVnosnihPolj.[ImePolja]+CASE WHEN SifrantiPolja.FieldValueIndex>1 THEN CAST(SifrantiPolja.FieldValueIndex AS VARCHAR) ELSE '' END AS [ImePolja],
     SifrantVnosnihPolj.[Opis],
     CAST(CASE WHEN SifrantiPolja.[PrimaryKey]=1 THEN 0 ELSE SifrantVnosnihPolj.[VecVrednosti] END AS BIT) AS [VecVrednosti],
     SifrantVnosnihPolj.[TipPolja],
@@ -56,5 +58,6 @@ LEFT OUTER JOIN (SELECT
 WHERE
     SifrantiPolja.IdSifranta = ?
     AND (1=? OR SifrantiPolja.IdSifre= ?)
+    AND (1=? OR SifrantiPolja.Hidden = 0)
 ORDER BY
     CountTabNames.MinZapSt, SifrantiPolja.ZapSt, SifrantiPolja.[Id]
