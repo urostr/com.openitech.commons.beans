@@ -629,7 +629,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public PreparedStatement getGeneratedFields;
 
   @Override
-  public ResultSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException {
+  public synchronized ResultSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException {
     if (getGeneratedFields == null) {
       getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
     }
