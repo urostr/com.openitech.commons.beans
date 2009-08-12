@@ -15,6 +15,7 @@ import com.openitech.sql.events.Event;
 import com.openitech.sql.events.EventQuery;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.sql.FieldValue;
+import com.openitech.sql.ValueType;
 import com.openitech.util.ReadInputStream;
 import com.sun.rowset.CachedRowSetImpl;
 import java.sql.Connection;
@@ -208,7 +209,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           List<FieldValue> fieldValues = eventValues.get(field);
           for (int i = 0; i < fieldValues.size(); i++) {
             FieldValue value = fieldValues.get(i);
-            Long valueId = storeValue(value.getValueType().getTypeIndex(), value.getValue());
+            Long valueId = storeValue(value.getValueType().getStoreValueType(), value.getValue());
 
             param = 1;
             get_field.setString(param, field.getName());
@@ -272,7 +273,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public Long storeValue(int fieldType, final Object value) throws SQLException {
+  public Long storeValue(ValueType fieldType, final Object value) throws SQLException {
     if (logValues == null) {
       logValues = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
     }
@@ -284,7 +285,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     Long newValueId = null;
     if (value != null) {
       switch (fieldType) {
-        case 1:
+        case BitValue:
+        case IntValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, value);
           fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
@@ -305,7 +307,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             rs.close();
           }
           break;
-        case 2:
+        case RealValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
           fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, value);
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
@@ -326,7 +328,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             rs.close();
           }
           break;
-        case 3:
+        case StringValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
           fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, value);
@@ -347,7 +349,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
             rs.close();
           }
           break;
-        case 4:
+        case DateTimeValue:
+        case MonthValue:
+        case TimeValue:
+        case DateValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
           fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
@@ -368,7 +373,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             rs.close();
           }
           break;
-        case 5:
+        case ObjectValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
           fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
@@ -376,13 +381,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, value);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           break;
-        case 6:
+        case ClobValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
           fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
           fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, value);
+          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, value);
           break;
       }
       if (newValueId == null) {
@@ -572,6 +577,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 7:
               result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("IntValue") != 0));
+              break;
+            case 8:
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DATE, rs.getDate("DateValue")));
+              break;
+            case 9:
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.TIME, rs.getTime("DateValue")));
+              break;
+            case 10:
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DATE, rs.getDate("DateValue")));
               break;
           }
         } while (rs.next());
@@ -857,7 +871,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sb.append("\nLEFT OUTER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
         sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
 
-        int tipPolja = FieldValue.ValueType.getType(f.getType()).getTypeIndex();
+        int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
         switch (tipPolja) {
           case 1:
             sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");

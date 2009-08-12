@@ -7,7 +7,7 @@ package com.openitech.sql.properties.mssql;
 import com.openitech.db.ConnectionManager;
 import com.openitech.spring.beans.factory.config.AbstractPropertyRetriever;
 import com.openitech.spring.beans.factory.config.PropertyType;
-import com.openitech.sql.FieldValue;
+import com.openitech.sql.ValueType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,7 +48,7 @@ public final class SqlPropertyRetrieverImpl extends AbstractPropertyRetriever {
         rs.close();
       }
 
-      if (count>0) {
+      if (count > 0) {
         param = 1;
         getProperty.setInt(param++, type.getContentType());
         getProperty.setString(param++, properyName);
@@ -58,20 +58,37 @@ public final class SqlPropertyRetrieverImpl extends AbstractPropertyRetriever {
           if (rs.next()) {
             rs.getObject("PropertyValue");
             if (!rs.wasNull()) {
-              int fieldType = rs.getInt("FieldType");
-              if (fieldType==FieldValue.ValueType.IntValue.getTypeIndex()) {
-                result = rs.getInt("PropertyValue");
-              } else if (fieldType==FieldValue.ValueType.RealValue.getTypeIndex()) {
-                result = rs.getDouble("PropertyValue");
-              } else if (fieldType==FieldValue.ValueType.StringValue.getTypeIndex()) {
-                result = rs.getString("PropertyValue");
-              } else if (fieldType==FieldValue.ValueType.DateValue.getTypeIndex()) {
-                result = rs.getDate("PropertyValue");
-              } else if (fieldType==FieldValue.ValueType.ObjectValue.getTypeIndex()) {
-                result = rs.getObject("PropertyValue");
-              } else if (fieldType==FieldValue.ValueType.ClobValue.getTypeIndex()) {
-                result = rs.getClob("PropertyValue");
-                result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
+              ValueType fieldType = ValueType.valueOf(rs.getInt("FieldType"));
+
+              switch (fieldType) {
+                case BitValue:
+                case IntValue:
+                  result = rs.getInt("PropertyValue");
+                  break;
+                case RealValue:
+                  rs.getDouble("PropertyValue");
+                  break;
+                case StringValue:
+                  rs.getString("PropertyValue");
+                  break;
+                case DateTimeValue:
+                case MonthValue:
+                case DateValue:
+                  rs.getDate("PropertyValue");
+                  break;
+                case TimeValue:
+                  rs.getTime("PropertyValue");
+                  break;
+                case ClobValue:
+                  rs.getClob("PropertyValue");
+                  result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
+                  break;
+                case ObjectValue:
+                  rs.getBlob("PropertyValue");
+                  break;
+                default:
+                  rs.getObject("PropertyValue");
+                  break;
               }
             }
           }

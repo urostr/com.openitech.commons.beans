@@ -10,6 +10,7 @@ import com.openitech.db.ConnectionManager;
 import com.openitech.db.components.JPIzbiraNaslova;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.sql.ValueType;
 import com.openitech.sql.events.Event;
 import com.openitech.sql.events.EventQuery;
 import com.openitech.util.Equals;
@@ -440,11 +441,11 @@ public abstract class SqlUtilities {
 
   public abstract java.sql.ResultSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException;
 
-  public Long storeValue(FieldValue.ValueType valueType, final Object value) throws SQLException {
-    return storeValue(valueType.getTypeIndex(), value);
+  public Long storeValue(int fieldType, final Object value) throws SQLException {
+    return storeValue(ValueType.valueOf(fieldType), value);
   }
 
-  public abstract Long storeValue(int fieldType, final Object value) throws SQLException;
+  public abstract Long storeValue(ValueType valueType, final Object value) throws SQLException;
 
   public abstract JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException;
 
