@@ -701,7 +701,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     parameters.add(sqlResultFields);
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
     parameters.add(sqlFindEventType);
-    String validFrom = validOnly ? " AND GETDATE()>=ev.validFrom " : "" ;
+//    String validFrom = validOnly ? " AND GETDATE()>=ev.validFrom " : "" ;
+    String validFrom = validOnly ? " AND ev.valid = 1 " : "" ;
     if (sifra == null) {
       sqlFindEventType.setValue("ev.[IdSifranta] = ?" + validFrom);
       parameters.add(sifrant);
@@ -732,11 +733,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     DbDataSource.SubstSqlParameter sqlValidOnly = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
     parameters.add(sqlValidOnly);
-    if (validOnly) {
-      sqlValidOnly.setValue("WHERE (ev.[validTo] IS NULL OR ev.[ValidTo] >= GETDATE())");
-    } else {
+//    if (validOnly) {
+//      sqlValidOnly.setValue("WHERE (ev.[validTo] IS NULL OR ev.[ValidTo] >= GETDATE())");
+//    } else {
       sqlValidOnly.setValue("");
-    }
+//    }
 
     int valuesSet = 0;
     Map<NamedFieldIds, NamedFieldIds> fieldNames;
