@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.rowset.CachedRowSet;
 
 /**
  *
@@ -433,13 +434,15 @@ public abstract class SqlUtilities {
     return storeEvent(newValues);
   }
 
+  public abstract FieldValue getNextIdentity(Field field) throws SQLException;
+
   public abstract Long storeEvent(Event event) throws SQLException;
 
-  public java.sql.ResultSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException {
+  public CachedRowSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException {
     return getGeneratedFields(idSifranta, idSifre, false);
   }
 
-  public abstract java.sql.ResultSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException;
+  public abstract CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException;
 
   public Long storeValue(int fieldType, final Object value) throws SQLException {
     return storeValue(ValueType.valueOf(fieldType), value);

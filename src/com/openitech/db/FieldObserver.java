@@ -5,20 +5,14 @@
 
 package com.openitech.db;
 
-import com.openitech.db.model.*;
-
 /**
  *
  * @author uros
  */
-public interface FieldObserver {
+public interface FieldObserver extends DataSourceObserver {
 
   String getColumnName();
 
-  DbDataSource getDataSource();
-
   void setColumnName(String columnName);
-
-  void setDataSource(DbDataSource dataSource);
 
 }

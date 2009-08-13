@@ -18,6 +18,7 @@ import com.openitech.sql.FieldValue;
 import com.openitech.sql.ValueType;
 import com.openitech.util.ReadInputStream;
 import com.sun.rowset.CachedRowSetImpl;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,6 +33,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.JOptionPane;
 
@@ -209,7 +212,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           List<FieldValue> fieldValues = eventValues.get(field);
           for (int i = 0; i < fieldValues.size(); i++) {
             FieldValue value = fieldValues.get(i);
-            Long valueId = storeValue(value.getValueType().getStoreValueType(), value.getValue());
+            Long valueId = storeValue(value.getValueType(), value.getValue());
 
             param = 1;
             get_field.setString(param, field.getName());
@@ -280,7 +283,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     int pos = 0;
     FieldValue[] fieldValues = new FieldValue[7];
-    fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, fieldType);
+    fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, fieldType.getTypeIndex());
     java.sql.ResultSet rs;
     Long newValueId = null;
     if (value != null) {
@@ -643,7 +646,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public PreparedStatement getGeneratedFields;
 
   @Override
-  public synchronized ResultSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException {
+  public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException {
     if (getGeneratedFields == null) {
       getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
     }
@@ -673,6 +676,105 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     return result;
+  }
+  private final static Event SYSTEM_IDENTITIES = new Event(0, "ID01", -1);
+
+  @Override
+  public FieldValue getNextIdentity(Field field) throws SQLException {
+    SYSTEM_IDENTITIES.setPrimaryKey(new Field[]{});
+    Event system = findEvent(SYSTEM_IDENTITIES);
+    system = system == null ? SYSTEM_IDENTITIES : system;
+    List<FieldValue> get = system.getEventValues().get(field);
+    if ((get == null) || (get.size() == 0)) {
+      ValueType type = ValueType.getType(field.getType());
+      FieldValue start = new FieldValue(field);
+
+      switch (type) {
+        case RealValue:
+        case IntValue:
+          start.setValue(1);
+          break;
+        case StringValue:
+          start.setValue("AAA000000001");
+          break;
+        default:
+          start = null;
+      }
+
+      if (start != null) {
+        system.addValue(start);
+        storeEvent(system);
+      }
+
+      return start;
+    } else {
+      FieldValue value = get.get(0);
+      ValueType type = ValueType.getType(value.getType());
+
+      switch (type) {
+        case RealValue:
+          value.setValue(((Number) value.getValue()).doubleValue() + 1);
+          break;
+        case IntValue:
+          value.setValue(((Number) value.getValue()).longValue() + 1);
+          break;
+        case StringValue:
+          value.setValue(getNextSifra((String) value.getValue()));
+          break;
+        default:
+          value = null;
+      }
+
+      if (value != null) {
+        storeEvent(system);
+      }
+
+      return value;
+    }
+  }
+  private final static Pattern numbers = Pattern.compile("(\\p{Space}*)(\\p{Alpha}*)(\\p{Digit}*)(\\p{Space}*)");
+
+  private String getNextSifra(String sifra) {
+    Matcher compare = numbers.matcher(sifra);
+    if (compare.matches()) {
+      String sdigit = compare.group(3);
+      String sstring = compare.group(2);
+      if (sdigit.length() > 0) {
+        String ndigit = Integer.toString(Integer.parseInt(sdigit) + 1);
+        if (ndigit.length() > sdigit.length() && sstring.length() > 0) {
+          ndigit = "1";
+          try {
+            sstring = getNextString(sstring);
+          } catch (UnsupportedEncodingException ex) {
+            sdigit = "0" + sdigit;
+            Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, null, ex);
+          }
+        }
+        ndigit = getZero(sdigit.length()) + ndigit;
+        sdigit = ndigit.substring(ndigit.length() - sdigit.length());
+      }
+      sifra = compare.group(1) + sstring + sdigit + compare.group(4);
+    }
+    return sifra;
+  }
+
+  private String getNextString(String sstring) throws UnsupportedEncodingException {
+    return getNextString(sstring, sstring.length() - 1);
+  }
+
+  private String getNextString(String sstring, int at) throws UnsupportedEncodingException {
+    byte[] bytes = sstring.substring(at).getBytes("UTF-8");
+    bytes[bytes.length - 1]++;
+    sstring = sstring.substring(0, sstring.length() - 1) + (new String(bytes, "UTF-8"));
+    return sstring;
+  }
+
+  private String getZero(int length) {
+    StringBuilder sb = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      sb.append("0");
+    }
+    return sb.toString();
   }
 
   private static class NamedFieldIds {
@@ -716,7 +818,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
     parameters.add(sqlFindEventType);
 //    String validFrom = validOnly ? " AND GETDATE()>=ev.validFrom " : "" ;
-    String validFrom = validOnly ? " AND ev.valid = 1 " : "" ;
+    String validFrom = validOnly ? " AND ev.valid = 1 " : "";
     if (sifra == null) {
       sqlFindEventType.setValue("ev.[IdSifranta] = ?" + validFrom);
       parameters.add(sifrant);
@@ -750,7 +852,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //    if (validOnly) {
 //      sqlValidOnly.setValue("WHERE (ev.[validTo] IS NULL OR ev.[ValidTo] >= GETDATE())");
 //    } else {
-      sqlValidOnly.setValue("");
+    sqlValidOnly.setValue("");
 //    }
 
     int valuesSet = 0;
@@ -762,95 +864,98 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
     }
     for (Field f : searchFields) {
-      //event.getEventValues().keySet()) {
-//      if (searchFields.contains(f)) {
-      valuesSet++;
-      final String ev_alias = "[ev_" + f.getName() + "]";
-      final String vp_alias = "[vp_" + f.getName() + "]";
-      final String val_alias = "[val_" + f.getName() + "]";
-      sb.append("\nINNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
-      sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
-      NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
-      if (fieldNames.containsKey(fn)) {
-        sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
-      } else {
-        sb.append(") ");
-        sb.append("\nINNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
-        sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
-        sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
-      }
-      sb.append("\nINNER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
-      sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
-      List<FieldValue> values;
-      if (event.getEventValues().containsKey(f)) {
-        values = event.getEventValues().get(f);
-      } else {
-        values = new java.util.ArrayList<FieldValue>();
-        values.add(new FieldValue(f));
-      }
-//        if (values != null) {
-      sb.append(" AND (");
-      boolean first = true;
-      for (FieldValue fv : values) {
-        int tipPolja = fv.getValueType().getTypeIndex();
-        if (first) {
-          first = false;
+      if (!(Event.EVENT_SOURCE.equals(f) ||
+              Event.EVENT_DATE.equals(f))) {
+        valuesSet++;
+        final String ev_alias = "[ev_" + f.getName() + "]";
+        final String vp_alias = "[vp_" + f.getName() + "]";
+        final String val_alias = "[val_" + f.getName() + "]";
+        sb.append("\nINNER JOIN [ChangeLog].[dbo].[EventValues] ").append(ev_alias).append(" ON (");
+        sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
+        NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
+        if (fieldNames.containsKey(fn)) {
+          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
         } else {
-          sb.append(" OR ");
+          sb.append(") ");
+          sb.append("\nINNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
+          sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
+          sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
         }
-        switch (tipPolja) {
-          case 1:
-            //Integer
-            sb.append(val_alias).append(".IntValue = ? ");
-            if (resultFields.contains(f)) {
-              sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
-            }
-            break;
-          case 2:
-            //Real
-            sb.append(val_alias).append(".RealValue = ? ");
-            if (resultFields.contains(f)) {
-              sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
-            }
-            break;
-          case 3:
-            //String
-            sb.append(val_alias).append(".StringValue = ? ");
-            if (resultFields.contains(f)) {
-              sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
-            }
-            break;
-          case 4:
-            //Date
-            sb.append(val_alias).append(".DateValue = ? ");
-            if (resultFields.contains(f)) {
-              sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
-            }
-            break;
-          case 6:
-            //Clob
-            sb.append(val_alias).append(".ClobValue = ? ");
-            if (resultFields.contains(f)) {
-              sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
-            }
-            break;
-          case 7:
-            //Boolean
-            sb.append(val_alias).append(".IntValue = ? ");
-            if (resultFields.contains(f)) {
-              sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
-            }
+        sb.append("\nINNER JOIN [ChangeLog].[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+        sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
+        List<FieldValue> values;
+        if (event.getEventValues().containsKey(f)) {
+          values = event.getEventValues().get(f);
+        } else {
+          values = new java.util.ArrayList<FieldValue>();
+          values.add(new FieldValue(f));
         }
-        DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
-        parameter.setType(fv.getType());
-        parameter.setValue(fv.getValue());
-        parameters.add(parameter);
-        namedParameters.put(f, parameter);
-      }
-      sb.append(")");
+//        if (values != null) {
+        sb.append(" AND (");
+        boolean first = true;
+        for (FieldValue fv : values) {
+          int tipPolja = fv.getValueType().getTypeIndex();
+          if (first) {
+            first = false;
+          } else {
+            sb.append(" OR ");
+          }
+          switch (tipPolja) {
+            case 1:
+              //Integer
+              sb.append(val_alias).append(".IntValue = ? ");
+              if (resultFields.contains(f)) {
+                sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
+              }
+              break;
+            case 2:
+              //Real
+              sb.append(val_alias).append(".RealValue = ? ");
+              if (resultFields.contains(f)) {
+                sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
+              }
+              break;
+            case 3:
+              //String
+              sb.append(val_alias).append(".StringValue = ? ");
+              if (resultFields.contains(f)) {
+                sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
+              }
+              break;
+            case 4:
+              //Date
+              sb.append(val_alias).append(".DateValue = ? ");
+              if (resultFields.contains(f)) {
+                sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
+              }
+              break;
+            case 6:
+              //Clob
+              sb.append(val_alias).append(".ClobValue = ? ");
+              if (resultFields.contains(f)) {
+                sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
+              }
+              break;
+            case 7:
+              //Boolean
+              sb.append(val_alias).append(".IntValue = ? ");
+              if (resultFields.contains(f)) {
+                sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
+              }
+          }
+          DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
+          parameter.setType(fv.getType());
+          parameter.setValue(fv.getValue());
+          parameters.add(parameter);
+          namedParameters.put(f, parameter);
+        }
+        sb.append(")");
 //        }
-      sb.append(") ");
-//      }
+        sb.append(") ");
+      } else if (Event.EVENT_SOURCE.equals(f) ||
+                 Event.EVENT_DATE.equals(f)) {
+        valuesSet++;
+      }
     }
     for (Field f : resultFields) {
       if (!searchFields.contains(f)) {

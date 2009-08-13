@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
  * @author uros
  */
 public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
-  private   static final ExecutorService pool = Executors.newFixedThreadPool(9);
+  private   static final ExecutorService pool = Executors.newCachedThreadPool();
   protected static final Map<Event, Long> timestamps = new ConcurrentHashMap<Event, Long>();
   protected static final Map<Event, Future> tasks = new ConcurrentHashMap<Event, Future>();
   

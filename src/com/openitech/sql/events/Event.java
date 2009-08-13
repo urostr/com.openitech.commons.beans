@@ -23,11 +23,20 @@ public class Event {
   public Event(int sifrant, String sifra) {
     this(null, sifrant, sifra);
   }
-  
+
+  public Event(int sifrant, String sifra, int eventSource) {
+    this(null, sifrant, sifra, eventSource);
+  }
+
   public Event(Event parent, int sifrant, String sifra) {
+    this(parent, sifrant, sifra, Integer.MIN_VALUE);
+  }
+  
+  public Event(Event parent, int sifrant, String sifra, int eventSource) {
     this.parent = parent;
     this.sifrant = sifrant;
     this.sifra = sifra;
+    this.eventSource = eventSource;
   }
 
   private long id = -1;

@@ -22,7 +22,7 @@ public class JDbDateTimeTextField extends JDbFormattedTextField {
   public JDbDateTimeTextField() {
     super();
     setFormat(FormatFactory.DATETIME_FORMAT);
-    setColumns(18);
+    setColumns(12);
   }
   
 }

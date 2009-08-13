@@ -16,11 +16,6 @@ public enum ValueType {
     }
 
     @Override
-    public int getStoreValueType() {
-      return 1;
-    }
-
-    @Override
     public int getSqlType() {
       return Types.INTEGER;
     }
@@ -28,11 +23,6 @@ public enum ValueType {
 
     @Override
     public int getTypeIndex() {
-      return 2;
-    }
-
-    @Override
-    public int getStoreValueType() {
       return 2;
     }
 
@@ -47,10 +37,6 @@ public enum ValueType {
       return 3;
     }
 
-    @Override
-    public int getStoreValueType() {
-      return 3;
-    }
 
     @Override
     public int getSqlType() {
@@ -63,10 +49,6 @@ public enum ValueType {
       return 4;
     }
 
-    @Override
-    public int getStoreValueType() {
-      return 4;
-    }
 
     @Override
     public int getSqlType() {
@@ -76,11 +58,6 @@ public enum ValueType {
 
     @Override
     public int getTypeIndex() {
-      return 5;
-    }
-
-    @Override
-    public int getStoreValueType() {
       return 5;
     }
 
@@ -96,11 +73,6 @@ public enum ValueType {
     }
 
     @Override
-    public int getStoreValueType() {
-      return 6;
-    }
-
-    @Override
     public int getSqlType() {
       return Types.CLOB;
     }
@@ -109,11 +81,6 @@ public enum ValueType {
     @Override
     public int getTypeIndex() {
       return 7;
-    }
-
-    @Override
-    public int getStoreValueType() {
-      return 1;
     }
 
     @Override
@@ -128,11 +95,6 @@ public enum ValueType {
     }
 
     @Override
-    public int getStoreValueType() {
-      return 4;
-    }
-
-    @Override
     public int getSqlType() {
       return Types.DATE;
     }
@@ -141,11 +103,6 @@ public enum ValueType {
     @Override
     public int getTypeIndex() {
       return 9;
-    }
-
-    @Override
-    public int getStoreValueType() {
-      return 4;
     }
 
     @Override
@@ -160,19 +117,12 @@ public enum ValueType {
     }
 
     @Override
-    public int getStoreValueType() {
-      return 4;
-    }
-
-    @Override
     public int getSqlType() {
       return Types.DATE;
     }
   };
 
   public abstract int getTypeIndex();
-
-  public abstract int getStoreValueType();
 
   public abstract int getSqlType();
 
