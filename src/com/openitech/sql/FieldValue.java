@@ -1,6 +1,8 @@
 package com.openitech.sql;
 
 import com.openitech.util.Equals;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
 
 public class FieldValue extends Field {
@@ -73,5 +75,13 @@ public class FieldValue extends Field {
 
   public ValueType getValueType() {
     return ValueType.getType(type, value);
+  }
+
+  public static FieldValue createFieldValue(ResultSet source, Field field, String columnName) throws SQLException {
+    FieldValue fieldValue = new FieldValue(field, source.getObject(columnName));
+    if (source.wasNull()) {
+      fieldValue.setValue(null);
+    }
+    return fieldValue;
   }
 }

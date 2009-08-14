@@ -472,7 +472,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     return required.remove(field);
   }
 
-  public void clearRequired(RequiredFields field) {
+  public void clearRequired() {
     required.clear();
   }
 

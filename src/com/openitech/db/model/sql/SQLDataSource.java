@@ -7,6 +7,8 @@
  */
 package com.openitech.db.model.sql;
 
+import com.openitech.CollectionKey;
+import com.openitech.NamedValue;
 import com.openitech.db.model.*;
 import com.openitech.Settings;
 import com.openitech.db.ConnectionManager;
@@ -85,6 +87,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   private boolean[] storedResult = new boolean[]{false, false};
   private final Semaphore semaphore = new Semaphore(1);
   private transient Map<CacheKey, CacheEntry<String, Object>> cache = new HashMap<CacheKey, CacheEntry<String, Object>>();
+  private transient Map<CollectionKey<NamedValue>, java.util.List<PendingValue>> pendingValuesCache = new HashMap<CollectionKey<NamedValue>, java.util.List<PendingValue>>();
   private final Runnable events = new RunnableEvents(this);
   private Connection connection = null;
   private transient Map<String, PreparedStatement> cachedStatements = new HashMap<String, PreparedStatement>();
@@ -3861,6 +3864,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           count = -1;
           storedUpdates.clear();
           cache.clear();
+          pendingValuesCache.clear();
           reloaded = true;
           getRowCount();
         }
@@ -4106,13 +4110,38 @@ public class SQLDataSource implements DbDataSourceImpl {
                     PendingSqlParameter pendingSqlParameter = getPendingSqlParameter(cn);
                     if (pendingSqlParameter != null) {
                       java.util.List<Object> parameters = new java.util.ArrayList<Object>();
+                      CollectionKey<NamedValue> queryKey = new CollectionKey<NamedValue>();
                       for (String keyField : pendingSqlParameter.getParentKeyFields()) {
-                        parameters.add(cache.get(new CacheKey(row, keyField)).value);
+                        final CacheKey parentCk = new CacheKey(row, keyField);
+                        if (cache.containsKey(parentCk)) {
+                          parameters.add(cache.get(parentCk).value);
+                          queryKey.add(new NamedValue(keyField, cache.get(parentCk).value));
+                        } else {
+                          value = selectResultSet.getObject(keyField);
+                          if (selectResultSet.wasNull()) {
+                            value = null;
+                          }
+                          cache.put(parentCk, new CacheEntry<String, Object>(this, keyField, value));
+                          queryKey.add(new NamedValue(keyField, value));
+                          parameters.add(value);
+                        }
                       }
-                      java.util.List<PendingValue> pendingValues = pendingSqlParameter.getPendingValues(parameters);
-                      for (PendingValue pendingValue : pendingValues) {
-                        cache.put(new CacheKey(row, pendingValue.getFieldName()), new CacheEntry<String, Object>(this, pendingValue.getFieldName(), pendingValue.getValue()));
-                        pending.put(pendingValue.getFieldName(), false);
+                      if (!pendingValuesCache.containsKey(queryKey)) {
+                        java.util.Map<CollectionKey<NamedValue>, java.util.List<Object>> query = new java.util.HashMap<CollectionKey<NamedValue>, java.util.List<Object>>();
+                        query.put(queryKey, parameters);
+                        pendingValuesCache.putAll(pendingSqlParameter.getPendingValues(query, pendingValuesCache.size()>0));
+
+                        //nismo ga našli
+                        if (!pendingValuesCache.containsKey(queryKey)) {
+                          pendingValuesCache.put(queryKey, new java.util.ArrayList<PendingValue>());
+                        }
+                      }
+
+                      if (pendingValuesCache.containsKey(queryKey)) {
+                        for (PendingValue pendingValue : pendingValuesCache.get(queryKey)) {
+                          cache.put(new CacheKey(row, pendingValue.getFieldName()), new CacheEntry<String, Object>(this, pendingValue.getFieldName(), pendingValue.getValue()));
+                          pending.put(pendingValue.getFieldName(), false);
+                        }
                       }
                     }
                   }
@@ -4518,6 +4547,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
         storedUpdates.remove(row);
         cache.clear();
+        pendingValuesCache.clear();
         inserting = false;
 
         int selectedrow = selectResultSet.getRow();
