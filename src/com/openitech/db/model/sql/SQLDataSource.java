@@ -2680,7 +2680,9 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public void close() throws SQLException {
     if (isDataLoaded()) {
-      selectResultSet.close();
+      if (!owner.isShareResults()) {
+        selectResultSet.close();
+      }
       selectResultSet = null;
       owner.fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
       owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, -1, -1));
@@ -3607,9 +3609,10 @@ public class SQLDataSource implements DbDataSourceImpl {
               sql +
               "\n################# ########## #################");
       if (sql != null && sql.length() > 0 && getConnection() != null) {
-        if (cachedStatements.containsKey(sql)) {
+        if (owner.isShareResults()) {
+          selectStatement = SQLCache.getSharedStatement(connection, sql);
+        } else if (cachedStatements.containsKey(sql)) {
           selectStatement = cachedStatements.get(sql);
-          preparedSelectSql = sql;
         } else if ((this.selectStatement == null) || (!sql.equals(preparedSelectSql))) {
           if (this.selectStatement != null) {
             if (owner.isCacheStatements()) {
@@ -3623,25 +3626,29 @@ public class SQLDataSource implements DbDataSourceImpl {
                   ResultSet.CONCUR_READ_ONLY,
                   ResultSet.HOLD_CURSORS_OVER_COMMIT);
           this.selectStatement.setFetchSize(1008);
-          preparedSelectSql = sql;
-          this.metaData = null;
-          this.columnMapping.clear();
-
-          this.metaData = selectStatement.getMetaData();
-          int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
-          for (int c = 1; c <= columnCount; c++) {
-            this.columnMapping.put(this.metaData.getColumnName(c), c);
-          }
-          primaryKeys = this.getPrimaryKeys();
 
           owner.setName();
           Logger.getLogger(Settings.LOGGER).info("Successfully prepared the selectSql.");
         }
+        preparedSelectSql = sql;
       } else {
         this.selectStatement = null;
       }
+
+      if (selectStatement != null) {
+        this.metaData = null;
+        this.columnMapping.clear();
+
+        this.metaData = selectStatement.getMetaData();
+        int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
+        for (int c = 1; c <= columnCount; c++) {
+          this.columnMapping.put(this.metaData.getColumnName(c), c);
+        }
+        primaryKeys = this.getPrimaryKeys();
+      }
+
       this.count = -1;
-      if (this.selectResultSet != null) {
+      if (!(owner.isShareResults()||(this.selectResultSet == null))) {
         this.selectResultSet.close();
       }
       this.selectResultSet = null;
@@ -3762,7 +3769,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                   System.out.println("############## count(*) ");
                   System.out.println(preparedCountSql);
                 }
-                ResultSet rs = executeSql(countStatement, owner.getParameters());
+                ResultSet rs = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedCountSql, owner.getParameters()) : executeSql(countStatement, owner.getParameters());
                 if (DbDataSource.DUMP_SQL) {
                   System.out.println("##############");
                 }
@@ -3777,7 +3784,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                       System.out.println("##############");
                       System.out.println(preparedSelectSql);
                     }
-                    selectResultSet = executeSql(selectStatement, owner.getParameters());
+                    selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters()) : executeSql(selectStatement, owner.getParameters());
                     if (DbDataSource.DUMP_SQL) {
                       System.out.println("##############");
                     }
@@ -3828,7 +3835,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (reload) {
       owner.lock();
       try {
-        if (selectResultSet != null) {
+        if (!((selectResultSet == null)||owner.isShareResults())) {
           selectResultSet.close();
         }
       } catch (SQLException ex) {
@@ -3849,7 +3856,7 @@ public class SQLDataSource implements DbDataSourceImpl {
             System.out.println(preparedSelectSql);
           }
           long timer = System.currentTimeMillis();
-          selectResultSet = executeSql(selectStatement, owner.getParameters());
+          selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters()) : executeSql(selectStatement, owner.getParameters());
           System.out.println(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
           if (DbDataSource.DUMP_SQL) {
             System.out.println("##############");
@@ -4129,7 +4136,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                       if (!pendingValuesCache.containsKey(queryKey)) {
                         java.util.Map<CollectionKey<NamedValue>, java.util.List<Object>> query = new java.util.HashMap<CollectionKey<NamedValue>, java.util.List<Object>>();
                         query.put(queryKey, parameters);
-                        pendingValuesCache.putAll(pendingSqlParameter.getPendingValues(query, pendingValuesCache.size()>0));
+                        pendingValuesCache.putAll(pendingSqlParameter.getPendingValues(query, pendingValuesCache.size() > 0));
 
                         //nismo ga našli
                         if (!pendingValuesCache.containsKey(queryKey)) {
@@ -4168,18 +4175,23 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public ResultSet getResultSet() throws SQLException {
-    java.sql.PreparedStatement resultStatement = getConnection().prepareStatement(preparedSelectSql,
-            ResultSet.TYPE_SCROLL_INSENSITIVE,
-            ResultSet.CONCUR_READ_ONLY,
-            ResultSet.HOLD_CURSORS_OVER_COMMIT);
-    resultStatement.setFetchSize(1008);
-
-
     if (DbDataSource.DUMP_SQL) {
       System.out.println("##############");
       System.out.println(preparedSelectSql);
     }
-    ResultSet result = executeSql(resultStatement, owner.getParameters());
+    ResultSet result;
+    if (owner.isShareResults()) {
+      result = SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters());
+    } else {
+      java.sql.PreparedStatement resultStatement = getConnection().prepareStatement(preparedSelectSql,
+              ResultSet.TYPE_SCROLL_INSENSITIVE,
+              ResultSet.CONCUR_READ_ONLY,
+              ResultSet.HOLD_CURSORS_OVER_COMMIT);
+      resultStatement.setFetchSize(1008);
+
+
+      result = executeSql(resultStatement, owner.getParameters());
+    }
     if (DbDataSource.DUMP_SQL) {
       System.out.println("##############");
     }
@@ -4203,7 +4215,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           selectResultSet.relative(0);
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
-          selectResultSet = executeSql(selectStatement, owner.getParameters());
+          selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters()) : executeSql(selectStatement, owner.getParameters());
           selectResultSet.setFetchSize(getFetchSize());
           selectResultSet.absolute(oldRow);
         } finally {
@@ -4552,10 +4564,10 @@ public class SQLDataSource implements DbDataSourceImpl {
 
         int selectedrow = selectResultSet.getRow();
 
-        if (selectResultSet != null) {
+        if (!((selectResultSet == null)||owner.isShareResults())) {
           selectResultSet.close();
         }
-        selectResultSet = executeSql(selectStatement, owner.getParameters());
+        selectResultSet = owner.isShareResults()?SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters(), true):executeSql(selectStatement, owner.getParameters());
         selectResultSet.setFetchSize(getFetchSize());
         if (selectedrow > 0) {
           try {

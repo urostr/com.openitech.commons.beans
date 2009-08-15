@@ -30,10 +30,13 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   protected final Long timestamp = new Long((new Date()).getTime());
   protected Event event;
   protected Event suspend;
+  protected Event cancel;
+
   
   protected DataSourceEvent(DataSourceEvent object) {
     this.event = object.event;
     this.suspend = object.suspend;
+    this.suspend = object.cancel;
   }
 
   /**
@@ -42,6 +45,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   public DataSourceEvent(Event event) {
     this.event = event;
     this.suspend = new Event(event.dataSource, Event.Type.SUSPEND);
+    this.cancel = new Event(event.dataSource, Event.Type.CANCEL);
   }
   
   public static void submit(DataSourceEvent event) {
@@ -51,6 +55,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
          ((RefreshDataSource) event).load();
         }      
     } else {
+      timestamps.remove(event.cancel);
       timestamps.put(event.event, event.timestamp);
       tasks.put(event.event, pool.submit(event));
       if (event.event.type.equals(Event.Type.REFRESH)) {
@@ -63,6 +68,10 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
     timestamp(new Event(dataSource, Event.Type.SUSPEND));
   }
   
+  public static void cancel(DbDataSource dataSource) {
+    timestamp(new Event(dataSource, Event.Type.CANCEL));
+  }
+
   public static void resume(DbDataSource dataSource) {
     timestamps.remove(new Event(dataSource, Event.Type.SUSPEND));
   }
@@ -80,6 +89,10 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
     return timestamps.containsKey(suspend);
   }
   
+  protected boolean isCanceled() {
+    return timestamps.containsKey(cancel);
+  }
+
   protected static void timestamp(Event event) {
     timestamps.put(event, new Long((new Date()).getTime()));
   }
@@ -93,7 +106,8 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
       ACTIVE_ROW_CHANGE_LISTENER,
       LIST_DATA_LISTENER,
       REFRESH,
-      SUSPEND;
+      SUSPEND,
+      CANCEL;
     }
     
     protected DbDataSource dataSource;

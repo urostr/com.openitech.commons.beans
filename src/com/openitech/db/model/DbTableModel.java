@@ -761,6 +761,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         return function.invoke(this);
       }
 
+      public Object getValue(String columnName) {
+        int pos = columnNames.indexOf(columnName);
+
+        return pos>=0 ? getValues().get(pos) : null;
+      }
+
       public java.util.List<Object> getValues() {
         java.util.List<Object> result = new java.util.ArrayList<Object>();
         try {

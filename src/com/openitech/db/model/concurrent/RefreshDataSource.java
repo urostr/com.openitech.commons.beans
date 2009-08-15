@@ -85,12 +85,18 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
   
   public void run() {
+    if (isCanceled()) {
+      return;
+    }
     if (isSuspended()) {
       try {
         Thread.sleep(27);
       } catch (InterruptedException ex) {
         Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
       }
+    }
+    if (isCanceled()) {
+      return;
     }
     if (isSuspended()) { //re-queue
       resubmit();
@@ -99,6 +105,9 @@ public final class RefreshDataSource extends DataSourceEvent {
         Thread.sleep(event.dataSource.getQueuedDelay());
       } catch (InterruptedException ex) {
         Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
+      }
+      if (isCanceled()) {
+        return;
       }
       if (timestamps.get(event).longValue()<=timestamp.longValue()) {
         if (event.isOnEventQueue()) {

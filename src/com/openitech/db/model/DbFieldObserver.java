@@ -40,6 +40,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private boolean updatingActiveRow = false;
   private boolean updatingFieldValue = false;
+  private transient Object oldValue = null;
 
   /** Creates a new instance of DbFieldObserver */
   public DbFieldObserver() {
@@ -101,9 +102,17 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + getColumnName() + "' from the dataSource '" + dataSource.getName() + "'. [" + ex.getMessage() + "]");
         result = false;
       }
-    //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
     return result;
+  }
+
+  private boolean hasValueChanged() {
+    if (oldValue != null) {
+      return !oldValue.equals(getValue());
+    } else {
+      return true; //always check null values
+    }
   }
 
   public Object getValue() {
@@ -121,14 +130,14 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. " + ex.getMessage());
         result = null;
       }
-    //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
     return result;
   }
 
   public String getValueAsText() {
     Object result = getValue();
-    if(result instanceof Clob){
+    if (result instanceof Clob) {
       try {
         result = ((Clob) result).getSubString(1L, (int) ((Clob) result).length());
       } catch (SQLException ex) {
@@ -154,7 +163,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
         result = 0;
       }
-    //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
     return result;
   }
@@ -175,7 +184,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
         result = 0;
       }
-    //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
     return result;
   }
@@ -196,7 +205,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
         result = null;
       }
-    //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
     return result;
   }
@@ -249,7 +258,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. [" + ex.getMessage() + "]", ex);
         result = false;
       }
-    //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
     return result;
   }
@@ -266,7 +275,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. " + ex.getMessage());
         result = new byte[]{};
       }
-    //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
     return result;
   }
@@ -446,11 +455,14 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public void dataSource_activeRowChanged(ActiveRowChangeEvent event) {
     if (!updatingActiveRow) {
-      updatingActiveRow = true;
-      try {
-        fireFieldValueChanged(new ActiveRowChangeEvent(event.getSource(), columnName, -1));
-      } finally {
-        updatingActiveRow = false;
+      if (hasValueChanged()) {
+        updatingActiveRow = true;
+        try {
+          oldValue = getValue();
+          fireFieldValueChanged(new ActiveRowChangeEvent(event.getSource(), columnName, -1));
+        } finally {
+          updatingActiveRow = false;
+        }
       }
     }
   }
@@ -461,16 +473,19 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     if (!updatingFieldValue) {
-      String columnName = event.getColumnName();
-      if (columnName == null && event.getColumnIndex() != -1) {
-        try {
-          columnName = dataSource.getColumnName(event.getColumnIndex());
-        } catch (SQLException ex) {
-          columnName = null;
+      if (hasValueChanged()) {
+        String columnName = event.getColumnName();
+        if (columnName == null && event.getColumnIndex() != -1) {
+          try {
+            columnName = dataSource.getColumnName(event.getColumnIndex());
+          } catch (SQLException ex) {
+            columnName = null;
+          }
         }
-      }
-      if ((columnName != null) && (columnName.equalsIgnoreCase(this.columnName))) {
-        fireFieldValueChanged(new ActiveRowChangeEvent(event.getSource(), columnName, -1));
+        if ((columnName != null) && (columnName.equalsIgnoreCase(this.columnName))) {
+          oldValue = getValue();
+          fireFieldValueChanged(new ActiveRowChangeEvent(event.getSource(), columnName, -1));
+        }
       }
     }
   }

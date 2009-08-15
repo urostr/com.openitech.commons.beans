@@ -516,8 +516,8 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
                 for (Object v : ((ValuesList) seek).getValues()) {
                   parameters.add(v);
                 }
-              } else if (seek.getValue() instanceof java.util.List) {
-                for (Object v : (java.util.List) seek.getValue()) {
+              } else if (seek.getValue() instanceof java.util.Collection) {
+                for (Object v : (java.util.Collection) seek.getValue()) {
                   parameters.add(v);
                 }
               } else {
@@ -700,6 +700,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         }
       });
 
+    }
+    
+    public SifrantSeekType(String field, Callable<DbComboBoxModel> callable) {
+      this(field, new FutureTask<DbComboBoxModel>(callable));
     }
 
     public SifrantSeekType(String field, FutureTask<DbComboBoxModel> model) {

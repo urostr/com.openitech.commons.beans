@@ -115,6 +115,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   private long queuedDelay = 108;
 
   private boolean reloadsOnEventQueue = false;
+  private boolean shareResults = false;
   private boolean cacheStatements = true;
   private boolean autoInsert = false;
 
@@ -151,6 +152,23 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
     }
   }
 
+  /**
+   * Get the value of shareResults
+   *
+   * @return the value of shareResults
+   */
+  public boolean isShareResults() {
+    return shareResults;
+  }
+
+  /**
+   * Set the value of shareResults
+   *
+   * @param shareResults new value of shareResults
+   */
+  public void setShareResults(boolean shareResults) {
+    this.shareResults = shareResults;
+  }
   private boolean safeMode = true;
 
   /**
