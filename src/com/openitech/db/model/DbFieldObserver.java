@@ -119,16 +119,18 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     Object result = null;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-      try {
-        if (dataSource.getRowCount() > 0) {
-          result = dataSource.getObject(columnName);
-          if (dataSource.wasNull()) {
-            result = null;
+      if (dataSource.isDataLoaded()) {
+        try {
+          if (dataSource.getRowCount() > 0) {
+            result = dataSource.getObject(columnName);
+            if (dataSource.wasNull()) {
+              result = null;
+            }
           }
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. " + ex.getMessage());
+          result = null;
         }
-      } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. " + ex.getMessage());
-        result = null;
       }
       //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
@@ -151,17 +153,19 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     int result = 0;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-      try {
-        if (dataSource.getRowCount() > 0) {
-          result = dataSource.getInt(columnName);
-        }
+      if (dataSource.isDataLoaded()) {
+        try {
+          if (dataSource.getRowCount() > 0) {
+            result = dataSource.getInt(columnName);
+          }
 
-        if (dataSource.wasNull()) {
-          result = Integer.MIN_VALUE;
+          if (dataSource.wasNull()) {
+            result = Integer.MIN_VALUE;
+          }
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          result = 0;
         }
-      } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
-        result = 0;
       }
       //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
@@ -172,17 +176,19 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     double result = 0;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-      try {
-        if (dataSource.getRowCount() > 0) {
-          result = dataSource.getDouble(columnName);
-        }
+      if (dataSource.isDataLoaded()) {
+        try {
+          if (dataSource.getRowCount() > 0) {
+            result = dataSource.getDouble(columnName);
+          }
 
-        if (dataSource.wasNull()) {
-          result = Double.MIN_VALUE;
+          if (dataSource.wasNull()) {
+            result = Double.MIN_VALUE;
+          }
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          result = 0;
         }
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
-        result = 0;
       }
       //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
@@ -193,17 +199,19 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     Date result = null;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-      try {
-        if (dataSource.getRowCount() > 0) {
-          try {
-            result = dataSource.getTimestamp(columnName);
-          } catch (Exception ex) {
-            result = FormatFactory.JDBC_DATE_FORMAT.parse(dataSource.getString(columnName));
+      if (dataSource.isDataLoaded()) {
+        try {
+          if (dataSource.getRowCount() > 0) {
+            try {
+              result = dataSource.getTimestamp(columnName);
+            } catch (Exception ex) {
+              result = FormatFactory.JDBC_DATE_FORMAT.parse(dataSource.getString(columnName));
+            }
           }
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          result = null;
         }
-      } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
-        result = null;
       }
       //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
@@ -214,49 +222,51 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     boolean result = false;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-      try {
-        if (dataSource.getRowCount() > 0) {
-          int type = dataSource.getType(columnName);
-          switch (type) {
-            case Types.BIGINT:
-            case Types.DECIMAL:
-            case Types.DOUBLE:
-            case Types.FLOAT:
-            case Types.NUMERIC:
-            case Types.INTEGER:
-            case Types.BIT:
-              Object value = dataSource.getObject(columnName);
-              if (value instanceof Boolean) {
-                result = (Boolean) value;
-              } else {
-                result = !dataSource.wasNull();
-                if (result) //ni bil null
-                {
-                  result = !Equals.equals(value, 0);
+      if (dataSource.isDataLoaded()) {
+        try {
+          if (dataSource.getRowCount() > 0) {
+            int type = dataSource.getType(columnName);
+            switch (type) {
+              case Types.BIGINT:
+              case Types.DECIMAL:
+              case Types.DOUBLE:
+              case Types.FLOAT:
+              case Types.NUMERIC:
+              case Types.INTEGER:
+              case Types.BIT:
+                Object value = dataSource.getObject(columnName);
+                if (value instanceof Boolean) {
+                  result = (Boolean) value;
+                } else {
+                  result = !dataSource.wasNull();
+                  if (result) //ni bil null
+                  {
+                    result = !Equals.equals(value, 0);
+                  }
                 }
-              }
-              break;
-            case Types.BOOLEAN:
-              result = dataSource.getBoolean(columnName);
-              break;
-            case Types.CHAR:
-            case Types.VARCHAR:
-              String svalue = dataSource.getString(columnName);
-              result = !dataSource.wasNull();
-              if (result) { //ni bil null
-                svalue = svalue.trim().toUpperCase();
-                result = svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F"));
-              }
-              break;
-            default:
-              dataSource.getObject(columnName);
-              result = !dataSource.wasNull();
-              break;
+                break;
+              case Types.BOOLEAN:
+                result = dataSource.getBoolean(columnName);
+                break;
+              case Types.CHAR:
+              case Types.VARCHAR:
+                String svalue = dataSource.getString(columnName);
+                result = !dataSource.wasNull();
+                if (result) { //ni bil null
+                  svalue = svalue.trim().toUpperCase();
+                  result = svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F"));
+                }
+                break;
+              default:
+                dataSource.getObject(columnName);
+                result = !dataSource.wasNull();
+                break;
+            }
           }
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. [" + ex.getMessage() + "]", ex);
+          result = false;
         }
-      } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. [" + ex.getMessage() + "]", ex);
-        result = false;
       }
       //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
@@ -267,13 +277,15 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     byte[] result = new byte[]{};
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-      try {
-        if (dataSource.getRowCount() > 0) {
-          result = dataSource.getBytes(columnName);
+      if (dataSource.isDataLoaded()) {
+        try {
+          if (dataSource.getRowCount() > 0) {
+            result = dataSource.getBytes(columnName);
+          }
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. " + ex.getMessage());
+          result = new byte[]{};
         }
-      } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. " + ex.getMessage());
-        result = new byte[]{};
       }
       //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }

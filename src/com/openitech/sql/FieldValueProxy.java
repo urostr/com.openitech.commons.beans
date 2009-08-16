@@ -60,19 +60,6 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
 
   @Override
   public void fieldValueChanged(ActiveRowChangeEvent event) {
-    Object value;
-
-    switch (ValueType.getType(getType())) {
-      case IntValue: value = fieldObserver.getValueAsInt(); break;
-      case DateValue: value = fieldObserver.getValueAsDate(); break;
-      case StringValue:
-      case ClobValue: value = fieldObserver.getValueAsText(); break;
-      case RealValue: value = fieldObserver.getValueAsDouble(); break;
-      case BitValue: value = fieldObserver.getValueAsBoolean(); break;
-      default:
-        value = fieldObserver.getValue(); break;
-    }
-
-    super.setValue(value);
+    super.setValue(fieldObserver.getValue());
   }
 }

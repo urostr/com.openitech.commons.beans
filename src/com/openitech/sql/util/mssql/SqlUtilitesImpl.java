@@ -63,7 +63,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public long getScopeIdentity() throws SQLException {
-    Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+    Statement statement = ConnectionManager.getInstance().getTxConnection().createStatement();
 
     ResultSet result = statement.executeQuery("SELECT SCOPE_IDENTITY() AS ScopeIdentity");
     result.next();
@@ -73,7 +73,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public long getCurrentIdentity(String tableName) throws SQLException {
-    Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+    Statement statement = ConnectionManager.getInstance().getTxConnection().createStatement();
 
     ResultSet result = statement.executeQuery("SELECT IDENT_CURRENT(" + tableName + ") AS CurrentIdentity");
     result.next();
@@ -83,7 +83,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public long getLastIdentity() throws SQLException {
-    Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+    Statement statement = ConnectionManager.getInstance().getTxConnection().createStatement();
 
     ResultSet result = statement.executeQuery("SELECT @@IDENTITY AS [Identity]");
     result.next();
@@ -93,15 +93,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   protected void logChanges(String application, String database, String tableName, Operation operation, List<FieldValue> newValues, List<FieldValue> oldValues) throws SQLException {
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (logChanges == null) {
-      logChanges = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_change_log.sql", "cp1250"));
+      logChanges = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_change_log.sql", "cp1250"));
     }
     if (logValues == null) {
-      logValues = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
+      logValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
     }
 
     if (logChangedValues == null) {
-      logChangedValues = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_changed_values.sql", "cp1250"));
+      logChangedValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_changed_values.sql", "cp1250"));
     }
 
     FieldValue[] fieldValues = new FieldValue[]{
@@ -138,7 +139,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public Long storeEvent(Event event) throws SQLException {
-    final Connection connection = ConnectionManager.getInstance().getConnection();
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertEvents == null) {
       insertEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
     }
@@ -182,7 +183,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         } else {
           insertEvents.setInt(param++, event.getEventSource());
         }
-        insertEvents.setDate(param++, new java.sql.Date(event.getDatum().getTime()));
+        insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
         insertEvents.setString(param++, event.getOpomba());
         success = success && insertEvents.executeUpdate() > 0;
 
@@ -199,7 +200,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         } else {
           updateEvents.setInt(param++, event.getEventSource());
         }
-        updateEvents.setDate(param++, new java.sql.Date(event.getDatum().getTime()));
+        updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
         updateEvents.setString(param++, event.getOpomba());
         updateEvents.setLong(param++, events_ID);
 
@@ -278,7 +279,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public Long storeValue(ValueType fieldType, final Object value) throws SQLException {
     if (logValues == null) {
-      logValues = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
+      logValues = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
     }
 
     int pos = 0;
@@ -297,7 +298,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           if (find_intvalue == null) {
-            find_intvalue = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_intvalue.sql", "cp1250"));
+            find_intvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_intvalue.sql", "cp1250"));
           }
 
           find_intvalue.setObject(1, value, java.sql.Types.BIGINT);
@@ -318,7 +319,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           if (find_realvalue == null) {
-            find_realvalue = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_realvalue.sql", "cp1250"));
+            find_realvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_realvalue.sql", "cp1250"));
           }
 
           find_realvalue.setObject(1, value, java.sql.Types.REAL);
@@ -339,7 +340,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           if (find_stringvalue == null) {
-            find_stringvalue = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_stringvalue.sql", "cp1250"));
+            find_stringvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_stringvalue.sql", "cp1250"));
           }
 
           find_stringvalue.setObject(1, value, java.sql.Types.VARCHAR);
@@ -363,10 +364,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           if (find_datevalue == null) {
-            find_datevalue = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_datevalue.sql", "cp1250"));
+            find_datevalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_datevalue.sql", "cp1250"));
           }
 
-          find_datevalue.setObject(1, value, java.sql.Types.DATE);
+          find_datevalue.setObject(1, value, java.sql.Types.TIMESTAMP);
           rs = find_datevalue.executeQuery();
           try {
             if (rs.next()) {
@@ -440,7 +441,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException {
 
     SqlUtilities sqlUtility = SqlUtilities.getInstance();
-    Connection connection = ConnectionManager.getInstance().getConnection();
+    Connection connection = ConnectionManager.getInstance().getTxConnection();
     int param;
 
     if (address.getHsMID() == null || address.getHsMID().getValue() == null) {
@@ -552,7 +553,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 rs.getString("IdSifre"));
         result.setId(eventId);
         result.setEventSource(rs.getInt("IdEventSource"));
-        result.setDatum(rs.getDate("Datum"));
+        result.setDatum(rs.getTimestamp("Datum"));
         java.sql.Clob opomba = rs.getClob("Opomba");
         if (!rs.wasNull()) {
           result.setOpomba(opomba.getSubString(1L, (int) opomba.length()));
@@ -569,7 +570,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getString("StringValue")));
               break;
             case 4:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DATE, rs.getDate("DateValue")));
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getTimestamp("DateValue")));
               break;
             case 5:
               result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getBlob("ObjectValue")));
@@ -582,7 +583,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("IntValue") != 0));
               break;
             case 8:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DATE, rs.getDate("DateValue")));
+              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getTimestamp("DateValue")));
               break;
             case 9:
               result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.TIME, rs.getTime("DateValue")));
@@ -615,7 +616,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         primaryKey.add(Event.EVENT_SOURCE);
       }
       java.util.List parameters = new java.util.ArrayList<Object>();
-      int valuesSet = prepareSearchParameters(parameters, new HashMap<Field, DbDataSource.SqlParameter<Object>>(), event, primaryKey, new java.util.HashSet<Field>(), event.getSifrant(), event.getSifra(), true);
+      int valuesSet = prepareSearchParameters(parameters, new HashMap<Field, DbDataSource.SqlParameter<Object>>(), event, primaryKey, new java.util.HashSet<Field>(), event.getSifrant(), event.getSifra(), true, false);
 
       //ce niso bile nastavljene vse vrednosti PK-ja potem ne iscemo 
       boolean seek = true;
@@ -810,9 +811,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean validOnly) {
+  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean validOnly, boolean lastEntryOnly) {
     StringBuilder sb = new StringBuilder(500);
     StringBuilder sbresult = new StringBuilder(500);
+    DbDataSource.SubstSqlParameter sqlResultLimit = new DbDataSource.SubstSqlParameter("<%ev_result_limit%>");
+    parameters.add(sqlResultLimit);
+    sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 ":" DISTINCT TOP 100 PERCENT ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
     parameters.add(sqlResultFields);
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
@@ -1015,12 +1019,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra) {
+  public EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean lastEntryOnly) {
     EventQueryImpl result = new EventQueryImpl(parent);
 
     result.sifrant = sifrant;
     result.sifra = sifra;
-    result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, true);
+    result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, true, lastEntryOnly);
 
     return result;
   }

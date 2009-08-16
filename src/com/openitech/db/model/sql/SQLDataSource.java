@@ -69,6 +69,7 @@ import javax.swing.event.ListDataEvent;
  */
 public class SQLDataSource implements DbDataSourceImpl {
 
+  public static final String SELECT_1 = "SELECT 1";
   private String selectSql;
   private String countSql;
   private String preparedSelectSql;
@@ -3390,7 +3391,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       sql.append(delimiterLeft).append(tableName).append(delimiterRight).append(" (").append(columns).append(") ");
       sql.append("VALUES (").append(values).append(")");
 
-      PreparedStatement insertStatement = getConnection().prepareStatement(sql.toString());
+      PreparedStatement insertStatement = getTxConnection().prepareStatement(sql.toString());
       try {
         ParameterMetaData parameterMetaData = insertStatement.getParameterMetaData();
 
@@ -3469,7 +3470,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                     }
                   } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
                     if (entry.getValue() instanceof java.util.Date) {
-                      updateResultSet.updateDate(entry.getKey(), new java.sql.Date(((java.util.Date) entry.getValue()).getTime()));
+                      updateResultSet.updateTimestamp(entry.getKey(), new java.sql.Timestamp(((java.util.Date) entry.getValue()).getTime()));
                     } else if (entry.getValue() == null) {
                       updateResultSet.updateObject(entry.getKey(), entry.getValue());
                     } else {
@@ -3511,7 +3512,7 @@ public class SQLDataSource implements DbDataSourceImpl {
             }
             String sql = "UPDATE " + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
 
-            PreparedStatement updateStatement = getConnection().prepareStatement(sql.toString());
+            PreparedStatement updateStatement = getTxConnection().prepareStatement(sql.toString());
             try {
               ParameterMetaData parameterMetaData = updateStatement.getParameterMetaData();
 
@@ -3648,7 +3649,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
 
       this.count = -1;
-      if (!(owner.isShareResults()||(this.selectResultSet == null))) {
+      if (!(owner.isShareResults() || (this.selectResultSet == null))) {
         this.selectResultSet.close();
       }
       this.selectResultSet = null;
@@ -3730,6 +3731,10 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  public Connection getTxConnection() {
+    return ConnectionManager.getInstance().getTxConnection();
+  }
+
   public void setConnection(Connection connection) throws SQLException {
     if (this.connection != connection) {
       for (PreparedStatement statement : cachedStatements.values()) {
@@ -3764,17 +3769,21 @@ public class SQLDataSource implements DbDataSourceImpl {
           try {
             if (this.count == -1) {
               if (countStatement != null) {
-                Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedCountSql + "'");
-                if (DbDataSource.DUMP_SQL) {
-                  System.out.println("############## count(*) ");
-                  System.out.println(preparedCountSql);
-                }
-                ResultSet rs = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedCountSql, owner.getParameters()) : executeSql(countStatement, owner.getParameters());
-                if (DbDataSource.DUMP_SQL) {
-                  System.out.println("##############");
-                }
-                if (rs.first()) {
-                  newCount = rs.getInt(1);
+                if (preparedCountSql.equalsIgnoreCase(SELECT_1)) {
+                  newCount = 1;
+                } else {
+                  Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedCountSql + "'");
+                  if (DbDataSource.DUMP_SQL) {
+                    System.out.println("############## count(*) ");
+                    System.out.println(preparedCountSql);
+                  }
+                  ResultSet rs = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedCountSql, owner.getParameters()) : executeSql(countStatement, owner.getParameters());
+                  if (DbDataSource.DUMP_SQL) {
+                    System.out.println("##############");
+                  }
+                  if (rs.first()) {
+                    newCount = rs.getInt(1);
+                  }
                 }
               } else if (selectStatement != null) {
                 if (selectResultSet == null) {
@@ -3835,7 +3844,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (reload) {
       owner.lock();
       try {
-        if (!((selectResultSet == null)||owner.isShareResults())) {
+        if (!((selectResultSet == null) || owner.isShareResults())) {
           selectResultSet.close();
         }
       } catch (SQLException ex) {
@@ -3935,12 +3944,57 @@ public class SQLDataSource implements DbDataSourceImpl {
     return sql;
   }
 
+  public static List<Object> getParameters(List<?> source) {
+    List<Object> target = new ArrayList<Object>();
+
+    getParameters(source, target, 0, false);
+
+    return target;
+  }
+
+  private static int getParameters(List<?> source, List<Object> target, int pos, boolean subset) {
+    if (!subset) {
+      target.clear();
+    }
+
+    Integer type;
+
+    for (Object value : source) {
+      if (value instanceof DbDataSource.SqlParameter) {
+        type = ((DbDataSource.SqlParameter) value).getType();
+        if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
+          if (((DbDataSource.SqlParameter) value).getValue() != null) {
+            target.add(((DbDataSource.SqlParameter) value).getValue());
+          } else {
+            target.add(null);
+          }
+        } else if ((value instanceof DbDataSource.SubstSqlParameter) && (((DbDataSource.SubstSqlParameter) value).getParameters().size() > 0)) {
+          pos = getParameters(((DbDataSource.SubstSqlParameter) value).getParameters(), target, pos, true);
+        }
+      } else {
+        if (value == null) {
+          target.add(null);
+        } else {
+          target.add(value);
+        }
+      }
+    }
+    return pos;
+  }
+
   private static int setParameters(PreparedStatement statement, List<?> parameters, int pos, boolean subset) throws SQLException {
     if (!subset) {
       statement.clearParameters();
     }
-    ParameterMetaData metaData = statement.getParameterMetaData();
-    int parameterCount = metaData.getParameterCount();
+
+    ParameterMetaData metaData = null;
+    int parameterCount = Integer.MAX_VALUE;
+    try {
+      metaData = statement.getParameterMetaData();
+      parameterCount = metaData.getParameterCount();
+    } catch (SQLException err) {
+      err.printStackTrace();
+    }
     Object value;
     Integer type;
 
@@ -3966,7 +4020,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       } else {
         if (value == null) {
-          statement.setNull(pos, metaData.getParameterType(pos++));
+          statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
           if (DbDataSource.DUMP_SQL) {
             System.out.println("--[" + (pos - 1) + "]=null");
           }
@@ -3978,8 +4032,10 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
     }
-    while ((pos <= parameterCount) && !subset) {
-      statement.setNull(pos, metaData.getParameterType(pos++));
+    if (parameterCount < Integer.MAX_VALUE) {
+      while ((pos <= parameterCount) && !subset) {
+        statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
+      }
     }
     return pos;
   }
@@ -4564,10 +4620,10 @@ public class SQLDataSource implements DbDataSourceImpl {
 
         int selectedrow = selectResultSet.getRow();
 
-        if (!((selectResultSet == null)||owner.isShareResults())) {
+        if (!((selectResultSet == null) || owner.isShareResults())) {
           selectResultSet.close();
         }
-        selectResultSet = owner.isShareResults()?SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters(), true):executeSql(selectStatement, owner.getParameters());
+        selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters(), true) : executeSql(selectStatement, owner.getParameters());
         selectResultSet.setFetchSize(getFetchSize());
         if (selectedrow > 0) {
           try {

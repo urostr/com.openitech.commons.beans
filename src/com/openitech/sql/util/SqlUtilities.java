@@ -313,7 +313,7 @@ public abstract class SqlUtilities {
   private java.util.Stack<Savepoint> activeSavepoints = new java.util.Stack<Savepoint>();
 
   public Savepoint beginTransaction() throws SQLException {
-    Connection connection = ConnectionManager.getInstance().getConnection();
+    Connection connection = ConnectionManager.getInstance().getTxConnection();
 
     if (connection.getAutoCommit()) {
       autocommit = connection.getAutoCommit();
@@ -347,7 +347,7 @@ public abstract class SqlUtilities {
   }
 
   public boolean endTransaction(boolean commit, Savepoint savepoint) throws SQLException {
-    Connection connection = ConnectionManager.getInstance().getConnection();
+    Connection connection = ConnectionManager.getInstance().getTxConnection();
 
     if (!connection.getAutoCommit()) {
       if (commit) {
@@ -459,10 +459,10 @@ public abstract class SqlUtilities {
   public abstract DbDataSource getDsSifrantModel(String dataBase, java.util.List<Object> parameters) throws SQLException;
 
   public EventQuery prepareEventQuery(Event event, Set<Field> searchFields, Set<Field> resultFields) {
-    return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), event.getSifra());
+    return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), event.getSifra(), false);
   }
 
-  public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra);
+  public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean lastEntryOnly);
 
   public static enum Operation {
 

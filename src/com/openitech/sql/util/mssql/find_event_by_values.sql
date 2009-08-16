@@ -1,4 +1,4 @@
-SELECT DISTINCT TOP 100 PERCENT
+SELECT <%ev_result_limit%>
     ev.[Id],
     ev.[Id] as [EventId],
     ev.[IdSifranta],

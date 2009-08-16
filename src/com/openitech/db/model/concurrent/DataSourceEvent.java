@@ -15,15 +15,19 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
  * @author uros
  */
 public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
-  private   static final ExecutorService pool = Executors.newCachedThreadPool();
+  private   static final ExecutorService pool = new ThreadPoolExecutor(0, 27,
+                                      9L, TimeUnit.SECONDS,
+                                      new SynchronousQueue<Runnable>());
   protected static final Map<Event, Long> timestamps = new ConcurrentHashMap<Event, Long>();
   protected static final Map<Event, Future> tasks = new ConcurrentHashMap<Event, Future>();
   

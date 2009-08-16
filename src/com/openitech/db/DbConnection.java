@@ -32,6 +32,7 @@ public interface DbConnection {
 
 
   Connection getConnection();
+  Connection getTxConnection();
 
   String getProperty(String key);
 

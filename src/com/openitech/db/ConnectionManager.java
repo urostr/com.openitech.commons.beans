@@ -7,6 +7,8 @@
  */
 package com.openitech.db;
 
+import java.sql.Connection;
+
 /**
  *
  * @author uros
@@ -108,5 +110,10 @@ public class ConnectionManager implements DbConnection {
       //ignore
     }
     return dialect;
+  }
+
+  @Override
+  public Connection getTxConnection() {
+    return getDbConnection() == null ? null : getDbConnection().getTxConnection();
   }
 }

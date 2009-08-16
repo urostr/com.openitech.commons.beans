@@ -16,6 +16,7 @@ SELECT
     SifrantiPolja.[UporabiPrivzetoVrednost],
     SifrantiPolja.[FieldActions],
     SifrantiPolja.[ReadOnly],
+    SifrantiPolja.[LastValueOnly],
     SifrantiPolja.[validFrom],
     SifrantiPolja.[validTo],
     SifrantVnosnihPolj.[ImePolja]+CASE WHEN SifrantiPolja.FieldValueIndex>1 THEN CAST(SifrantiPolja.FieldValueIndex AS VARCHAR) ELSE '' END AS [ImePolja],

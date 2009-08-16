@@ -9,6 +9,7 @@ import com.openitech.db.ConnectionManager;
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -37,11 +38,10 @@ public class SQLCache implements Serializable {
     key.add(query);
     key.addAll(parameters);
 
-    SharedEntry result;
-    if (sharedResults.containsKey(key)) {
+    SharedEntry result = new SharedEntry(connection, query, parameters, TTL);
+    if (sharedResults.containsKey(result.entryKey)) {
       result = sharedResults.get(key);
     } else {
-      result = new SharedEntry(connection, query, parameters, TTL);
       sharedResults.put(key, result);
     }
 
@@ -91,19 +91,33 @@ public class SQLCache implements Serializable {
     private final String query;
     private final List<Object> parameters;
 
-    public SharedEntry(Connection connection, String query, List<Object> parameters, long ttl) {
+    public SharedEntry(Connection connection, String query, List<Object> parameters, long ttl) throws SQLException {
+      this.connection = connection==null?ConnectionManager.getInstance().getConnection():connection;
+      this.query = query;
+
       statementKey = new CollectionKey<Object>(2);
       statementKey.add(connection);
       statementKey.add(query);
 
-      entryKey = new CollectionKey<Object>(parameters.size() + 1);
+      ParameterMetaData metaData = getStatement().getParameterMetaData();
+      int parameterCount = metaData.getParameterCount();
+
+      List<Object> target = SQLDataSource.getParameters(parameters);
+
+      while (target.size()<parameterCount) {
+        target.add(null);
+      }
+
+      while (target.size()>parameterCount) {
+        target.remove(target.size()-1);
+      }
+
+      entryKey = new CollectionKey<Object>(target.size() + 1);
 
       entryKey.add(query);
-      entryKey.addAll(parameters);
+      entryKey.addAll(target);
 
-      this.connection = connection==null?ConnectionManager.getInstance().getConnection():connection;
-      this.query = query;
-      this.parameters = Collections.unmodifiableList(parameters);
+      this.parameters = Collections.unmodifiableList(target);
     }
 
     public PreparedStatement getStatement() throws SQLException {
