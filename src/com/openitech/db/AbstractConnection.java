@@ -59,13 +59,16 @@ public abstract class AbstractConnection implements DbConnection {
 
   @Override
   public Connection getTxConnection() {
-    if (connection == null) {
-      return getConnection();
+    if (useProxool) {
+      return PooledConnection.getInstance().getTxConnection();
     } else {
-      return connection;
+      if (connection == null) {
+        return getConnection();
+      } else {
+        return connection;
+      }
     }
   }
-
 
   @Override
   public java.sql.Connection getConnection() {
@@ -123,9 +126,10 @@ public abstract class AbstractConnection implements DbConnection {
 
               if (useProxool) {
                 useProxool = PooledConnection.getInstance().init(settings, connect);
+                result = PooledConnection.getInstance().getTxConnection();
+              } else {
+                result = DriverManager.getConnection(DB_URL, connect);
               }
-              //the tx connection is not pooled
-              result = DriverManager.getConnection(DB_URL, connect);
 
               if (result != null) {
                 createSchema(result);

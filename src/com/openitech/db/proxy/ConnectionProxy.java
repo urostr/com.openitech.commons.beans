@@ -4,7 +4,6 @@
  */
 package com.openitech.db.proxy;
 
-import com.openitech.db.ConnectionManager;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -27,9 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.ProxoolFacade;
-import org.logicalcobwebs.proxool.ProxyConnectionIF;
 import org.logicalcobwebs.proxool.admin.SnapshotIF;
-import org.logicalcobwebs.proxool.admin.StatisticsIF;
 
 /**
  *
@@ -55,7 +52,7 @@ public class ConnectionProxy implements java.sql.Connection {
         throw new java.sql.SQLException("Connection not ready");
       } else {
         connection.getWarnings();
-        connection.getMetaData();
+//        connection.isValid(5);
 
         if (query != null) {
           query.execute();
@@ -94,27 +91,23 @@ public class ConnectionProxy implements java.sql.Connection {
         if (connection == null) {
           try {
             java.sql.Connection c = DriverManager.getConnection(proxoolPool);
-            try {
-              SnapshotIF snapshot = ProxoolFacade.getSnapshot(proxoolPool.replace("proxool.", ""), true);
-              System.out.println(ConnectionProxy.class.getName() + ":connection created:active:" + snapshot.getActiveConnectionCount() + ":available:" + snapshot.getAvailableConnectionCount()+":total:"+snapshot.getConnectionCount());
-            } catch (ProxoolException ex) {
-              Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, ex.getMessage());
-            }
             if (c != null) {
               connection = c;
               query = c.prepareStatement(test);
+              query.setQueryTimeout(5);
+              try {
+                SnapshotIF snapshot = ProxoolFacade.getSnapshot(proxoolPool.replace("proxool.", ""), true);
+                System.out.println(ConnectionProxy.class.getName() + ":connection created:active:" + snapshot.getActiveConnectionCount() + ":available:" + snapshot.getAvailableConnectionCount() + ":total:" + snapshot.getConnectionCount());
+              } catch (ProxoolException ex) {
+                Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, ex.getMessage());
+              }
             }
-            try {
-              SnapshotIF snapshot = ProxoolFacade.getSnapshot(proxoolPool.replace("proxool.", ""), true);
-              System.out.println(ConnectionProxy.class.getName() + ":connection created:active:" + snapshot.getActiveConnectionCount() + ":available:" + snapshot.getAvailableConnectionCount()+":total:"+snapshot.getConnectionCount());
-            } catch (ProxoolException ex) {
-              Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, ex.getMessage());
-            }
+
             if (c instanceof ConnectionProxy) {
               connection = ((ConnectionProxy) c).connection;
             }
           } catch (SQLException ex) {
-            Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, "Failed to create connection", ex);
           }
         }
       }

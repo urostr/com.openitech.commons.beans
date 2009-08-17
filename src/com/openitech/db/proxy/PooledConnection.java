@@ -5,10 +5,13 @@
 package com.openitech.db.proxy;
 
 import com.openitech.db.ConnectionManager;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.logicalcobwebs.proxool.ProxoolConstants;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.ProxoolFacade;
@@ -19,6 +22,7 @@ import org.logicalcobwebs.proxool.ProxoolFacade;
  */
 public class PooledConnection {
 
+  public static final int DEFAULT_POOL_SIZE = 9;
   static PooledConnection instance = null;
 
   public static PooledConnection getInstance() {
@@ -28,12 +32,17 @@ public class PooledConnection {
     return instance;
   }
   protected String connectionTest;
+  private ConnectionProxy txConnection = null;
   private java.util.List<java.sql.Connection> pool = new java.util.ArrayList<java.sql.Connection>();
   private int roundrobin = 1;
-  private int pool_size = 9;
+  private int pool_size = DEFAULT_POOL_SIZE;
   String proxoolPool;
 
   public PooledConnection() {
+  }
+
+  public Connection getTxConnection() {
+    return txConnection;
   }
 
   public Connection getConnection() throws SQLException {
@@ -54,14 +63,15 @@ public class PooledConnection {
     connectionTest = settings.getProperty(ConnectionManager.DB_TEST, "select GETDATE()");
 
     try {
-      pool_size = Integer.valueOf(settings.getProperty(ConnectionManager.DB_POOL_SIZE, "9"));
+      pool_size = Integer.valueOf(settings.getProperty(ConnectionManager.DB_POOL_SIZE, "" + DEFAULT_POOL_SIZE));
     } catch (Exception err) {
-      pool_size = 9;
+      pool_size = DEFAULT_POOL_SIZE;
     }
 
     int max_pool_size = pool_size * 9;
 
     String PROXOOL_DB_URL = "proxool.default:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
+    connect.setProperty(ProxoolConstants.FATAL_SQL_EXCEPTION_PROPERTY, "the Connection object is closed,attempting to read when no request has been sent,TDS Protocol error");
     connect.setProperty(ProxoolConstants.MINIMUM_CONNECTION_COUNT_PROPERTY, "1");
     connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + max_pool_size);
     connect.setProperty(ProxoolConstants.HOUSE_KEEPING_SLEEP_TIME_PROPERTY, "15000");
@@ -71,15 +81,34 @@ public class PooledConnection {
     connect.setProperty(ProxoolConstants.TEST_BEFORE_USE_PROPERTY, "true");
     connect.setProperty(ProxoolConstants.HOUSE_KEEPING_TEST_SQL_PROPERTY, connectionTest);
 
-    final String autoCommit = settings.getProperty(ConnectionManager.DB_AUTOCOMMIT, "true");
+    //final String autoCommit = settings.getProperty(ConnectionManager.DB_AUTOCOMMIT, "true");
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
     org.logicalcobwebs.proxool.ConnectionListenerIF cl = new org.logicalcobwebs.proxool.ConnectionListenerIF() {
 
       @Override
       public void onBirth(Connection arg0) throws SQLException {
-        arg0.setReadOnly(false);
-        arg0.setAutoCommit(Boolean.parseBoolean(autoCommit));
-        System.out.println("proxool:connection created");
+        boolean readonly = txConnection != null;
+        if (readonly) {
+          readonly = isTxConnectionValid();
+        }
+        if (readonly) {
+          arg0.setReadOnly(true);
+        } else {
+          synchronized (PooledConnection.this) {
+            if (!isTxConnectionValid()) {
+              if (txConnection == null) {
+                txConnection = new ConnectionProxy(proxoolPool, connectionTest, arg0);
+              } else {
+                txConnection.connection = arg0;
+              }
+            } else {
+              readonly = true;
+              arg0.setReadOnly(true);
+            }
+          }
+        }
+
+        System.out.println("proxool:connection created:" + (readonly ? "readonly" : "TX"));
       }
 
       @Override
@@ -93,8 +122,34 @@ public class PooledConnection {
 
       @Override
       public void onFail(String arg0, Exception arg1) {
-        System.err.println("proxool:connection failed:" + arg0 + ":" + arg1.getMessage());
-        arg1.printStackTrace();
+        System.err.println("proxool:connection failed:" + arg0 + ":" + readLine(arg1.getMessage()));
+      }
+
+      protected boolean isTxConnectionValid() {
+        boolean valid = (txConnection!=null)&&(txConnection.connection != null);
+        if (valid) {
+          try {
+            txConnection.testConnection();
+          } catch (SQLException ex) {
+            try {
+              ProxoolFacade.killConnecton(txConnection.connection, false);
+            } catch (ProxoolException ex1) {
+              Logger.getLogger(PooledConnection.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            System.out.println("proxool:the current TX connection is not valid. resetting.");
+            valid = false;
+          }
+        }
+        return valid;
+      }
+
+      private String readLine(String message) {
+        try {
+          java.io.LineNumberReader r = new java.io.LineNumberReader(new java.io.StringReader(message));
+          return r.readLine();
+        } catch (IOException ex) {
+          return message;
+        }
       }
     };
 

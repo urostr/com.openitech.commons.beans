@@ -14,8 +14,11 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,7 +33,7 @@ public class StatementProxy implements java.sql.Statement {
   final int resultSetType;
   final int resultSetConcurrency;
   final int resultSetHoldability;
-  protected List<Invocation<Statement>> invocations = new ArrayList<Invocation<Statement>>();
+  protected Set<Invocation<Statement>> invocations = new HashSet<Invocation<Statement>>();
   protected List<String> batch = new ArrayList<String>();
 
   protected StatementProxy(ConnectionProxy proxy, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
@@ -87,7 +90,11 @@ public class StatementProxy implements java.sql.Statement {
         if (statement == null) {
           statement = ((StatementProxy) proxy.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability)).statement;
           try {
-            for (Invocation invocation : invocations) {
+            List<Invocation<Statement>> invoke = new ArrayList(invocations.size());
+            invoke.addAll(invocations);
+            Collections.sort(invoke);
+            
+            for (Invocation invocation : invoke) {
               if (!invocation.equals(ignore)) {
                 invocation.invoke(statement);
               }
@@ -163,22 +170,26 @@ public class StatementProxy implements java.sql.Statement {
   }
 
   protected Object tryToInvoke(Invocation invocation) throws SQLException {
-    int trys = 3;
+    int trys = 1;
     while (true) {
       try {
         return invocation.invoke(getStatement(invocation));
-      } catch (Exception err) {
+      } catch (Throwable err) {
+        System.out.println(getClass().getName()+":failed to invoke ["+invocation.method.getName()+"]:reason:"+err.getMessage());
         boolean problematic = false;
         try {
           testStatement();
-        } catch (SQLException cex) {
+        } catch (Throwable cex) {
           problematic = true;
         }
-        if ((problematic) || (--trys > 0)) {
-          if (trys < 2) {
-            statement = null;
-          }
-          System.out.println(getClass() + ":retrying:" + (3 - trys) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
+//        if ((problematic) || (--trys > 0)) {
+//          if (trys < 2) {
+//            statement = null;
+//          }
+//          System.out.println(getClass() + ":retrying:" + (3 - trys) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
+//        } else {
+        if (problematic) {
+          System.out.println(getClass() + ":retrying:" + (trys++) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
         } else {
           if (!(err instanceof SQLException) &&
                   (err.getCause() instanceof SQLException)) {

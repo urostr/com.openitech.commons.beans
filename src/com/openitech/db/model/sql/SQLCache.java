@@ -34,7 +34,7 @@ public class SQLCache implements Serializable {
   public static CachedRowSet getSharedResult(Connection connection, String query, List<Object> parameters, boolean reload, long TTL) throws SQLException {
     CollectionKey<Object> key = new CollectionKey<Object>(parameters.size() + 2);
     connection = connection==null?ConnectionManager.getInstance().getConnection():connection;
-    key.add(connection);
+    //key.add(connection);
     key.add(query);
     key.addAll(parameters);
 
@@ -51,7 +51,7 @@ public class SQLCache implements Serializable {
   public static PreparedStatement getSharedStatement(Connection connection, String query) throws SQLException {
     CollectionKey<Object> statementKey = new CollectionKey<Object>(2);
     connection = connection==null?ConnectionManager.getInstance().getConnection():connection;
-    statementKey.add(connection);
+    //statementKey.add(connection);
     statementKey.add(query);
 
     PreparedStatement statement;

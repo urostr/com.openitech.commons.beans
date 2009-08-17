@@ -2793,7 +2793,6 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
       int oldRow = getOpenSelectResultSet().getRow();
-      ;
       selectResultSet.afterLast();
       owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
     } else {
@@ -3423,6 +3422,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           }
         }
         Logger.getLogger(Settings.LOGGER).info("Executing insert : '" + sql + "'");
+        insertStatement.setQueryTimeout(15);
         insertStatement.executeUpdate();
       } finally {
         insertStatement.close();
@@ -3489,7 +3489,6 @@ public class SQLDataSource implements DbDataSourceImpl {
                 }
               }
             }
-
             updateResultSet.updateRow();
           } finally {
             updateResultSet.close();
@@ -3551,6 +3550,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                 oldValues.put(columnMapping.checkedGet(c).intValue(), value);
               }
               Logger.getLogger(Settings.LOGGER).info("Executing update : '" + sql + "'");
+              updateStatement.setQueryTimeout(15);
               updateStatement.executeUpdate();
             } finally {
               updateStatement.close();
@@ -4056,11 +4056,21 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static ResultSet executeQuery(String selectSQL, List<?> parameters) throws SQLException {
+    return executeQuery(selectSQL, parameters, ConnectionManager.getInstance().getConnection());
+  }
+
+  public static ResultSet executeQuery(String selectSQL, List<?> parameters, Connection connection) throws SQLException {
+    return executeQuery(selectSQL, parameters, ConnectionManager.getInstance().getConnection(), 1800);
+  }
+  
+  public static ResultSet executeQuery(String selectSQL, List<?> parameters, Connection connection, int timeout) throws SQLException {
     String sql = substParameters(selectSQL, parameters);
-    PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql,
+    PreparedStatement statement = connection.prepareStatement(sql,
             ResultSet.TYPE_SCROLL_INSENSITIVE,
             ResultSet.CONCUR_READ_ONLY,
             ResultSet.HOLD_CURSORS_OVER_COMMIT);
+
+    statement.setQueryTimeout(timeout);
 
     try {
       if (DbDataSource.DUMP_SQL) {

@@ -85,6 +85,12 @@ public class ResultSetProxy implements ResultSet {
   final Invocation<ResultSet> unwrap;
   final Invocation<ResultSet> isWrapperFor;
 
+  //speed up
+  final Invocation<ResultSet> getObjectS;
+  final Invocation<ResultSet> getObjectI;
+
+
+
   protected ResultSetProxy(ResultSet resultSet, Invocation<Statement> invocation, StatementProxy target) {
     this.invocation = invocation;
     this.resultSet = resultSet;
@@ -122,6 +128,10 @@ public class ResultSetProxy implements ResultSet {
     isClosed = new Invocation<ResultSet>(getReadMethod(ResultSetProxyBeanInfo.PROPERTY_closed), new Object[]{});
     unwrap = new Invocation<ResultSet>(getMethod(ResultSetProxyBeanInfo.METHOD_unwrap59), null);
     isWrapperFor = new Invocation<ResultSet>(getMethod(ResultSetProxyBeanInfo.METHOD_isWrapperFor48), null);
+
+    //speed up
+    getObjectS = new Invocation<ResultSet>(getMethod(ResultSetProxyBeanInfo.METHOD_getObject31), null);
+    getObjectI = new Invocation<ResultSet>(getReadMethod(ResultSetProxyBeanInfo.PROPERTY_object), null);
   }
 
   protected ResultSet getResultSet() throws SQLException {
@@ -232,25 +242,27 @@ public class ResultSetProxy implements ResultSet {
   }
 
   protected Object tryToInvoke(Invocation<ResultSet> invocation, boolean critical) throws SQLException {
-    int trys = 3;
+    int trys = 1;
     while (true) {
       try {
         Object result = invocation.invoke(getResultSet(invocation));
         Logger.getLogger(StatementProxy.class.getName()).finest(invocation.getMethod().getName() + "=" + result);
         return result;
-      } catch (Exception err) {
+      } catch (Throwable err) {
+        System.out.println(getClass().getName()+":failed to invoke ["+invocation.method.getName()+"]:reason:"+err.getMessage());
         boolean problematic = false;
         try {
           target.testStatement();
-        } catch (SQLException cex) {
+        } catch (Throwable cex) {
           resultSet = null;
           problematic = true;
         }
-        if ((problematic) || (--trys > 0)) {
-          if ((trys < 2) && (critical)) {
-            resultSet = null;
-          }
-          System.out.println(getClass() + ":retrying:" + (3 - trys) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
+        if (problematic) {
+//        if ((problematic) || (--trys > 0)) {
+//          if ((trys < 2) && (critical)) {
+//            resultSet = null;
+//          }
+          System.out.println(getClass() + ":retrying:" + (trys++) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
         } else {
           if (!(err instanceof SQLException) &&
                   (err.getCause() instanceof SQLException)) {
@@ -671,24 +683,26 @@ public class ResultSetProxy implements ResultSet {
 
   @Override
   public Object getObject(int columnIndex) throws SQLException {
-    Invocation<ResultSet> invoke = new Invocation<ResultSet>(getReadMethod(ResultSetProxyBeanInfo.PROPERTY_object), new Object[]{columnIndex});
+    getObjectI.arguments = new Object[]{columnIndex};
+    getObjectI.timestamp();
     if (reads.isEmpty()) {
-      reads.add(invoke);
+      reads.add(getObjectI);
     } else {
-      reads.set(0, invoke);
+      reads.set(0, getObjectI);
     }
-    return (Object) tryToInvoke(invoke);
+    return (Object) tryToInvoke(getObjectI);
   }
 
   @Override
   public Object getObject(String columnLabel) throws SQLException {
-    Invocation<ResultSet> invoke = new Invocation<ResultSet>(getMethod(ResultSetProxyBeanInfo.METHOD_getObject31), new Object[]{columnLabel});
+    getObjectS.arguments = new Object[]{columnLabel};
+    getObjectS.timestamp();
     if (reads.isEmpty()) {
-      reads.add(invoke);
+      reads.add(getObjectS);
     } else {
-      reads.set(0, invoke);
+      reads.set(0, getObjectS);
     }
-    return (Object) tryToInvoke(invoke);
+    return (Object) tryToInvoke(getObjectS);
   }
 
   @Override

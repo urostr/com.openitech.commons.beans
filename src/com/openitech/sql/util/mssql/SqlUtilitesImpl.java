@@ -142,18 +142,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertEvents == null) {
       insertEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
+      insertEvents.setQueryTimeout(15);
     }
     if (updateEvents == null) {
       updateEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEvents.sql", "cp1250"));
+      updateEvents.setQueryTimeout(15);
     }
     if (findEventValue == null) {
       findEventValue = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_eventvalue.sql", "cp1250"));
     }
     if (insertEventValues == null) {
       insertEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEventValues.sql", "cp1250"));
+      insertEventValues.setQueryTimeout(15);
     }
     if (updateEventValues == null) {
       updateEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEventValue.sql", "cp1250"));
+      updateEventValues.setQueryTimeout(15);
     }
     if (get_field == null) {
       get_field = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
@@ -173,6 +177,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       boolean insert = event.getId() == -1;
 
       if (insert) {
+        System.out.println("event:"+event.getSifrant()+"-"+event.getSifra()+":inserting");
         //insertaj event
         param = 1;
         insertEvents.clearParameters();
@@ -190,6 +195,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         events_ID = getLastIdentity();
       } else {
         events_ID = event.getId();
+        System.out.println("event:"+event.getSifrant()+"-"+event.getSifra()+":updating:"+events_ID);
 
         param = 1;
         updateEvents.clearParameters();
@@ -280,6 +286,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public Long storeValue(ValueType fieldType, final Object value) throws SQLException {
     if (logValues == null) {
       logValues = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
+      logValues.setQueryTimeout(15);
     }
 
     int pos = 0;
@@ -544,7 +551,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   public Event findEvent(Long eventId) throws SQLException {
     if (findEventById == null) {
-      findEventById = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_id.sql", "cp1250"));
+      findEventById = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_id.sql", "cp1250"));
     }
     ResultSet rs = executeQuery(findEventById, new FieldValue("ID", java.sql.Types.BIGINT, eventId));
     try {
@@ -626,7 +633,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       if (seek) {
-        ResultSet rs = SQLDataSource.executeQuery(getFindEventSQL(), parameters);
+        ResultSet rs = SQLDataSource.executeQuery(getFindEventSQL(), parameters, ConnectionManager.getInstance().getTxConnection());
         try {
           if (rs.next()) {
             event.setId(rs.getLong("Id"));
