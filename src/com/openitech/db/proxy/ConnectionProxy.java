@@ -94,15 +94,21 @@ public class ConnectionProxy implements java.sql.Connection {
         if (connection == null) {
           try {
             java.sql.Connection c = DriverManager.getConnection(proxoolPool);
+            try {
+              SnapshotIF snapshot = ProxoolFacade.getSnapshot(proxoolPool.replace("proxool.", ""), true);
+              System.out.println(ConnectionProxy.class.getName() + ":connection created:active:" + snapshot.getActiveConnectionCount() + ":available:" + snapshot.getAvailableConnectionCount()+":total:"+snapshot.getConnectionCount());
+            } catch (ProxoolException ex) {
+              Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, ex.getMessage());
+            }
             if (c != null) {
               connection = c;
               query = c.prepareStatement(test);
-              try {
-                SnapshotIF snapshot = ProxoolFacade.getSnapshot(proxoolPool, false);
-                System.out.print(ConnectionProxy.class.getName() + ":connection created:active:" + snapshot.getActiveConnectionCount() + ":available:" + snapshot.getAvailableConnectionCount());
-              } catch (ProxoolException ex) {
-                Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, ex.getMessage());
-              }
+            }
+            try {
+              SnapshotIF snapshot = ProxoolFacade.getSnapshot(proxoolPool.replace("proxool.", ""), true);
+              System.out.println(ConnectionProxy.class.getName() + ":connection created:active:" + snapshot.getActiveConnectionCount() + ":available:" + snapshot.getAvailableConnectionCount()+":total:"+snapshot.getConnectionCount());
+            } catch (ProxoolException ex) {
+              Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, ex.getMessage());
             }
             if (c instanceof ConnectionProxy) {
               connection = ((ConnectionProxy) c).connection;
