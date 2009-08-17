@@ -9,6 +9,7 @@
 package com.openitech.db;
 
 import com.openitech.Settings;
+import com.openitech.db.proxy.ConnectionProxy;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.logicalcobwebs.proxool.ProxoolFacade;
 
 /**
  *
@@ -76,9 +78,9 @@ public abstract class AbstractConnection implements DbConnection {
       try {
         java.sql.Connection result;
         if (pool.size()<pool_size) {
-          pool.add(result = DriverManager.getConnection(proxoolPool));
+          pool.add(result = new ConnectionProxy(proxoolPool, settings.getProperty(ConnectionManager.DB_TEST,"select GETDATE()"), DriverManager.getConnection(proxoolPool)));
         } else {
-          result = pool.get(roundrobin++);
+          result = pool.get(Math.max(pool.size()-1,  roundrobin++));
           if (roundrobin>=pool.size()) {
             roundrobin = 1;
           }
@@ -135,8 +137,8 @@ public abstract class AbstractConnection implements DbConnection {
 
               if (useProxool) {
                 String PROXOOL_DB_URL = "proxool.default:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":"+ DB_URL;
-                connect.setProperty("proxool.maximum-connection-count", ""+pool_size);
-                connect.setProperty("proxool.house-keeping-test-sql", "select GETDATE()");
+                connect.setProperty("proxool.maximum-connection-count", ""+pool_size*3);
+                connect.setProperty("proxool.house-keeping-test-sql", settings.getProperty(ConnectionManager.DB_TEST,"select GETDATE()"));
 
                 result = DriverManager.getConnection(PROXOOL_DB_URL, connect);
 
@@ -144,13 +146,36 @@ public abstract class AbstractConnection implements DbConnection {
                   proxoolPool = "proxool.default";
                   System.out.println("Using proxool pool");
 
-                  pool.add(result);
+                  pool.add(new ConnectionProxy(proxoolPool, settings.getProperty(ConnectionManager.DB_TEST,"select GETDATE()"), result));
+
+                  org.logicalcobwebs.proxool.ConnectionListenerIF cl = new org.logicalcobwebs.proxool.ConnectionListenerIF() {
+
+                    @Override
+                    public void onBirth(Connection arg0) throws SQLException {
+                      arg0.setReadOnly(false);
+                      arg0.setAutoCommit(Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")));
+                    }
+
+                    @Override
+                    public void onDeath(Connection arg0, int arg1) throws SQLException {
+                    }
+
+                    @Override
+                    public void onExecute(String arg0, long arg1) {
+                    }
+
+                    @Override
+                    public void onFail(String arg0, Exception arg1) {
+                    }
+
+                  };
+
+                  ProxoolFacade.addConnectionListener("default", cl);
                 }
               }
 
-              if (result == null) {
-                result = DriverManager.getConnection(DB_URL, connect);
-              }
+              //the tx connection is not pooled
+              result = DriverManager.getConnection(DB_URL, connect);
 
               if (result != null) {
                 createSchema(result);

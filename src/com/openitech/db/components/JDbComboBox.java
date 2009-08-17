@@ -113,13 +113,17 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     actionWeakListener.setEnabled(false);
     try {
-      final int valueAsInt = dbFieldObserver.getValueAsInt();
       if (getModel() instanceof DbComboBoxModel) {
         this.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(dbFieldObserver.getValue(), null, null));
-      } else if ((valueAsInt>=0) && (valueAsInt < getModel().getSize())) {
-        this.setSelectedIndex(valueAsInt);
-      } else if (valueAsInt == Integer.MIN_VALUE) {
-        this.setSelectedItem(null);
+      } else {
+        if (getModel().getSize() > 0) {
+          final int valueAsInt = dbFieldObserver.getValueAsInt();
+          if ((valueAsInt >= 0) && (valueAsInt < getModel().getSize())) {
+            this.setSelectedIndex(valueAsInt);
+          } else if (valueAsInt == Integer.MIN_VALUE) {
+            this.setSelectedItem(null);
+          }
+        }
       }
       if (getEditor() != null) {
         getEditor().setItem(getSelectedItem());

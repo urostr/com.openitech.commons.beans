@@ -18,6 +18,7 @@ import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.concurrent.DataSourceEvent;
 import com.openitech.db.model.concurrent.PendingSqlParameter;
 import com.openitech.db.model.concurrent.PendingValue;
+import com.openitech.db.proxy.ResultSetProxy;
 import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
 import com.openitech.util.OwnerFrame;
@@ -4137,7 +4138,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         } else {
           owner.lock();
           try {
-            int oldRow = getOpenSelectResultSet().getRow();
+            final int oldRow = selectResultSet.getRow();
 
             int max = Math.min(rowIndex + getFetchSize(), getRowCount());
             int min = Math.max(max - getFetchSize(), 1);
@@ -4257,25 +4258,29 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   private ResultSet getOpenSelectResultSet() throws SQLException {
     if (isDataLoaded()) {
-      int oldRow = 1;
-      boolean check = false;
-      try {
-        oldRow = selectResultSet.getRow();
-      } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, ex.getMessage());
-        check = true;
-      }
-      if (check) {
-        owner.lock();
+      if (selectResultSet instanceof ResultSetProxy) {
+        return selectResultSet;
+      } else {
+        int oldRow = 1;
+        boolean check = false;
         try {
-          selectResultSet.relative(0);
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
-          selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters()) : executeSql(selectStatement, owner.getParameters());
-          selectResultSet.setFetchSize(getFetchSize());
-          selectResultSet.absolute(oldRow);
-        } finally {
-          owner.unlock();
+          oldRow = selectResultSet.getRow();
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, ex.getMessage());
+          check = true;
+        }
+        if (check) {
+          owner.lock();
+          try {
+            selectResultSet.relative(0);
+          } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
+            selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters()) : executeSql(selectStatement, owner.getParameters());
+            selectResultSet.setFetchSize(getFetchSize());
+            selectResultSet.absolute(oldRow);
+          } finally {
+            owner.unlock();
+          }
         }
       }
     }
