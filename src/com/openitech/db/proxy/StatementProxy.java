@@ -58,12 +58,11 @@ public class StatementProxy implements java.sql.Statement {
       passed = true;
     } finally {
       if (!passed) {
-        System.err.println(getClass().getName()+":TEST FAILED:invalidating statement");
+        System.err.println(getClass().getName() + ":TEST FAILED:invalidating statement");
         statement = null;
       }
     }
   }
-
 
   protected Statement getStatement() throws SQLException {
     return getStatement(null);
@@ -78,23 +77,28 @@ public class StatementProxy implements java.sql.Statement {
         statement.getWarnings();
       } catch (Throwable ex) {
         System.out.println(getClass() + ":recreating statement:cause [" + ex.getMessage() + "]");
+        statement = null;
         create = true;
       }
     }
-    
+
     if (create) {
-      statement = ((StatementProxy) proxy.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability)).statement;
-      try {
-        for (Invocation invocation : invocations) {
-          if (!invocation.equals(ignore)) {
-            invocation.invoke(statement);
+      synchronized (this) {
+        if (statement == null) {
+          statement = ((StatementProxy) proxy.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability)).statement;
+          try {
+            for (Invocation invocation : invocations) {
+              if (!invocation.equals(ignore)) {
+                invocation.invoke(statement);
+              }
+            }
+          } catch (InvocationTargetException err) {
+            throw (err.getCause() instanceof SQLException) ? (SQLException) err.getCause() : new SQLException(err);
+          }
+          for (String sql : batch) {
+            statement.addBatch(sql);
           }
         }
-      } catch (InvocationTargetException err) {
-        throw (err.getCause() instanceof SQLException) ? (SQLException) err.getCause() : new SQLException(err);
-      }
-      for (String sql : batch) {
-        statement.addBatch(sql);
       }
     }
     return statement;
@@ -170,11 +174,11 @@ public class StatementProxy implements java.sql.Statement {
         } catch (SQLException cex) {
           problematic = true;
         }
-        if ((problematic)||(--trys>0)) {
-          if (trys<2) {
+        if ((problematic) || (--trys > 0)) {
+          if (trys < 2) {
             statement = null;
           }
-          System.out.println(getClass() + ":retrying:"+(3-trys)+":"+invocation.getMethod().getName()+":cause [" + err.getMessage() + "]");
+          System.out.println(getClass() + ":retrying:" + (3 - trys) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
         } else {
           if (!(err instanceof SQLException) &&
                   (err.getCause() instanceof SQLException)) {

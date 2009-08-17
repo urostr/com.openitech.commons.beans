@@ -13,7 +13,6 @@ import org.logicalcobwebs.proxool.ProxoolConstants;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.ProxoolFacade;
 
-
 /**
  *
  * @author uros
@@ -28,11 +27,10 @@ public class PooledConnection {
     }
     return instance;
   }
-
   protected String connectionTest;
-  private int pool_size;
   private java.util.List<java.sql.Connection> pool = new java.util.ArrayList<java.sql.Connection>();
   private int roundrobin = 1;
+  private int pool_size = 3;
   String proxoolPool;
 
   public PooledConnection() {
@@ -55,6 +53,12 @@ public class PooledConnection {
     String DB_URL = settings.getProperty(ConnectionManager.DB_JDBC_NET);
     connectionTest = settings.getProperty(ConnectionManager.DB_TEST, "select GETDATE()");
 
+    try {
+      pool_size = Integer.valueOf(settings.getProperty(ConnectionManager.DB_POOL_SIZE, "3"));
+    } catch (Exception err) {
+      pool_size = 3;
+    }
+
     String PROXOOL_DB_URL = "proxool.default:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
     connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + pool_size * 9);
     connect.setProperty(ProxoolConstants.HOUSE_KEEPING_SLEEP_TIME_PROPERTY, "15000");
@@ -62,7 +66,7 @@ public class PooledConnection {
     connect.setProperty(ProxoolConstants.STATISTICS_LOG_LEVEL_PROPERTY, ProxoolConstants.STATISTICS_LOG_LEVEL_DEBUG);
     connect.setProperty(ProxoolConstants.TEST_BEFORE_USE_PROPERTY, "true");
     connect.setProperty(ProxoolConstants.TEST_AFTER_USE_PROPERTY, "true");
-    connect.setProperty(ProxoolConstants.HOUSE_KEEPING_TEST_SQL_PROPERTY,connectionTest);
+    connect.setProperty(ProxoolConstants.HOUSE_KEEPING_TEST_SQL_PROPERTY, connectionTest);
 
     Connection result = DriverManager.getConnection(PROXOOL_DB_URL, connect);
 

@@ -138,32 +138,37 @@ public class ResultSetProxy implements ResultSet {
         resultSet.getWarnings();
       } catch (Throwable ex) {
         System.out.println(getClass() + ":recreating result set:cause [" + ex.getMessage() + "]");
+        resultSet = null;
         create = true;
       }
     }
     if (create) {
       try {
         target.getStatement();
-
-        resultSet = (ResultSet) invocation.invoke(target);
-        if (resultSet instanceof ResultSetProxy) {
-          resultSet = ((ResultSetProxy) resultSet).resultSet;
-        }
-        List<Invocation<ResultSet>> invocations = new ArrayList(reads.size() + motion.size() + update.size() + single.size() + regular.size());
-        invocations.addAll(reads);
-        invocations.addAll(motion);
-        invocations.addAll(update);
-        invocations.addAll(single);
-        invocations.addAll(regular);
-        Collections.sort(invocations);
-        for (Invocation<ResultSet> invocation : invocations) {
-          if (!invocation.equals(ignore)) {
-            invocation.invoke(resultSet);
+        synchronized (this) {
+          if (resultSet == null) {
+            resultSet = (ResultSet) invocation.invoke(target);
+            if (resultSet instanceof ResultSetProxy) {
+              resultSet = ((ResultSetProxy) resultSet).resultSet;
+            }
+            List<Invocation<ResultSet>> invocations = new ArrayList(reads.size() + motion.size() + update.size() + single.size() + regular.size());
+            invocations.addAll(reads);
+            invocations.addAll(motion);
+            invocations.addAll(update);
+            invocations.addAll(single);
+            invocations.addAll(regular);
+            Collections.sort(invocations);
+            for (Invocation<ResultSet> invocation : invocations) {
+              if (!invocation.equals(ignore)) {
+                invocation.invoke(resultSet);
+              }
+            }
           }
         }
       } catch (InvocationTargetException err) {
         throw (err.getCause() instanceof SQLException) ? (SQLException) err.getCause() : new SQLException(err);
       }
+
     }
     return resultSet;
   }
@@ -242,7 +247,7 @@ public class ResultSetProxy implements ResultSet {
           problematic = true;
         }
         if ((problematic) || (--trys > 0)) {
-          if ((trys < 2)&&(critical)) {
+          if ((trys < 2) && (critical)) {
             resultSet = null;
           }
           System.out.println(getClass() + ":retrying:" + (3 - trys) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
