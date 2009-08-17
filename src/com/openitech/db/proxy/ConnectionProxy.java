@@ -25,6 +25,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.logicalcobwebs.proxool.ProxoolException;
+import org.logicalcobwebs.proxool.ProxoolFacade;
+import org.logicalcobwebs.proxool.ProxyConnectionIF;
+import org.logicalcobwebs.proxool.admin.SnapshotIF;
+import org.logicalcobwebs.proxool.admin.StatisticsIF;
 
 /**
  *
@@ -60,6 +65,12 @@ public class ConnectionProxy implements java.sql.Connection {
     } finally {
       if (!passed) {
         System.err.println(getClass().getName()+":TEST FAILED:invalidating connection");
+        try {
+          ProxoolFacade.killConnecton(connection, false);
+        } catch (ProxoolException ex) {
+          Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        connection.close();
         connection = null;
       }
     }
@@ -82,6 +93,12 @@ public class ConnectionProxy implements java.sql.Connection {
         if (c != null) {
           connection = c;
           query = c.prepareStatement(test);
+          try {
+            SnapshotIF snapshot = ProxoolFacade.getSnapshot(proxoolPool, false);
+            System.out.print(ConnectionProxy.class.getName() + ":connection created:active:"+snapshot.getActiveConnectionCount()+":available:"+snapshot.getAvailableConnectionCount());
+          } catch (ProxoolException ex) {
+            Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, ex.getMessage());
+          }
         }
         if (c instanceof ConnectionProxy) {
           connection = ((ConnectionProxy) c).connection;

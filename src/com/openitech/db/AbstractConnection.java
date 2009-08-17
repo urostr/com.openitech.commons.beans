@@ -9,7 +9,7 @@
 package com.openitech.db;
 
 import com.openitech.Settings;
-import com.openitech.db.proxy.ConnectionProxy;
+import com.openitech.db.proxy.PooledConnection;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.logicalcobwebs.proxool.ProxoolFacade;
 
 /**
  *
@@ -33,14 +32,10 @@ public abstract class AbstractConnection implements DbConnection {
   private static final String userDir = System.getProperty("user.dir").replaceAll(fileSeparator, fileSeparator + fileSeparator);
   private Process databaseProcess = null;
   boolean useProxool = false;
-  String proxoolPool;
   /**
    * Creates a new instance of AbstractConnection
    */
-  private final int pool_size = 9;
   protected java.sql.Connection connection = null;
-  private java.util.List<java.sql.Connection> pool = new java.util.ArrayList<java.sql.Connection>(pool_size);
-  private int roundrobin = 1;
 
   public AbstractConnection() {
     settings = loadProperites("connection.properties");
@@ -74,18 +69,9 @@ public abstract class AbstractConnection implements DbConnection {
 
   @Override
   public java.sql.Connection getConnection() {
-    if (proxoolPool != null) {
+    if (useProxool) {
       try {
-        java.sql.Connection result;
-        if (pool.size()<pool_size) {
-          pool.add(result = new ConnectionProxy(proxoolPool, settings.getProperty(ConnectionManager.DB_TEST,"select GETDATE()"), DriverManager.getConnection(proxoolPool)));
-        } else {
-          result = pool.get(Math.max(pool.size()-1,  roundrobin++));
-          if (roundrobin>=pool.size()) {
-            roundrobin = 1;
-          }
-        }
-        return result;
+        return PooledConnection.getInstance().getConnection();
       } catch (SQLException ex) {
         Logger.getLogger(AbstractConnection.class.getName()).log(Level.SEVERE, null, ex);
         return connection;
@@ -96,7 +82,7 @@ public abstract class AbstractConnection implements DbConnection {
         Class.forName("org.logicalcobwebs.proxool.ProxoolDriver");
         useProxool = true;
       } catch (ClassNotFoundException ex) {
-        Logger.getLogger(AbstractConnection.class.getName()).log(Level.SEVERE, null, ex);
+        useProxool = false;
       }
       try {
         if (connection == null || connection.isClosed()) {
@@ -136,44 +122,8 @@ public abstract class AbstractConnection implements DbConnection {
               }
 
               if (useProxool) {
-                String PROXOOL_DB_URL = "proxool.default:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":"+ DB_URL;
-                connect.setProperty("proxool.maximum-connection-count", ""+pool_size*3);
-                connect.setProperty("proxool.house-keeping-test-sql", settings.getProperty(ConnectionManager.DB_TEST,"select GETDATE()"));
-
-                result = DriverManager.getConnection(PROXOOL_DB_URL, connect);
-
-                if (result != null) {
-                  proxoolPool = "proxool.default";
-                  System.out.println("Using proxool pool");
-
-                  pool.add(new ConnectionProxy(proxoolPool, settings.getProperty(ConnectionManager.DB_TEST,"select GETDATE()"), result));
-
-                  org.logicalcobwebs.proxool.ConnectionListenerIF cl = new org.logicalcobwebs.proxool.ConnectionListenerIF() {
-
-                    @Override
-                    public void onBirth(Connection arg0) throws SQLException {
-                      arg0.setReadOnly(false);
-                      arg0.setAutoCommit(Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")));
-                    }
-
-                    @Override
-                    public void onDeath(Connection arg0, int arg1) throws SQLException {
-                    }
-
-                    @Override
-                    public void onExecute(String arg0, long arg1) {
-                    }
-
-                    @Override
-                    public void onFail(String arg0, Exception arg1) {
-                    }
-
-                  };
-
-                  ProxoolFacade.addConnectionListener("default", cl);
-                }
+                useProxool = PooledConnection.getInstance().init(settings, connect);
               }
-
               //the tx connection is not pooled
               result = DriverManager.getConnection(DB_URL, connect);
 
