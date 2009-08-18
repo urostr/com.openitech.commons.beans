@@ -8,6 +8,7 @@
 package com.openitech.db.model;
 
 import com.openitech.Settings;
+import com.openitech.db.ConnectionManager;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.StoreUpdatesEvent;
@@ -118,6 +119,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   private boolean shareResults = false;
   private boolean cacheStatements = true;
   private boolean autoInsert = false;
+  private boolean connectOnDemand = false;
 
   private DbDataSourceFactory.DbDataSourceImpl implementation;
 
@@ -139,6 +141,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   }
 
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
+    connectOnDemand = ConnectionManager.getInstance().isPooled();
     implementation = DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass);
     try {
       if (countSql!=null) {
@@ -150,6 +153,25 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
     } catch (SQLException ex) {
       throw (IllegalArgumentException) (new IllegalArgumentException("Failed to create a DbDataSource instance")).initCause(ex);
     }
+  }
+
+
+  /**
+   * Get the value of connectOnDemand
+   *
+   * @return the value of connectOnDemand
+   */
+  public boolean isConnectOnDemand() {
+    return connectOnDemand;
+  }
+
+  /**
+   * Set the value of connectOnDemand
+   *
+   * @param connectOnDemand new value of connectOnDemand
+   */
+  public void setConnectOnDemand(boolean connectOnDemand) {
+    this.connectOnDemand = connectOnDemand;
   }
 
   /**

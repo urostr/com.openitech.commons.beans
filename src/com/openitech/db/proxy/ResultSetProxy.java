@@ -84,12 +84,9 @@ public class ResultSetProxy implements ResultSet {
   final Invocation<ResultSet> isClosed;
   final Invocation<ResultSet> unwrap;
   final Invocation<ResultSet> isWrapperFor;
-
   //speed up
   final Invocation<ResultSet> getObjectS;
   final Invocation<ResultSet> getObjectI;
-
-
 
   protected ResultSetProxy(ResultSet resultSet, Invocation<Statement> invocation, StatementProxy target) {
     this.invocation = invocation;
@@ -161,21 +158,29 @@ public class ResultSetProxy implements ResultSet {
             if (resultSet instanceof ResultSetProxy) {
               resultSet = ((ResultSetProxy) resultSet).resultSet;
             }
-            List<Invocation<ResultSet>> invocations = new ArrayList(reads.size() + motion.size() + update.size() + single.size() + regular.size());
-            invocations.addAll(reads);
-            invocations.addAll(motion);
-            invocations.addAll(update);
-            invocations.addAll(single);
-            invocations.addAll(regular);
-            Collections.sort(invocations);
-            for (Invocation<ResultSet> invocation : invocations) {
-              if (!invocation.equals(ignore)) {
-                invocation.invoke(resultSet);
+            List<Invocation<ResultSet>> invoke = new ArrayList(reads.size() + motion.size() + update.size() + single.size() + regular.size());
+            invoke.addAll(reads);
+            invoke.addAll(motion);
+            invoke.addAll(update);
+            invoke.addAll(single);
+            invoke.addAll(regular);
+            Collections.sort(invoke);
+
+            List<Invocation<ResultSet>> copies = new ArrayList(invoke.size());
+
+            for (Invocation<ResultSet> element : invoke) {
+              if (!element.equals(ignore)) {
+                copies.add((Invocation<ResultSet>) element.clone());
               }
+            }
+
+            for (Invocation<ResultSet> element : copies) {
+              element.invoke(resultSet);
             }
           }
         }
       } catch (InvocationTargetException err) {
+        System.out.println(getClass() + ":failed to recreate statement:cause [" + err.getMessage() + "]");
         throw (err.getCause() instanceof SQLException) ? (SQLException) err.getCause() : new SQLException(err);
       }
 
@@ -249,19 +254,20 @@ public class ResultSetProxy implements ResultSet {
         Logger.getLogger(StatementProxy.class.getName()).finest(invocation.getMethod().getName() + "=" + result);
         return result;
       } catch (Throwable err) {
-        System.out.println(getClass().getName()+":failed to invoke ["+invocation.method.getName()+"]:reason:"+err.getMessage());
+        System.out.println(getClass().getName() + ":failed to invoke [" + invocation.method.getName() + "]:reason:" + err.getMessage());
         boolean problematic = false;
         try {
           target.testStatement();
         } catch (Throwable cex) {
           resultSet = null;
+          try {
+            Thread.currentThread().sleep(PooledConnection.RETRY_DELAY);
+          } catch (InterruptedException ex) {
+            Logger.getLogger(StatementProxy.class.getName()).log(Level.INFO, ex.getMessage());
+          }
           problematic = true;
         }
-        if (problematic) {
-//        if ((problematic) || (--trys > 0)) {
-//          if ((trys < 2) && (critical)) {
-//            resultSet = null;
-//          }
+        if (problematic&&(trys<PooledConnection.RETRYS_LIMIT)) {
           System.out.println(getClass() + ":retrying:" + (trys++) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
         } else {
           if (!(err instanceof SQLException) &&

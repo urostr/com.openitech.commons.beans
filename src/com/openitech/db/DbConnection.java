@@ -33,6 +33,7 @@ public interface DbConnection {
   int DB_CONNECT_PREFIX_LENGTH=DB_CONNECT_PREFIX.length();
 
 
+  Connection getTemporaryConnection();
   Connection getConnection();
   Connection getTxConnection();
 
@@ -45,5 +46,6 @@ public interface DbConnection {
   void setServerConnect(boolean connecttoserver);
 
   boolean containsKey(String key);
+  boolean isPooled();
   
 }

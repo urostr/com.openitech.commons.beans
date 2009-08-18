@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  *
  * @author uros
  */
-public class Invocation<T> implements Comparable<Invocation> {
+public class Invocation<T> implements Comparable<Invocation>, Cloneable {
   long timestamp = System.currentTimeMillis();
   final Method method;
   Object[] arguments;
@@ -55,6 +55,17 @@ public class Invocation<T> implements Comparable<Invocation> {
 
   public void setArguments(Object[] arguments) {
     this.arguments = arguments;
+  }
+
+  @Override
+  protected Object clone() {
+    try {
+      return super.clone();
+    } catch (CloneNotSupportedException ex) {
+      Invocation<T> result = new Invocation<T>(method, arguments);
+      result.timestamp = this.timestamp;
+      return result;
+    }
   }
 
 }

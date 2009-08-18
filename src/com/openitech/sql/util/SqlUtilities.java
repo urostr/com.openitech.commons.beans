@@ -429,7 +429,7 @@ public abstract class SqlUtilities {
     if (find != null) {
       newValues.setId(find.getId());
       newValues.setEventSource(find.getEventSource());
-      newValues.setDatum(find.getDatum());
+//      newValues.setDatum(find.getDatum());
     }
     return storeEvent(newValues);
   }

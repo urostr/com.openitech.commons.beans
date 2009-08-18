@@ -41,6 +41,11 @@ public class StatementProxy implements java.sql.Statement {
     this.resultSetType = resultSetType;
     this.resultSetConcurrency = resultSetConcurrency;
     this.resultSetHoldability = resultSetHoldability;
+
+    //speed up
+    setCursorName = new Invocation<Statement>(getWriteMethod(StatementProxyBeanInfo.PROPERTY_cursorName), null);
+    setFetchDirection = new Invocation<Statement>(getWriteMethod(StatementProxyBeanInfo.PROPERTY_fetchDirection), null );
+    setFetchSize = new Invocation<Statement>(getWriteMethod(StatementProxyBeanInfo.PROPERTY_fetchSize), null);
   }
   protected Statement statement = null;
 
@@ -93,13 +98,20 @@ public class StatementProxy implements java.sql.Statement {
             List<Invocation<Statement>> invoke = new ArrayList(invocations.size());
             invoke.addAll(invocations);
             Collections.sort(invoke);
-            
-            for (Invocation invocation : invoke) {
-              if (!invocation.equals(ignore)) {
-                invocation.invoke(statement);
+
+            List<Invocation<Statement>> copies = new ArrayList(invoke.size());
+
+            for (Invocation<Statement> element : invoke) {
+              if (!element.equals(ignore)) {
+                copies.add((Invocation<Statement>) element.clone());
               }
             }
+
+            for (Invocation<Statement> element : copies) {
+              element.invoke(statement);
+            }
           } catch (InvocationTargetException err) {
+            System.out.println(getClass() + ":failed to recreate statement:cause [" + err.getMessage() + "]");
             throw (err.getCause() instanceof SQLException) ? (SQLException) err.getCause() : new SQLException(err);
           }
           for (String sql : batch) {
@@ -169,17 +181,23 @@ public class StatementProxy implements java.sql.Statement {
     }
   }
 
+  @SuppressWarnings("static-access")
   protected Object tryToInvoke(Invocation invocation) throws SQLException {
     int trys = 1;
     while (true) {
       try {
         return invocation.invoke(getStatement(invocation));
       } catch (Throwable err) {
-        System.out.println(getClass().getName()+":failed to invoke ["+invocation.method.getName()+"]:reason:"+err.getMessage());
+        System.out.println(getClass().getName() + ":failed to invoke [" + invocation.method.getName() + "]:reason:" + err.getMessage());
         boolean problematic = false;
         try {
           testStatement();
         } catch (Throwable cex) {
+          try {
+            Thread.currentThread().sleep(PooledConnection.RETRY_DELAY);
+          } catch (InterruptedException ex) {
+            Logger.getLogger(StatementProxy.class.getName()).log(Level.INFO, ex.getMessage());
+          }
           problematic = true;
         }
 //        if ((problematic) || (--trys > 0)) {
@@ -188,7 +206,7 @@ public class StatementProxy implements java.sql.Statement {
 //          }
 //          System.out.println(getClass() + ":retrying:" + (3 - trys) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
 //        } else {
-        if (problematic) {
+        if (problematic&&(trys<PooledConnection.RETRYS_LIMIT)) {
           System.out.println(getClass() + ":retrying:" + (trys++) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
         } else {
           if (!(err instanceof SQLException) &&
@@ -271,9 +289,12 @@ public class StatementProxy implements java.sql.Statement {
     getStatement().clearWarnings();
   }
 
+  final Invocation<Statement> setCursorName;
   @Override
   public void setCursorName(String name) throws SQLException {
-    invocations.add(new Invocation<Statement>(getWriteMethod(StatementProxyBeanInfo.PROPERTY_cursorName), new Object[]{name}));
+    setCursorName.arguments = new Object[]{name};
+    setCursorName.timestamp();
+    invocations.add(setCursorName);
     getStatement().setCursorName(name);
   }
 
@@ -298,9 +319,12 @@ public class StatementProxy implements java.sql.Statement {
     return getStatement().getMoreResults();
   }
 
+  final Invocation<Statement> setFetchDirection;
   @Override
   public void setFetchDirection(int direction) throws SQLException {
-    invocations.add(new Invocation<Statement>(getWriteMethod(StatementProxyBeanInfo.PROPERTY_fetchDirection), new Object[]{direction}));
+    setFetchDirection.timestamp();
+    setFetchDirection.arguments =  new Object[]{direction};
+    invocations.add(setFetchDirection);
     getStatement().setFetchDirection(direction);
   }
 
@@ -309,9 +333,12 @@ public class StatementProxy implements java.sql.Statement {
     return getStatement().getFetchDirection();
   }
 
+  final Invocation<Statement> setFetchSize;
   @Override
   public void setFetchSize(int rows) throws SQLException {
-    invocations.add(new Invocation<Statement>(getWriteMethod(StatementProxyBeanInfo.PROPERTY_fetchSize), new Object[]{rows}));
+    setFetchSize.timestamp();
+    setFetchSize.arguments = new Object[]{rows};
+    invocations.add(setFetchSize);
     getStatement().setFetchSize(rows);
   }
 

@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.4 $
+ * $Revision: 1.5 $
  */
 package com.openitech.db.model.sql;
 
@@ -22,6 +22,7 @@ import com.openitech.db.proxy.ResultSetProxy;
 import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
 import com.openitech.util.OwnerFrame;
+import com.sun.rowset.CachedRowSetImpl;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.io.InputStream;
@@ -61,6 +62,7 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.RowSetListener;
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.JOptionPane;
 import javax.swing.event.ListDataEvent;
 
@@ -76,10 +78,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   private String preparedSelectSql;
   private String preparedCountSql;
   private String updateTableName;
-  private transient PreparedStatement selectStatement;
-  private transient PreparedStatement countStatement;
   private List<PrimaryKey> primaryKeys;
-  private transient ResultSet selectResultSet = null;
   private int count = 0;
   private int fetchSize = 54;
   private Map<Integer, Map<String, Object>> storedUpdates = new HashMap<Integer, Map<String, Object>>();
@@ -91,7 +90,12 @@ public class SQLDataSource implements DbDataSourceImpl {
   private transient Map<CacheKey, CacheEntry<String, Object>> cache = new HashMap<CacheKey, CacheEntry<String, Object>>();
   private transient Map<CollectionKey<NamedValue>, java.util.List<PendingValue>> pendingValuesCache = new HashMap<CollectionKey<NamedValue>, java.util.List<PendingValue>>();
   private final Runnable events = new RunnableEvents(this);
-  private Connection connection = null;
+  private transient Connection connection = null;
+  private boolean selectStatementReady = false;
+  private boolean countStatementReady = false;
+  private transient CurrentResultSet currentResultSet = null;
+  private transient PreparedStatement selectStatement;
+  private transient PreparedStatement countStatement;
   private transient Map<String, PreparedStatement> cachedStatements = new HashMap<String, PreparedStatement>();
   /**
    * Holds value of property uniqueID.
@@ -774,7 +778,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public int findColumn(String columnName) throws SQLException {
     if (loadData()) {
-      return selectResultSet.findColumn(columnName);
+      return openSelectResultSet().findColumn(columnName);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -1426,10 +1430,11 @@ public class SQLDataSource implements DbDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      int oldRow = getOpenSelectResultSet().getRow();
-      boolean res = selectResultSet.absolute(row);
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      int oldRow = openSelectResultSet.getRow();
+      boolean res = openSelectResultSet.absolute(row);
       if (res) {
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
       }
       return res;
     } else {
@@ -1720,10 +1725,11 @@ public class SQLDataSource implements DbDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      int oldRow = getOpenSelectResultSet().getRow();
-      boolean res = selectResultSet.relative(rows);
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      int oldRow = openSelectResultSet.getRow();
+      boolean res = openSelectResultSet.relative(rows);
       if (res) {
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
       }
       return res;
     } else {
@@ -1752,7 +1758,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public void setFetchDirection(int direction) throws SQLException {
     if (isDataLoaded()) {
-      selectResultSet.setFetchDirection(direction);
+      openSelectResultSet().setFetchDirection(direction);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -1777,7 +1783,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public void setFetchSize(int rows) throws SQLException {
     this.fetchSize = rows;
     if (isDataLoaded()) {
-      selectResultSet.setFetchSize(rows);
+      openSelectResultSet().setFetchSize(rows);
     }
   }
 
@@ -2330,7 +2336,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public boolean wasNull() throws SQLException {
     if (isDataLoaded()) {
-      return storedResult[0] ? storedResult[1] : selectResultSet.wasNull();
+      return storedResult[0] ? storedResult[1] : openSelectResultSet().wasNull();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2519,7 +2525,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public int getFetchDirection() throws SQLException {
     if (loadData()) {
-      return getOpenSelectResultSet().getFetchDirection();
+      return openSelectResultSet().getFetchDirection();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2550,7 +2556,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public String getCursorName() throws SQLException {
     if (loadData()) {
-      return getOpenSelectResultSet().getCursorName();
+      return openSelectResultSet().getCursorName();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2569,7 +2575,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public int getConcurrency() throws SQLException {
     if (loadData()) {
-      return getOpenSelectResultSet().getConcurrency();
+      return openSelectResultSet().getConcurrency();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2594,14 +2600,107 @@ public class SQLDataSource implements DbDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      int oldRow = getOpenSelectResultSet().getRow();
-      boolean res = selectResultSet.first();
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      int oldRow = openSelectResultSet.getRow();
+      boolean res = openSelectResultSet.first();
       if (res) {
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
       }
       return res;
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
+    }
+  }
+
+  protected void createCurrentResultSet() {
+    try {
+      Connection connection = getConnection();
+      try {
+        Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedSelectSql + "'");
+        if (DbDataSource.DUMP_SQL) {
+          System.out.println("##############");
+          System.out.println(preparedSelectSql);
+        }
+        long timer = System.currentTimeMillis();
+        currentResultSet = new CurrentResultSet(owner.isShareResults() ? SQLCache.getSharedResult(preparedSelectSql, owner.getParameters()) : executeSql(getSelectStatement(preparedSelectSql, connection), owner.getParameters()));
+        System.out.println(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
+        if (DbDataSource.DUMP_SQL) {
+          System.out.println("##############");
+        }
+        currentResultSet.currentResultSet.first();
+      } finally {
+        if (owner.isConnectOnDemand()) {
+          connection.close();
+        }
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:" + preparedSelectSql, ex);
+      currentResultSet = null;
+    }
+//        finally {
+//          inserting = false;
+//          count = -1;
+//          storedUpdates.clear();
+//          cache.clear();
+//          pendingValuesCache.clear();
+//          reloaded = true;
+//          getRowCount();
+//        }
+  }
+
+//  protected PreparedStatement getCountStatement() throws SQLException {
+//    return getCountStatement(preparedCountSql, getConnection());
+//  }
+  protected PreparedStatement getCountStatement(String sql, Connection connection) throws SQLException {
+    if (this.countStatement != null) {
+      return this.countStatement;
+    } else {
+      PreparedStatement countStatement = null;
+
+      if (sql != null && sql.length() > 0 && connection != null) {
+        if (cachedStatements.containsKey(sql)) {
+          countStatement = cachedStatements.get(sql);
+        } else {
+          countStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+          countStatement.setFetchSize(1);
+
+          if (!owner.isConnectOnDemand()) {
+            if (!owner.isCacheStatements()) {
+              cachedStatements.clear();
+            }
+            cachedStatements.put(sql, countStatement);
+          }
+        }
+      }
+
+      return countStatement;
+    }
+  }
+
+  protected PreparedStatement getSelectStatement(String sql, Connection connection) throws SQLException {
+    if (this.selectStatement != null) {
+      return this.selectStatement;
+    } else {
+      PreparedStatement selectStatement = null;
+      if (sql != null && sql.length() > 0 && connection != null) {
+        if (cachedStatements.containsKey(sql)) {
+          selectStatement = cachedStatements.get(sql);
+        } else {
+
+          selectStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+          selectStatement.setFetchSize(1008);
+
+          if (!owner.isConnectOnDemand()) {
+            if (!owner.isCacheStatements()) {
+              cachedStatements.clear();
+            }
+            cachedStatements.put(sql, selectStatement);
+          }
+          owner.setName();
+          Logger.getLogger(Settings.LOGGER).info("Successfully prepared the selectSql.");
+        }
+      }
+      return selectStatement;
     }
   }
 
@@ -2610,14 +2709,14 @@ public class SQLDataSource implements DbDataSourceImpl {
     PrimaryKey key;
     for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
       key = pk.next();
-      delete = key.getDeleteStatement(resultSet);
+      delete = key.getDeleteStatement(resultSet, getTxConnection());
       delete.execute();
     }
   }
 
   @Override
   public void doDeleteRow() throws SQLException {
-    doDeleteRow(getOpenSelectResultSet());
+    doDeleteRow(openSelectResultSet());
   }
 
   /**
@@ -2644,7 +2743,7 @@ public class SQLDataSource implements DbDataSourceImpl {
             deleteRow = false;
           }
           if (deleteRow) {
-            ResultSet resultSet = getOpenSelectResultSet();
+            ResultSet resultSet = openSelectResultSet();
             int oldRow = resultSet.getRow();
             if (owner.isUpdateRowFireOnly()) {
               owner.fireDeleteRow(new StoreUpdatesEvent(owner, getRow(), false, null, null));
@@ -2683,9 +2782,9 @@ public class SQLDataSource implements DbDataSourceImpl {
   public void close() throws SQLException {
     if (isDataLoaded()) {
       if (!owner.isShareResults()) {
-        selectResultSet.close();
+        currentResultSet.currentResultSet.close();
       }
-      selectResultSet = null;
+      currentResultSet = null;
       owner.fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
       owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, -1, -1));
     } else {
@@ -2703,7 +2802,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public void clearWarnings() throws SQLException {
     if (isDataLoaded()) {
-      selectResultSet.clearWarnings();
+      openSelectResultSet().clearWarnings();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2739,7 +2838,8 @@ public class SQLDataSource implements DbDataSourceImpl {
             inserting = false;
             owner.fireIntervalRemoved(new ListDataEvent(this, ListDataEvent.INTERVAL_REMOVED, getRowCount(), getRowCount()));
           }
-          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), selectResultSet.getRow()));
+          final int row = openSelectResultSet().getRow();
+          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, row, row));
         }
       }
     } else {
@@ -2765,10 +2865,11 @@ public class SQLDataSource implements DbDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      int oldRow = getOpenSelectResultSet().getRow();
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      int oldRow = openSelectResultSet.getRow();
       ;
-      selectResultSet.beforeFirst();
-      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+      openSelectResultSet.beforeFirst();
+      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2792,9 +2893,10 @@ public class SQLDataSource implements DbDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      int oldRow = getOpenSelectResultSet().getRow();
-      selectResultSet.afterLast();
-      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      int oldRow = openSelectResultSet.getRow();
+      openSelectResultSet.afterLast();
+      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2831,7 +2933,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public int getRow() throws SQLException {
     if (loadData()) {
-      return inserting ? getRowCount() : getOpenSelectResultSet().getRow();
+      return inserting ? getRowCount() : openSelectResultSet().getRow();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2851,7 +2953,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @since 1.2
    */
   public Statement getStatement() throws SQLException {
-    return this.selectStatement;
+    return getSelectStatement(preparedSelectSql, getTxConnection());
   }
 
   /**
@@ -2867,7 +2969,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public int getType() throws SQLException {
     if (loadData()) {
-      return getOpenSelectResultSet().getType();
+      return openSelectResultSet().getType();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2914,7 +3016,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public SQLWarning getWarnings() throws SQLException {
     if (isDataLoaded()) {
-      return getOpenSelectResultSet().getWarnings();
+      return openSelectResultSet().getWarnings();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2947,7 +3049,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public boolean isAfterLast() throws SQLException {
     if (isDataLoaded()) {
-      return inserting ? false : selectResultSet.isAfterLast();
+      return inserting ? false : openSelectResultSet().isAfterLast();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2965,7 +3067,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public boolean isBeforeFirst() throws SQLException {
     if (isDataLoaded()) {
-      return inserting ? false : selectResultSet.isBeforeFirst();
+      return inserting ? false : openSelectResultSet().isBeforeFirst();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2982,7 +3084,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public boolean isFirst() throws SQLException {
     if (isDataLoaded()) {
-      return inserting ? false : selectResultSet.isFirst() || (getRowCount() == 0);
+      return inserting ? false : openSelectResultSet().isFirst() || (getRowCount() == 0);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -3003,7 +3105,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public boolean isLast() throws SQLException {
     if (isDataLoaded()) {
-      return inserting ? true : selectResultSet.isLast() || (getRowCount() == 0);
+      return inserting ? true : openSelectResultSet().isLast() || (getRowCount() == 0);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -3028,10 +3130,11 @@ public class SQLDataSource implements DbDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      int oldRow = getOpenSelectResultSet().getRow();
-      boolean res = selectResultSet.last();
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      int oldRow = openSelectResultSet.getRow();
+      boolean res = openSelectResultSet.last();
       if (res) {
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
       }
       return res;
     } else {
@@ -3057,10 +3160,11 @@ public class SQLDataSource implements DbDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      int oldRow = getOpenSelectResultSet().getRow();
-      selectResultSet.moveToCurrentRow();
-      if (selectResultSet.getRow() != oldRow) {
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      int oldRow = openSelectResultSet.getRow();
+      openSelectResultSet.moveToCurrentRow();
+      if (openSelectResultSet.getRow() != oldRow) {
+        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
       }
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -3106,7 +3210,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           moveToInsertRow = false;
         }
         if (moveToInsertRow) {
-          int oldRow = getOpenSelectResultSet().getRow();
+          int oldRow = openSelectResultSet().getRow();
           inserting = true;
           ResultSetMetaData metaData = getMetaData();
           int columnCount = metaData.getColumnCount();
@@ -3153,10 +3257,11 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
       if (!isLast()) {
-        int oldRow = getOpenSelectResultSet().getRow();
-        boolean res = selectResultSet.next();
+        final ResultSet openSelectResultSet = openSelectResultSet();
+        int oldRow = openSelectResultSet.getRow();
+        boolean res = openSelectResultSet.next();
         if (res) {
-          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
         }
         return res;
       } else {
@@ -3187,11 +3292,11 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
       if (!isFirst()) {
-        int oldRow = getOpenSelectResultSet().getRow();
-        ;
-        boolean res = selectResultSet.previous();
+        final ResultSet openSelectResultSet = openSelectResultSet();
+        int oldRow = openSelectResultSet.getRow();
+        boolean res = openSelectResultSet.previous();
         if (res) {
-          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), oldRow));
+          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
         }
         return res;
       } else {
@@ -3232,8 +3337,9 @@ public class SQLDataSource implements DbDataSourceImpl {
       if (rowUpdated()) {
         cancelRowUpdates();
       }
-      getOpenSelectResultSet().refreshRow();
-      int row = selectResultSet.getRow();
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      openSelectResultSet.refreshRow();
+      int row = openSelectResultSet.getRow();
       owner.fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, row - 1, row - 1));
       owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, row, row));
     } else {
@@ -3336,6 +3442,8 @@ public class SQLDataSource implements DbDataSourceImpl {
     Scale scaledValue;
     Entry<String, Object> entry;
 
+    final Connection connection = getTxConnection();
+
     int columnCount = getColumnCount();
 
     String delimiterLeft = getDelimiterLeft();
@@ -3428,7 +3536,8 @@ public class SQLDataSource implements DbDataSourceImpl {
         insertStatement.close();
       }
     } else {
-      ResultSetMetaData metaData = selectResultSet.getMetaData();
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      ResultSetMetaData metaData = openSelectResultSet.getMetaData();
       List<String> skipColumns = new ArrayList<String>();
       for (int c = 1; c <= columnCount; c++) {
         String columnName = metaData.getColumnName(c).toUpperCase();
@@ -3437,7 +3546,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                 (updateColumnNames.size() == 0 ||
                 updateColumnNames.contains(columnName))) {
           try {
-            Object value = selectResultSet.getObject(c);
+            Object value = openSelectResultSet.getObject(c);
             oldValues.put(c, value);
           } catch (Exception err) {
             Logger.getLogger(Settings.LOGGER).info("Skipping illegal value for: '" + columnName + "'");
@@ -3450,7 +3559,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       PrimaryKey key;
       for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
         key = pk.next();
-        ResultSet updateResultSet = key.getUpdateResultSet(getOpenSelectResultSet());
+        ResultSet updateResultSet = key.getUpdateResultSet(openSelectResultSet, connection);
 
         if (updateResultSet != null) {
           try {
@@ -3507,7 +3616,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           if (updateCount > 0) {
             StringBuilder where = new StringBuilder();
 
-            for (String c : key.getColumnNames()) {
+            for (String c : key.getColumnNames(connection)) {
               where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
             }
             String sql = "UPDATE " + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
@@ -3540,8 +3649,8 @@ public class SQLDataSource implements DbDataSourceImpl {
                   oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
                 }
               }
-              for (String c : key.getColumnNames()) {
-                Object value = selectResultSet.getObject(c);
+              for (String c : key.getColumnNames(connection)) {
+                Object value = openSelectResultSet.getObject(c);
                 if (value == null) {
                   updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
                 } else {
@@ -3580,17 +3689,25 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   private List<PrimaryKey> getPrimaryKeys() {
     List<PrimaryKey> result = new ArrayList<PrimaryKey>();
-    if (this.selectStatement != null) {
+    PreparedStatement statement = null;
+    try {
+      Connection connection = getConnection();
       try {
-        result = PrimaryKey.getPrimaryKeys(this.selectStatement);
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getPrimaryKeys from '" + selectSql + "'", ex);
-        result = new ArrayList<PrimaryKey>();
+        statement = this.getSelectStatement(preparedSelectSql, connection);
+        if (statement != null) {
+          result = PrimaryKey.getPrimaryKeys(statement, connection);
+        }
+      } finally {
+        if (owner.isConnectOnDemand()) {
+          connection.close();
+        }
       }
+    } catch (SQLException ex) {
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getPrimaryKeys from '" + selectSql + "'", ex);
+      result = new ArrayList<PrimaryKey>();
     }
     if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
       PrimaryKey pk = new PrimaryKey(getUniqueID(), getUpdateTableName());
-      pk.connection = this.getConnection();
       result.add(pk);
     }
     return result;
@@ -3610,50 +3727,39 @@ public class SQLDataSource implements DbDataSourceImpl {
               "\n################# SELECT SQL #################\n" +
               sql +
               "\n################# ########## #################");
-      if (sql != null && sql.length() > 0 && getConnection() != null) {
-        if (owner.isShareResults()) {
-          selectStatement = SQLCache.getSharedStatement(connection, sql);
-        } else if (cachedStatements.containsKey(sql)) {
-          selectStatement = cachedStatements.get(sql);
-        } else if ((this.selectStatement == null) || (!sql.equals(preparedSelectSql))) {
-          if (this.selectStatement != null) {
-            if (owner.isCacheStatements()) {
-              cachedStatements.put(preparedSelectSql, selectStatement);
-            } else {
-              selectStatement.close();
-            }
+      selectStatementReady = false;
+      preparedSelectSql = null;
+
+      final Connection connection = getConnection();
+      try {
+        PreparedStatement selectStatement = getSelectStatement(sql, connection);
+
+        if (selectStatement != null) {
+          selectStatementReady = true;
+          preparedSelectSql = sql;
+
+          this.metaData = null;
+          this.columnMapping.clear();
+
+          this.metaData = selectStatement.getMetaData();
+          int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
+          for (int c = 1; c <= columnCount; c++) {
+            this.columnMapping.put(this.metaData.getColumnName(c), c);
           }
-          this.selectStatement = getConnection().prepareStatement(sql,
-                  ResultSet.TYPE_SCROLL_INSENSITIVE,
-                  ResultSet.CONCUR_READ_ONLY,
-                  ResultSet.HOLD_CURSORS_OVER_COMMIT);
-          this.selectStatement.setFetchSize(1008);
-
-          owner.setName();
-          Logger.getLogger(Settings.LOGGER).info("Successfully prepared the selectSql.");
+          primaryKeys = this.getPrimaryKeys();
         }
-        preparedSelectSql = sql;
-      } else {
-        this.selectStatement = null;
-      }
-
-      if (selectStatement != null) {
-        this.metaData = null;
-        this.columnMapping.clear();
-
-        this.metaData = selectStatement.getMetaData();
-        int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
-        for (int c = 1; c <= columnCount; c++) {
-          this.columnMapping.put(this.metaData.getColumnName(c), c);
+      } finally {
+        if (owner.isConnectOnDemand()) {
+          connection.close();
         }
-        primaryKeys = this.getPrimaryKeys();
       }
 
       this.count = -1;
-      if (!(owner.isShareResults() || (this.selectResultSet == null))) {
-        this.selectResultSet.close();
-      }
-      this.selectResultSet = null;
+//      if (!(owner.isShareResults() || (currentResultSet == null))) {
+//        currentResultSet.currentResultSet.setFetchSize(0);
+//        currentResultSet.currentResultSet.close();
+//      }
+      currentResultSet = null;
     } catch (InterruptedException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
     } finally {
@@ -3687,25 +3793,16 @@ public class SQLDataSource implements DbDataSourceImpl {
               "\n################# COUNT SQL #################\n" +
               sql +
               "\n################# ######### #################");
-      if (sql != null && sql.length() > 0 && getConnection() != null) {
-        if (cachedStatements.containsKey(sql)) {
-          countStatement = cachedStatements.get(sql);
-          preparedCountSql = sql;
-        } else if ((this.countStatement == null) || (!sql.equals(preparedCountSql))) {
-          if (this.countStatement != null) {
-            if (owner.isCacheStatements()) {
-              cachedStatements.put(preparedCountSql, countStatement);
-            } else {
-              countStatement.close();
-            }
-          }
-          countStatement = getConnection().prepareStatement(sql,
-                  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
-          countStatement.setFetchSize(1);
+      preparedCountSql = null;
+      final Connection connection = getConnection();
+      try {
+        if (getCountStatement(sql, connection) != null) {
           preparedCountSql = sql;
         }
-      } else {
-        countStatement = null;
+      } finally {
+        if (owner.isConnectOnDemand()) {
+          connection.close();
+        }
       }
     } catch (InterruptedException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + countSql + "'", ex);
@@ -3726,14 +3823,22 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public Connection getConnection() {
     if (this.connection == null) {
-      return ConnectionManager.getInstance() != null ? ConnectionManager.getInstance().getConnection() : null;
+      if (ConnectionManager.getInstance() != null) {
+        if (owner.isConnectOnDemand()) {
+          return ConnectionManager.getInstance().getTemporaryConnection();
+        } else {
+          return ConnectionManager.getInstance().getConnection();
+        }
+      } else {
+        return null;
+      }
     } else {
       return this.connection;
     }
   }
 
   public Connection getTxConnection() {
-    return ConnectionManager.getInstance().getTxConnection();
+    return (this.connection == null) ? ConnectionManager.getInstance().getTxConnection() : this.connection;
   }
 
   public void setConnection(Connection connection) throws SQLException {
@@ -3742,19 +3847,11 @@ public class SQLDataSource implements DbDataSourceImpl {
         statement.close();
       }
       cachedStatements.clear();
-    }
-    this.connection = connection;
-    if (selectStatement != null && !selectStatement.getConnection().equals(connection)) {
-      if (this.selectStatement != null) {
-        this.selectStatement.close();
-        this.selectStatement = null;
-      }
-      if (this.countStatement != null) {
-        this.countStatement.close();
-        this.countStatement = null;
-      }
+
+      this.connection = connection;
+
       setSelectSql(this.selectSql);
-      if ((this.countStatement == null) && (countSql != null)) {
+      if (countSql != null) {
         setCountSql(countSql);
       }
     }
@@ -3766,10 +3863,13 @@ public class SQLDataSource implements DbDataSourceImpl {
       return -1;
     } else {
       if (this.count == -1) {
+        if ((currentResultSet!=null)&&(currentResultSet.currentResultSet instanceof CachedRowSet)) {
+          return ((CachedRowSet) currentResultSet.currentResultSet).size();
+        } else
         if (owner.lock(false)) {
           try {
             if (this.count == -1) {
-              if (countStatement != null) {
+              if (preparedCountSql != null) {
                 if (preparedCountSql.equalsIgnoreCase(SELECT_1)) {
                   newCount = 1;
                 } else {
@@ -3778,40 +3878,32 @@ public class SQLDataSource implements DbDataSourceImpl {
                     System.out.println("############## count(*) ");
                     System.out.println(preparedCountSql);
                   }
-                  ResultSet rs = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedCountSql, owner.getParameters()) : executeSql(countStatement, owner.getParameters());
-                  if (DbDataSource.DUMP_SQL) {
-                    System.out.println("##############");
-                  }
-                  if (rs.first()) {
-                    newCount = rs.getInt(1);
+                  Connection connection = getConnection();
+                  try {
+                    ResultSet rs = owner.isShareResults() ? SQLCache.getSharedResult(preparedCountSql, owner.getParameters()) : executeSql(getCountStatement(preparedCountSql, connection), owner.getParameters());
+                    if (DbDataSource.DUMP_SQL) {
+                      System.out.println("##############");
+                    }
+                    if (rs.first()) {
+                      newCount = rs.getInt(1);
+                    }
+                  } finally {
+                    if (owner.isConnectOnDemand()) {
+                      connection.close();
+                    }
                   }
                 }
-              } else if (selectStatement != null) {
-                if (selectResultSet == null) {
-                  try {
-                    Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedSelectSql + "'");
-                    if (DbDataSource.DUMP_SQL) {
-                      System.out.println("##############");
-                      System.out.println(preparedSelectSql);
-                    }
-                    selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters()) : executeSql(selectStatement, owner.getParameters());
-                    if (DbDataSource.DUMP_SQL) {
-                      System.out.println("##############");
-                    }
-                    selectResultSet.setFetchSize(getFetchSize());
-                    selectResultSet.first();
-                  } catch (SQLException ex) {
-                    Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:" + preparedSelectSql, ex);
-                    selectResultSet = null;
-                  }
+              } else if (preparedSelectSql != null) {
+                if (currentResultSet == null) {
+                  createCurrentResultSet();
                 }
 
-                if (selectResultSet != null) {
-                  int row = selectResultSet.getRow();
-                  selectResultSet.last();
-                  newCount = selectResultSet.getRow();
+                if (currentResultSet != null) {
+                  int row = currentResultSet.currentResultSet.getRow();
+                  currentResultSet.currentResultSet.last();
+                  newCount = currentResultSet.currentResultSet.getRow();
                   if (row > 0) {
-                    selectResultSet.absolute(row);
+                    currentResultSet.currentResultSet.absolute(row);
                   }
                 }
               }
@@ -3832,8 +3924,27 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  private class CurrentResultSet {
+
+    ResultSet currentResultSet;
+
+    public CurrentResultSet(ResultSet currentResultSet) throws SQLException {
+      if (owner.isConnectOnDemand()) {
+        this.currentResultSet = new CachedRowSetImpl();
+        this.currentResultSet.setFetchSize(getFetchSize());
+        ((CachedRowSet) this.currentResultSet).populate(currentResultSet);
+      } else {
+        this.currentResultSet = currentResultSet;
+      }
+    }
+
+    private void close() throws SQLException {
+      currentResultSet.close();
+    }
+  }
+
   public boolean isDataLoaded() {
-    return selectResultSet != null;
+    return currentResultSet != null;
   }
 
   private boolean loadData(boolean reload) {
@@ -3845,60 +3956,41 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (reload) {
       owner.lock();
       try {
-        if (!((selectResultSet == null) || owner.isShareResults())) {
-          selectResultSet.close();
+        if (!((currentResultSet == null) || owner.isShareResults())) {
+          currentResultSet.close();
         }
       } catch (SQLException ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
       } finally {
-        selectResultSet = null;
+        currentResultSet = null;
         owner.unlock();
       }
     }
-    if ((selectResultSet == null) && selectStatement != null) {
+    if ((currentResultSet == null) && selectStatementReady) {
       owner.lock();
       try {
         owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
-        try {
-          Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedSelectSql + "'");
-          if (DbDataSource.DUMP_SQL) {
-            System.out.println("##############");
-            System.out.println(preparedSelectSql);
-          }
-          long timer = System.currentTimeMillis();
-          selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters()) : executeSql(selectStatement, owner.getParameters());
-          System.out.println(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
-          if (DbDataSource.DUMP_SQL) {
-            System.out.println("##############");
-          }
-          selectResultSet.setFetchSize(getFetchSize());
-          selectResultSet.first();
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:" + preparedSelectSql, ex);
-          selectResultSet = null;
-        } finally {
-          inserting = false;
-          count = -1;
-          storedUpdates.clear();
-          cache.clear();
-          pendingValuesCache.clear();
-          reloaded = true;
-          getRowCount();
-        }
+        createCurrentResultSet();
       } finally {
+        inserting = false;
+        count = -1;
+        storedUpdates.clear();
+        cache.clear();
+        pendingValuesCache.clear();
+        reloaded = true;
         owner.unlock();
         Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
       }
       if (oldRow > 0 && getRowCount() > 0) {
         try {
-          selectResultSet.absolute(Math.min(oldRow, getRowCount()));
+          currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
         }
       }
       owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
     }
-    if (reloaded && selectResultSet != null) {
+    if (reloaded && currentResultSet != null) {
       if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
         events.run();
       } else {
@@ -3909,7 +4001,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
     }
-    return selectResultSet != null;
+    return currentResultSet != null;
 
   }
 
@@ -4060,9 +4152,9 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static ResultSet executeQuery(String selectSQL, List<?> parameters, Connection connection) throws SQLException {
-    return executeQuery(selectSQL, parameters, ConnectionManager.getInstance().getConnection(), 1800);
+    return executeQuery(selectSQL, parameters, connection, 1800);
   }
-  
+
   public static ResultSet executeQuery(String selectSQL, List<?> parameters, Connection connection, int timeout) throws SQLException {
     String sql = substParameters(selectSQL, parameters);
     PreparedStatement statement = connection.prepareStatement(sql,
@@ -4148,14 +4240,15 @@ public class SQLDataSource implements DbDataSourceImpl {
         } else {
           owner.lock();
           try {
-            final int oldRow = selectResultSet.getRow();
+            final ResultSet openSelectResultSet = openSelectResultSet();
+            final int oldRow = openSelectResultSet.getRow();
 
             int max = Math.min(rowIndex + getFetchSize(), getRowCount());
             int min = Math.max(max - getFetchSize(), 1);
-            selectResultSet.absolute(min);
+            openSelectResultSet.absolute(min);
             String cn;
             Object value;
-            for (int row = min; !selectResultSet.isAfterLast() && (row <= max); row++) {
+            for (int row = min; !openSelectResultSet.isAfterLast() && (row <= max); row++) {
               if (!cache.containsKey(new CacheKey(row, columnName))) {
                 java.util.Map<String, Boolean> pending = new HashMap<String, Boolean>();
                 for (int c = 0; c < columnNames.length; c++) {
@@ -4166,8 +4259,8 @@ public class SQLDataSource implements DbDataSourceImpl {
                 for (int c = 0; c < columnNames.length; c++) {
                   cn = columnNames[c].toUpperCase();
                   if (!pending.get(cn)) {
-                    value = selectResultSet.getObject(cn);
-                    if (selectResultSet.wasNull()) {
+                    value = openSelectResultSet.getObject(cn);
+                    if (openSelectResultSet.wasNull()) {
                       value = null;
                     }
                     cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, value));
@@ -4191,8 +4284,8 @@ public class SQLDataSource implements DbDataSourceImpl {
                           parameters.add(cache.get(parentCk).value);
                           queryKey.add(new NamedValue(keyField, cache.get(parentCk).value));
                         } else {
-                          value = selectResultSet.getObject(keyField);
-                          if (selectResultSet.wasNull()) {
+                          value = openSelectResultSet.getObject(keyField);
+                          if (openSelectResultSet.wasNull()) {
                             value = null;
                           }
                           cache.put(parentCk, new CacheEntry<String, Object>(this, keyField, value));
@@ -4227,9 +4320,9 @@ public class SQLDataSource implements DbDataSourceImpl {
                   }
                 }
               }
-              selectResultSet.next();
+              openSelectResultSet.next();
             }
-            selectResultSet.absolute(oldRow);
+            openSelectResultSet.absolute(oldRow);
           } finally {
             owner.unlock();
           }
@@ -4248,16 +4341,29 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
     ResultSet result;
     if (owner.isShareResults()) {
-      result = SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters());
+      result = SQLCache.getSharedResult(preparedSelectSql, owner.getParameters());
     } else {
-      java.sql.PreparedStatement resultStatement = getConnection().prepareStatement(preparedSelectSql,
-              ResultSet.TYPE_SCROLL_INSENSITIVE,
-              ResultSet.CONCUR_READ_ONLY,
-              ResultSet.HOLD_CURSORS_OVER_COMMIT);
-      resultStatement.setFetchSize(1008);
+      final Connection connection = getConnection();
+      try {
+        java.sql.PreparedStatement resultStatement = connection.prepareStatement(preparedSelectSql,
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY,
+                ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        resultStatement.setFetchSize(1008);
 
 
-      result = executeSql(resultStatement, owner.getParameters());
+        result = executeSql(resultStatement, owner.getParameters());
+
+        if (owner.isConnectOnDemand()) {
+          CachedRowSet cr = new CachedRowSetImpl();
+          cr.populate(result);
+          result = cr;
+        }
+      } finally {
+        if (owner.isConnectOnDemand()) {
+          connection.close();
+        }
+      }
     }
     if (DbDataSource.DUMP_SQL) {
       System.out.println("##############");
@@ -4266,15 +4372,16 @@ public class SQLDataSource implements DbDataSourceImpl {
     return result;
   }
 
-  private ResultSet getOpenSelectResultSet() throws SQLException {
+  private ResultSet openSelectResultSet() throws SQLException {
     if (isDataLoaded()) {
-      if (selectResultSet instanceof ResultSetProxy) {
-        return selectResultSet;
+      if ((currentResultSet.currentResultSet instanceof CachedRowSet) ||
+              (currentResultSet.currentResultSet instanceof ResultSetProxy)) {
+        return currentResultSet.currentResultSet;
       } else {
         int oldRow = 1;
         boolean check = false;
         try {
-          oldRow = selectResultSet.getRow();
+          oldRow = currentResultSet.currentResultSet.getRow();
         } catch (Exception ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.WARNING, ex.getMessage());
           check = true;
@@ -4282,24 +4389,22 @@ public class SQLDataSource implements DbDataSourceImpl {
         if (check) {
           owner.lock();
           try {
-            selectResultSet.relative(0);
+            currentResultSet.currentResultSet.relative(0);
           } catch (SQLException ex) {
             Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
-            selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters()) : executeSql(selectStatement, owner.getParameters());
-            selectResultSet.setFetchSize(getFetchSize());
-            selectResultSet.absolute(oldRow);
+            createCurrentResultSet();
           } finally {
             owner.unlock();
           }
         }
       }
     }
-    return selectResultSet;
+    return currentResultSet.currentResultSet;
   }
 
   public String getColumnName(int columnIndex) throws SQLException {
     if (loadData()) {
-      return getOpenSelectResultSet().getMetaData().getColumnName(columnIndex);
+      return openSelectResultSet().getMetaData().getColumnName(columnIndex);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -4345,7 +4450,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       columnName = columnName.toUpperCase();
       Integer row = new Integer(getRow());
       boolean isUpdating = inserting || storedUpdates.containsKey(row);
-      if (isUpdating || !Equals.equals(value, getOpenSelectResultSet().getObject(columnName))) {
+      if (isUpdating || !Equals.equals(value, openSelectResultSet().getObject(columnName))) {
         Map<String, Object> columnValues;
         if (storedUpdates.containsKey(row)) {
           columnValues = storedUpdates.get(row);
@@ -4365,10 +4470,10 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
-  private boolean compareValues(ResultSet resultSet, Map<Integer, Object> values) throws SQLException {
+  private boolean compareValues(ResultSet resultSet, Connection connection, Map<Integer, Object> values) throws SQLException {
     boolean equals = false;
     if (primaryKeys.size() == 1) {
-      equals = primaryKeys.get(0).compareValues(resultSet, values);
+      equals = primaryKeys.get(0).compareValues(resultSet, connection, values);
     } else if (uniqueID != null && uniqueID.length > 0) {
       equals = true;
       for (String column : uniqueID) {
@@ -4404,7 +4509,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (inserting) {
       return true;
     } else if (wasUpdated(columnIndex)) {
-      return !com.openitech.util.Equals.equals(getOpenSelectResultSet().getObject(columnIndex), getObject(columnIndex));
+      return !com.openitech.util.Equals.equals(openSelectResultSet().getObject(columnIndex), getObject(columnIndex));
     } else {
       return false;
     }
@@ -4414,18 +4519,18 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (inserting) {
       return true;
     } else if (wasUpdated(columnName)) {
-      return !com.openitech.util.Equals.equals(getOpenSelectResultSet().getObject(columnName), getObject(columnName));
+      return !com.openitech.util.Equals.equals(openSelectResultSet().getObject(columnName), getObject(columnName));
     } else {
       return false;
     }
   }
 
   public Object getOldValue(int columnIndex) throws SQLException {
-    return getOpenSelectResultSet().getObject(columnIndex);
+    return openSelectResultSet().getObject(columnIndex);
   }
 
   public Object getOldValue(String columnName) throws SQLException {
-    return getOpenSelectResultSet().getObject(columnName);
+    return openSelectResultSet().getObject(columnName);
   }
 
   public boolean wasUpdated(int columnIndex) throws SQLException {
@@ -4495,12 +4600,12 @@ public class SQLDataSource implements DbDataSourceImpl {
       storedResult[0] = true;
     } else {
       storedResult[0] = false;
+      final ResultSet openSelectResultSet = openSelectResultSet();
 
-      int oldrow = selectResultSet.getRow();
+      int oldrow = openSelectResultSet.getRow();
 
       if (oldrow != row) {
-        getOpenSelectResultSet();
-        selectResultSet.absolute(row);
+        openSelectResultSet.absolute(row);
       }
 
       if (isPending(columnName, row)) {
@@ -4508,41 +4613,41 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
 
       if (String.class.isAssignableFrom(type)) {
-        result = selectResultSet.getString(columnName);
+        result = openSelectResultSet.getString(columnName);
       } else if (Number.class.isAssignableFrom(type)) {
         if (Integer.class.isAssignableFrom(type)) {
-          result = selectResultSet.getInt(columnName);
+          result = openSelectResultSet.getInt(columnName);
         } else if (Short.class.isAssignableFrom(type)) {
-          result = selectResultSet.getShort(columnName);
+          result = openSelectResultSet.getShort(columnName);
         } else if (Double.class.isAssignableFrom(type)) {
-          result = selectResultSet.getDouble(columnName);
+          result = openSelectResultSet.getDouble(columnName);
         } else if (Byte.class.isAssignableFrom(type)) {
-          result = selectResultSet.getByte(columnName);
+          result = openSelectResultSet.getByte(columnName);
         } else if (Float.class.isAssignableFrom(type)) {
-          result = selectResultSet.getFloat(columnName);
+          result = openSelectResultSet.getFloat(columnName);
         } else if (Long.class.isAssignableFrom(type)) {
-          result = selectResultSet.getLong(columnName);
+          result = openSelectResultSet.getLong(columnName);
         } else {
-          result = selectResultSet.getBigDecimal(columnName);
+          result = openSelectResultSet.getBigDecimal(columnName);
         }
       } else if (Boolean.class.isAssignableFrom(type)) {
-        result = selectResultSet.getBoolean(columnName);
+        result = openSelectResultSet.getBoolean(columnName);
       } else if (Date.class.isAssignableFrom(type)) {
         if (Time.class.isAssignableFrom(type)) {
-          result = selectResultSet.getTime(columnName);
+          result = openSelectResultSet.getTime(columnName);
         } else if (Timestamp.class.isAssignableFrom(type)) {
-          result = selectResultSet.getTimestamp(columnName);
+          result = openSelectResultSet.getTimestamp(columnName);
         } else {
-          result = selectResultSet.getDate(columnName);
+          result = openSelectResultSet.getDate(columnName);
         }
       } else if (nullValue instanceof byte[]) {
-        result = selectResultSet.getBytes(columnName);
+        result = openSelectResultSet.getBytes(columnName);
       } else {
-        result = selectResultSet.getObject(columnName);
+        result = openSelectResultSet.getObject(columnName);
       }
 
       if (oldrow != row) {
-        selectResultSet.absolute(oldrow);
+        openSelectResultSet.absolute(oldrow);
       }
     }
 
@@ -4633,28 +4738,25 @@ public class SQLDataSource implements DbDataSourceImpl {
         pendingValuesCache.clear();
         inserting = false;
 
-        int selectedrow = selectResultSet.getRow();
+        int selectedrow = openSelectResultSet().getRow();
 
-        if (!((selectResultSet == null) || owner.isShareResults())) {
-          selectResultSet.close();
-        }
-        selectResultSet = owner.isShareResults() ? SQLCache.getSharedResult(connection, preparedSelectSql, owner.getParameters(), true) : executeSql(selectStatement, owner.getParameters());
-        selectResultSet.setFetchSize(getFetchSize());
+        createCurrentResultSet();
+        final ResultSet openSelectResultSet = openSelectResultSet();
         if (selectedrow > 0) {
           try {
-            selectResultSet.absolute(selectedrow);
+            openSelectResultSet.absolute(selectedrow);
           } catch (SQLException ex) {
-            selectResultSet.first();
+            openSelectResultSet.first();
           }
         } else {
-          selectResultSet.first();
+          openSelectResultSet.first();
         }
 
         if (owner.isSeekUpdatedRow()) {
-          if (!compareValues(selectResultSet, oldValues)) {
-            if (selectResultSet.first()) {
-              while (!compareValues(selectResultSet, oldValues) && !selectResultSet.isLast()) {
-                selectResultSet.next();
+          if (!compareValues(openSelectResultSet, connection, oldValues)) {
+            if (openSelectResultSet.first()) {
+              while (!compareValues(openSelectResultSet, connection, oldValues) && !openSelectResultSet.isLast()) {
+                openSelectResultSet.next();
               }
             }
           }
@@ -4663,7 +4765,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         count = -1; //reset row count
 
         owner.fireContentsChanged(new ListDataEvent(owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, selectResultSet.getRow(), -1));
+        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), -1));
         Logger.getLogger(Settings.LOGGER).exiting(this.getClass().toString(), "storeUpdates", insert);
       }
     } else {
@@ -4935,8 +5037,8 @@ public class SQLDataSource implements DbDataSourceImpl {
   public String getDataSourceName() {
     if (loadData()) {
       try {
-        if (getOpenSelectResultSet() instanceof javax.sql.RowSet) {
-          return ((javax.sql.RowSet) getOpenSelectResultSet()).getDataSourceName();
+        if (openSelectResultSet() instanceof javax.sql.RowSet) {
+          return ((javax.sql.RowSet) openSelectResultSet()).getDataSourceName();
         }
       } catch (SQLException ex) {
         Logger.getLogger(SQLDataSource.class.getName()).log(Level.SEVERE, null, ex);
@@ -4949,8 +5051,8 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public void setDataSourceName(String name) throws SQLException {
     if (isDataLoaded()) {
-      if (getOpenSelectResultSet() instanceof javax.sql.RowSet) {
-        ((javax.sql.RowSet) getOpenSelectResultSet()).setDataSourceName(name);
+      if (openSelectResultSet() instanceof javax.sql.RowSet) {
+        ((javax.sql.RowSet) openSelectResultSet()).setDataSourceName(name);
       }
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -5572,26 +5674,23 @@ public class SQLDataSource implements DbDataSourceImpl {
     int hashcode;
     boolean updateFailed = false;
     boolean virtual = false;
-    Connection connection;
 
     public PrimaryKey(String[] uniqueID, String table) {
       this.virtual = true;
       this.table = table;
-      this.connection = null;
       for (String s : uniqueID) {
         columnNames.add(s.toUpperCase());
       }
       hashcode = table.hashCode();
     }
 
-    public PrimaryKey(Connection connection, String table) throws SQLException {
+    public PrimaryKey(String table) throws SQLException {
       this.virtual = false;
       this.table = table;
-      this.connection = connection;
       hashcode = table.hashCode();
     }
 
-    public List<String> getColumnNames() throws SQLException {
+    public List<String> getColumnNames(Connection connection) throws SQLException {
       if (this.columnNames.size() == 0) {
         DatabaseMetaData metaData = connection.getMetaData();
         try {
@@ -5613,7 +5712,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       return columnNames;
     }
 
-    public PreparedStatement getDeleteStatement(ResultSet data) throws SQLException {
+    public PreparedStatement getDeleteStatement(ResultSet data, Connection connection) throws SQLException {
       if (delete == null) {
         StringBuilder sql = new StringBuilder();
 
@@ -5628,7 +5727,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
       delete.clearParameters();
       int p = 1;
-      for (Iterator<String> c = getColumnNames().iterator(); c.hasNext();) {
+      for (Iterator<String> c = getColumnNames(connection).iterator(); c.hasNext();) {
         delete.setObject(p++, data.getObject(c.next()));
       }
 
@@ -5636,7 +5735,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       return delete;
     }
 
-    public ResultSet getUpdateResultSet(ResultSet data) throws SQLException {
+    public ResultSet getUpdateResultSet(ResultSet data, Connection connection) throws SQLException {
       ResultSet result = null;
       if (connection != null && !virtual) {
         if (update == null) {
@@ -5683,22 +5782,22 @@ public class SQLDataSource implements DbDataSourceImpl {
       return columnMapping.containsKey(columnName.toUpperCase());
     }
 
-    public <K> boolean compareValues(ResultSet resultSet, Map<K, Object> values) throws SQLException {
+    public <K> boolean compareValues(ResultSet resultSet, Connection connection, Map<K, Object> values) throws SQLException {
       if (resultSet.isAfterLast() || resultSet.isBeforeFirst()) {
         return false;
       } else {
-        boolean equals = values != null && (values.size() >= getColumnNames().size());
+        boolean equals = values != null && (values.size() >= getColumnNames(connection).size());
         if (equals) {
           try {
             String columnName;
             Integer columnIndex;
             boolean columnValuesScan = false;
             boolean indexed = values.keySet().iterator().next() instanceof Integer;
-            boolean[] primarysChecked = new boolean[getColumnNames().size()];
+            boolean[] primarysChecked = new boolean[getColumnNames(connection).size()];
             Arrays.fill(primarysChecked, false);
             for (int c = 0; equals && c < primarysChecked.length; c++) {
               if (!primarysChecked[c]) {
-                columnName = getColumnNames().get(c);
+                columnName = getColumnNames(connection).get(c);
                 columnIndex = columnMapping.get(columnName);
                 if (indexed && (columnIndex != null)) {
                   if (values.containsKey(columnIndex) && values.get(columnIndex) != null) {
@@ -5713,7 +5812,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                   for (Iterator<Map.Entry<K, Object>> iterator = values.entrySet().iterator(); iterator.hasNext() && equals;) {
                     Map.Entry<K, Object> entry = iterator.next();
                     columnName = metaData.getColumnName(((Integer) entry.getKey()).intValue()).toUpperCase();
-                    int index = getColumnNames().indexOf(columnName);
+                    int index = getColumnNames(connection).indexOf(columnName);
                     if (index >= 0) {
                       primarysChecked[index] = true;
                       if (entry.getValue() != null) {
@@ -5743,7 +5842,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
     }
 
-    public static List<PrimaryKey> getPrimaryKeys(PreparedStatement statement) throws SQLException {
+    public static List<PrimaryKey> getPrimaryKeys(PreparedStatement statement, Connection connection) throws SQLException {
       List<PrimaryKey> result = new ArrayList<PrimaryKey>();
       ResultSetMetaData metaData = statement.getMetaData();
       if (metaData != null) {
@@ -5758,7 +5857,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           table = metaData.getTableName(c);
           if (table != null) {
             columnTables.put(metaData.getColumnName(c).toUpperCase(), table);
-            if (keys.indexOf(key = new PrimaryKey(statement.getConnection(), table)) < 0) {
+            if (keys.indexOf(key = new PrimaryKey(table)) < 0) {
               keys.add(key);
             }
           }
@@ -5767,8 +5866,8 @@ public class SQLDataSource implements DbDataSourceImpl {
 
         for (Iterator<PrimaryKey> pk = keys.iterator(); pk.hasNext();) {
           key = pk.next();
-          boolean valid = !key.getColumnNames().isEmpty();
-          for (Iterator<String> c = key.getColumnNames().iterator(); valid && c.hasNext();) {
+          boolean valid = !key.getColumnNames(connection).isEmpty();
+          for (Iterator<String> c = key.getColumnNames(connection).iterator(); valid && c.hasNext();) {
             String columnName = c.next();
             valid = columnTables.containsKey(columnName) && columnTables.get(columnName).equals(key.table);
           }
@@ -5908,8 +6007,8 @@ public class SQLDataSource implements DbDataSourceImpl {
       int pos = 0;
       if (owner.getRowCount() > 0) {
         try {
-          if (owner.selectResultSet != null) {
-            pos = owner.selectResultSet.getRow();
+          if (owner.currentResultSet != null) {
+            pos = owner.openSelectResultSet().getRow();
           }
         } catch (SQLException err) {
           pos = 0;
@@ -5949,7 +6048,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public String getDelimiterLeft() {
     ConnectionManager cm = ConnectionManager.getInstance();
-    if ((this.delimiterLeft == null) && (cm != null) && (cm.getConnection() != null)) {
+    if ((this.delimiterLeft == null) && (cm != null) && (cm.getTxConnection() != null)) {
       return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_LEFT, "");
     } else {
       return this.delimiterLeft;
@@ -5976,7 +6075,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public String getDelimiterRight() {
     ConnectionManager cm = ConnectionManager.getInstance();
-    if ((this.delimiterLeft == null) && (cm != null) && (cm.getConnection() != null)) {
+    if ((this.delimiterLeft == null) && (cm != null) && (cm.getTxConnection() != null)) {
       return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_RIGHT, "");
     } else {
       return this.delimiterRight;

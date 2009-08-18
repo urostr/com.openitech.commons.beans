@@ -27,18 +27,17 @@ import javax.sql.rowset.CachedRowSet;
  * @author uros
  */
 public class SQLCache implements Serializable {
+
   private static final long TTL = 15000; //15s
   private static transient Map<CollectionKey<Object>, PreparedStatement> sharedStatements = new ConcurrentHashMap<CollectionKey<Object>, PreparedStatement>();
   private static Map<CollectionKey<Object>, SharedEntry> sharedResults = new ConcurrentHashMap<CollectionKey<Object>, SharedEntry>();
 
-  public static CachedRowSet getSharedResult(Connection connection, String query, List<Object> parameters, boolean reload, long TTL) throws SQLException {
+  public static CachedRowSet getSharedResult(String query, List<Object> parameters, boolean reload, long TTL) throws SQLException {
     CollectionKey<Object> key = new CollectionKey<Object>(parameters.size() + 2);
-    connection = connection==null?ConnectionManager.getInstance().getConnection():connection;
-    //key.add(connection);
     key.add(query);
     key.addAll(parameters);
 
-    SharedEntry result = new SharedEntry(connection, query, parameters, TTL);
+    SharedEntry result = new SharedEntry(null, query, parameters, TTL);
     if (sharedResults.containsKey(result.entryKey)) {
       result = sharedResults.get(key);
     } else {
@@ -50,8 +49,7 @@ public class SQLCache implements Serializable {
 
   public static PreparedStatement getSharedStatement(Connection connection, String query) throws SQLException {
     CollectionKey<Object> statementKey = new CollectionKey<Object>(2);
-    connection = connection==null?ConnectionManager.getInstance().getConnection():connection;
-    //statementKey.add(connection);
+    statementKey.add(connection);
     statementKey.add(query);
 
     PreparedStatement statement;
@@ -71,12 +69,12 @@ public class SQLCache implements Serializable {
     return statement;
   }
 
-  public static ResultSet getSharedResult(Connection connection, String query, List<Object> parameters) throws SQLException {
-    return getSharedResult(connection, query, parameters, false, TTL);
+  public static ResultSet getSharedResult(String query, List<Object> parameters) throws SQLException {
+    return getSharedResult(query, parameters, false, TTL);
   }
 
-  public static ResultSet getSharedResult(Connection connection, String query, List<Object> parameters, boolean reload) throws SQLException {
-    return getSharedResult(connection, query, parameters, reload, TTL);
+  public static ResultSet getSharedResult(String query, List<Object> parameters, boolean reload) throws SQLException {
+    return getSharedResult(query, parameters, reload, TTL);
   }
 
   public static class SharedEntry implements Serializable {
@@ -92,24 +90,37 @@ public class SQLCache implements Serializable {
     private final List<Object> parameters;
 
     public SharedEntry(Connection connection, String query, List<Object> parameters, long ttl) throws SQLException {
-      this.connection = connection==null?ConnectionManager.getInstance().getConnection():connection;
+      this.connection = connection;
       this.query = query;
 
       statementKey = new CollectionKey<Object>(2);
-      statementKey.add(connection);
+      if (connection != null) {
+        statementKey.add(connection);
+      }
       statementKey.add(query);
-
-      ParameterMetaData metaData = getStatement().getParameterMetaData();
-      int parameterCount = metaData.getParameterCount();
 
       List<Object> target = SQLDataSource.getParameters(parameters);
 
-      while (target.size()<parameterCount) {
-        target.add(null);
+      Connection temporary = null;
+      if (connection == null) {
+        temporary = ConnectionManager.getInstance().getTemporaryConnection();
       }
+      try {
+        ParameterMetaData metaData = getStatement(temporary != null ? temporary : connection).getParameterMetaData();
+        int parameterCount = metaData.getParameterCount();
 
-      while (target.size()>parameterCount) {
-        target.remove(target.size()-1);
+
+        while (target.size() < parameterCount) {
+          target.add(null);
+        }
+
+        while (target.size() > parameterCount) {
+          target.remove(target.size() - 1);
+        }
+      } finally {
+        if (temporary != null) {
+          temporary.close();
+        }
       }
 
       entryKey = new CollectionKey<Object>(target.size() + 1);
@@ -120,19 +131,20 @@ public class SQLCache implements Serializable {
       this.parameters = Collections.unmodifiableList(target);
     }
 
-    public PreparedStatement getStatement() throws SQLException {
+    public PreparedStatement getStatement(Connection connection) throws SQLException {
       PreparedStatement statement;
-
-
-      if (sharedStatements.containsKey(statementKey)) {
+      if (!ConnectionManager.getInstance().isPooled() && sharedStatements.containsKey(statementKey)) {
         statement = sharedStatements.get(statementKey);
       } else {
+
         statement = connection.prepareStatement(query,
                 ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY);
         statement.setFetchSize(1008);
 
-        sharedStatements.put(statementKey, statement);
+        if (!ConnectionManager.getInstance().isPooled()) {
+          sharedStatements.put(statementKey, statement);
+        }
       }
 
       return statement;
@@ -144,7 +156,14 @@ public class SQLCache implements Serializable {
         try {
           if (reload || (entry == null) || (!isValid(ttl))) {
             entry = new CachedRowSetImpl();
-            entry.populate(SQLDataSource.executeQuery( getStatement(), parameters));
+            Connection connection = (this.connection == null) ? ConnectionManager.getInstance().getTemporaryConnection() : this.connection;
+            try {
+              entry.populate(SQLDataSource.executeQuery(getStatement(connection), parameters));
+            } finally {
+              if (this.connection == null) {
+                connection.close();
+              }
+            }
             timestamp = System.currentTimeMillis();
           }
         } finally {

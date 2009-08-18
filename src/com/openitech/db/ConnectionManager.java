@@ -3,7 +3,7 @@
  *
  * Created on March 26, 2006, 11:49 AM
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  */
 package com.openitech.db;
 
@@ -115,5 +115,15 @@ public class ConnectionManager implements DbConnection {
   @Override
   public Connection getTxConnection() {
     return getDbConnection() == null ? null : getDbConnection().getTxConnection();
+  }
+
+  @Override
+  public Connection getTemporaryConnection() {
+    return getDbConnection() == null ? null : getDbConnection().getTemporaryConnection();
+  }
+
+  @Override
+  public boolean isPooled() {
+    return getDbConnection() == null ? false : getDbConnection().isPooled();
   }
 }

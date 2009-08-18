@@ -22,7 +22,10 @@ import org.logicalcobwebs.proxool.ProxoolFacade;
  */
 public class PooledConnection {
 
-  public static final int DEFAULT_POOL_SIZE = 9;
+  public static final int DEFAULT_POOL_SIZE = 3;
+  public static final long RETRYS_LIMIT = 9;
+  public static final long RETRY_DELAY = 54;
+  
   static PooledConnection instance = null;
 
   public static PooledConnection getInstance() {
@@ -37,12 +40,17 @@ public class PooledConnection {
   private int roundrobin = 1;
   private int pool_size = DEFAULT_POOL_SIZE;
   String proxoolPool;
+  String proxoolTemporary;
 
   public PooledConnection() {
   }
 
   public Connection getTxConnection() {
     return txConnection;
+  }
+
+  public Connection getTemporaryConnection() throws SQLException {
+    return DriverManager.getConnection(proxoolTemporary);
   }
 
   public Connection getConnection() throws SQLException {
@@ -73,7 +81,7 @@ public class PooledConnection {
     String PROXOOL_DB_URL = "proxool.default:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
     connect.setProperty(ProxoolConstants.FATAL_SQL_EXCEPTION_PROPERTY, "the Connection object is closed,attempting to read when no request has been sent,TDS Protocol error");
     connect.setProperty(ProxoolConstants.MINIMUM_CONNECTION_COUNT_PROPERTY, "1");
-    connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + max_pool_size);
+    connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + pool_size);
     connect.setProperty(ProxoolConstants.HOUSE_KEEPING_SLEEP_TIME_PROPERTY, "15000");
     connect.setProperty(ProxoolConstants.MAXIMUM_ACTIVE_TIME_PROPERTY, "7200000");
     connect.setProperty(ProxoolConstants.STATISTICS_PROPERTY, "15s,15m");
@@ -83,6 +91,13 @@ public class PooledConnection {
 
     //final String autoCommit = settings.getProperty(ConnectionManager.DB_AUTOCOMMIT, "true");
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
+
+    connect.setProperty(ProxoolConstants.MAXIMUM_ACTIVE_TIME_PROPERTY, "9000");
+    PROXOOL_DB_URL = "proxool.temporary:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
+    connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + max_pool_size);
+    ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
+
+
     org.logicalcobwebs.proxool.ConnectionListenerIF cl = new org.logicalcobwebs.proxool.ConnectionListenerIF() {
 
       @Override
@@ -122,7 +137,7 @@ public class PooledConnection {
 
       @Override
       public void onFail(String arg0, Exception arg1) {
-        System.err.println("proxool:connection failed:" + arg0 + ":" + readLine(arg1.getMessage()));
+        System.err.println("proxool:connection failed:" + arg0);
       }
 
       protected boolean isTxConnectionValid() {
@@ -159,7 +174,7 @@ public class PooledConnection {
 
     if (result != null) {
       this.proxoolPool = "proxool.default";
-      ;
+      this.proxoolTemporary = "proxool.temporary";
       System.out.println("Using proxool pool");
 
       pool.add(new ConnectionProxy(proxoolPool, connectionTest, result));

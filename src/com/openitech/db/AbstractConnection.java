@@ -32,6 +32,8 @@ public abstract class AbstractConnection implements DbConnection {
   private static final String userDir = System.getProperty("user.dir").replaceAll(fileSeparator, fileSeparator + fileSeparator);
   private Process databaseProcess = null;
   boolean useProxool = false;
+  String DB_URL = null;
+  Properties connect = new Properties();
   /**
    * Creates a new instance of AbstractConnection
    */
@@ -56,6 +58,25 @@ public abstract class AbstractConnection implements DbConnection {
   }
 
   protected abstract Properties loadProperites(String propertiesName);
+
+  @Override
+  public boolean isPooled() {
+    return useProxool;
+  }
+
+  @Override
+  public Connection getTemporaryConnection() {
+    try {
+      if (useProxool) {
+        return PooledConnection.getInstance().getTemporaryConnection();
+      } else {
+        return DriverManager.getConnection(DB_URL, connect);
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(AbstractConnection.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return null;
+  }
 
   @Override
   public Connection getTxConnection() {
@@ -91,7 +112,6 @@ public abstract class AbstractConnection implements DbConnection {
         if (connection == null || connection.isClosed()) {
           String DB_USER = settings.getProperty(ConnectionManager.DB_USER);
           String DB_PASS = settings.getProperty(ConnectionManager.DB_PASS);
-          String DB_URL = null;
 
           java.sql.Connection result = null;
 
@@ -123,6 +143,10 @@ public abstract class AbstractConnection implements DbConnection {
                   connect.put(((String) entry.getKey()).substring(DB_CONNECT_PREFIX_LENGTH), entry.getValue());
                 }
               }
+
+
+              this.connect.clear();
+              this.connect.putAll(connect);
 
               if (useProxool) {
                 useProxool = PooledConnection.getInstance().init(settings, connect);
@@ -168,6 +192,9 @@ public abstract class AbstractConnection implements DbConnection {
               }
             }
 
+            this.connect.clear();
+            this.connect.putAll(connect);
+
             result = DriverManager.getConnection(DB_URL, connect);
 
             if (result != null) {
@@ -192,6 +219,7 @@ public abstract class AbstractConnection implements DbConnection {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
         connection = null;
       }
+
       return connection;
     }
   }

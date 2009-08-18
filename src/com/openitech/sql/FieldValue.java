@@ -84,4 +84,9 @@ public class FieldValue extends Field {
     }
     return fieldValue;
   }
+
+  @Override
+  public String toString() {
+    return name+":"+type+":"+ValueType.getType(type)+":"+value;
+  }
 }
