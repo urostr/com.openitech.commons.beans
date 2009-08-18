@@ -2782,7 +2782,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public void close() throws SQLException {
     if (isDataLoaded()) {
       if (!owner.isShareResults()) {
-        currentResultSet.currentResultSet.close();
+        currentResultSet.close();
       }
       currentResultSet = null;
       owner.fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
@@ -3755,10 +3755,9 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
 
       this.count = -1;
-//      if (!(owner.isShareResults() || (currentResultSet == null))) {
-//        currentResultSet.currentResultSet.setFetchSize(0);
-//        currentResultSet.currentResultSet.close();
-//      }
+      if (!(owner.isShareResults() || (currentResultSet == null))) {
+        currentResultSet.close();
+      }
       currentResultSet = null;
     } catch (InterruptedException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
@@ -3939,7 +3938,11 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
 
     private void close() throws SQLException {
-      currentResultSet.close();
+      if (currentResultSet instanceof CachedRowSet) {
+        ((CachedRowSet) currentResultSet).release();
+      } else {
+        currentResultSet.close();
+      }
     }
   }
 
