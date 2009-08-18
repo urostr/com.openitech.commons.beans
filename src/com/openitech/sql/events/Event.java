@@ -196,6 +196,7 @@ public class Event {
   
   private List<FieldValue> getFieldValues(FieldValue value) {
     List<FieldValue> fieldValues;
+    Field key = new Field(value);
     if (eventValues.containsKey(value)) {
       fieldValues = eventValues.get(value);
     } else {
@@ -246,5 +247,10 @@ public class Event {
     int hash = 5;
     hash = 97 * hash + (int) (this.id ^ (this.id >>> 32));
     return hash;
+  }
+
+  @Override
+  public String toString() {
+    return (parent!=null?"P:"+parent.toString():"E:") + sifrant + "-" + sifra + ":" + id;
   }
 }

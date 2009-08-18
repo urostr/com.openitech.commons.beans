@@ -3218,7 +3218,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           storedUpdates.remove(new Integer(getRow()));
           for (int c = 1; c <= columnCount; c++) {
             columnName = metaData.getColumnName(c);
-            storeUpdate(columnName, owner.getDefaultValues().containsKey(columnName) ? owner.getDefaultValues().get(columnName) : null, false);
+            storeUpdate(columnName, owner.getDefaultValues().containsKey(columnName) ? owner.getDefaultValues().get(columnName) : null, false, true);
           }
 
           owner.fireIntervalAdded(new ListDataEvent(this, ListDataEvent.INTERVAL_ADDED, getRowCount() - 1, getRowCount() - 1));
@@ -3862,10 +3862,9 @@ public class SQLDataSource implements DbDataSourceImpl {
       return -1;
     } else {
       if (this.count == -1) {
-        if ((currentResultSet!=null)&&(currentResultSet.currentResultSet instanceof CachedRowSet)) {
+        if ((currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
           return ((CachedRowSet) currentResultSet.currentResultSet).size();
-        } else
-        if (owner.lock(false)) {
+        } else if (owner.lock(false)) {
           try {
             if (this.count == -1) {
               if (preparedCountSql != null) {
@@ -4446,8 +4445,14 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   private void storeUpdate(String columnName, Object value, boolean notify) throws SQLException {
-    if (getRowCount() == 0 && !isReadOnly() && owner.isAutoInsert()) {
-      moveToInsertRow();
+    storeUpdate(columnName, value, notify, false);
+  }
+
+  private void storeUpdate(String columnName, Object value, boolean notify, boolean inserting) throws SQLException {
+    if (!inserting) {
+      if (getRowCount() == 0 && !isReadOnly() && owner.isAutoInsert()) {
+        moveToInsertRow();
+      }
     }
     if (getRow() > 0 && !isReadOnly()) {
       columnName = columnName.toUpperCase();
@@ -4586,6 +4591,18 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (storedUpdates.containsKey(r)) {
       if (storedUpdates.get(r).containsKey(columnName)) {
         result = storedUpdates.get(r).get(columnName);
+        if (result instanceof java.util.Date) {
+          java.util.Date value = ((java.util.Date) result);
+          if (value != null) {
+            if (Time.class.isAssignableFrom(type)) {
+              result = new java.sql.Time(value.getTime());
+            } else if (Timestamp.class.isAssignableFrom(type)) {
+              result = new java.sql.Timestamp(value.getTime());
+            } else {
+              result = new java.sql.Date(value.getTime());
+            }
+          }
+        }
         storedResult[0] = true;
         if (storedResult[1] = (result == null)) {
           result = nullValue;
@@ -4636,12 +4653,15 @@ public class SQLDataSource implements DbDataSourceImpl {
       } else if (Boolean.class.isAssignableFrom(type)) {
         result = openSelectResultSet.getBoolean(columnName);
       } else if (Date.class.isAssignableFrom(type)) {
-        if (Time.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getTime(columnName);
-        } else if (Timestamp.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getTimestamp(columnName);
-        } else {
-          result = openSelectResultSet.getDate(columnName);
+        java.util.Date value = ((java.util.Date) openSelectResultSet.getObject(columnName));
+        if (value != null) {
+          if (Time.class.isAssignableFrom(type)) {
+            result = new java.sql.Time(value.getTime());
+          } else if (Timestamp.class.isAssignableFrom(type)) {
+            result = new java.sql.Timestamp(value.getTime());
+          } else {
+            result = new java.sql.Date(value.getTime());
+          }
         }
       } else if (nullValue instanceof byte[]) {
         result = openSelectResultSet.getBytes(columnName);

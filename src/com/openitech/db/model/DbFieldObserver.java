@@ -358,7 +358,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
       activeRowChangeWeakListener.setEnabled(false);
       try {
         if (value != null && (value instanceof java.util.Date)) {
-          value = new java.sql.Date(((java.util.Date) value).getTime());
+          value = new java.sql.Timestamp(((java.util.Date) value).getTime());
         }
         dataSource.updateObject(columnName, value);
         Object newvalue = dataSource.getObject(columnName);

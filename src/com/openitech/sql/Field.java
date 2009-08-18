@@ -23,6 +23,18 @@ public class Field {
     this.type = type;
   }
 
+  /**
+   *
+   * @param name fieldName
+   * @param type fieldType java.sql.Type
+   */
+  public Field(Field field) {
+    super();
+    this.name = field.name;
+    this.type = field.type;
+  }
+
+
   @Override
   public boolean equals(Object obj) {
     if (obj == null) {
