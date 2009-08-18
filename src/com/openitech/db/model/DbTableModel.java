@@ -130,17 +130,16 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
   @Override
   public boolean isCellEditable(int rowIndex, int columnIndex) {
-    if (getDataSource()==null) {
+    if (getDataSource() == null) {
       return false;
     } else {
-      boolean editable = columnDescriptors[columnIndex].isEditable()&&(columnDescriptors[columnIndex].getCellEditor()!=null);
-      if ((rowIndex+1)>getDataSource().getRowCount()) {
+      boolean editable = columnDescriptors[columnIndex].isEditable() && (columnDescriptors[columnIndex].getCellEditor() != null);
+      if ((rowIndex + 1) > getDataSource().getRowCount()) {
         editable = editable && getDataSource().isAutoInsert();
       }
       return editable;
     }
   }
-
 
   /**
    * Get the value of autoInsertRow
@@ -764,7 +763,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       public Object getValue(String columnName) {
         int pos = columnNames.indexOf(columnName);
 
-        return pos>=0 ? getValues().get(pos) : null;
+        return pos >= 0 ? getValues().get(pos) : null;
       }
 
       public java.util.List<Object> getValues() {
@@ -798,16 +797,20 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
                 value = dataSource.getValueAt(rowIndex + 1, columnName, rowColumnNames);
               }
 
-              if (value instanceof java.util.Date) {
-                value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
-              } else if (value instanceof java.lang.Number) {
-                if ((value instanceof java.math.BigDecimal) ||
-                        (value instanceof java.lang.Double) ||
-                        (value instanceof java.lang.Float)) {
-                  value = DECIMAL_FORMAT.format((java.lang.Number) value);
-                } else {
-                  value = INTEGER_FORMAT.format((java.lang.Number) value);
+              if (renderer == null) {
+                if (value instanceof java.util.Date) {
+                  value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
+                } else if (value instanceof java.lang.Number) {
+                  if ((value instanceof java.math.BigDecimal) ||
+                          (value instanceof java.lang.Double) ||
+                          (value instanceof java.lang.Float)) {
+                    value = DECIMAL_FORMAT.format((java.lang.Number) value);
+                  } else {
+                    value = INTEGER_FORMAT.format((java.lang.Number) value);
+                  }
                 }
+              } else if ((DateTimeRenderer.class.isAssignableFrom(renderer)) && (value instanceof java.util.Date)) {
+                value = FormatFactory.DATETIME_FORMAT.format((java.util.Date) value);
               }
 
               result.append(value == null ? "" : value);
