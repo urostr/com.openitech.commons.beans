@@ -126,4 +126,9 @@ public class ConnectionManager implements DbConnection {
   public boolean isPooled() {
     return getDbConnection() == null ? false : getDbConnection().isPooled();
   }
+
+  @Override
+  public boolean isConnectOnDemand() {
+    return getDbConnection() == null ? false : getDbConnection().isConnectOnDemand();
+  }
 }

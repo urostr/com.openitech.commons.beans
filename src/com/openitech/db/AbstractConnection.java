@@ -65,6 +65,13 @@ public abstract class AbstractConnection implements DbConnection {
   }
 
   @Override
+  public boolean isConnectOnDemand() {
+    return Boolean.valueOf(settings.getProperty(DB_CONNECT_ON_DEMAND, "true"));
+  }
+
+
+
+  @Override
   public Connection getTemporaryConnection() {
     try {
       if (useProxool) {

@@ -808,6 +808,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
                   } else {
                     value = INTEGER_FORMAT.format((java.lang.Number) value);
                   }
+                } else if (value instanceof java.sql.Clob) {
+                  try {
+                    value = ((java.sql.Clob) value).getSubString(1L, (int) ((java.sql.Clob) value).length());
+                  } catch (SQLException ex) {
+                    Logger.getLogger(DbFieldObserver.class.getName()).log(Level.SEVERE, null, ex);
+                  }
                 }
               } else if ((DateTimeRenderer.class.isAssignableFrom(renderer)) && (value instanceof java.util.Date)) {
                 value = FormatFactory.DATETIME_FORMAT.format((java.util.Date) value);

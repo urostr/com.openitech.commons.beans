@@ -49,8 +49,24 @@ public class PooledConnection {
     return txConnection;
   }
 
-  public Connection getTemporaryConnection() throws SQLException {
-    return DriverManager.getConnection(proxoolTemporary);
+  public Connection getTemporaryConnection() {
+    Connection result = null;
+    do {
+      try {
+        result = DriverManager.getConnection(proxoolTemporary);
+      } catch (SQLException ex) {
+        Logger.getLogger(PooledConnection.class.getName()).log(Level.WARNING, ex.getMessage());
+        result = null;
+      }
+      if (result==null) {
+        try {
+          Thread.currentThread().sleep(108);
+        } catch (InterruptedException ex) {
+          Logger.getLogger(PooledConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      }
+    } while (result ==null);
+    return result;
   }
 
   public Connection getConnection() throws SQLException {
@@ -76,13 +92,13 @@ public class PooledConnection {
       pool_size = DEFAULT_POOL_SIZE;
     }
 
-    int max_pool_size = pool_size * 9;
+    String max_pool_size = settings.getProperty(ConnectionManager.DB_MAX_POOL_SIZE, ""+pool_size * 9);
 
     String PROXOOL_DB_URL = "proxool.default:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
     connect.setProperty(ProxoolConstants.FATAL_SQL_EXCEPTION_PROPERTY, "the Connection object is closed,attempting to read when no request has been sent,TDS Protocol error");
     connect.setProperty(ProxoolConstants.MINIMUM_CONNECTION_COUNT_PROPERTY, "1");
     connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + pool_size);
-    connect.setProperty(ProxoolConstants.HOUSE_KEEPING_SLEEP_TIME_PROPERTY, "15000");
+    connect.setProperty(ProxoolConstants.HOUSE_KEEPING_SLEEP_TIME_PROPERTY, "3000");
     connect.setProperty(ProxoolConstants.MAXIMUM_ACTIVE_TIME_PROPERTY, "7200000");
     connect.setProperty(ProxoolConstants.STATISTICS_PROPERTY, "15s,15m");
     connect.setProperty(ProxoolConstants.STATISTICS_LOG_LEVEL_PROPERTY, ProxoolConstants.STATISTICS_LOG_LEVEL_DEBUG);
@@ -92,7 +108,7 @@ public class PooledConnection {
     //final String autoCommit = settings.getProperty(ConnectionManager.DB_AUTOCOMMIT, "true");
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
 
-    connect.setProperty(ProxoolConstants.MAXIMUM_ACTIVE_TIME_PROPERTY, "9000");
+    connect.setProperty(ProxoolConstants.MAXIMUM_ACTIVE_TIME_PROPERTY, "15000");
     PROXOOL_DB_URL = "proxool.temporary:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
     connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + max_pool_size);
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);

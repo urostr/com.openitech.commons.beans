@@ -447,9 +447,9 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       this.no_fields = no_fields;
     }
   }
-  private HashSet<AbstractSeekType> seek_types = new HashSet<AbstractSeekType>();
-  private HashSet<RequiredFields> required = new HashSet<RequiredFields>();
-  private boolean filterRequired = false;
+  protected HashSet<AbstractSeekType> seek_types = new HashSet<AbstractSeekType>();
+  protected HashSet<RequiredFields> required = new HashSet<RequiredFields>();
+  protected boolean filterRequired = false;
 
   public DataSourceFilters(String replace) {
     super(replace);
@@ -476,7 +476,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     required.clear();
   }
 
-  private void setParameters(boolean notify) {
+  protected void setParameters(boolean notify) {
     StringBuilder value = new StringBuilder(108);
 
     parameters.clear();

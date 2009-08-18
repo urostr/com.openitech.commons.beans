@@ -141,7 +141,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   }
 
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
-    connectOnDemand = ConnectionManager.getInstance().isPooled();
+    connectOnDemand = ConnectionManager.getInstance().isPooled()&&ConnectionManager.getInstance().isConnectOnDemand();
     implementation = DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass);
     try {
       if (countSql!=null) {
@@ -2783,9 +2783,9 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
     if (!v.contains(l)) {
       v.addElement(l);
       listDataListeners = v;
-      if (getRowCount() > 0) {
-        l.contentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-      }
+//      if (getRowCount() > 0) {
+//        l.contentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+//      }
     }
   }
 

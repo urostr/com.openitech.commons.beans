@@ -19,6 +19,8 @@ public interface DbConnection {
   String DB_AUTOCOMMIT = "db.autocommit";
   String DB_TEST = "db.test";
   String DB_POOL_SIZE = "db.pool.size";
+  String DB_MAX_POOL_SIZE="db.max.pool.size";
+  String DB_CONNECT_ON_DEMAND="db.connect.on.demand";
   String DB_DRIVER_EMBEDDED = "db.driver.embedded";
   String DB_DRIVER_NET = "db.driver.net";
   String DB_JDBC_EMBEDDED = "db.jdbc.embedded";
@@ -47,5 +49,5 @@ public interface DbConnection {
 
   boolean containsKey(String key);
   boolean isPooled();
-  
+  boolean isConnectOnDemand();
 }

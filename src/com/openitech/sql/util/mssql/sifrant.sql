@@ -17,13 +17,12 @@ UNION ALL
     Sifranti.Opis
 FROM 
     <%tb_sifranti%> Sifranti
-INNER JOIN <%tb_seznam_sifrantov%> SeznamSifrantov ON (
-    SeznamSifrantov.Id=Sifranti.IdSifranta 
-    <%DbSifrantModelFilter%> AND
-    SeznamSifrantov.validFrom<=CURRENT_TIMESTAMP AND
-    (SeznamSifrantov.validTo IS NULL OR SeznamSifrantov.validTo>=CURRENT_TIMESTAMP)
+LEFT OUTER JOIN <%tb_seznam_sifrantov%> SeznamSifrantov ON (
+    SeznamSifrantov.Id=Sifranti.IdSifranta
 )
-WHERE     
+WHERE <%DbSifrantModelFilter%> AND
+    SeznamSifrantov.validFrom<=CURRENT_TIMESTAMP AND
+    (SeznamSifrantov.validTo IS NULL OR SeznamSifrantov.validTo>=CURRENT_TIMESTAMP) AND
     Sifranti.validFrom<=CURRENT_TIMESTAMP AND
     (Sifranti.validTo IS NULL OR Sifranti.validTo>=CURRENT_TIMESTAMP)
 

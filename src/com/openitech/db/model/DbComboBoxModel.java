@@ -78,7 +78,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     String oldvalue = this.keyColumnName;
     this.keyColumnName = keyColumnName;
     if ((oldvalue != null && !oldvalue.equals(keyColumnName)) || (oldvalue != keyColumnName)) {
-      UpdateEntries(false);
+      updateEntries(false);
     }
   }
 
@@ -88,7 +88,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
 
   public void setValueColumnNames(String[] valueColumnNames) {
     this.valueColumnNames = valueColumnNames;
-    UpdateEntries(false);
+    updateEntries(false);
   }
 
   public String[] getValueColumnNames() {
@@ -97,7 +97,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
 
   public void setExtendedValueColumnNames(String[] extendedValueColumnNames) {
     this.extendedValueColumnNames = extendedValueColumnNames;
-    UpdateEntries(false);
+    updateEntries(false);
   }
 
   public String[] getExtendedValueColumnNames() {
@@ -111,7 +111,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     String[] oldvalue = this.separator;
     this.separator = separator;
     if (oldvalue != null && !java.util.Arrays.equals(oldvalue, separator)) {
-      UpdateEntries(false);
+      updateEntries(false);
     }
   }
 
@@ -146,7 +146,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
         dataSource.addPropertyChangeListener("selectSql", propertyChangeWeakListener);
       }
       if (oldvalue != dataSource) {
-        UpdateEntries();
+        updateEntries();
       }
     } finally {
       waitForEventQueue = true;
@@ -157,21 +157,21 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     return dataSource;
   }
 
-  private void UpdateEntries() {
-    UpdateEntries(waitForEventQueue);
+  private void updateEntries() {
+    updateEntries(waitForEventQueue);
   }
 
-  private void UpdateEntries(boolean wait) {
+  private void updateEntries(boolean wait) {
     try {
       if (EventQueue.isDispatchThread()) {
-        UpdateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+        updateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
       } else if (wait) {
         EventQueue.invokeAndWait(new Runnable() {
 
           @Override
           public void run() {
             try {
-              UpdateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+              updateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
             } catch (Exception ex) {
               Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries.", ex);
             }
@@ -183,7 +183,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
           @Override
           public void run() {
             try {
-              UpdateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+              updateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
             } catch (Exception ex) {
               Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries.", ex);
             }
@@ -195,7 +195,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
     }
   }
 
-  private void UpdateEntries(ListDataEvent e) {
+  protected void updateEntries(ListDataEvent e) {
     if (dataSource != null &&
             keyColumnName != null &&
             valueColumnNames != null) {
@@ -358,7 +358,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    *    event information
    */
   public void intervalRemoved(ListDataEvent e) {
-    UpdateEntries();
+    updateEntries();
   }
 
   /**
@@ -372,7 +372,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    *    event information
    */
   public void intervalAdded(ListDataEvent e) {
-    UpdateEntries();
+    updateEntries();
   }
 
   /**
@@ -387,7 +387,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    *    event information
    */
   public void contentsChanged(ListDataEvent e) {
-    UpdateEntries();
+    updateEntries();
   }
 
   /**
@@ -397,7 +397,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    *   	and the property that has changed.
    */
   public void propertyChange(PropertyChangeEvent evt) {
-    UpdateEntries();
+    updateEntries();
   }
 
   @Override
