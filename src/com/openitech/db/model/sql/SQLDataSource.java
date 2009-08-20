@@ -5775,9 +5775,11 @@ public class SQLDataSource implements DbDataSourceImpl {
 
           this.columnMapping.clear();
           ResultSetMetaData metaData = update.getMetaData();
-          int columnCount = metaData.getColumnCount();
-          for (int c = 1; c <= columnCount; c++) {
-            this.columnMapping.put(metaData.getColumnName(c).toUpperCase(), c);
+          if (metaData != null) {
+            int columnCount = metaData.getColumnCount();
+            for (int c = 1; c <= columnCount; c++) {
+              this.columnMapping.put(metaData.getColumnName(c).toUpperCase(), c);
+            }
           }
         }
 
