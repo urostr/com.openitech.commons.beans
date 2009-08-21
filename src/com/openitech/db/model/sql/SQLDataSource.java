@@ -4454,7 +4454,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         moveToInsertRow();
       }
     }
-    if (getRow() > 0 && !isReadOnly()) {
+    if (getRow() >= 0 && !isReadOnly()) {
       columnName = columnName.toUpperCase();
       Integer row = new Integer(getRow());
       boolean isUpdating = inserting || storedUpdates.containsKey(row);
