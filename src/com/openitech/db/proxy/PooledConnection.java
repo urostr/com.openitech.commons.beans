@@ -108,7 +108,7 @@ public class PooledConnection {
     //final String autoCommit = settings.getProperty(ConnectionManager.DB_AUTOCOMMIT, "true");
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
 
-    connect.setProperty(ProxoolConstants.MAXIMUM_ACTIVE_TIME_PROPERTY, "15000");
+    connect.setProperty(ProxoolConstants.MAXIMUM_ACTIVE_TIME_PROPERTY, settings.getProperty(ConnectionManager.DB_MAX_ACTIVE_TIME, "15000"));
     PROXOOL_DB_URL = "proxool.temporary:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
     connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + max_pool_size);
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
