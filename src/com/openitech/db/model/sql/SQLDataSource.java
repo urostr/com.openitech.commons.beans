@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.5 $
+ * $Revision: 1.6 $
  */
 package com.openitech.db.model.sql;
 
@@ -3857,13 +3857,13 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public int getRowCount() {
-    int newCount = this.count;
+     int newCount = this.count;
     if (!isDataLoaded() && refreshPending) {
       return -1;
     } else {
       if (this.count == -1) {
         if ((currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
-          return ((CachedRowSet) currentResultSet.currentResultSet).size();
+          newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
         } else if (owner.lock(false)) {
           try {
             if (this.count == -1) {
@@ -4454,7 +4454,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         moveToInsertRow();
       }
     }
-    if (getRow() >= 0 && !isReadOnly()) {
+    if (getRow() > 0 && !isReadOnly()) {
       columnName = columnName.toUpperCase();
       Integer row = new Integer(getRow());
       boolean isUpdating = inserting || storedUpdates.containsKey(row);
