@@ -131,21 +131,21 @@ public class SQLCache implements Serializable {
       this.parameters = Collections.unmodifiableList(target);
     }
 
-    public PreparedStatement getStatement(Connection connection) throws SQLException {
+    private PreparedStatement getStatement(Connection connection) throws SQLException {
       PreparedStatement statement;
-      if (!ConnectionManager.getInstance().isPooled() && sharedStatements.containsKey(statementKey)) {
-        statement = sharedStatements.get(statementKey);
-      } else {
+//      if (!ConnectionManager.getInstance().isPooled() && sharedStatements.containsKey(statementKey)) {
+//        statement = sharedStatements.get(statementKey);
+//      } else {
 
         statement = connection.prepareStatement(query,
                 ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY);
         statement.setFetchSize(1008);
 
-        if (!ConnectionManager.getInstance().isPooled()) {
-          sharedStatements.put(statementKey, statement);
-        }
-      }
+//        if (!ConnectionManager.getInstance().isPooled()) {
+//          sharedStatements.put(statementKey, statement);
+//        }
+//      }
 
       return statement;
     }

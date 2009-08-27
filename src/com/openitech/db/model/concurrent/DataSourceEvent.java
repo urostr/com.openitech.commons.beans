@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -25,9 +26,10 @@ import java.util.concurrent.TimeUnit;
  * @author uros
  */
 public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
-  private   static final ExecutorService pool = new ThreadPoolExecutor(0, 27,
+  private   static final ExecutorService pool = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                                       9L, TimeUnit.SECONDS,
                                       new SynchronousQueue<Runnable>());
+//  private   static final ExecutorService pool = Executors.newCachedThreadPool();
   protected static final Map<Event, Long> timestamps = new ConcurrentHashMap<Event, Long>();
   protected static final Map<Event, Future> tasks = new ConcurrentHashMap<Event, Future>();
   
@@ -53,12 +55,19 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   }
   
   public static void submit(DataSourceEvent event) {
+    submit(event, true);
+  }
+  
+  protected static void submit(DataSourceEvent event, boolean log) {
     if ((event instanceof RefreshDataSource)&&
         event.event.dataSource.getQueuedDelay()<=0) {
         if (event.event.dataSource.canLock()) {
          ((RefreshDataSource) event).load();
         }      
     } else {
+      if (log) {
+        System.out.println("SUBMITTING:"+event.event.dataSource.getName()+":"+(event.isSuspended()?"SUSPENDED":"ACTIVE"));
+      }
       timestamps.remove(event.cancel);
       timestamps.put(event.event, event.timestamp);
       tasks.put(event.event, pool.submit(event));

@@ -86,6 +86,7 @@ public final class RefreshDataSource extends DataSourceEvent {
   
   public void run() {
     if (isCanceled()) {
+      System.out.println(event.dataSource.getName()+" is canceled. Quitting.");
       return;
     }
     if (isSuspended()) {
@@ -96,21 +97,25 @@ public final class RefreshDataSource extends DataSourceEvent {
       }
     }
     if (isCanceled()) {
-      return;
+     System.out.println(event.dataSource.getName()+" is canceled. Quitting.");
+     return;
     }
     if (isSuspended()) { //re-queue
       resubmit();
     } else {
       try {
+        System.out.println("QUEUED DELAY:"+event.dataSource.getQueuedDelay()+"ms:"+event.dataSource.getName()+":"+(isSuspended()?"SUSPENDED":"ACTIVE"));
         Thread.sleep(event.dataSource.getQueuedDelay());
       } catch (InterruptedException ex) {
         Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
       }
       if (isCanceled()) {
+        System.out.println(event.dataSource.getName()+" is canceled. Quitting.");
         return;
       }
       if (timestamps.get(event).longValue()<=timestamp.longValue()) {
         if (event.isOnEventQueue()) {
+          System.out.println("trying to load on EQ:"+event.dataSource.getName());
           try {
             EventQueue.invokeAndWait(new Runnable() {
               public void run() {
@@ -124,12 +129,12 @@ public final class RefreshDataSource extends DataSourceEvent {
           load();
         }
       } else
-        Logger.getLogger(Settings.LOGGER).fine("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
+        Logger.getLogger(Settings.LOGGER).warning("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
     }
   }
   
   private void resubmit() {
-    DataSourceEvent.submit(this);
+    DataSourceEvent.submit(this, false);
   }
   
 //  private void lockAndLoad() {
@@ -141,6 +146,7 @@ public final class RefreshDataSource extends DataSourceEvent {
 //  }
   
   protected void load() {
+    System.out.println("LOADING:"+event.dataSource.getName());
     event.dataSource.lock(true, true);
     try {
       if (filterChange)
