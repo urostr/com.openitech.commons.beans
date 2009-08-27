@@ -81,7 +81,9 @@ public final class SqlPropertyRetrieverImpl extends AbstractPropertyRetriever {
                   break;
                 case ClobValue:
                   rs.getClob("PropertyValue");
-                  result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
+                  if ((result!=null)&&(((java.sql.Clob) result).length()>0)) {
+                    result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
+                  }
                   break;
                 case ObjectValue:
                   rs.getBlob("PropertyValue");

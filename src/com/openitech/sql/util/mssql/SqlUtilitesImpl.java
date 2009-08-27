@@ -177,7 +177,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       boolean insert = event.getId() == -1;
 
       if (insert) {
-        System.out.println("event:"+event.getSifrant()+"-"+event.getSifra()+":inserting");
+        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
         //insertaj event
         param = 1;
         insertEvents.clearParameters();
@@ -195,7 +195,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         events_ID = getLastIdentity();
       } else {
         events_ID = event.getId();
-        System.out.println("event:"+event.getSifrant()+"-"+event.getSifra()+":updating:"+events_ID);
+        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
 
         param = 1;
         updateEvents.clearParameters();
@@ -563,7 +563,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
         result.setDatum(rs.getTimestamp("Datum"));
         java.sql.Clob opomba = rs.getClob("Opomba");
         if (!rs.wasNull()) {
-          result.setOpomba(opomba.getSubString(1L, (int) opomba.length()));
+          if (opomba.length() > 0) {
+            result.setOpomba(opomba.getSubString(1L, (int) opomba.length()));
+          } else {
+            result.setOpomba(null);
+          }
         }
         do {
           switch (rs.getInt("FieldType")) {
@@ -584,7 +588,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 6:
               java.sql.Clob value = rs.getClob("ClobValue");
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, value.getSubString(1L, (int) value.length())));
+              if ((value!=null) && (value.length()>0)) {
+                result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, value.getSubString(1L, (int) value.length())));
+              } else {
+                result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, ""));
+              }
               break;
             case 7:
               result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("IntValue") != 0));
@@ -823,7 +831,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     StringBuilder sbresult = new StringBuilder(500);
     DbDataSource.SubstSqlParameter sqlResultLimit = new DbDataSource.SubstSqlParameter("<%ev_result_limit%>");
     parameters.add(sqlResultLimit);
-    sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 ":" DISTINCT TOP 100 PERCENT ");
+    sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : " DISTINCT TOP 100 PERCENT ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
     parameters.add(sqlResultFields);
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
@@ -964,7 +972,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //        }
         sb.append(") ");
       } else if (Event.EVENT_SOURCE.equals(f) ||
-                 Event.EVENT_DATE.equals(f)) {
+              Event.EVENT_DATE.equals(f)) {
         valuesSet++;
       }
     }

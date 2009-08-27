@@ -141,7 +141,11 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     Object result = getValue();
     if (result instanceof Clob) {
       try {
-        result = ((Clob) result).getSubString(1L, (int) ((Clob) result).length());
+        if (((Clob) result).length() > 0) {
+          result = ((Clob) result).getSubString(1L, (int) ((Clob) result).length());
+        } else {
+          result = "";
+        }
       } catch (SQLException ex) {
         Logger.getLogger(DbFieldObserver.class.getName()).log(Level.SEVERE, null, ex);
       }
