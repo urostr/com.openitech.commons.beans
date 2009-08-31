@@ -177,7 +177,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       boolean insert = event.getId() == -1;
 
       if (insert) {
-        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
+//        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
         //insertaj event
         param = 1;
         insertEvents.clearParameters();
@@ -195,7 +195,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         events_ID = getLastIdentity();
       } else {
         events_ID = event.getId();
-        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
+//        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
 
         param = 1;
         updateEvents.clearParameters();

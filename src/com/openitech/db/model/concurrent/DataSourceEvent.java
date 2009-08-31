@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   private   static final ExecutorService pool = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                                      9L, TimeUnit.SECONDS,
+                                      30L, TimeUnit.SECONDS,
                                       new SynchronousQueue<Runnable>());
 //  private   static final ExecutorService pool = Executors.newCachedThreadPool();
   protected static final Map<Event, Long> timestamps = new ConcurrentHashMap<Event, Long>();

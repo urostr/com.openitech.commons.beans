@@ -35,9 +35,7 @@ SELECT
     SifrantVnosnihPolj.[UporabiSifrantPodjetji],
     SifrantVnosnihPolj.[UporabiSifrantPonudb],
     SifrantVnosnihPolj.[UporabiSifrantXML],
-    SifrantVnosnihPolj.[Opombe],
-    SifrantVnosnihPolj.[validFrom],
-    SifrantVnosnihPolj.[validTo]
+    SifrantVnosnihPolj.[Opombe]
 FROM
     [ChangeLog].[dbo].[SifrantiPolja] as SifrantiPolja
 LEFT OUTER JOIN
