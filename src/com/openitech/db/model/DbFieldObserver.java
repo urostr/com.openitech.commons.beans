@@ -139,7 +139,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public String getValueAsText() {
     Object result = getValue();
-    if (result instanceof Clob) {
+    if ((result instanceof Clob)||(result instanceof javax.sql.rowset.serial.SerialClob)) {
       try {
         if (((Clob) result).length() > 0) {
           result = ((Clob) result).getSubString(1L, (int) ((Clob) result).length());

@@ -3,7 +3,7 @@
  *
  * Created on April 2, 2006, 11:59 AM
  *
- * $Revision: 1.6 $
+ * $Revision: 1.7 $
  */
 package com.openitech.db.model.sql;
 
@@ -4687,8 +4687,6 @@ public class SQLDataSource implements DbDataSourceImpl {
     CacheKey ck = new CacheKey(row, columnName);
 
     if (wasUpdated(row, columnName)) {
-      return false;
-    } else if (cache.containsKey(ck)) {
       return false;
     } else {
       boolean result = false;

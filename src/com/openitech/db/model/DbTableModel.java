@@ -808,7 +808,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
                   } else {
                     value = INTEGER_FORMAT.format((java.lang.Number) value);
                   }
-                } else if ((value instanceof java.sql.Clob) && (value != null)) {
+                } else if (((value instanceof java.sql.Clob)||(value instanceof javax.sql.rowset.serial.SerialClob)) && (value != null)) {
                   try {
                     if (((java.sql.Clob) value).length() > 0) {
                       value = ((java.sql.Clob) value).getSubString(1L, (int) ((java.sql.Clob) value).length());
@@ -816,6 +816,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
                       value = "";
                     }
                   } catch (SQLException ex) {
+                    value = "";
                     Logger.getLogger(DbFieldObserver.class.getName()).log(Level.SEVERE, null, ex);
                   }
                 }

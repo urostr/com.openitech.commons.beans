@@ -195,6 +195,9 @@ public class PooledConnection {
 
       pool.add(new ConnectionProxy(proxoolPool, connectionTest, result));
 
+    } else {
+      ProxoolFacade.removeConnectionPool("proxool.default");
+      ProxoolFacade.removeConnectionPool("proxool.temporary");
     }
 
     return result != null;
