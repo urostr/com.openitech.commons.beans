@@ -6,7 +6,7 @@ package com.openitech.sql.util.mssql;
 
 import com.openitech.CaseInsensitiveString;
 import com.openitech.db.ConnectionManager;
-import com.openitech.db.components.JPIzbiraNaslova;
+import com.openitech.db.components.DbNaslovDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.db.model.sql.SQLDataSource;
@@ -445,7 +445,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public JPIzbiraNaslova.Naslov storeAddress(JPIzbiraNaslova.Naslov address) throws SQLException {
+  public DbNaslovDataModel.Naslov storeAddress(DbNaslovDataModel.Naslov address) throws SQLException {
 
     SqlUtilities sqlUtility = SqlUtilities.getInstance();
     Connection connection = ConnectionManager.getInstance().getTxConnection();

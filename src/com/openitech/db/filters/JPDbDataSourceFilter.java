@@ -289,7 +289,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         .addComponent(jLabel2)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(80, Short.MAX_VALUE))
+        .addContainerGap(11, Short.MAX_VALUE))
     );
     jpDateFieldLayout.setVerticalGroup(
       jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -321,7 +321,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpTextFieldLayout.createSequentialGroup()
         .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 334, Short.MAX_VALUE))
+        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE))
     );
     jpTextFieldLayout.setVerticalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -335,6 +335,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpFilterValues.add(jpTextField, "TEXTFIELD_CARD");
 
     jtfSifrant.setColumns(4);
+    jtfSifrant.setSearchField(true);
 
     jcbSifrant.setModel(smSifrant);
     jcbSifrant.addActionListener(new java.awt.event.ActionListener() {
@@ -350,7 +351,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpSifrantPanelLayout.createSequentialGroup()
         .addComponent(jtfSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE))
+        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 345, Short.MAX_VALUE))
     );
     jpSifrantPanelLayout.setVerticalGroup(
       jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -368,7 +369,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpPreformattedField.setLayout(jpPreformattedFieldLayout);
     jpPreformattedFieldLayout.setHorizontalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 448, Short.MAX_VALUE)
+      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 447, Short.MAX_VALUE)
     );
     jpPreformattedFieldLayout.setVerticalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

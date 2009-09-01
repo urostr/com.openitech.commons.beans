@@ -43,14 +43,14 @@ public class TelefonskeStevilke {
   public static class Telefon {
 
     public static final int[] OMREZNE_GSM = new int[]{
-      030,
-      031,
-      040,
-      041,
-      050,
-      051,
-      064,
-      070
+      30,
+      31,
+      40,
+      41,
+      50,
+      51,
+      64,
+      70
     };
     private boolean gsm = false;
     private boolean tujina = false;
