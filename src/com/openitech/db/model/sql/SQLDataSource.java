@@ -3857,7 +3857,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public int getRowCount() {
-     int newCount = this.count;
+    int newCount = this.count;
     if (!isDataLoaded() && refreshPending) {
       return -1;
     } else {
@@ -4607,7 +4607,15 @@ public class SQLDataSource implements DbDataSourceImpl {
         if (storedResult[1] = (result == null)) {
           result = nullValue;
         } else if (type.equals(String.class)) {
-          result = result.toString();
+          if (result instanceof java.sql.Clob) {
+            if (((java.sql.Clob) result).length() > 0) {
+              result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
+            } else {
+              result = "";
+            }
+          } else {
+            result = result.toString();
+          }
         } else if (result instanceof Scale) {
           result = ((Scale) result).x;
         }
@@ -4618,6 +4626,26 @@ public class SQLDataSource implements DbDataSourceImpl {
 
     if (row == 0) {
       storedResult[0] = true;
+    } else if (isPending(columnName, row)) {
+      result = getValueAt(row, columnName);
+      storedResult[0] = true;
+      if (storedResult[1] = (result == null)) {
+        result = nullValue;
+      } else if (type.equals(String.class)) {
+        if (result instanceof java.sql.Clob) {
+          if (((java.sql.Clob) result).length() > 0) {
+            result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
+          } else {
+            result = "";
+          }
+        } else {
+          result = result.toString();
+        }
+      } else if (result instanceof Scale) {
+        result = ((Scale) result).x;
+      }
+
+      return (T) result;
     } else {
       storedResult[0] = false;
       final ResultSet openSelectResultSet = openSelectResultSet();
@@ -4628,9 +4656,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         openSelectResultSet.absolute(row);
       }
 
-      if (isPending(columnName, row)) {
-        return (T) getValueAt(row, columnName);
-      }
+
 
       if (String.class.isAssignableFrom(type)) {
         result = openSelectResultSet.getString(columnName);

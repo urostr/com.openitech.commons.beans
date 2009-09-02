@@ -105,7 +105,7 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
         if (!seek_types.contains(I_TYPE_OPIS_SIFRANTA)) {
           seek_types.add(I_TYPE_OPIS_SIFRANTA);
         }
-        if (I_TYPE_SKUPINA_SIFRANTA.setValue(sifrantSkupina) &&
+        if (I_TYPE_SKUPINA_SIFRANTA.setValue(sifrantSkupina) ||
                 I_TYPE_OPIS_SIFRANTA.setValue(sifrantOpis)) {
           setParameters(true);
         }
