@@ -51,19 +51,21 @@ public class PooledConnection {
 
   public Connection getTemporaryConnection() {
     Connection result = null;
+    int count = 1;
     do {
       try {
         result = DriverManager.getConnection(proxoolTemporary);
       } catch (SQLException ex) {
-        Logger.getLogger(PooledConnection.class.getName()).log(Level.WARNING, ex.getMessage());
+//        Logger.getLogger(PooledConnection.class.getName()).log(Level.WARNING, ex.getMessage());
         result = null;
       }
       if (result==null) {
         try {
-          Thread.currentThread().sleep(108);
+          Thread.currentThread().sleep(108*count);
         } catch (InterruptedException ex) {
           Logger.getLogger(PooledConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
+        count = (count > RETRYS_LIMIT) ? (int) RETRYS_LIMIT : count + 1;
       }
     } while (result ==null);
     return result;
