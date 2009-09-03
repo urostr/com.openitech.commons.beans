@@ -114,7 +114,7 @@ public class PooledConnection {
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
 
 
-    org.logicalcobwebs.proxool.ConnectionListenerIF cl = new org.logicalcobwebs.proxool.ConnectionListenerIF() {
+    org.logicalcobwebs.proxool.ConnectionListenerIF clTX = new org.logicalcobwebs.proxool.ConnectionListenerIF() {
 
       @Override
       public void onBirth(Connection arg0) throws SQLException {
@@ -184,7 +184,39 @@ public class PooledConnection {
       }
     };
 
-    ProxoolFacade.addConnectionListener("default", cl);
+    ProxoolFacade.addConnectionListener("default", clTX);
+    
+    final String execute_on_crate = settings.getProperty(ConnectionManager.DB_POOL_EXECUTE_ON_CREATE, "");
+
+    org.logicalcobwebs.proxool.ConnectionListenerIF clTEMP = new org.logicalcobwebs.proxool.ConnectionListenerIF() {
+
+      @Override
+      public void onBirth(Connection arg0) throws SQLException {
+        arg0.setReadOnly(true);
+        if (execute_on_crate.length()>0) {
+          System.out.println("proxool:temp:executing:"+execute_on_crate);
+          arg0.createStatement().execute(execute_on_crate);
+        }
+
+        System.out.println("proxool:temp:connection created:readonly");
+      }
+
+      @Override
+      public void onDeath(Connection arg0, int arg1) throws SQLException {
+        System.out.println("proxool:temp:connection killed");
+      }
+
+      @Override
+      public void onExecute(String arg0, long arg1) {
+      }
+
+      @Override
+      public void onFail(String arg0, Exception arg1) {
+        System.err.println("proxool:temp:connection failed:" + arg0);
+      }
+    };
+
+    ProxoolFacade.addConnectionListener("temporary", clTEMP);
 
     Connection result = DriverManager.getConnection(PROXOOL_DB_URL, connect);
 
