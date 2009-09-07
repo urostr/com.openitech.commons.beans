@@ -2634,7 +2634,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from \n:" + preparedSelectSql, ex);
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from " + owner.getName(), ex);
       currentResultSet = null;
     }
 //        finally {
@@ -3541,10 +3541,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       List<String> skipColumns = new ArrayList<String>();
       for (int c = 1; c <= columnCount; c++) {
         String columnName = metaData.getColumnName(c).toUpperCase();
-        if ((updateTableName == null ||
-                (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) &&
-                (updateColumnNames.size() == 0 ||
-                updateColumnNames.contains(columnName))) {
+        if ((updateTableName == null || (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) && (updateColumnNames.size() == 0 || updateColumnNames.contains(columnName))) {
           try {
             Object value = openSelectResultSet.getObject(c);
             oldValues.put(c, value);
@@ -3718,56 +3715,56 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public void setSelectSql(String selectSql) throws SQLException {
-    String oldvalue = this.selectSql;
-    try {
-      semaphore.acquire();
-      this.selectSql = selectSql;
-      String sql = substParameters(selectSql, owner.getParameters());
-      Logger.getLogger(Settings.LOGGER).finest(
-              "\n################# SELECT SQL #################\n" +
-              sql +
-              "\n################# ########## #################");
-      selectStatementReady = false;
-      preparedSelectSql = null;
-
-      final Connection connection = getConnection();
+    if (selectSql != null) {
+      String oldvalue = this.selectSql;
       try {
-        PreparedStatement selectStatement = getSelectStatement(sql, connection);
+        semaphore.acquire();
+        this.selectSql = selectSql;
+        String sql = substParameters(selectSql, owner.getParameters());
+        Logger.getLogger(Settings.LOGGER).finest(
+                "\n################# SELECT SQL #################\n" + sql + "\n################# ########## #################");
+        selectStatementReady = false;
+        preparedSelectSql = null;
 
-        if (selectStatement != null) {
-          selectStatementReady = true;
-          preparedSelectSql = sql;
+        final Connection connection = getConnection();
+        try {
+          PreparedStatement selectStatement = getSelectStatement(sql, connection);
 
-          this.metaData = null;
-          this.columnMapping.clear();
+          if (selectStatement != null) {
+            selectStatementReady = true;
+            preparedSelectSql = sql;
 
-          this.metaData = selectStatement.getMetaData();
-          int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
-          for (int c = 1; c <= columnCount; c++) {
-            this.columnMapping.put(this.metaData.getColumnName(c), c);
+            this.metaData = null;
+            this.columnMapping.clear();
+
+            this.metaData = selectStatement.getMetaData();
+            int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
+            for (int c = 1; c <= columnCount; c++) {
+              this.columnMapping.put(this.metaData.getColumnName(c), c);
+            }
+            primaryKeys = this.getPrimaryKeys();
           }
-          primaryKeys = this.getPrimaryKeys();
+        } finally {
+          if (owner.isConnectOnDemand()) {
+            connection.close();
+          }
         }
-      } finally {
-        if (owner.isConnectOnDemand()) {
-          connection.close();
-        }
-      }
 
-      this.count = -1;
-      if (!(owner.isShareResults() || (currentResultSet == null))) {
-        currentResultSet.close();
+        this.count = -1;
+        if (!(owner.isShareResults() || (currentResultSet == null))) {
+          currentResultSet.close();
+        }
+        currentResultSet = null;
+      } catch (InterruptedException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
+      } finally {
+        semaphore.release();
+        if (countSql == null) {
+          setCountSql("SELECT COUNT(*) FROM (" + this.selectSql + ") c");
+        }
       }
-      currentResultSet = null;
-    } catch (InterruptedException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
-    } finally {
-      semaphore.release();
-      if (countSql == null) {
-        setCountSql("SELECT COUNT(*) FROM (" + this.selectSql + ") c");
-      }
+      owner.firePropertyChange("selectSql", oldvalue, this.selectSql);
     }
-    owner.firePropertyChange("selectSql", oldvalue, this.selectSql);
   }
 
   public int getColumnIndex(String columnName) throws SQLException {
@@ -3789,9 +3786,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.countSql = countSql;
       String sql = substParameters(countSql, owner.getParameters());
       Logger.getLogger(Settings.LOGGER).finest(
-              "\n################# COUNT SQL #################\n" +
-              sql +
-              "\n################# ######### #################");
+              "\n################# COUNT SQL #################\n" + sql + "\n################# ######### #################");
       preparedCountSql = null;
       final Connection connection = getConnection();
       try {
@@ -3907,7 +3902,7 @@ public class SQLDataSource implements DbDataSourceImpl {
               }
             }
           } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count from \n:" + preparedCountSql, ex);
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count for " + owner.getName(), ex);
             newCount = this.count;
           } finally {
             owner.unlock();
@@ -4376,8 +4371,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   private ResultSet openSelectResultSet() throws SQLException {
     if (isDataLoaded()) {
-      if ((currentResultSet.currentResultSet instanceof CachedRowSet) ||
-              (currentResultSet.currentResultSet instanceof ResultSetProxy)) {
+      if ((currentResultSet.currentResultSet instanceof CachedRowSet) || (currentResultSet.currentResultSet instanceof ResultSetProxy)) {
         return currentResultSet.currentResultSet;
       } else {
         int oldRow = 1;
@@ -4732,8 +4726,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     Iterator<Object> i = owner.getParameters().iterator();
     while (result == null && i.hasNext()) {
       Object parameter = i.next();
-      if ((parameter instanceof PendingSqlParameter) &&
-              ((PendingSqlParameter) parameter).isPending(columnName)) {
+      if ((parameter instanceof PendingSqlParameter) && ((PendingSqlParameter) parameter).isPending(columnName)) {
         result = (PendingSqlParameter) parameter;
       }
     }
