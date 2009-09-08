@@ -26,6 +26,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JMenu;
 import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 
 /**
@@ -163,6 +164,38 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
             document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+            document.addDocumentListener(new DocumentListener() {
+
+              @Override
+              public void insertUpdate(DocumentEvent e) {
+                updateSifrant(e);
+              }
+
+              @Override
+              public void removeUpdate(DocumentEvent e) {
+                updateSifrant(e);
+              }
+
+              @Override
+              public void changedUpdate(DocumentEvent e) {
+                updateSifrant(e);
+              }
+
+              private void updateSifrant(DocumentEvent e) {
+                if ((!updating) && (jcbSifrant != null)) {
+                  updating = true;
+                  try {
+                    jcbSifrant.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(com.openitech.util.Document.getText(e.getDocument()), null, null));
+                    jcbSifrant.repaint(27);
+                  } catch (BadLocationException ex) {
+                    Logger.getLogger(JPDbDataSourceFilter.class.getName()).warning(ex.getMessage());
+                    jcbSifrant.setSelectedItem(null);
+                  } finally {
+                    updating = false;
+                  }
+                }
+              }
+            });
             documents.put(item, new javax.swing.text.Document[]{document});
             sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
           } else {
@@ -198,11 +231,11 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         jtfSifrant.setDocument(documents.get(item)[0]);
         jcbSifrant.setModel(sifranti.get(item));
         ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
-      } else if (item.getSeekType()==com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
+      } else if (item.getSeekType() == com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
         jtfPreformattedValue.setDocument(documents.get(item)[0]);
         ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "PREFORMATTED_CARD");
       } else {
-        if (item.getSeekType()>=jcbType.getItemCount()) {
+        if (item.getSeekType() >= jcbType.getItemCount()) {
           item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
         }
         jcbType.setSelectedIndex(item.getSeekType());
@@ -393,26 +426,34 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
         filters.getFilterFor(item).setSeekType(item, jcbType.getSelectedIndex());
       }
-    //pnDataModel.dsPonudbeFilter.setSeekType(pnDataModel.dsPonudbeFilter.I_TYPE_INSOFFERS_STRANKA_PRIIMEK, jcbType.getSelectedIndex());
+      //pnDataModel.dsPonudbeFilter.setSeekType(pnDataModel.dsPonudbeFilter.I_TYPE_INSOFFERS_STRANKA_PRIIMEK, jcbType.getSelectedIndex());
 }//GEN-LAST:event_jcbTypeActionPerformed
 
     private void jcbStolpecActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbStolpecActionPerformed
       // TODO add your handling code here:
       updateFilterPane();
     }//GEN-LAST:event_jcbStolpecActionPerformed
+  private boolean updating = false;
 
     private void jcbSifrantActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbSifrantActionPerformed
-      if ((jcbSifrant.getSelectedItem() != null) && (jcbSifrant.getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
-        Object value = (((DbComboBoxModel.DbComboBoxEntry) jcbSifrant.getSelectedItem()).getKey());
-        if (value == null) {
-          jtfSifrant.setText("");
-        } else {
-          jtfSifrant.setText(value.toString());
+      if (!updating) {
+        if ((jcbSifrant.getSelectedItem() != null) && (jcbSifrant.getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
+          updating = true;
+          try {
+            Object value = (((DbComboBoxModel.DbComboBoxEntry) jcbSifrant.getSelectedItem()).getKey());
+            if (value == null) {
+              jtfSifrant.setText("");
+            } else {
+              jtfSifrant.setText(value.toString());
+            }
+          } finally {
+            updating = false;
+          }
+
         }
       }
 
     }//GEN-LAST:event_jcbSifrantActionPerformed
-
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
