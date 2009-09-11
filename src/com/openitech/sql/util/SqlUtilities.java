@@ -12,6 +12,7 @@ import com.openitech.db.components.JPIzbiraNaslova;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.sql.ValueType;
+import com.openitech.sql.events.ActivityEvent;
 import com.openitech.sql.events.Event;
 import com.openitech.sql.events.EventQuery;
 import com.openitech.util.Equals;
@@ -443,7 +444,11 @@ public abstract class SqlUtilities {
     return getGeneratedFields(idSifranta, idSifre, false);
   }
 
-  public abstract CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException;
+  public CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException {
+    return getGeneratedFields(idSifranta, idSifre, visibleOnly, null);
+  }
+
+  public abstract CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException;
 
   public Long storeValue(int fieldType, final Object value) throws SQLException {
     return storeValue(ValueType.valueOf(fieldType), value);

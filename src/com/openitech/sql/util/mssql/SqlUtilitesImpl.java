@@ -16,6 +16,7 @@ import com.openitech.sql.events.EventQuery;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.sql.FieldValue;
 import com.openitech.sql.ValueType;
+import com.openitech.sql.events.ActivityEvent;
 import com.openitech.util.ReadInputStream;
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.UnsupportedEncodingException;
@@ -662,12 +663,27 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public PreparedStatement getGeneratedFields;
 
   @Override
-  public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly) throws SQLException {
+  public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
     if (getGeneratedFields == null) {
       getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
     }
     getGeneratedFields.clearParameters();
     int param = 1;
+    if (activityEvent!=null) {
+      getGeneratedFields.setLong(param++, activityEvent.getActivityId());
+      getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
+      getGeneratedFields.setString(param++, activityEvent.getIdSifre());
+      getGeneratedFields.setLong(param++, activityEvent.getActivityId());
+      getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
+      getGeneratedFields.setString(param++, activityEvent.getIdSifre());
+    } else {
+      getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+      getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+      getGeneratedFields.setNull(param++, java.sql.Types.VARCHAR);
+      getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+      getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+      getGeneratedFields.setNull(param++, java.sql.Types.VARCHAR);
+    }
     getGeneratedFields.setInt(param++, idSifranta);
     getGeneratedFields.setBoolean(param++, idSifre == null);
     getGeneratedFields.setString(param++, idSifre);

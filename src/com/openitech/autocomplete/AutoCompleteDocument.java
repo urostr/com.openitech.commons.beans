@@ -1,5 +1,5 @@
 /*
- * $Id: AutoCompleteDocument.java,v 1.3 2008/11/20 12:12:28 uros Exp $
+ * $Id: AutoCompleteDocument.java,v 1.4 2009/08/17 11:45:22 uros Exp $
  *
  * Copyright 2004 Sun Microsystems, Inc., 4150 Network Circle,
  * Santa Clara, California 95054, U.S.A. All rights reserved.
