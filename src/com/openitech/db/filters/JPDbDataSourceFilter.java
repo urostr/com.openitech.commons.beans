@@ -234,6 +234,13 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       } else if (item.getSeekType() == com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
         jtfPreformattedValue.setDocument(documents.get(item)[0]);
         ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "PREFORMATTED_CARD");
+      } else if (item instanceof DataSourceFilters.IntegerSeekType) {
+        if ((item.getSeekType()-com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+          item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+        }
+        jcbNumberType.setSelectedIndex(item.getSeekType()-com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+        jtfNumberValue.setDocument(documents.get(item)[0]);
+        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "NUMBERFIELD_CARD");
       } else {
         if (item.getSeekType() >= jcbType.getItemCount()) {
           item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
@@ -281,6 +288,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jcbSifrant = new com.openitech.db.components.JDbComboBox();
     jpPreformattedField = new javax.swing.JPanel();
     jtfPreformattedValue = new com.openitech.db.components.JDbTextField();
+    jpNumberField = new javax.swing.JPanel();
+    jcbNumberType = new javax.swing.JComboBox();
+    jtfNumberValue = new com.openitech.db.components.JDbTextField();
 
     jtfDateValueOd.setSearchField(true);
 
@@ -352,9 +362,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpTextFieldLayout.setHorizontalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(jpTextFieldLayout.createSequentialGroup()
-        .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE))
+        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE))
     );
     jpTextFieldLayout.setVerticalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -411,6 +421,37 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
     jpFilterValues.add(jpPreformattedField, "PREFORMATTED_CARD");
 
+    jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "je enako", "je veèje ali enako od", "je manjše ali enako kot" }));
+    jcbNumberType.setFocusable(false);
+    jcbNumberType.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jcbNumberTypeActionPerformed(evt);
+      }
+    });
+
+    jtfNumberValue.setColumns(20);
+    jtfNumberValue.setSearchField(true);
+
+    javax.swing.GroupLayout jpNumberFieldLayout = new javax.swing.GroupLayout(jpNumberField);
+    jpNumberField.setLayout(jpNumberFieldLayout);
+    jpNumberFieldLayout.setHorizontalGroup(
+      jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(jpNumberFieldLayout.createSequentialGroup()
+        .addComponent(jcbNumberType, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE))
+    );
+    jpNumberFieldLayout.setVerticalGroup(
+      jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(jpNumberFieldLayout.createSequentialGroup()
+        .addGap(1, 1, 1)
+        .addGroup(jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+          .addComponent(jcbNumberType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(jtfNumberValue, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+    );
+
+    jpFilterValues.add(jpNumberField, "NUMBERFIELD_CARD");
+
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
     gridBagConstraints.weightx = 1.0;
@@ -420,7 +461,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   }// </editor-fold>//GEN-END:initComponents
 
     private void jcbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbTypeActionPerformed
-      // TODO add your handling code here:
       if (!refreshing) {
         DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
 
@@ -454,21 +494,33 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       }
 
     }//GEN-LAST:event_jcbSifrantActionPerformed
+
+    private void jcbNumberTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbNumberTypeActionPerformed
+      if (!refreshing) {
+        DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
+
+        filters.getFilterFor(item).setSeekType(item, jcbNumberType.getSelectedIndex()+com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+      }
+    }//GEN-LAST:event_jcbNumberTypeActionPerformed
+
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker1;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker2;
+  private javax.swing.JComboBox jcbNumberType;
   private com.openitech.db.components.JDbComboBox jcbSifrant;
   private javax.swing.JComboBox jcbStolpec;
   private javax.swing.JComboBox jcbType;
   private javax.swing.JPanel jpDateField;
   private javax.swing.JPanel jpFilterValues;
+  private javax.swing.JPanel jpNumberField;
   private javax.swing.JPanel jpPreformattedField;
   private javax.swing.JPanel jpSifrantPanel;
   private javax.swing.JPanel jpTextField;
   private com.openitech.db.components.JDbDateTextField jtfDateValueDo;
   private com.openitech.db.components.JDbDateTextField jtfDateValueOd;
+  private com.openitech.db.components.JDbTextField jtfNumberValue;
   private com.openitech.db.components.JDbTextField jtfPreformattedValue;
   private com.openitech.db.components.JDbTextField jtfSifrant;
   private com.openitech.db.components.JDbTextField jtfValue;

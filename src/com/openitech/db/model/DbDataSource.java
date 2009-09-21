@@ -118,6 +118,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   private boolean reloadsOnEventQueue = false;
   private boolean shareResults = false;
   private boolean cacheStatements = true;
+  private boolean cacheRowSet = true;
   private boolean autoInsert = false;
   private boolean connectOnDemand = false;
 
@@ -155,6 +156,23 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
     }
   }
 
+  /**
+   * Get the value of cacheRowSet
+   *
+   * @return the value of cacheRowSet
+   */
+  public boolean isCacheRowSet() {
+    return cacheRowSet;
+  }
+
+  /**
+   * Set the value of cacheRowSet
+   *
+   * @param cacheRowSet new value of cacheRowSet
+   */
+  public void setCacheRowSet(boolean cacheRowSet) {
+    this.cacheRowSet = cacheRowSet;
+  }
 
   /**
    * Get the value of connectOnDemand

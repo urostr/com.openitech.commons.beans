@@ -3853,7 +3853,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public int getRowCount() {
     int newCount = this.count;
-    if (!isDataLoaded() && refreshPending) {
+    if (!isDataLoaded() || refreshPending) {
       return -1;
     } else {
       if (this.count == -1) {
@@ -3922,7 +3922,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     ResultSet currentResultSet;
 
     public CurrentResultSet(ResultSet currentResultSet) throws SQLException {
-      if (owner.isConnectOnDemand()) {
+      if (owner.isConnectOnDemand()||owner.isCacheRowSet()) {
         this.currentResultSet = new CachedRowSetImpl();
         this.currentResultSet.setFetchSize(getFetchSize());
         ((CachedRowSet) this.currentResultSet).populate(currentResultSet);
