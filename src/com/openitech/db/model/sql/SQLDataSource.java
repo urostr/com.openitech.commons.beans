@@ -3853,12 +3853,18 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public int getRowCount() {
     int newCount = this.count;
-    if (!isDataLoaded() || refreshPending) {
+    if (!isDataLoaded() && refreshPending) {
       return -1;
     } else {
       if (this.count == -1) {
         if ((currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
           newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
+        } else if (owner.isCacheRowSet()) {
+          if (loadData()) {
+            return getRowCount();
+          } else {
+            return -1;
+          }
         } else if (owner.lock(false)) {
           try {
             if (this.count == -1) {
