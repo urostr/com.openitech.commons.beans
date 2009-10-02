@@ -41,6 +41,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
   private boolean updatingActiveRow = false;
   private boolean updatingFieldValue = false;
   private transient Object oldValue = null;
+  private boolean wasNull = false;
 
   /** Creates a new instance of DbFieldObserver */
   public DbFieldObserver() {
@@ -117,13 +118,14 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public Object getValue() {
     Object result = null;
+    wasNull = true;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
         try {
           if (dataSource.getRowCount() > 0) {
             result = dataSource.getObject(columnName);
-            if (dataSource.wasNull()) {
+            if (wasNull = dataSource.wasNull()) {
               result = null;
             }
           }
@@ -139,7 +141,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public String getValueAsText() {
     Object result = getValue();
-    if ((result instanceof Clob)||(result instanceof javax.sql.rowset.serial.SerialClob)) {
+    if ((result instanceof Clob) || (result instanceof javax.sql.rowset.serial.SerialClob)) {
       try {
         if (((Clob) result).length() > 0) {
           result = ((Clob) result).getSubString(1L, (int) ((Clob) result).length());
@@ -155,15 +157,17 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public int getValueAsInt() {
     int result = 0;
+    wasNull = true;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
         try {
           if (dataSource.getRowCount() > 0) {
             result = dataSource.getInt(columnName);
+            wasNull = dataSource.wasNull();
           }
 
-          if (dataSource.wasNull()) {
+          if (wasNull) {
             result = Integer.MIN_VALUE;
           }
         } catch (Exception ex) {
@@ -178,15 +182,17 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public double getValueAsDouble() {
     double result = 0;
+    wasNull = true;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
         try {
           if (dataSource.getRowCount() > 0) {
             result = dataSource.getDouble(columnName);
+            wasNull = dataSource.wasNull();
           }
 
-          if (dataSource.wasNull()) {
+          if (wasNull) {
             result = Double.MIN_VALUE;
           }
         } catch (SQLException ex) {
@@ -201,6 +207,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public Date getValueAsDate() {
     Date result = null;
+    wasNull = true;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
@@ -208,6 +215,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
           if (dataSource.getRowCount() > 0) {
             try {
               result = dataSource.getTimestamp(columnName);
+              wasNull = dataSource.wasNull();
             } catch (Exception ex) {
               result = FormatFactory.JDBC_DATE_FORMAT.parse(dataSource.getString(columnName));
             }
@@ -239,10 +247,11 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
               case Types.INTEGER:
               case Types.BIT:
                 Object value = dataSource.getObject(columnName);
+                wasNull = dataSource.wasNull();
                 if (value instanceof Boolean) {
                   result = (Boolean) value;
                 } else {
-                  result = !dataSource.wasNull();
+                  result = !wasNull;
                   if (result) //ni bil null
                   {
                     result = !Equals.equals(value, 0);
@@ -251,11 +260,12 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
                 break;
               case Types.BOOLEAN:
                 result = dataSource.getBoolean(columnName);
+                wasNull = dataSource.wasNull();
                 break;
               case Types.CHAR:
               case Types.VARCHAR:
                 String svalue = dataSource.getString(columnName);
-                result = !dataSource.wasNull();
+                result = !(wasNull = dataSource.wasNull());
                 if (result) { //ni bil null
                   svalue = svalue.trim().toUpperCase();
                   result = svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F"));
@@ -263,7 +273,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
                 break;
               default:
                 dataSource.getObject(columnName);
-                result = !dataSource.wasNull();
+                result = !(wasNull = dataSource.wasNull());
                 break;
             }
           }
@@ -279,12 +289,14 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
 
   public byte[] getValueAsByteArray() {
     byte[] result = new byte[]{};
+    wasNull = true;
     if (dataSource != null && columnName != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
         try {
           if (dataSource.getRowCount() > 0) {
             result = dataSource.getBytes(columnName);
+            wasNull = dataSource.wasNull();
           }
         } catch (Exception ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource '" + dataSource.getSelectSql() + "'. " + ex.getMessage());
@@ -417,15 +429,16 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
   }
 
   public boolean wasNull() {
-    boolean result = true;
-    if (this.dataSource != null && dataSource.getRowCount() > 0) {
-      try {
-        result = this.dataSource.wasNull();
-      } catch (SQLException ex) {
-        result = true;
-      }
-    }
-    return result;
+    return wasNull;
+//    boolean result = true;
+//    if (this.dataSource != null && dataSource.getRowCount() > 0) {
+//      try {
+//        result = this.dataSource.wasNull();
+//      } catch (SQLException ex) {
+//        result = true;
+//      }
+//    }
+//    return result;
   }
 
   public void startUpdate() {
