@@ -3468,7 +3468,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           if (schemaName == null) {
             schemaName = metaData.getSchemaName(columnIndex);
           } else if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex))) {
-            throw new SQLException("Insert on different schemas not supported.");
+            throw new SQLException("Insert on different schemas not supported. Shema: "+schemaName+" != "+metaData.getSchemaName(columnIndex));
           }
           if (tableName == null) {
             tableName = metaData.getTableName(columnIndex);
@@ -4615,6 +4615,12 @@ public class SQLDataSource implements DbDataSourceImpl {
             }
           } else {
             result = result.toString();
+          }
+        } else if (result instanceof java.sql.Clob) {
+          if (((java.sql.Clob) result).length() > 0) {
+            result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
+          } else {
+            result = "";
           }
         } else if (result instanceof Scale) {
           result = ((Scale) result).x;

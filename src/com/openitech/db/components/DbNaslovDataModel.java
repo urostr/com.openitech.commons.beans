@@ -78,6 +78,7 @@ public class DbNaslovDataModel {
       dsUlice.setCanDeleteRows(false);
       dsUlice.setReadOnly(true);
       dsUlice.setName("ulice");
+      dsUlice.setShareResults(true);
       List parameters = new ArrayList();
       parameters.add(dsUliceFilter);
       parameters.add(dsUliceFilter);
@@ -97,6 +98,7 @@ public class DbNaslovDataModel {
       dsHisneStevilke.setCanDeleteRows(false);
       dsHisneStevilke.setReadOnly(true);
       dsHisneStevilke.setName("hisne_stevilke");
+      dsHisneStevilke.setShareResults(true);
       parameters = new ArrayList();
       parameters.add(dsHisneStevilkeFilter);
       parameters.add(dsHisneStevilkeFilter);
@@ -116,6 +118,7 @@ public class DbNaslovDataModel {
       dsPoste.setCanDeleteRows(false);
       dsPoste.setReadOnly(true);
       dsPoste.setName("poste");
+      dsPoste.setShareResults(true);
       parameters = new ArrayList();
       parameters.add(dsPosteFilter);
       parameters.add(dsPosteFilter);
@@ -135,6 +138,7 @@ public class DbNaslovDataModel {
       dsPostneStevilke.setCanDeleteRows(false);
       dsPostneStevilke.setReadOnly(true);
       dsPostneStevilke.setName("postne_stevilke");
+      dsPostneStevilke.setShareResults(true);
       parameters = new ArrayList();
       parameters.add(dsPostneStevilkeFilter);
       parameters.add(dsPostneStevilkeFilter);
@@ -151,6 +155,7 @@ public class DbNaslovDataModel {
       dsNaselja.setCanDeleteRows(false);
       dsNaselja.setReadOnly(true);
       dsNaselja.setName("naselja");
+      dsNaselja.setShareResults(true);
       parameters = new ArrayList();
       parameters.add(dsNaseljaFilter);
       parameters.add(dsNaseljaFilter);
