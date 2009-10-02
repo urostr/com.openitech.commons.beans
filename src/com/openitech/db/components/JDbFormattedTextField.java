@@ -47,7 +47,6 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DateFormatter;
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
@@ -261,7 +260,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
             setValue(value);
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't display the '" + dbFieldObserver.getColumnName() + "' value. [" + ex.getMessage() + "]");
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't display the '" + dbFieldObserver.getColumnName() + "' value.  "+ex.toString()+" [" + ex.getMessage() + "] Object = "+dbFieldObserver.getValue());
         }
       }
     }
@@ -327,13 +326,14 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       if (element.getClassName().contains("JXDatePicker") &&
               element.getMethodName().equals("setEditor")) {
         result = true;
+        super.setValue((java.util.Date) null);
         EventQueue.invokeLater(new Runnable() {
 
           @Override
           public void run() {
             disableColumnUpdates = true;
-            try {
-              firePropertyChange("value", null, dbFieldObserver.getValueAsDate());
+            try {              
+              firePropertyChange("value", (java.util.Date) null, dbFieldObserver.getValueAsDate());
             } finally {
               disableColumnUpdates = false;
             }
@@ -388,8 +388,8 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     if (!isAJXDataPickerSetEditorCall()) {
       documentWeakListener.setEnabled(false);
       try {
-        super.setValue(value);
-        updateColumn();
+          super.setValue(value);
+          updateColumn();
       } finally {
         documentWeakListener.setEnabled(true);
       }
