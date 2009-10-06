@@ -21,10 +21,7 @@ import java.util.logging.Logger;
  */
 public class RemoteDbConnection extends AbstractConnection {
   private static final String propertiesName="remote.connection.properties";
-  
-  static {
-    ConnectionManager.registerManagedConnection(DbConnection.class);
-  }
+
   /**
    * Creates a new instance of DbConnection
    */
