@@ -143,6 +143,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
 
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
     connectOnDemand = ConnectionManager.getInstance().isPooled()&&ConnectionManager.getInstance().isConnectOnDemand();
+    cacheRowSet = ConnectionManager.getInstance().isCacheRowSet();
     implementation = DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass);
     try {
       if (countSql!=null) {

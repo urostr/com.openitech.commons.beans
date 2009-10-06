@@ -131,4 +131,9 @@ public class ConnectionManager implements DbConnection {
   public boolean isConnectOnDemand() {
     return getDbConnection() == null ? false : getDbConnection().isConnectOnDemand();
   }
+
+  @Override
+  public boolean isCacheRowSet() {
+    return getDbConnection() == null ? false : getDbConnection().isCacheRowSet();
+  }
 }
