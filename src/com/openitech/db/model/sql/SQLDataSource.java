@@ -3468,7 +3468,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           if (schemaName == null) {
             schemaName = metaData.getSchemaName(columnIndex);
           } else if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex))) {
-            throw new SQLException("Insert on different schemas not supported. Shema: "+schemaName+" != "+metaData.getSchemaName(columnIndex));
+            throw new SQLException("Insert on different schemas not supported. Shema: " + schemaName + " != " + metaData.getSchemaName(columnIndex));
           }
           if (tableName == null) {
             tableName = metaData.getTableName(columnIndex);
@@ -3928,7 +3928,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     ResultSet currentResultSet;
 
     public CurrentResultSet(ResultSet currentResultSet) throws SQLException {
-      if (owner.isConnectOnDemand()||owner.isCacheRowSet()) {
+      if (owner.isConnectOnDemand() || owner.isCacheRowSet()) {
         this.currentResultSet = new CachedRowSetImpl();
         this.currentResultSet.setFetchSize(getFetchSize());
         ((CachedRowSet) this.currentResultSet).populate(currentResultSet);
@@ -4251,6 +4251,7 @@ public class SQLDataSource implements DbDataSourceImpl {
             openSelectResultSet.absolute(min);
             String cn;
             Object value;
+            java.util.Set<PendingSqlParameter> fetchcached = new java.util.HashSet<PendingSqlParameter>();
             for (int row = min; !openSelectResultSet.isAfterLast() && (row <= max); row++) {
               if (!cache.containsKey(new CacheKey(row, columnName))) {
                 java.util.Map<String, Boolean> pending = new HashMap<String, Boolean>();
@@ -4300,10 +4301,13 @@ public class SQLDataSource implements DbDataSourceImpl {
                         java.util.Map<CollectionKey<NamedValue>, java.util.List<Object>> query = new java.util.HashMap<CollectionKey<NamedValue>, java.util.List<Object>>();
                         query.put(queryKey, parameters);
                         pendingValuesCache.putAll(pendingSqlParameter.getPendingValues(query, pendingValuesCache.size() > 0));
-
-                        //nismo ga našli
-                        if (!pendingValuesCache.containsKey(queryKey)) {
-                          pendingValuesCache.put(queryKey, new java.util.ArrayList<PendingValue>());
+                        if (pendingSqlParameter.isSupportsMultipleKeys() && pendingSqlParameter.getMultipleKeysLimit() == Integer.MIN_VALUE) {
+                          fetchcached.add(pendingSqlParameter);
+                        } else {
+                          //nismo ga našli
+                          if (!pendingValuesCache.containsKey(queryKey)) {
+                            pendingValuesCache.put(queryKey, new java.util.ArrayList<PendingValue>());
+                          }
                         }
                       }
 
@@ -4324,6 +4328,39 @@ public class SQLDataSource implements DbDataSourceImpl {
                 }
               }
               openSelectResultSet.next();
+            }
+            if (!fetchcached.isEmpty()) {
+              int row = 0;
+              openSelectResultSet.beforeFirst();
+              while (openSelectResultSet.next()) {
+                for (PendingSqlParameter pendingSqlParameter : fetchcached) {
+                  CollectionKey<NamedValue> queryKey = new CollectionKey<NamedValue>();
+                  for (String keyField : pendingSqlParameter.getParentKeyFields()) {
+                    final CacheKey parentCk = new CacheKey(row++, keyField);
+                    if (cache.containsKey(parentCk)) {
+                      queryKey.add(new NamedValue(keyField, cache.get(parentCk).value));
+                    } else {
+                      value = openSelectResultSet.getObject(keyField);
+                      if (openSelectResultSet.wasNull()) {
+                        value = null;
+                      }
+                      cache.put(parentCk, new CacheEntry<String, Object>(this, keyField, value));
+                      queryKey.add(new NamedValue(keyField, value));
+                    }
+                  }
+
+                  //nismo ga našli
+                  if (!pendingValuesCache.containsKey(queryKey)) {
+                    pendingValuesCache.put(queryKey, new java.util.ArrayList<PendingValue>());
+                    for (int c = 0; c < columnNames.length; c++) {
+                      cn = columnNames[c].toUpperCase();
+                      if (isPending(cn, row)) {
+                          cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, null));
+                      }
+                    }
+                  }
+                }
+              }
             }
             openSelectResultSet.absolute(oldRow);
           } finally {
