@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.openitech.db.model.concurrent;
+package com.openitech.db.model.sql;
 
 import com.openitech.CollectionKey;
 import com.openitech.NamedValue;

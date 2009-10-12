@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.openitech.db.model.concurrent;
+package com.openitech.db.model.sql;
 
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.ref.events.PropertyChangeWeakListener;

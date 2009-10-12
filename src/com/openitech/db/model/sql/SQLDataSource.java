@@ -16,8 +16,6 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.concurrent.DataSourceEvent;
-import com.openitech.db.model.concurrent.PendingSqlParameter;
-import com.openitech.db.model.concurrent.PendingValue;
 import com.openitech.db.proxy.ResultSetProxy;
 import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
