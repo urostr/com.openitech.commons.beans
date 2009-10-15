@@ -3978,6 +3978,11 @@ public class SQLDataSource implements DbDataSourceImpl {
         storedUpdates.clear();
         cache.clear();
         pendingValuesCache.clear();
+        for (Object parameter:owner.getParameters()) {
+          if (parameter instanceof PendingSqlParameter) {
+            ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+          }
+        }
         reloaded = true;
         owner.unlock();
         Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
@@ -4180,7 +4185,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
     List<Object> queryParameters = new java.util.ArrayList(parameters.size());
-    for (Object parameter:parameters) {
+    for (Object parameter : parameters) {
       if (parameter instanceof TemporarySubselectSqlParameter) {
         ((TemporarySubselectSqlParameter) parameter).executeQuery(statement.getConnection());
       } else {
@@ -4308,11 +4313,12 @@ public class SQLDataSource implements DbDataSourceImpl {
                         java.util.Map<CollectionKey<NamedValue>, java.util.List<Object>> query = new java.util.HashMap<CollectionKey<NamedValue>, java.util.List<Object>>();
                         query.put(queryKey, parameters);
                         pendingValuesCache.putAll(pendingSqlParameter.getPendingValues(query, pendingValuesCache.size() > 0));
-                        if (pendingSqlParameter.isSupportsMultipleKeys() && pendingSqlParameter.getMultipleKeysLimit() == Integer.MIN_VALUE) {
-                          fetchcached.add(pendingSqlParameter);
-                        } else {
-                          //nismo ga našli
-                          if (!pendingValuesCache.containsKey(queryKey)) {
+                        //nismo ga našli
+                        if (!pendingValuesCache.containsKey(queryKey)) {
+                          if (pendingSqlParameter.isSupportsMultipleKeys() && pendingSqlParameter.getMultipleKeysLimit() == Integer.MIN_VALUE) {
+                            fetchcached.add(pendingSqlParameter);
+                          } else {
+
                             pendingValuesCache.put(queryKey, new java.util.ArrayList<PendingValue>());
                           }
                         }
@@ -4362,7 +4368,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                     for (int c = 0; c < columnNames.length; c++) {
                       cn = columnNames[c].toUpperCase();
                       if (isPending(cn, row)) {
-                          cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, null));
+                        cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, null));
                       }
                     }
                   }
@@ -4677,7 +4683,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (row == 0) {
       storedResult[0] = true;
     } else if (isPending(columnName, row)) {
-      result = getValueAt(row, columnName);
+      result = getValueAt(row, columnName, getPendingColumnsFor(columnName));
       storedResult[0] = true;
       if (storedResult[1] = (result == null)) {
         result = nullValue;
@@ -4773,6 +4779,22 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
 
       return result;
+    }
+  }
+
+  private String[] getPendingColumnsFor(String columnName) {
+    PendingSqlParameter result = null;
+
+    for (Object parameter : owner.getParameters()) {
+      if (parameter instanceof PendingSqlParameter) {
+        result = ((PendingSqlParameter) parameter);
+        break;
+      }
+    }
+    if (result != null) {
+      return result.getPendingFields().toArray(new String[]{});
+    } else {
+      return null;
     }
   }
 

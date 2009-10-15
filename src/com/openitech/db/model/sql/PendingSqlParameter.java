@@ -212,6 +212,10 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
   }
   private transient Map<CollectionKey<NamedValue>, java.util.List<PendingValue>> pendingValuesCache = new HashMap<CollectionKey<NamedValue>, java.util.List<PendingValue>>();
 
+  public void emptyPendingValuesCache() {
+    pendingValuesCache.clear();
+  }
+
   public java.util.Map<CollectionKey<NamedValue>, java.util.List<PendingValue>> getPendingValues(java.util.Map<CollectionKey<NamedValue>, java.util.List<Object>> query, boolean cache) throws SQLException {
     java.util.Map<CollectionKey<NamedValue>, java.util.List<PendingValue>> result = new java.util.HashMap<CollectionKey<NamedValue>, java.util.List<PendingValue>>();
 
@@ -255,7 +259,16 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
                 ResultSet.HOLD_CURSORS_OVER_COMMIT);
       }
 
+       long timer = System.currentTimeMillis();
+     if (DbDataSource.DUMP_SQL) {
+        System.out.println("##############");
+        System.out.println(deferredSQL);
+      }
       ResultSet executeQuery = DbDataSource.executeQuery(deferredStatement, parameters);
+        if (DbDataSource.DUMP_SQL) {
+          System.out.println("pending:deffered:" + (System.currentTimeMillis() - timer) + "ms");
+          System.out.println("##############");
+        }
       try {
 
         while (executeQuery.next()) {

@@ -323,10 +323,14 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 
     for (StackTraceElement element : stackTrace) {
-      if (element.getClassName().contains("JXDatePicker") &&
-              element.getMethodName().equals("setEditor")) {
+      if (element.getClassName().contains("JXDatePicker") && element.getMethodName().equals("setEditor")) {
         result = true;
-        super.setValue((java.util.Date) null);
+        try {
+          documentWeakListener.setEnabled(false);
+          super.setValue((java.util.Date) null);
+        } finally {
+          documentWeakListener.setEnabled(true);
+        }
         EventQueue.invokeLater(new Runnable() {
 
           @Override
