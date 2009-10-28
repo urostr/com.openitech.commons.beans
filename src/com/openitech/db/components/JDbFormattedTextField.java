@@ -94,6 +94,8 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2, 2, 2, 2));
     this.setFont((java.awt.Font) UIManager.getDefaults().get("TextField.font"));
     //this.addPropertyChangeListener("value", propertyChangeWeakListener);
+
+    setFocusLostBehavior(JFormattedTextField.PERSIST);
   }
 
   public void this_focusGained(FocusEvent e) {
