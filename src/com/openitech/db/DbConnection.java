@@ -33,6 +33,7 @@ public interface DbConnection {
   String DB_DELIMITER_LEFT = "db.delimiter.left";
   String DB_DELIMITER_RIGHT = "db.delimiter.right";
   String DB_POOL_EXECUTE_ON_CREATE = "db.pool.execute.on.create";
+  String DB_USE_POOL="db.pool.use";
   
   String DB_CONNECT_PREFIX="db.connect.";
   int DB_CONNECT_PREFIX_LENGTH=DB_CONNECT_PREFIX.length();

@@ -111,13 +111,17 @@ public abstract class AbstractConnection implements DbConnection {
         return connection;
       }
     } else {
-
-      try {
-        Class.forName("org.logicalcobwebs.proxool.ProxoolDriver");
-        useProxool = true;
-      } catch (ClassNotFoundException ex) {
+      if (Boolean.valueOf(settings.getProperty(DB_USE_POOL, "false"))) {
+        try {
+          Class.forName("org.logicalcobwebs.proxool.ProxoolDriver");
+          useProxool = true;
+        } catch (ClassNotFoundException ex) {
+          useProxool = false;
+        }
+      } else {
         useProxool = false;
       }
+
       try {
         if (connection == null || connection.isClosed()) {
           String DB_USER = settings.getProperty(ConnectionManager.DB_USER);
