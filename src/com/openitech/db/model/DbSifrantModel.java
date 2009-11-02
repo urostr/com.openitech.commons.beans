@@ -63,6 +63,7 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
 
     super.setDataSource(dsSifrant);
   }
+
   protected void updateEntries(ListDataEvent e) {
     if (sifrantSkupina != null && sifrantOpis != null) {
       super.updateEntries(e);
@@ -185,4 +186,45 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     fGroup.setSeekValue(sifrantSkupina, sifrantOpis);
   }
   private String dataBase;
+
+  private String[] allowedValues;
+
+  /**
+   * Get the value of allowedValues
+   *
+   * @return the value of allowedValues
+   */
+  public String[] getAllowedValues() {
+    return allowedValues;
+  }
+
+  /**
+   * Set the value of allowedValues
+   *
+   * @param allowedValues new value of allowedValues
+   */
+  public void setAllowedValues(String... allowedValues) {
+    this.allowedValues = allowedValues;
+  }
+
+  private String[] excludedValues;
+
+  /**
+   * Get the value of excludedValues
+   *
+   * @return the value of excludedValues
+   */
+  public String[] getExcludedValues() {
+    return excludedValues;
+  }
+
+  /**
+   * Set the value of excludedValues
+   *
+   * @param excludedValues new value of excludedValues
+   */
+  public void setExcludedValues(String... excludedValues) {
+    this.excludedValues = excludedValues;
+  }
+
 }

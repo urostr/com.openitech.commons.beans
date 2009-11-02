@@ -143,22 +143,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertEvents == null) {
       insertEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
-      insertEvents.setQueryTimeout(15);
+//      insertEvents.setQueryTimeout(15);
     }
     if (updateEvents == null) {
       updateEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEvents.sql", "cp1250"));
-      updateEvents.setQueryTimeout(15);
+//      updateEvents.setQueryTimeout(15);
     }
     if (findEventValue == null) {
       findEventValue = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_eventvalue.sql", "cp1250"));
     }
     if (insertEventValues == null) {
       insertEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEventValues.sql", "cp1250"));
-      insertEventValues.setQueryTimeout(15);
+//      insertEventValues.setQueryTimeout(15);
     }
     if (updateEventValues == null) {
       updateEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEventValue.sql", "cp1250"));
-      updateEventValues.setQueryTimeout(15);
+//      updateEventValues.setQueryTimeout(15);
     }
     if (get_field == null) {
       get_field = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
