@@ -3078,7 +3078,9 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
     boolean result = false;
     try {
       result = available.tryLock() || available.tryLock(10L, TimeUnit.MILLISECONDS);
-      available.unlock();
+      if (result) {
+        available.unlock();
+      }
     } catch (InterruptedException ex) {
       //ignore it;
       }

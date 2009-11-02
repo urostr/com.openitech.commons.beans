@@ -435,7 +435,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       tb_seznam_sifrantov.setValue(dataBase + ".[SeznamSifrantov] AS ");
     }
     params.add(tb_seznam_sifrantov);
-    params.add(parameters.get(1));
+    for (int i=1; i<parameters.size(); i++) {
+      params.add(parameters.get(i));
+    }
 
     dsSifrant.setParameters(params);
     dsSifrant.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant_c.sql", "cp1250"));

@@ -10,6 +10,7 @@ package com.openitech.db.model;
 
 import com.openitech.sql.util.SqlUtilities;
 import java.sql.SQLException;
+import java.util.List;
 import javax.swing.event.ListDataEvent;
 
 /**
@@ -20,6 +21,7 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
 
   private final DbSifrantModel.SifrantiDataSourceDescriptionFilter fNotDefined = new DbSifrantModel.SifrantiDataSourceDescriptionFilter();
   private final DbSifrantModel.SifrantiDataSourceFilters fGroup = new DbSifrantModel.SifrantiDataSourceFilters();
+  DbDataSource.SubstSqlParameter valuesConstraint = new DbDataSource.SubstSqlParameter("<%ValuesConstraint%>");
   private DbDataSource dsSifrant;
 
   /** Creates a new instance of DbSifrantModel */
@@ -32,11 +34,21 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   }
 
   public DbSifrantModel(String textNotDefined, String dataBase) throws SQLException {
+    this(textNotDefined, dataBase, null, null);
+  }
+
+  public DbSifrantModel(String textNotDefined, String dataBase, List<String> allowedValues, List<String> excludedValues) throws SQLException {
     super(null, "IdSifre", new String[]{"Opis"});
     if (textNotDefined == null) {
       textNotDefined = "Ni doloèen";
     }
     this.dataBase = dataBase;
+    if (allowedValues != null) {
+      this.allowedValues = allowedValues.toArray(new String[allowedValues.size()]);
+    }
+    if (excludedValues != null) {
+      this.excludedValues = excludedValues.toArray(new String[excludedValues.size()]);
+    }
     init();
   }
 
@@ -45,10 +57,29 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     fGroup.addRequired(fGroup.I_TYPE_OPIS_SIFRANTA, 2);
     fGroup.addRequired(fGroup.I_TYPE_SKUPINA_SIFRANTA, 2);
 
+    StringBuffer values = new StringBuffer();
+
+    if (allowedValues != null) {
+      values.append(" Sifranti.IdSifre IN ( ");
+      for (String allowedV : allowedValues) {
+        values.append("" + allowedV + " ");
+      }
+      values.append(" AND ");
+    } else if (excludedValues != null) {
+      values.append(" Sifranti.IdSifre NOT IN ");
+      for (String excludedV : excludedValues) {
+        values.append(" " + excludedV + " ");
+      }
+      values.append(" AND ");
+    }
+
+    
+    valuesConstraint.setValue(values.toString());
     java.util.List parameters = new java.util.ArrayList();
 
     parameters.add(fNotDefined);
     parameters.add(fGroup);
+    parameters.add(valuesConstraint);
 
     if (SqlUtilities.getInstance() == null) {
       this.dsSifrant = new DbDataSource();
@@ -60,10 +91,12 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
 
 //    fNotDefined.addDataSource(dsSifrant);
     fGroup.addDataSource(dsSifrant);
+//    valuesConstraint.addDataSource(dsSifrant);
 
     super.setDataSource(dsSifrant);
   }
 
+  @Override
   protected void updateEntries(ListDataEvent e) {
     if (sifrantSkupina != null && sifrantOpis != null) {
       super.updateEntries(e);
@@ -186,7 +219,6 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     fGroup.setSeekValue(sifrantSkupina, sifrantOpis);
   }
   private String dataBase;
-
   private String[] allowedValues;
 
   /**
@@ -206,7 +238,6 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   public void setAllowedValues(String... allowedValues) {
     this.allowedValues = allowedValues;
   }
-
   private String[] excludedValues;
 
   /**
@@ -226,5 +257,4 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   public void setExcludedValues(String... excludedValues) {
     this.excludedValues = excludedValues;
   }
-
 }

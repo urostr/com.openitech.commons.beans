@@ -18,7 +18,7 @@ FROM
 INNER JOIN <%tb_seznam_sifrantov%> SeznamSifrantov ON (
     SeznamSifrantov.Id=Sifranti.IdSifranta
 )
-WHERE <%DbSifrantModelFilter%> AND
+WHERE <%DbSifrantModelFilter%> AND <%ValuesConstraint%>
     SeznamSifrantov.validFrom<=CURRENT_TIMESTAMP AND
     (SeznamSifrantov.validTo IS NULL OR SeznamSifrantov.validTo>=CURRENT_TIMESTAMP) AND
     Sifranti.validFrom<=CURRENT_TIMESTAMP AND
