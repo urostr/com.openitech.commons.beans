@@ -6,6 +6,8 @@ package com.openitech.db.model;
 
 import com.openitech.db.ConnectionManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import junit.framework.TestCase;
 
 /**
@@ -37,10 +39,30 @@ public class DbSifrantModelTest extends TestCase {
    * Test of setTextNotDefined method, of class DbSifrantModel.
    */
   public void testDbSifrantModel() throws SQLException {
-    DbSifrantModel dbSifrantModel = new DbSifrantModel(null, "[ChangeLog].[dbo]", null, null);
+    DbDataSource.DUMP_SQL = true;
+    List<String> allowedValues = new ArrayList<String>();
+    allowedValues.add("BK01");
+    allowedValues.add("BK02");
+    allowedValues.add("BK03");
+
+    DbSifrantModel dbSifrantModel = new DbSifrantModel(null, "[ChangeLog].[dbo]", allowedValues, null);
     dbSifrantModel.setSifrantSkupina("Dogodki");
     dbSifrantModel.setSifrantOpis("REZULTAT_KLICA");
 
-    assertTrue(dbSifrantModel.getSize()>0);
+
+    assertTrue(dbSifrantModel.getSize() > 0);
+
+    List<String> excludedValues = new ArrayList<String>();
+    excludedValues.add("BK01");
+    excludedValues.add("BK02");
+    excludedValues.add("BK03");
+
+    DbSifrantModel dbSifrantModel2 = new DbSifrantModel(null, "[ChangeLog].[dbo]", null, excludedValues);
+    dbSifrantModel2.setSifrantSkupina("Dogodki");
+    dbSifrantModel2.setSifrantOpis("REZULTAT_KLICA");
+
+    assertTrue(dbSifrantModel2.getSize() > 0);
+
+
   }
 }

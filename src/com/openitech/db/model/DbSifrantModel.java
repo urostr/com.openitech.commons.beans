@@ -60,20 +60,20 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     StringBuffer values = new StringBuffer();
 
     if (allowedValues != null) {
-      values.append(" Sifranti.IdSifre IN ( ");
       for (String allowedV : allowedValues) {
-        values.append("" + allowedV + " ");
+        values.append((values.length() > 0 ? " , " : " ") + "'" + allowedV + "' ");
       }
-      values.append(" AND ");
+      values.insert(0, " Sifranti.IdSifre IN ( ");
+      values.append(" ) AND ");
     } else if (excludedValues != null) {
-      values.append(" Sifranti.IdSifre NOT IN ");
       for (String excludedV : excludedValues) {
-        values.append(" " + excludedV + " ");
+        values.append((values.length() > 0 ? " , " : " ") + "'" + excludedV + "' ");
       }
-      values.append(" AND ");
+      values.insert(0, " Sifranti.IdSifre NOT IN ( ");
+      values.append(" ) AND ");
     }
 
-    
+
     valuesConstraint.setValue(values.toString());
     java.util.List parameters = new java.util.ArrayList();
 
@@ -91,7 +91,6 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
 
 //    fNotDefined.addDataSource(dsSifrant);
     fGroup.addDataSource(dsSifrant);
-//    valuesConstraint.addDataSource(dsSifrant);
 
     super.setDataSource(dsSifrant);
   }
