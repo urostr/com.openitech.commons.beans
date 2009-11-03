@@ -137,7 +137,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
       } catch (SQLException ex) {
         for (String sql : createTableSqls) {
-          statement.addBatch(sql);
+          statement.addBatch(sql.replaceAll("<%TS%>", Long.toString(System.currentTimeMillis())));
         }
         statement.executeBatch();
         fill = true;
