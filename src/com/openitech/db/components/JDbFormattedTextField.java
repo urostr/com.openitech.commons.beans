@@ -25,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -34,11 +35,14 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.ComboBoxModel;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -96,6 +100,37 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     //this.addPropertyChangeListener("value", propertyChangeWeakListener);
 
     setFocusLostBehavior(JFormattedTextField.PERSIST);
+
+      Action copyAction = new AbstractAction() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        copy();
+        System.out.println("Copy Pressed");
+      }
+    };
+    Action pasteAction = new AbstractAction() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        paste();
+        System.out.println("Paste Pressed");
+      }
+    };
+    Action cutAction = new AbstractAction() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        cut();
+        System.out.println("Cut Pressed");
+      }
+    };
+    KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_MASK);
+    KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_MASK);
+    KeyStroke ctrlX = KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_MASK);
+    getInputMap().put(ctrlC, copyAction);
+    getInputMap().put(ctrlV, pasteAction);
+    getInputMap().put(ctrlX, cutAction);
   }
 
   public void this_focusGained(FocusEvent e) {
