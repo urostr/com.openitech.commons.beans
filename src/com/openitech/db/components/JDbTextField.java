@@ -25,11 +25,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.ComboBoxModel;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.EventListenerList;
@@ -72,6 +76,37 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
     this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2, 2, 2, 2));
+
+      Action copyAction = new AbstractAction() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        copy();
+        System.out.println("Copy Pressed");
+      }
+    };
+    Action pasteAction = new AbstractAction() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        paste();
+        System.out.println("Paste Pressed");
+      }
+    };
+    Action cutAction = new AbstractAction() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        cut();
+        System.out.println("Cut Pressed");
+      }
+    };
+    KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_MASK);
+    KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_MASK);
+    KeyStroke ctrlX = KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_MASK);
+    getInputMap().put(ctrlC, copyAction);
+    getInputMap().put(ctrlV, pasteAction);
+    getInputMap().put(ctrlX, cutAction);
   }
 
   public void this_focusGained(FocusEvent e) {
