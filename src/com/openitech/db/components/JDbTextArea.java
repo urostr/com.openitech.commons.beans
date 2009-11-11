@@ -8,6 +8,7 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
+import com.openitech.components.WindowsActions;
 import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
@@ -55,6 +56,8 @@ public class JDbTextArea extends JTextArea implements DocumentListener, FieldObs
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
+
+    WindowsActions.addActions(this);
   }
 
   public void this_focusGained(FocusEvent e) {
