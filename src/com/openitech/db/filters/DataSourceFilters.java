@@ -74,6 +74,25 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     protected int i_type = 4;
     protected int p_count = 1;
     private String name;
+    protected String operator = "and";
+
+    /**
+     * Get the value of operator
+     *
+     * @return the value of operator
+     */
+    public String getOperator() {
+      return operator;
+    }
+
+    /**
+     * Set the value of operator
+     *
+     * @param operator new value of operator
+     */
+    public void setOperator(String operator) {
+      this.operator = operator;
+    }
 
     /**
      * Get the value of automatic
@@ -510,7 +529,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       if (do_seek) {
         for (AbstractSeekType seek : seek_types) {
           if (seek.hasValue()) {
-            value.append(value.length() > 0 ? " and " : "").append(seek.getSQLSegment());
+            value.append(value.length() > 0 ? " "+seek.getOperator()+" " : "").append(seek.getSQLSegment());
             for (int p = 1; p <= seek.p_count; p++) {
               if (seek instanceof ValuesList) {
                 for (Object v : ((ValuesList) seek).getValues()) {
@@ -701,7 +720,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       });
 
     }
-    
+
     public SifrantSeekType(String field, Callable<DbComboBoxModel> callable) {
       this(field, new FutureTask<DbComboBoxModel>(callable));
     }
@@ -809,6 +828,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   //TODO: FINISH THE EVENT FILTER, USING THE EventQuery and SqlUtilites class
   public final static class EventSeekType extends DataSourceFilters.AbstractSeekType<Event> implements ValuesList {
+
     private String eventProperty;
 
     public EventSeekType(String field, String eventProperty) {
@@ -820,8 +840,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public boolean setValue(Event value) {
       if (!Equals.equals(getValue(), value)) {
         this.value = value;
-        if (value!=null) {
-
+        if (value != null) {
         }
         return true;
       } else {
@@ -832,6 +851,54 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     @Override
     public List getValues() {
       throw new UnsupportedOperationException("Not supported yet.");
+    }
+  }
+
+  public abstract static class InnerJoinSeekType<T> extends AbstractSeekType<T> {
+
+    private static final String pattern = " INNER JOIN {0}\n " + " ON ( {1} {2} )";
+    private String joinTable;
+    private String joinCondition;
+
+    public InnerJoinSeekType(String joinTable, String joinCondition, String field) {
+//    super(" INNER JOIN " + tableName + " " + alias +
+//            " \nON ( " + alias + ".PPVrednostID = " + joinON + " " +
+//            " \nAND " + alias + "." + valueType + " = ?", PREFORMATTED, 1);
+      super(field, EQUALS, 1);
+      this.joinTable = joinTable;
+      this.joinCondition = joinCondition;
+    }
+
+    @Override
+    public StringBuilder getSQLSegment() {
+      return new StringBuilder(MessageFormat.format(pattern, joinTable, joinCondition, super.getSQLSegment()));
+    }
+    private boolean caseSensitive = false;
+
+    /**
+     * Getter for property caseSensitive.
+     * @return Value of property caseSensitive.
+     */
+    public boolean isCaseSensitive() {
+      return this.caseSensitive;
+    }
+
+    @Override
+    public String getOperator() {
+      return "";
+    }
+
+    @Override
+    public void setOperator(String operator) {
+      throw new UnsupportedOperationException("InnerJoinSeekType ne podpira dodatnih operatorjev");
+    }
+
+    /**
+     * Setter for property caseSensitive.
+     * @param caseSensitive New value of property caseSensitive.
+     */
+    public void setCaseSensitive(boolean caseSensitive) {
+      this.caseSensitive = caseSensitive;
     }
   }
 }

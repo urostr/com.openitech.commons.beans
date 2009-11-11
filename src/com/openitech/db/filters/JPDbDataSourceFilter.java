@@ -221,36 +221,38 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   private void updateFilterPane() {
     try {
       refreshing = true;
-      DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
+      if (jcbStolpec.getSelectedItem() instanceof DataSourceFilters.AbstractSeekType) {
+        DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
 
-      if (item instanceof DataSourceFilters.BetweenDateSeekType) {
-        jtfDateValueOd.setDocument(documents.get(item)[0]);
-        jtfDateValueDo.setDocument(documents.get(item)[1]);
-        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "DATEFIELD_CARD");
-      } else if (item instanceof DataSourceFilters.SifrantSeekType) {
-        jtfSifrant.setDocument(documents.get(item)[0]);
-        jcbSifrant.setModel(sifranti.get(item));
-        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
-      } else if (item.getSeekType() == com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
-        jtfPreformattedValue.setDocument(documents.get(item)[0]);
-        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "PREFORMATTED_CARD");
-      } else if (item instanceof DataSourceFilters.IntegerSeekType) {
-        if ((item.getSeekType()-com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
-          item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+        if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+          jtfDateValueOd.setDocument(documents.get(item)[0]);
+          jtfDateValueDo.setDocument(documents.get(item)[1]);
+          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "DATEFIELD_CARD");
+        } else if (item instanceof DataSourceFilters.SifrantSeekType) {
+          jtfSifrant.setDocument(documents.get(item)[0]);
+          jcbSifrant.setModel(sifranti.get(item));
+          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
+        } else if (item.getSeekType() == com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
+          jtfPreformattedValue.setDocument(documents.get(item)[0]);
+          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "PREFORMATTED_CARD");
+        } else if (item instanceof DataSourceFilters.IntegerSeekType) {
+          if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+            item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+          }
+          jcbNumberType.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+          jtfNumberValue.setDocument(documents.get(item)[0]);
+          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "NUMBERFIELD_CARD");
+        } else {
+          if (item.getSeekType() >= jcbType.getItemCount()) {
+            item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
+          }
+          jcbType.setSelectedIndex(item.getSeekType());
+          jtfValue.setDocument(documents.get(item)[0]);
+          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "TEXTFIELD_CARD");
         }
-        jcbNumberType.setSelectedIndex(item.getSeekType()-com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-        jtfNumberValue.setDocument(documents.get(item)[0]);
-        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "NUMBERFIELD_CARD");
-      } else {
-        if (item.getSeekType() >= jcbType.getItemCount()) {
-          item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
-        }
-        jcbType.setSelectedIndex(item.getSeekType());
-        jtfValue.setDocument(documents.get(item)[0]);
-        ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "TEXTFIELD_CARD");
+        invalidate();
+        repaint();
       }
-      invalidate();
-      repaint();
     } finally {
       refreshing = false;
     }
@@ -499,10 +501,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       if (!refreshing) {
         DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
 
-        filters.getFilterFor(item).setSeekType(item, jcbNumberType.getSelectedIndex()+com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+        filters.getFilterFor(item).setSeekType(item, jcbNumberType.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
       }
     }//GEN-LAST:event_jcbNumberTypeActionPerformed
-
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
