@@ -186,6 +186,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                   updating = true;
                   try {
                     jcbSifrant.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(com.openitech.util.Document.getText(e.getDocument()), null, null));
+                    if (jcbSifrant.getEditor() != null) {
+                      jcbSifrant.getEditor().setItem(jcbSifrant.getSelectedItem());
+                    }
                     jcbSifrant.repaint(27);
                   } catch (BadLocationException ex) {
                     Logger.getLogger(JPDbDataSourceFilter.class.getName()).warning(ex.getMessage());
