@@ -85,6 +85,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   public final static String STORE_UPDATES = "storeUpdates";
   public final static String LOAD_DATA = "loadData";
   public final static String DATA_LOADED = "dataLoaded";
+  public final static long DEFAULT_QUEUED_DELAY = 108;
 
   private String componentName;
 
@@ -113,7 +114,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   private String name = "";
   private final ReentrantLock available = new ReentrantLock();
 
-  private long queuedDelay = 108;
+  private long queuedDelay = DEFAULT_QUEUED_DELAY;
 
   private boolean reloadsOnEventQueue = false;
   private boolean shareResults = false;
