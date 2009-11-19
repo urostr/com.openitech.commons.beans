@@ -5052,6 +5052,13 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
       parameters.remove(parameter);
       firePropertyChange("parameters", size, parameters.size());
     }
+
+    @Override
+    public String toString() {
+      return ""+getReplace()+" "+getValue();
+    }
+
+
   }
 
   protected final static class FireFieldValueChanged implements Runnable {
