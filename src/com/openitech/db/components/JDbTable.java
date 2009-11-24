@@ -47,7 +47,6 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   private static boolean sortable;
   private boolean enableSorting = false;
 
-
   static {
     try {
       convertRowIndexToModel = JDbTable.class.getMethod("convertRowIndexToModel", int.class);
@@ -56,8 +55,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       constructRowSorter = Class.forName("javax.swing.table.TableRowSorter").getConstructor(javax.swing.table.TableModel.class);
       setComparator = Class.forName("javax.swing.table.TableRowSorter").getMethod("setComparator", int.class, java.util.Comparator.class);
 
-      if (convertRowIndexToModel != null &&
-              convertRowIndexToView != null) {
+      if (convertRowIndexToModel != null && convertRowIndexToView != null) {
         System.out.println("com.openitech.db.components.JDbTable is sortable.");
         sortable = true;
       }
@@ -69,7 +67,6 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       constructRowSorter = null;
     }
   }
-
   final javax.swing.JCheckBoxMenuItem miSorting = new javax.swing.JCheckBoxMenuItem();
 
   /** Creates a new instance of JDbTable */
@@ -82,7 +79,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     putClientProperty("Quaqua.Table.style", "striped");
     javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
     if (sortable) {
-      
+
 
       miSorting.setText("Sortiranje seznama");
       miSorting.setSelected(enableSorting);
@@ -141,30 +138,15 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
     }
   }
-
   private JMenuItem activeFiltersMenu;
 
   public void setActiveFiltersMenu(JMenuItem miActiveFilters) {
-    javax.swing.JPopupMenu menu = getComponentPopupMenu();
-    if (activeFiltersMenu!=null) {
-      int index = menu.getComponentIndex(miActiveFilters);
-      if (index>=0) {
-        menu.remove(index);
-        if (menu.getComponent(index) instanceof javax.swing.JPopupMenu.Separator) {
-          menu.remove(index);
-        }
-      }
-      activeFiltersMenu = null;
-    }
-    if (miActiveFilters!=null) {
-
-      menu.insert(new javax.swing.JPopupMenu.Separator(), 0);
-      menu.insert(miActiveFilters, 0);
-
-      activeFiltersMenu = miActiveFilters;
-    }
+    this.activeFiltersMenu = addTableMenuItem(miActiveFilters, true);
   }
 
+  public JMenuItem getActiveFiltersMenu() {
+    return activeFiltersMenu;
+  }
 
   private JMenuItem exportTableMenu = null;
 
@@ -173,23 +155,37 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   }
 
   public void setExportTableMenu(JMenuItem exportTableMenu) {
-    javax.swing.JPopupMenu menu = getComponentPopupMenu();
-    int index = -1;
-    if (this.exportTableMenu!=null) {
-      index = menu.getComponentIndex(this.exportTableMenu);
-      if (index>=0) {
-        menu.remove(index);
-      }
-      this.exportTableMenu = null;
-    }
-    if (exportTableMenu!=null) {
-      menu.insert(exportTableMenu, index>0?index:0);
-
-      this.exportTableMenu = exportTableMenu;
-    }
+    this.exportTableMenu = addTableMenuItem(exportTableMenu, false);
   }
 
+  public JMenuItem addTableMenuItem(JMenuItem jMenuItem, boolean separator) {
+    JMenuItem result = null;
+    javax.swing.JPopupMenu menu = getComponentPopupMenu();
+    int index = -1;
+    if (jMenuItem != null) {
+      index = menu.getComponentIndex(jMenuItem);
+      if (index >= 0) {
+        menu.remove(index);
 
+        if (separator && (menu.getComponent(index) instanceof javax.swing.JPopupMenu.Separator)) {
+          menu.remove(index);
+        }
+      }
+
+      result = null;
+    }
+    if (jMenuItem != null) {
+
+      if (separator) {
+        menu.insert(new javax.swing.JPopupMenu.Separator(), index > 0 ? index : 0);
+      }
+      menu.insert(jMenuItem, index > 0 ? index : 0);
+
+      result = jMenuItem;
+    }
+
+    return result;
+  }
 
   /**
    * Sets the data model for this table to <code>newModel</code> and registers
@@ -284,10 +280,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
         int newRowNumber = dbTableModel.getDataSourceRow(selectedRow);
         try {
           selectionChanged = true;
-          if ((newRowNumber >= 1) &&
-                  (newRowNumber <= dbTableModel.getRowCount()) &&
-                  (dbTableModel.getDataSource().getRow() != newRowNumber) &&
-                  !dbTableModel.getDataSource().rowInserted()) {
+          if ((newRowNumber >= 1) && (newRowNumber <= dbTableModel.getRowCount()) && (dbTableModel.getDataSource().getRow() != newRowNumber) && !dbTableModel.getDataSource().rowInserted()) {
             dbTableModel.getDataSource().absolute(newRowNumber);
           }
         } catch (Exception ex) {
