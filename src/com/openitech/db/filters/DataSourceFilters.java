@@ -2,8 +2,9 @@ package com.openitech.db.filters;
 
 import com.openitech.db.model.*;
 import com.openitech.formats.FormatFactory;
-import com.openitech.sql.events.Event;
 import com.openitech.util.Equals;
+import com.openitech.util.TelefonskeStevilke;
+import com.openitech.util.TelefonskeStevilke.Telefon;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.Date;
@@ -13,9 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.text.Document;
@@ -529,7 +528,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       if (do_seek) {
         for (AbstractSeekType seek : seek_types) {
           if (seek.hasValue()) {
-            value.append(value.length() > 0 ? " "+seek.getOperator()+" " : "").append(seek.getSQLSegment());
+            value.append(value.length() > 0 ? " " + seek.getOperator() + " " : "").append(seek.getSQLSegment());
             for (int p = 1; p <= seek.p_count; p++) {
               if (seek instanceof ValuesList) {
                 for (Object v : ((ValuesList) seek).getValues()) {
@@ -826,34 +825,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
-  //TODO: FINISH THE EVENT FILTER, USING THE EventQuery and SqlUtilites class
-  public final static class EventSeekType extends DataSourceFilters.AbstractSeekType<Event> implements ValuesList {
-
-    private String eventProperty;
-
-    public EventSeekType(String field, String eventProperty) {
-      super(field, PREFORMATTED, 1);
-      this.eventProperty = eventProperty;
-    }
-
-    @Override
-    public boolean setValue(Event value) {
-      if (!Equals.equals(getValue(), value)) {
-        this.value = value;
-        if (value != null) {
-        }
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    @Override
-    public List getValues() {
-      throw new UnsupportedOperationException("Not supported yet.");
-    }
-  }
-
   public abstract static class InnerJoinSeekType<T> extends AbstractSeekType<T> {
 
     private static final String pattern = " INNER JOIN {0}\n " + " ON ( {1} {2} )";
@@ -899,6 +870,95 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      */
     public void setCaseSensitive(boolean caseSensitive) {
       this.caseSensitive = caseSensitive;
+    }
+  }
+
+  public static class TelefonSeekType extends AbstractSeekType<String> {
+
+    DataSourceFiltersSeek<String> omrezna;
+    DataSourceFiltersSeek<String> telefonska;
+
+    public TelefonSeekType(DataSourceFiltersSeek<String> omrezna, DataSourceFiltersSeek<String> telefonska) {
+      super("", telefonska.seek.getSeekType(), 1);
+
+      this.omrezna = omrezna;
+      this.telefonska = telefonska;
+    }
+
+    @Override
+    public boolean setValue(String value) {
+      if (value == null) {
+        value = "";
+      } else {
+        value = value.trim();
+      }
+
+      if (!Equals.equals(this.value, value)) {
+        if (value.length() == 0) {
+          omrezna.filter.setSeekValue(omrezna.seek, "");
+          telefonska.filter.setSeekValue(telefonska.seek, "");
+        } else {
+          StringBuilder sb_omrezna = new StringBuilder(10);
+          StringBuilder sb_telefonska = new StringBuilder(10);
+
+          int pos = 0;
+
+          while ((pos < value.length()) && Character.isDigit(value.charAt(pos))) {
+            sb_omrezna.append(value.charAt(pos++));
+          }
+          while (pos < value.length()) {
+            if (Character.isDigit(value.charAt(pos))) {
+              sb_telefonska.append(value.charAt(pos));
+            }
+            pos++;
+          }
+
+          if ((sb_omrezna.length() > 0) && (sb_telefonska.length() > 0)) {
+            omrezna.filter.setSeekValue(omrezna.seek, sb_omrezna.toString());
+            telefonska.filter.setSeekValue(telefonska.seek, sb_telefonska.toString());
+          } else {
+            Telefon telefon = null;
+            
+            if (value.startsWith("0")||value.startsWith("+")) {
+              telefon = TelefonskeStevilke.getTelefon(value);
+            }
+
+            if (telefon != null) {
+              omrezna.filter.setSeekValue(omrezna.seek, telefon.getOmrezna());
+              telefonska.filter.setSeekValue(telefonska.seek, telefon.getTelefonska());
+            } else {
+              omrezna.filter.setSeekValue(omrezna.seek, "");
+              telefonska.filter.setSeekValue(telefonska.seek, value);
+            }
+          }
+        }
+
+        this.value = value;
+
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    @Override
+    public boolean setSeekType(int i_type) {
+      if (telefonska.seek.getSeekType() != i_type) {
+        telefonska.filter.setSeekType(telefonska.seek, i_type);
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    @Override
+    public int getSeekType() {
+      return telefonska.seek.getSeekType();
+    }
+
+    @Override
+    public boolean hasValue() {
+      return false;
     }
   }
 }
