@@ -26,6 +26,22 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   public abstract static class AbstractSeekType<E> {
 
     /**
+     * UPPER_EQUALS has value 0
+     */
+    public static final int UPPER_EQUALS = 0;
+    /**
+     * UPPER_BEGINS_WITH has value 1
+     */
+    public static final int UPPER_BEGINS_WITH = 1;
+    /**
+     * UPPER_END_WITH has value 2
+     */
+    public static final int UPPER_END_WITH = 2;
+    /**
+     * UPPER_CONTAINS has value 3
+     */
+    public static final int UPPER_CONTAINS = 3;
+    /**
      * Equals has value 4
      */
     public static final int EQUALS = 4;
@@ -41,6 +57,18 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      * PREFORMATTED has value 7
      */
     public static final int PREFORMATTED = 7;
+    /**
+     * BEGINS_WITH has value 8
+     */
+    public static final int BEGINS_WITH = 8;
+    /**
+     * ENDS_WITH has value 9
+     */
+    public static final int ENDS_WITH = 9;
+    /**
+     * CONTAINS has value 10
+     */
+    public static final int CONTAINS = 10;
     protected final MessageFormat[] formati = new MessageFormat[]{
       new MessageFormat(" (UPPER({0}) = ?) "), //-0
       new MessageFormat(" (UPPER({0}) like (?+''%'')) "), //-1
@@ -206,22 +234,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public final static class SeekType extends AbstractSeekType<String> {
 
-    /**
-     * UPPER_EQUALS has value 0
-     */
-    public static final int UPPER_EQUALS = 0;
-    /**
-     * UPPER_BEGINS_WITH has value 1
-     */
-    public static final int UPPER_BEGINS_WITH = 1;
-    /**
-     * UPPER_END_WITH has value 2
-     */
-    public static final int UPPER_END_WITH = 2;
-    /**
-     * UPPER_CONTAINS has value 3
-     */
-    public static final int UPPER_CONTAINS = 3;
     private int min_length = 3;
 
     /**
@@ -827,22 +839,43 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public abstract static class InnerJoinSeekType<T> extends AbstractSeekType<T> {
 
-    private static final String pattern = " INNER JOIN {0}\n " + " ON ( {1} {2} )";
+    private static final String pattern = " {0} {1}\n " + " ON ( {2} {3} )";
+    private String joinType;
     private String joinTable;
     private String joinCondition;
 
     public InnerJoinSeekType(String joinTable, String joinCondition, String field) {
-//    super(" INNER JOIN " + tableName + " " + alias +
-//            " \nON ( " + alias + ".PPVrednostID = " + joinON + " " +
-//            " \nAND " + alias + "." + valueType + " = ?", PREFORMATTED, 1);
+      this("INNER JOIN", joinTable, joinCondition, field);
+    }
+
+     public InnerJoinSeekType(String joinType, String joinTable, String joinCondition, String field) {
       super(field, EQUALS, 1);
+      this.joinType = joinType;
       this.joinTable = joinTable;
       this.joinCondition = joinCondition;
     }
 
     @Override
     public StringBuilder getSQLSegment() {
-      return new StringBuilder(MessageFormat.format(pattern, joinTable, joinCondition, super.getSQLSegment()));
+      return new StringBuilder(MessageFormat.format(pattern, getJoinType(), joinTable, joinCondition, super.getSQLSegment()));
+    }
+
+    /**
+     * Get the value of joinType
+     *
+     * @return the value of joinType
+     */
+    public String getJoinType() {
+      return joinType;
+    }
+
+    /**
+     * Set the value of joinType
+     *
+     * @param joinType new value of joinType
+     */
+    public void setJoinType(String joinType) {
+      this.joinType = joinType;
     }
     private boolean caseSensitive = false;
 
