@@ -1,5 +1,6 @@
 package com.openitech.db.filters;
 
+import com.openitech.db.ConnectionManager;
 import com.openitech.db.model.*;
 import com.openitech.formats.FormatFactory;
 import com.openitech.util.Equals;
@@ -222,13 +223,44 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     public StringBuilder getSQLSegment() {
-      StringBuffer sb = formati[i_type].format(new Object[]{field}, new StringBuffer(27), null);
+      int seekType = i_type;
+
+      if (isCaseInsensitive()) {
+        switch (i_type) {
+          case UPPER_EQUALS: seekType = EQUALS; break;
+          case UPPER_BEGINS_WITH: seekType = BEGINS_WITH; break;
+          case UPPER_END_WITH: seekType = ENDS_WITH; break;
+          case UPPER_CONTAINS: seekType = CONTAINS; break;
+        }
+      }
+      
+      StringBuffer sb = formati[seekType].format(new Object[]{field}, new StringBuffer(27), null);
       return new StringBuilder(sb);
     }
 
     @Override
     public String toString() {
       return name != null ? name : super.toString();
+    }
+    
+    private boolean caseInsensitive = ConnectionManager.getInstance().isCaseInsensitive();
+
+    /**
+     * Get the value of caseInsensitive
+     *
+     * @return the value of caseInsensitive
+     */
+    public boolean isCaseInsensitive() {
+      return caseInsensitive;
+    }
+
+    /**
+     * Set the value of caseInsensitive
+     *
+     * @param caseInsensitive new value of caseInsensitive
+     */
+    public void setCaseInsensitive(boolean caseInsensitive) {
+      this.caseInsensitive = caseInsensitive;
     }
   }
 

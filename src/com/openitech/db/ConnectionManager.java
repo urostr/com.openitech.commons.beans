@@ -82,21 +82,14 @@ public class ConnectionManager implements DbConnection {
     return getDbConnection().getProperty(DbConnection.DB_DRIVER_EMBEDDED, getDbConnection().getProperty(DbConnection.DB_DRIVER_NET, null));
   }
 
+  @Override
   public String getUrl() {
-    return getDbConnection().getProperty(DbConnection.DB_JDBC_EMBEDDED, getDbConnection().getProperty(DbConnection.DB_JDBC_NET, null));
+    return getDbConnection() == null ? null : getDbConnection().getUrl();
   }
 
+  @Override
   public String getDialect() {
-    String dialect = "";
-    try {
-      String url = this.getUrl().toLowerCase();
-      if (url.startsWith("jdbc:jtds:sqlserver:")) {
-        dialect = "mssql";
-      }
-    } catch (NullPointerException ex) {
-      //ignore
-    }
-    return dialect;
+    return getDbConnection() == null ? null : getDbConnection().getDialect();
   }
 
   public String getHibernateDialect() {
@@ -135,5 +128,10 @@ public class ConnectionManager implements DbConnection {
   @Override
   public boolean isCacheRowSet() {
     return getDbConnection() == null ? false : getDbConnection().isCacheRowSet();
+  }
+
+  @Override
+  public boolean isCaseInsensitive() {
+    return getDbConnection() == null ? false : getDbConnection().isCaseInsensitive();
   }
 }

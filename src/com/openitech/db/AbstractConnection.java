@@ -32,6 +32,8 @@ public abstract class AbstractConnection implements DbConnection {
   private static final String userDir = System.getProperty("user.dir").replaceAll(fileSeparator, fileSeparator + fileSeparator);
   private Process databaseProcess = null;
   boolean useProxool = false;
+  Boolean isCaseInsensitive = null;
+  String dialect = null;
   String DB_URL = null;
   Properties connect = new Properties();
   /**
@@ -72,6 +74,31 @@ public abstract class AbstractConnection implements DbConnection {
   @Override
   public boolean isCacheRowSet() {
     return Boolean.valueOf(settings.getProperty(DB_CACHEROWSET, "true"));
+  }
+
+  @Override
+  public String getUrl() {
+    return settings.getProperty(DbConnection.DB_JDBC_EMBEDDED, settings.getProperty(DbConnection.DB_JDBC_NET, null));
+  }
+
+  @Override
+  public String getDialect() {
+    if (dialect==null) {
+      try {
+        String url = this.getUrl().toLowerCase();
+        if (url.startsWith("jdbc:jtds:sqlserver:")) {
+          dialect = "mssql";
+        }
+      } catch (NullPointerException ex) {
+        //ignore
+      }
+    }
+    return dialect;
+  }
+
+  @Override
+  public boolean isCaseInsensitive() {
+    return isCaseInsensitive == null ? (isCaseInsensitive = Boolean.valueOf(settings.getProperty(DB_CASE_INSESITIVE, Boolean.toString("mssql".equals(getDialect()))))) : isCaseInsensitive;
   }
 
   @Override
