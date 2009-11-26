@@ -101,6 +101,20 @@ public class DataSourceLimit extends DbDataSource.SubstSqlParameter implements A
       }
 
     }
+
+    public static ButtonGroup getButtonGroup() {
+      return bg;
+    }
+
+    public void setSelected() {
+      setSelected(this);
+    }
+
+    public void setSelected(Limit limit) {
+      for (Limit s:Limit.values()) {
+        s.getModel().setSelected(s.equals(limit));
+      }
+    }
   }
 
   public DataSourceLimit(String replace) {

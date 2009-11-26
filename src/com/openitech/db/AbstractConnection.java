@@ -267,18 +267,22 @@ public abstract class AbstractConnection implements DbConnection {
 
   protected abstract void createSchema(Connection conn) throws SQLException;
 
+  @Override
   public String getProperty(String key) {
     return settings.getProperty(key);
   }
 
+  @Override
   public String getProperty(String key, String defaultValue) {
     return settings.getProperty(key, defaultValue);
   }
 
+  @Override
   public Object setProperty(String key, String value) {
     return settings.setProperty(key, value);
   }
 
+  @Override
   public boolean containsKey(String key) {
     return settings.containsKey(key);
   }
