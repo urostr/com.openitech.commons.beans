@@ -227,13 +227,21 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
       if (isCaseInsensitive()) {
         switch (i_type) {
-          case UPPER_EQUALS: seekType = EQUALS; break;
-          case UPPER_BEGINS_WITH: seekType = BEGINS_WITH; break;
-          case UPPER_END_WITH: seekType = ENDS_WITH; break;
-          case UPPER_CONTAINS: seekType = CONTAINS; break;
+          case UPPER_EQUALS:
+            seekType = EQUALS;
+            break;
+          case UPPER_BEGINS_WITH:
+            seekType = BEGINS_WITH;
+            break;
+          case UPPER_END_WITH:
+            seekType = ENDS_WITH;
+            break;
+          case UPPER_CONTAINS:
+            seekType = CONTAINS;
+            break;
         }
       }
-      
+
       StringBuffer sb = formati[seekType].format(new Object[]{field}, new StringBuffer(27), null);
       return new StringBuilder(sb);
     }
@@ -242,7 +250,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public String toString() {
       return name != null ? name : super.toString();
     }
-    
     private boolean caseInsensitive = ConnectionManager.getInstance().isCaseInsensitive();
 
     /**
@@ -728,19 +735,20 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   public final static class SifrantSeekType extends AbstractSeekType<String> {
 
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
-    /**
-     * UPPER_EQUALS has value 0
-     */
-    public static final int UPPER_EQUALS = 0;
-    private int min_length = 1;
     private FutureTask<DbComboBoxModel> model;
+    private AbstractSeekType<String> seekType;
 
     public SifrantSeekType(String field, final String sifrantSkupina, final String sifrantOpis) {
       this(field, sifrantSkupina, sifrantOpis, null);
     }
 
     public SifrantSeekType(String field, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined) {
-      super(field, UPPER_EQUALS, 1);
+      this(new SeekType(field, UPPER_EQUALS, 1), sifrantSkupina, sifrantOpis, textNotDefined);
+    }
+    public SifrantSeekType(AbstractSeekType<String> seekType, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined) {
+      super("", PREFORMATTED, 1);
+
+      this.seekType = seekType;
       this.def_i_type = 1;
       this.sifrantSkupina = sifrantSkupina;
       this.sifrantOpis = sifrantOpis;
@@ -769,12 +777,18 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     public SifrantSeekType(String field, FutureTask<DbComboBoxModel> model) {
-      super(field, UPPER_EQUALS, 1);
+      this(new SeekType(field, UPPER_EQUALS, 1), model);
+    }
+
+    public SifrantSeekType(AbstractSeekType<String> seekType, FutureTask<DbComboBoxModel> model) {
+      super("", PREFORMATTED, 1);
+      this.seekType = seekType;
       this.model = model;
       this.sifrantSkupina = null;
       this.sifrantOpis = null;
       this.textNotDefined = null;
     }
+
     private final String textNotDefined;
 
     /**
@@ -823,30 +837,43 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       return result;
     }
 
+    @Override
     public boolean setValue(String value) {
-      if (value == null) {
-        value = "";
-      } else if (value.endsWith("%")) {
-        value = value.substring(0, value.length() - 1);
-      }
-      value = value.trim();
+      boolean result = seekType.setValue(value);
 
-      if (value.length() < min_length) {
-        value = "";
-      } else {
-        value = caseSensitive ? value : value.toUpperCase();
-      }
-      if (!Equals.equals(getValue(), value)) {
-        this.value = value;
-        return true;
-      } else {
-        return false;
-      }
+      this.value = seekType.value;
+      return result;
     }
 
+    @Override
     public boolean hasValue() {
-      return value != null && value.length() > 0;
+      return seekType.hasValue();
     }
+
+    @Override
+    public StringBuilder getSQLSegment() {
+      return seekType.getSQLSegment();
+    }
+
+    @Override
+    public void setName(String name) {
+      seekType.setName(name);
+      super.setName(name);
+    }
+
+    @Override
+    public void setOperator(String operator) {
+      seekType.setOperator(operator);
+      super.setOperator(operator);
+    }
+
+    @Override
+    public boolean setSeekType(int i) {
+      seekType.setSeekType(i);
+      return super.setSeekType(i);
+    }
+
+
     /**
      * Holds value of property caseSensitive.
      */
@@ -871,16 +898,16 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public abstract static class InnerJoinSeekType<T> extends AbstractSeekType<T> {
 
-    private static final String pattern = " {0} {1}\n " + " ON ( {2} {3} )";
-    private String joinType;
-    private String joinTable;
-    private String joinCondition;
+    protected  static final String pattern = " {0} {1}\n " + " ON ( {2} {3} )";
+    protected String joinType;
+    protected String joinTable;
+    protected String joinCondition;
 
     public InnerJoinSeekType(String joinTable, String joinCondition, String field) {
       this("INNER JOIN", joinTable, joinCondition, field);
     }
 
-     public InnerJoinSeekType(String joinType, String joinTable, String joinCondition, String field) {
+    public InnerJoinSeekType(String joinType, String joinTable, String joinCondition, String field) {
       super(field, EQUALS, 1);
       this.joinType = joinType;
       this.joinTable = joinTable;
@@ -889,7 +916,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     @Override
     public StringBuilder getSQLSegment() {
-      return new StringBuilder(MessageFormat.format(pattern, getJoinType(), joinTable, joinCondition, super.getSQLSegment()));
+      return new StringBuilder(MessageFormat.format(pattern, getJoinType(), getJoinTable(), getJoinCondition(), super.getSQLSegment()));
     }
 
     /**
@@ -902,13 +929,23 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     /**
-     * Set the value of joinType
+     * Get the value of joinCondition
      *
-     * @param joinType new value of joinType
+     * @return the value of joinCondition
      */
-    public void setJoinType(String joinType) {
-      this.joinType = joinType;
+    public String getJoinCondition() {
+      return joinCondition;
     }
+
+    /**
+     * Get the value of joinTable
+     *
+     * @return the value of joinTable
+     */
+    public String getJoinTable() {
+      return joinTable;
+    }
+
     private boolean caseSensitive = false;
 
     /**
@@ -983,8 +1020,8 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
             telefonska.filter.setSeekValue(telefonska.seek, sb_telefonska.toString());
           } else {
             Telefon telefon = null;
-            
-            if (value.startsWith("0")||value.startsWith("+")) {
+
+            if (value.startsWith("0") || value.startsWith("+")) {
               telefon = TelefonskeStevilke.getTelefon(value);
             }
 
