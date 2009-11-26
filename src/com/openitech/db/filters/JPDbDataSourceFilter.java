@@ -13,6 +13,7 @@ package com.openitech.db.filters;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.formats.FormatFactory;
+import com.openitech.util.Equals;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -71,6 +72,28 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         }
       }
     });
+  }
+  private JPDbDataSourceFilter parentFilterPanel;
+
+  /**
+   * Get the value of parent
+   *
+   * @return the value of parent
+   */
+  public JPDbDataSourceFilter getParentFilterPanel() {
+    return parentFilterPanel;
+  }
+
+  /**
+   * Set the value of parent
+   *
+   * @param parent new value of parent
+   */
+  public void setParentFilterPanel(JPDbDataSourceFilter parentFilterPanel) {
+    if (!Equals.equals(this.parentFilterPanel, parentFilterPanel)) {
+      this.parentFilterPanel = parentFilterPanel;
+      updateColumns();
+    }
   }
 
   public DataSourceFiltersMap getFilters() {
@@ -141,75 +164,64 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     Vector<DataSourceFilters.AbstractSeekType<? extends Object>> headers = new Vector<DataSourceFilters.AbstractSeekType<? extends Object>>();
 
     documents.clear();
-    for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
-      java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
+    if (filters.size() > 0) {
+      for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
+        java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
 
-      for (int i = 0; i < seekTypeList.size(); i++) {
-        DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
+        for (int i = 0; i < seekTypeList.size(); i++) {
+          DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
 
 
-        if (!item.isAutomatic()) {
-          documents.put(item, item.getDocuments());
-        } else {
-          headers.add(item);
-
-          if (item instanceof DataSourceFilters.BetweenDateSeekType) {
-            javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
-            javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
-
-            from.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
-            to.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
-
-            documents.put(item, new javax.swing.text.Document[]{from, to});
-          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
-            javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
-            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
-            document.addDocumentListener(new DocumentListener() {
-
-              @Override
-              public void insertUpdate(DocumentEvent e) {
-                updateSifrant(e);
-              }
-
-              @Override
-              public void removeUpdate(DocumentEvent e) {
-                updateSifrant(e);
-              }
-
-              @Override
-              public void changedUpdate(DocumentEvent e) {
-                updateSifrant(e);
-              }
-
-              private void updateSifrant(DocumentEvent e) {
-                if ((!updating) && (jcbSifrant != null)) {
-                  updating = true;
-                  try {
-                    jcbSifrant.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(com.openitech.util.Document.getText(e.getDocument()), null, null));
-                    if (jcbSifrant.getEditor() != null) {
-                      jcbSifrant.getEditor().setItem(jcbSifrant.getSelectedItem());
-                    }
-                    jcbSifrant.repaint(27);
-                  } catch (BadLocationException ex) {
-                    Logger.getLogger(JPDbDataSourceFilter.class.getName()).warning(ex.getMessage());
-                    jcbSifrant.setSelectedItem(null);
-                  } finally {
-                    updating = false;
-                  }
-                }
-              }
-            });
-            documents.put(item, new javax.swing.text.Document[]{document});
-            sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
+          if (!item.isAutomatic()) {
+            documents.put(item, item.getDocuments());
           } else {
-            javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
-            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
-            documents.put(item, new javax.swing.text.Document[]{document});
+            headers.add(item);
+
+            if ((parentFilterPanel != null) && (parentFilterPanel.documents.containsKey(item))) {
+              documents.put(item, parentFilterPanel.documents.get(item));
+              if (parentFilterPanel.sifranti.containsKey(item)) {
+                sifranti.put(item, parentFilterPanel.sifranti.get(item));
+              }
+            } else if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+              javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
+              javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
+
+              from.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
+              to.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
+
+              documents.put(item, new javax.swing.text.Document[]{from, to});
+            } else if (item instanceof DataSourceFilters.SifrantSeekType) {
+              javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
+              document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+              document.addDocumentListener(new DocumentListener() {
+
+                @Override
+                public void insertUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument());
+                }
+
+                @Override
+                public void removeUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument());
+                }
+
+                @Override
+                public void changedUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument());
+                }
+              });
+              documents.put(item, new javax.swing.text.Document[]{document});
+              sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
+            } else {
+              javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
+              document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+              documents.put(item, new javax.swing.text.Document[]{document});
+            }
           }
         }
-      }
 
-      entry.getKey().addPropertyChangeListener("query", queryChanged);
+        entry.getKey().addPropertyChangeListener("query", queryChanged);
+      }
     }
     if (headers.size() == 0) {
       jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Ni doloèen"}));
@@ -220,6 +232,29 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     updateFilterPane();
   }
   private boolean refreshing = false;
+
+  private void updateSifrant(javax.swing.text.Document doc) {
+    if ((!updating) && (jcbSifrant != null)) {
+      updating = true;
+      try {
+        final String text = com.openitech.util.Document.getText(doc);
+        if (text.isEmpty()) {
+          jcbSifrant.setSelectedIndex(0);
+        } else {
+          jcbSifrant.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(text, null, null));
+          if (jcbSifrant.getEditor() != null) {
+            jcbSifrant.getEditor().setItem(jcbSifrant.getSelectedItem());
+          }
+        }
+        jcbSifrant.repaint(27);
+      } catch (BadLocationException ex) {
+        Logger.getLogger(JPDbDataSourceFilter.class.getName()).warning(ex.getMessage());
+        jcbSifrant.setSelectedItem(null);
+      } finally {
+        updating = false;
+      }
+    }
+  }
 
   private void updateFilterPane() {
     try {
@@ -234,6 +269,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         } else if (item instanceof DataSourceFilters.SifrantSeekType) {
           jtfSifrant.setDocument(documents.get(item)[0]);
           jcbSifrant.setModel(sifranti.get(item));
+          updateSifrant(documents.get(item)[0]);
           ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
         } else if (item.getSeekType() == com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
           jtfPreformattedValue.setDocument(documents.get(item)[0]);
