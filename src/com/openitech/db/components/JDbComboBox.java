@@ -65,7 +65,7 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addActionListener(actionWeakListener);
     if (decorate) {
-      com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
+      //  com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
     }
   }
 
@@ -217,6 +217,9 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     }
     try {
       super.setModel(aModel);
+      if (aModel instanceof DbComboBoxModel) {
+        com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
+      }
     } finally {
       if (actionWeakListener != null) {
         actionWeakListener.setEnabled(true);
