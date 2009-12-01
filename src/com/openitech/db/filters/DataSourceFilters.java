@@ -8,6 +8,7 @@ import com.openitech.util.TelefonskeStevilke;
 import com.openitech.util.TelefonskeStevilke.Telefon;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -732,7 +733,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public T newInstance(String replace);
   }
 
-  public final static class SifrantSeekType extends AbstractSeekType<String> {
+  public final static class SifrantSeekType extends AbstractSeekType<String> implements ValuesList {
 
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private FutureTask<DbComboBoxModel> model;
@@ -894,6 +895,18 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public void setCaseSensitive(boolean caseSensitive) {
       this.caseSensitive = caseSensitive;
     }
+
+    @Override
+    public List getValues() {
+      if (seekType instanceof ValuesList) {
+        return ((ValuesList) seekType).getValues();
+      } else {
+        List result = new ArrayList();
+        result.add(getValue());
+
+        return result;
+      }
+    }
   }
 
   public abstract static class InnerJoinSeekType<T> extends AbstractSeekType<T> {
@@ -916,7 +929,11 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     @Override
     public StringBuilder getSQLSegment() {
-      return new StringBuilder(MessageFormat.format(pattern, getJoinType(), getJoinTable(), getJoinCondition(), super.getSQLSegment()));
+      return new StringBuilder(MessageFormat.format(pattern, getJoinType(), getJoinTable(), getJoinCondition(),getJoinSearchCondition()));
+    }
+
+    public CharSequence getJoinSearchCondition() {
+      return super.getSQLSegment();
     }
 
     /**

@@ -7,16 +7,12 @@
 package com.openitech.components;
 
 import java.awt.EventQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  *
  * @author  uros
  */
 public class JWProgressMonitor extends javax.swing.JDialog {
-  private final static  ExecutorService tpes = Executors.newFixedThreadPool(1);
-  
   /** Creates new form JWProgressMonitor */
   public JWProgressMonitor(java.awt.Frame owner) {
     super(owner,true);
@@ -114,23 +110,28 @@ public class JWProgressMonitor extends javax.swing.JDialog {
     }
   }
 
+  @Override
   public void setTitle(String title) {
     jlTitle.setText(title);
     pack();
   }
   
+  @Override
   public String getTitle() {
     return jlTitle.getText();
   }
 
+  @Override
   public void setVisible(final boolean b) {
     EventQueue.invokeLater(new Runnable() {
+      @Override
       public void run() {
+        setModal(b);
         inheritedVisible(b);
       }
     });
   }
-  
+
   private final void inheritedVisible(boolean b) {
     super.setVisible(b);
   }
