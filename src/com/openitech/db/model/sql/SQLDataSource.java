@@ -4857,20 +4857,21 @@ public class SQLDataSource implements DbDataSourceImpl {
         inserting = false;
 
         int selectedrow = openSelectResultSet().getRow();
+        boolean positioned = false;
 
         createCurrentResultSet();
         final ResultSet openSelectResultSet = openSelectResultSet();
         if (selectedrow > 0) {
           try {
-            openSelectResultSet.absolute(selectedrow);
+            positioned = openSelectResultSet.absolute(selectedrow);
           } catch (SQLException ex) {
-            openSelectResultSet.first();
+            positioned = openSelectResultSet.first();
           }
         } else {
-          openSelectResultSet.first();
+          positioned = openSelectResultSet.first();
         }
 
-        if (owner.isSeekUpdatedRow()) {
+        if (owner.isSeekUpdatedRow()&&positioned) {
           if (!compareValues(openSelectResultSet, connection, oldValues)) {
             if (openSelectResultSet.first()) {
               while (!compareValues(openSelectResultSet, connection, oldValues) && !openSelectResultSet.isLast()) {
