@@ -488,7 +488,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         betweenDateDocumentListener.from.removeDocumentListener(betweenDateDocumentListener);
         betweenDateDocumentListener.to.removeDocumentListener(betweenDateDocumentListener);
       }
-      if ((documents==null) || (documents.length<2)) {
+      if ((documents!=null) && (documents.length>=2)) {
         if (betweenDateDocumentListener == null) {
           betweenDateDocumentListener = new BetweenDateDocumentListener(filter, this, documents[0], documents[1]);
         } else {
