@@ -72,7 +72,7 @@ import javax.swing.event.ListDataListener;
  *
  * @author uros
  */
-public class DbDataSource implements DbNavigatorDataSource, RowSet  {
+public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public static boolean DUMP_SQL = false;
   public final static String MOVE_TO_INSERT_ROW = "moveToInsertRow";
@@ -86,9 +86,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   public final static String LOAD_DATA = "loadData";
   public final static String DATA_LOADED = "dataLoaded";
   public final static long DEFAULT_QUEUED_DELAY = 108;
-
   private String componentName;
-
   private transient WeakListenerList activeRowChangeListeners;
   private transient WeakListenerList storeUpdatesListeners;
   private transient WeakListenerList listDataListeners;
@@ -104,30 +102,25 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
    * @see #firePropertyChange
    */
   private PropertyChangeSupport changeSupport;
-
   protected final List<Object> parameters = new ArrayList<Object>();
   private Map<String, Object> defaultValues = new HashMap<String, Object>();
-
   private boolean canAddRows = true;
   private boolean canDeleteRows = true;
   private Pattern namePattern = Pattern.compile(".*from\\W*(\\w*)\\W.*");
   private String name = "";
   private final ReentrantLock available = new ReentrantLock();
-
   private long queuedDelay = DEFAULT_QUEUED_DELAY;
-
   private boolean reloadsOnEventQueue = false;
   private boolean shareResults = false;
   private boolean cacheStatements = true;
   private boolean cacheRowSet = true;
   private boolean autoInsert = false;
   private boolean connectOnDemand = false;
-
   private DbDataSourceFactory.DbDataSourceImpl implementation;
 
   /** Creates a new instance of DbDataSource */
   public DbDataSource() {
-    this(null,null);
+    this(null, null);
   }
 
   public DbDataSource(String selectSql) {
@@ -143,14 +136,14 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   }
 
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
-    connectOnDemand = ConnectionManager.getInstance().isPooled()&&ConnectionManager.getInstance().isConnectOnDemand();
+    connectOnDemand = ConnectionManager.getInstance().isPooled() && ConnectionManager.getInstance().isConnectOnDemand();
     cacheRowSet = ConnectionManager.getInstance().isCacheRowSet();
     implementation = DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass);
     try {
-      if (countSql!=null) {
+      if (countSql != null) {
         setCountSql(countSql);
       }
-      if (selectSql!=null) {
+      if (selectSql != null) {
         setSelectSql(selectSql);
       }
     } catch (SQLException ex) {
@@ -3084,7 +3077,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
       }
     } catch (InterruptedException ex) {
       //ignore it;
-      }
+    }
     return result;
   }
 
@@ -3161,6 +3154,16 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
 
   public boolean reload(int oldRow) {
     return loadData(true, oldRow);
+  }
+
+  public boolean reload(boolean queued) {
+    if (queued) {
+      com.openitech.db.model.concurrent.RefreshDataSource.timestamp(this);
+      com.openitech.db.model.concurrent.DataSourceEvent.submit(new com.openitech.db.model.concurrent.RefreshDataSource(this, true));
+      return true;
+    } else {
+      return reload();
+    }
   }
 
   public static String substParameters(String sql, List<?> parameters) {
@@ -3576,8 +3579,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
   public void firePropertyChange(String propertyName,
           Object oldValue, Object newValue) {
     PropertyChangeSupport changeSupport = this.changeSupport;
-    if (changeSupport == null ||
-            (oldValue != null && newValue != null && oldValue.equals(newValue))) {
+    if (changeSupport == null
+            || (oldValue != null && newValue != null && oldValue.equals(newValue))) {
       return;
     }
     if (EventQueue.isDispatchThread() || !isSafeMode()) {
@@ -4783,8 +4786,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
     protected void firePropertyChange(String propertyName,
             Object oldValue, Object newValue) {
       PropertyChangeSupport changeSupport = this.changeSupport;
-      if (changeSupport == null ||
-              (oldValue != null && newValue != null && oldValue.equals(newValue))) {
+      if (changeSupport == null
+              || (oldValue != null && newValue != null && oldValue.equals(newValue))) {
         return;
       }
       changeSupport.firePropertyChange(propertyName, oldValue, newValue);
@@ -5055,10 +5058,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet  {
 
     @Override
     public String toString() {
-      return ""+getReplace()+" "+getValue();
+      return "" + getReplace() + " " + getValue();
     }
-
-
   }
 
   protected final static class FireFieldValueChanged implements Runnable {
