@@ -498,6 +498,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         betweenDateDocumentListener.from.addDocumentListener(betweenDateDocumentListener);
         betweenDateDocumentListener.to.addDocumentListener(betweenDateDocumentListener);
       }
+      super.setDocuments(filter, documents);
     }
 
     private static class BetweenDateDocumentListener extends FilterDocumentListener {
