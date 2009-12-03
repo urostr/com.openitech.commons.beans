@@ -186,8 +186,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
               javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
 
-              from.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
-              to.addDocumentListener(new BetweenDateDocumentListener(entry.getKey(), (DataSourceFilters.BetweenDateSeekType) item, from, to));
+              item.setDocuments(entry.getKey(), new javax.swing.text.Document[] {from, to});
 
               documents.put(item, new javax.swing.text.Document[]{from, to});
             } else if (item instanceof DataSourceFilters.SifrantSeekType) {
@@ -566,57 +565,4 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   private com.openitech.db.components.JDbTextField jtfValue;
   private com.openitech.db.model.DbSifrantModel smSifrant;
   // End of variables declaration//GEN-END:variables
-
-  private static class BetweenDateDocumentListener extends FilterDocumentListener {
-
-    javax.swing.text.Document from;
-    javax.swing.text.Document to;
-
-    public BetweenDateDocumentListener(DataSourceFilters filter, DataSourceFilters.BetweenDateSeekType seek_type, javax.swing.text.Document from, javax.swing.text.Document to) {
-      super(filter, seek_type);
-      this.from = from;
-      this.to = to;
-    }
-
-    @Override
-    protected void setSeekValue(DocumentEvent e) {
-      java.util.Date from_date;
-      try {
-        from_date = FormatFactory.DATE_FORMAT.parse(getText(from));
-      } catch (ParseException ex) {
-        //from_date = Calendar.getInstance().getTime();
-        from_date = null;
-      }
-      java.util.Date to_date;
-      try {
-        to_date = FormatFactory.DATE_FORMAT.parse(getText(to));
-      } catch (ParseException ex) {
-        if (from_date == null) {
-          to_date = null;
-        } else {
-          to_date = Calendar.getInstance().getTime();
-        }
-      }
-
-      if (to_date != null) {
-        java.util.Calendar calendar = Calendar.getInstance();
-        calendar.setTime(to_date);
-        calendar.set(java.util.Calendar.HOUR_OF_DAY, 23);
-        calendar.set(java.util.Calendar.MINUTE, 59);
-        calendar.set(java.util.Calendar.SECOND, 59);
-        calendar.set(java.util.Calendar.MILLISECOND, 0);
-        to_date = calendar.getTime();
-      }
-
-      if (from_date == null && to_date != null) {
-        from_date = new java.util.Date(0);
-      }
-
-      java.util.List<java.util.Date> value = new ArrayList<java.util.Date>(2);
-      value.add(from_date);
-      value.add(to_date);
-
-      schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
-    }
-  }
 }

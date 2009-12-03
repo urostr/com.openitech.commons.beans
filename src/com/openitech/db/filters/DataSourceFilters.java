@@ -8,7 +8,9 @@ import com.openitech.util.TelefonskeStevilke;
 import com.openitech.util.TelefonskeStevilke.Telefon;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.event.DocumentEvent;
 import javax.swing.text.Document;
 
 public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
@@ -475,6 +478,80 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         return false;
       }
     }
+
+    BetweenDateDocumentListener betweenDateDocumentListener;
+
+
+    @Override
+    public void setDocuments(DataSourceFilters filter, Document... documents) {
+      if (betweenDateDocumentListener!=null) {
+        betweenDateDocumentListener.from.removeDocumentListener(betweenDateDocumentListener);
+        betweenDateDocumentListener.to.removeDocumentListener(betweenDateDocumentListener);
+      }
+      if ((documents==null) || (documents.length<2)) {
+        if (betweenDateDocumentListener == null) {
+          betweenDateDocumentListener = new BetweenDateDocumentListener(filter, this, documents[0], documents[1]);
+        } else {
+          betweenDateDocumentListener.from = documents[0];
+          betweenDateDocumentListener.to = documents[1];
+        }
+        betweenDateDocumentListener.from.addDocumentListener(betweenDateDocumentListener);
+        betweenDateDocumentListener.to.addDocumentListener(betweenDateDocumentListener);
+      }
+    }
+
+    private static class BetweenDateDocumentListener extends FilterDocumentListener {
+
+      javax.swing.text.Document from;
+      javax.swing.text.Document to;
+
+      public BetweenDateDocumentListener(DataSourceFilters filter, DataSourceFilters.BetweenDateSeekType seek_type, javax.swing.text.Document from, javax.swing.text.Document to) {
+        super(filter, seek_type);
+        this.from = from;
+        this.to = to;
+      }
+
+      @Override
+      protected void setSeekValue(DocumentEvent e) {
+        java.util.Date from_date;
+        try {
+          from_date = FormatFactory.DATE_FORMAT.parse(getText(from));
+        } catch (ParseException ex) {
+          //from_date = Calendar.getInstance().getTime();
+          from_date = null;
+        }
+        java.util.Date to_date;
+        try {
+          to_date = FormatFactory.DATE_FORMAT.parse(getText(to));
+        } catch (ParseException ex) {
+          if (from_date == null) {
+            to_date = null;
+          } else {
+            to_date = Calendar.getInstance().getTime();
+          }
+        }
+
+        if (to_date != null) {
+          java.util.Calendar calendar = Calendar.getInstance();
+          calendar.setTime(to_date);
+          calendar.set(java.util.Calendar.HOUR_OF_DAY, 23);
+          calendar.set(java.util.Calendar.MINUTE, 59);
+          calendar.set(java.util.Calendar.SECOND, 59);
+          calendar.set(java.util.Calendar.MILLISECOND, 0);
+          to_date = calendar.getTime();
+        }
+
+        if (from_date == null && to_date != null) {
+          from_date = new java.util.Date(0);
+        }
+
+        java.util.List<java.util.Date> value = new ArrayList<java.util.Date>(2);
+        value.add(from_date);
+        value.add(to_date);
+
+        schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
+      }
+    }
   }
 
   public final static class IntegerSeekType extends AbstractSeekType<java.lang.Integer> {
@@ -746,6 +823,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public SifrantSeekType(String field, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined) {
       this(new SeekType(field, UPPER_EQUALS, 1), sifrantSkupina, sifrantOpis, textNotDefined);
     }
+
     public SifrantSeekType(AbstractSeekType<String> seekType, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined) {
       super("", PREFORMATTED, 1);
 
@@ -789,7 +867,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       this.sifrantOpis = null;
       this.textNotDefined = null;
     }
-
     private final String textNotDefined;
 
     /**
@@ -873,8 +950,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       seekType.setSeekType(i);
       return super.setSeekType(i);
     }
-
-
     /**
      * Holds value of property caseSensitive.
      */
@@ -911,7 +986,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public abstract static class InnerJoinSeekType<T> extends AbstractSeekType<T> {
 
-    protected  static final String pattern = " {0} {1}\n " + " ON ( {2} {3} )";
+    protected static final String pattern = " {0} {1}\n " + " ON ( {2} {3} )";
     protected String joinType;
     protected String joinTable;
     protected String joinCondition;
@@ -929,7 +1004,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     @Override
     public StringBuilder getSQLSegment() {
-      return new StringBuilder(MessageFormat.format(pattern, getJoinType(), getJoinTable(), getJoinCondition(),getJoinSearchCondition()));
+      return new StringBuilder(MessageFormat.format(pattern, getJoinType(), getJoinTable(), getJoinCondition(), getJoinSearchCondition()));
     }
 
     public CharSequence getJoinSearchCondition() {
@@ -962,7 +1037,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public String getJoinTable() {
       return joinTable;
     }
-
     private boolean caseSensitive = false;
 
     /**
