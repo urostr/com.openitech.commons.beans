@@ -31,10 +31,10 @@ import javax.swing.text.JTextComponent;
 
 /**
  * This is a basic implementation of the <code>ComboPopup</code> interface.
- * 
+ *
  * This class represents the ui for the popup portion of the combo box.
  * <p>
- * All event handling is handled by listener classes created with the 
+ * All event handling is handled by listener classes created with the
  * <code>createxxxListener()</code> methods and internal classes.
  * You can change the behavior of this class by overriding the
  * <code>createxxxListener()</code> methods and supplying your own
@@ -98,6 +98,7 @@ public class AutoCompleteTextComponentPopup extends JPopupMenu implements ComboP
    * longer used.
    */
   protected boolean valueIsAdjusting = false;
+
   // Listeners that are required by the ComboPopup interface
   /**
    * Implementation of all the listener classes.
@@ -134,6 +135,7 @@ public class AutoCompleteTextComponentPopup extends JPopupMenu implements ComboP
    * @see #createListSelectionListener
    */
   protected ListSelectionListener listSelectionListener;
+
   // Listeners that are attached to the list
   /**
    * This protected field is implementation specific. Do not access directly
@@ -149,6 +151,7 @@ public class AutoCompleteTextComponentPopup extends JPopupMenu implements ComboP
    * @see #createListMouseMotionListener
    */
   protected MouseMotionListener listMouseMotionListener;
+
   // Added to the combo box for bound properties
   /**
    * This protected field is implementation specific. Do not access directly
@@ -157,6 +160,7 @@ public class AutoCompleteTextComponentPopup extends JPopupMenu implements ComboP
    * @see #createPropertyChangeListener
    */
   protected PropertyChangeListener propertyChangeListener;
+
   // Added to the combo box model
   /**
    * This protected field is implementation specific. Do not access directly
@@ -182,6 +186,7 @@ public class AutoCompleteTextComponentPopup extends JPopupMenu implements ComboP
   protected int scrollDirection = SCROLL_UP;
   protected static final int SCROLL_UP = 0;
   protected static final int SCROLL_DOWN = 1;
+
 
   //========================================
   // begin ComboPopup method implementations
@@ -211,28 +216,16 @@ public class AutoCompleteTextComponentPopup extends JPopupMenu implements ComboP
       int i, c;
       Object obj;
 
-      for (i = 0, c = comboBoxModel.getSize();
-              i < c; i++) {
-        obj = comboBoxModel.getElementAt(i);
-        if (obj != null && obj.equals(sObject)) {
+      for (i = 0      ,
+        c = comboBoxModel.getSize();
+         i < c;i++ ) {
+            obj = comboBoxModel.getElementAt(i);
+            if ( obj != null && obj.equals(sObject)) {
           return i;
         }
       }
       return -1;
     }
-  }
-
-  public int getMatch(String tekst) {
-    Object obj = null;
-    tekst = tekst.toUpperCase();
-    int c = comboBoxModel.getSize();
-    for (int i = 0; i < c; i++) {
-      obj = comboBoxModel.getElementAt(i);
-      if (obj != null && obj.toString().toUpperCase().startsWith(tekst)) {
-        return i;
-      }
-    }
-    return -1;
   }
 
   /**
@@ -1463,6 +1456,7 @@ public class AutoCompleteTextComponentPopup extends JPopupMenu implements ComboP
       }
     }
   }
+
   //
   // end Utility methods
   //=================================================================
