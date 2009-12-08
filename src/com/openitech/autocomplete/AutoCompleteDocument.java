@@ -156,9 +156,9 @@ public class AutoCompleteDocument implements StyledDocument {
         setSelectedItem(lookupResult.matchingItem, lookupResult.matchingString);
       }
     }
-    /*setText(lookupResult.matchingString);
+    setText(lookupResult.matchingString);
     // select the completed part
-    adaptor.markText(offs+str.length()); //*/
+    adaptor.markText(offs+str.length());
   }
   
   /**

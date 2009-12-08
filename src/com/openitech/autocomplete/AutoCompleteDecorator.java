@@ -25,6 +25,7 @@ import com.openitech.db.FieldObserver;
 import com.openitech.db.model.DbDataSource;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -201,7 +202,7 @@ public class AutoCompleteDecorator {
     final AbstractAutoCompleteAdaptor adaptor = new ComboBoxAdaptor(comboBox);
     final AutoCompleteDocument document = new AutoCompleteDocument(adaptor, strictMatching,
             stringConverter, editorComponent.getDocument());
-    decorate(editorComponent, document, adaptor);
+    decorate(comboBox, editorComponent, document, adaptor);
 
     //remove old key listener
     removeKeyListener(editorComponent);
@@ -219,9 +220,10 @@ public class AutoCompleteDecorator {
         // don't popup if the combobox isn't visible anyway
         if (comboBox.isDisplayable() && !comboBox.isPopupVisible()) {
           // don't popup when the user hits shift,ctrl or alt
+
           if (keyCode == KeyEvent.VK_SHIFT || keyCode == KeyEvent.VK_CONTROL || keyCode == KeyEvent.VK_ALT) {
             return;
-          // don't popup when the user hits escape (see issue #311)
+            // don't popup when the user hits escape (see issue #311)
           }
           if (keyCode == KeyEvent.VK_ESCAPE) {
             return;
@@ -232,8 +234,9 @@ public class AutoCompleteDecorator {
         //confirm selection and close popup
         if (comboBox.isPopupVisible() && (keyCode == KeyEvent.VK_ENTER)) {
           try {
+            String text = document.getText(0, document.getLength());
             document.remove(0, document.getLength());
-            document.insertString(0, stringConverter.getPreferredStringForItem(comboBox.getSelectedItem()), null);
+            document.insertString(0, text, null);
           } catch (BadLocationException e) {
             throw new RuntimeException(e.toString());
           }
@@ -264,9 +267,9 @@ public class AutoCompleteDecorator {
         if (editor != null && editor.getEditorComponent() != null) {
           if (!(editor instanceof AutoCompleteComboBoxEditor) && stringConverter != ObjectToStringConverter.DEFAULT_IMPLEMENTATION) {
             comboBox.setEditor(new AutoCompleteComboBoxEditor(editor, stringConverter));
-          // Don't do the decorate step here because calling setEditor will trigger
-          // the propertychange listener a second time, which will do the decorate
-          // and addKeyListener step.
+            // Don't do the decorate step here because calling setEditor will trigger
+            // the propertychange listener a second time, which will do the decorate
+            // and addKeyListener step.
           } else {
             decorate((JTextComponent) editor.getEditorComponent(), document, adaptor);
             editor.getEditorComponent().addKeyListener(keyListener);
@@ -417,7 +420,7 @@ public class AutoCompleteDecorator {
             // don't popup when the user hits shift,ctrl or alt
             if (keyCode == KeyEvent.VK_SHIFT || keyCode == KeyEvent.VK_CONTROL || keyCode == KeyEvent.VK_ALT) {
               return;
-            // don't popup when the user hits escape (see issue #311)
+              // don't popup when the user hits escape (see issue #311)
             }
             if (keyCode == KeyEvent.VK_ESCAPE) {
               return;
@@ -464,7 +467,7 @@ public class AutoCompleteDecorator {
           if (canUpdate) {
             String text;
             if ((autoCompleteModel.getSize() > 0) &&
-                    ((text=autoCompleteModel.getElementAt(0).toString()).toLowerCase().startsWith(textComponent.getText().toLowerCase()))) {
+                    ((text = autoCompleteModel.getElementAt(0).toString()).toLowerCase().startsWith(textComponent.getText().toLowerCase()))) {
               if (autoCompleteModel.getSelectedItem() == null) {
                 autoCompletePopUp.setListSelection(0);
               }
@@ -496,6 +499,118 @@ public class AutoCompleteDecorator {
         }
       }
     });
+  }
+
+  private static void decorate(final JComboBox comboBox, final JTextComponent textComponent, AutoCompleteDocument document, final AbstractAutoCompleteAdaptor adaptor) {
+    // install the document on the text component
+    textComponent.setDocument(document);
+
+    // Tweak some key bindings
+    InputMap editorInputMap = textComponent.getInputMap();
+    ActionMap editorActionMap = textComponent.getActionMap();
+
+    if (document.isStrictMatching()) {
+      // move the selection to the left on VK_BACK_SPACE
+      editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_BACK_SPACE, 0), DefaultEditorKit.selectionBackwardAction);
+      // ignore VK_DELETE and CTRL+VK_X and beep instead when strict matching
+      editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0), errorFeedbackAction);
+      editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_DOWN_MASK), errorFeedbackAction);
+    } else {
+      // leave VK_DELETE and CTRL+VK_X as is
+      // VK_BACKSPACE will move the selection to the left if the selected item is in the list
+      // it will delete the previous character otherwise
+      editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_BACK_SPACE, 0), "nonstrict-backspace");
+      editorActionMap.put("nonstrict-backspace", new NonStrictBackspaceAction(
+              editorActionMap.get(DefaultEditorKit.deletePrevCharAction),
+              editorActionMap.get(DefaultEditorKit.selectionBackwardAction),
+              adaptor));
+    }
+
+    //  if (textComponent instanceof AutoCompleteTextComponent) {
+    //remove old key listener
+    //  removeKeyListener(textComponent);
+
+    final ComboBoxModel autoCompleteModel = comboBox.getModel();
+    final AutoCompleteTextComponentPopup autoCompletePopUp = new AutoCompleteTextComponentPopup(textComponent, autoCompleteModel);
+
+    editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DOWN, 0), "select-autocomplete-nextitem");
+    editorActionMap.put("select-autocomplete-nextitem", new TextAction("select-autocomplete-nextitem") {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if (autoCompleteModel.getSize() > 0) {
+          if (!autoCompletePopUp.isVisible()) {
+            autoCompletePopUp.show();
+          } else {
+            autoCompletePopUp.setListSelection(autoCompletePopUp.getListSelection() + 1);
+          }
+
+          int caret = textComponent.getCaretPosition();
+          textComponent.setText(autoCompletePopUp.getSelectedText());
+
+          int length = textComponent.getText().length();
+          textComponent.getCaret().setDot(length);
+          textComponent.getCaret().moveDot(Math.min(caret, length));
+
+          autoCompletePopUp.requestFocus(true);
+        }
+      }
+    });
+
+    editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_UP, 0), "select-autocomplete-previousitem");
+    editorActionMap.put("select-autocomplete-previousitem", new TextAction("select-autocomplete-previousitem") {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if (autoCompleteModel.getSize() > 0) {
+          if (autoCompletePopUp.getListSelection() > 0) {
+            if (!autoCompletePopUp.isVisible()) {
+              autoCompletePopUp.show();
+            } else {
+              autoCompletePopUp.setListSelection(autoCompletePopUp.getListSelection() - 1);
+            }
+
+            int caret = textComponent.getCaretPosition();
+            textComponent.setText(autoCompletePopUp.getSelectedText());
+            int length = textComponent.getText().length();
+            textComponent.getCaret().setDot(length);
+            textComponent.getCaret().moveDot(Math.min(caret, length));
+
+            autoCompletePopUp.requestFocus(true);
+          } else {
+            if (autoCompletePopUp.isVisible()) {
+              autoCompletePopUp.hide();
+            }
+          }
+        }
+      }
+    });
+
+    //remove old focus listener
+
+    removeFocusListener(textComponent);
+
+
+
+    final FocusListener focusListener = new AutoCompleteFocusAdapter() {
+
+      /**
+       * Invoked when a component loses the keyboard focus.
+       */
+      @Override
+      public void focusLost(java.awt.event.FocusEvent evt) {
+        autoCompletePopUp.hide();
+      }
+
+      // mark entire text when the text component gains focus
+      // otherwise the last mark would have been retained which is quiet confusing
+      @Override
+      public void focusGained(FocusEvent e) {
+        adaptor.markEntireText();
+      }
+    };
+    textComponent.addFocusListener(focusListener);
+
   }
 
   static class NonStrictBackspaceAction extends TextAction {
