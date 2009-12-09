@@ -14,6 +14,7 @@ SELECT
     CASE WHEN ActivityEventsPolja.[ShowInTable] IS NOT NULL THEN ActivityEventsPolja.[ShowInTable] ELSE SifrantiPolja.[ShowInTable] END AS [ShowInTable],
     SifrantiPolja.[PrimaryKey],
     CASE WHEN ActivityEventsPolja.[UporabiPrivzetoVrednost] IS NOT NULL THEN ActivityEventsPolja.[UporabiPrivzetoVrednost] ELSE SifrantiPolja.[UporabiPrivzetoVrednost] END AS [UporabiPrivzetoVrednost],
+    CASE WHEN ActivityEventsPolja.[OpisNadVnosom] IS NOT NULL THEN ActivityEventsPolja.[OpisNadVnosom] ELSE SifrantiPolja.[OpisNadVnosom] END AS [OpisNadVnosom],
     CASE WHEN ActivityEventsPolja.[FieldActions] IS NOT NULL THEN ActivityEventsPolja.[FieldActions] ELSE SifrantiPolja.[FieldActions] END AS [FieldActions],
     CASE WHEN ActivityEventsPolja.[ReadOnly] IS NOT NULL THEN ActivityEventsPolja.[ReadOnly] ELSE SifrantiPolja.[ReadOnly] END AS [ReadOnly],
     CASE WHEN ActivityEventsPolja.[LastValueOnly] IS NOT NULL THEN ActivityEventsPolja.[LastValueOnly] ELSE SifrantiPolja.[LastValueOnly] END AS [LastValueOnly],
