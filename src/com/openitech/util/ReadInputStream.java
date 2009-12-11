@@ -1,6 +1,7 @@
 package com.openitech.util;
 
 import com.openitech.Settings;
+import com.openitech.sql.util.SqlUtilities;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +89,7 @@ public class ReadInputStream {
 
       for (String sql : sqls) {
         if (sql.trim().length() > 0 && !sql.startsWith("--")) {
-          result.add(sql.trim());
+          result.add(sql.trim().replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB)));
         }
       }
       return result.toArray(new String[result.size()]);
