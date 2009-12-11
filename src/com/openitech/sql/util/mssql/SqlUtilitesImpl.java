@@ -960,6 +960,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
               }
               break;
             case 4:
+            case 8:
+            case 9:
+            case 10:
               //Date
               sb.append(val_alias).append(".DateValue = ? ");
               if (resultFields.contains(f)) {
@@ -1027,6 +1030,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
             sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
             break;
           case 4:
+          case 8:
+          case 9:
+          case 10:
             //Date
             sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
             break;
