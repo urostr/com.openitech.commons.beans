@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,6 +40,10 @@ public abstract class SqlUtilities {
   private static final Map<String, Class<? extends SqlUtilities>> implementations = new HashMap<String, Class<? extends SqlUtilities>>();
   private static SqlUtilities instance;
   private boolean autocommit;
+  public static Properties DATABASES = new Properties();
+  public static final String CHANGE_LOG_DB = "[ChangeLog]";
+  public static final String RPP_DB = "[RPP]";
+  public static final String RPE_DB = "[RPE]";
 
   protected SqlUtilities() {
   }
