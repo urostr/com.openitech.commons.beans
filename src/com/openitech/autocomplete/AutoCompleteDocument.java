@@ -158,7 +158,9 @@ public class AutoCompleteDocument implements StyledDocument {
     }
     setText(lookupResult.matchingString);
     // select the completed part
-    adaptor.markText(offs+str.length());
+    if (str!=null) {
+      adaptor.markText(offs+str.length());
+    }
   }
   
   /**
