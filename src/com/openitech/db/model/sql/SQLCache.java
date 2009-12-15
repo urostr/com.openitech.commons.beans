@@ -4,6 +4,7 @@
  */
 package com.openitech.db.model.sql;
 
+import com.openitech.CaseInsensitiveString;
 import com.openitech.CollectionKey;
 import com.openitech.db.ConnectionManager;
 import com.sun.rowset.CachedRowSetImpl;
@@ -27,18 +28,32 @@ import javax.sql.rowset.CachedRowSet;
  * @author uros
  */
 public class SQLCache implements Serializable {
+  private static SQLCache instance;
 
-  private static final long TTL = 15000; //15s
-  private static transient Map<CollectionKey<Object>, PreparedStatement> sharedStatements = new ConcurrentHashMap<CollectionKey<Object>, PreparedStatement>();
-  private static Map<CollectionKey<Object>, SharedEntry> sharedResults = new ConcurrentHashMap<CollectionKey<Object>, SharedEntry>();
+  private long ttl = 15000; //15s
+  private transient Map<CollectionKey<Object>, PreparedStatement> sharedStatements = new ConcurrentHashMap<CollectionKey<Object>, PreparedStatement>();
+  private Map<CollectionKey<Object>, SharedEntry> sharedResults = new ConcurrentHashMap<CollectionKey<Object>, SharedEntry>();
 
-  public static CachedRowSet getSharedResult(String query, List<Object> parameters, boolean reload, long TTL) throws SQLException {
-    CollectionKey<Object> key = new CollectionKey<Object>(parameters.size() + 2);
-    key.add(query);
-    key.addAll(parameters);
+  public SQLCache() {
 
+  }
+
+  public static final SQLCache getInstance() {
+    if (instance==null) {
+      instance = new SQLCache();
+    }
+    return instance;
+  }
+
+  protected void clearSharedResults() {
+    sharedResults.clear();
+  }
+
+  public CachedRowSet getSharedResult(String query, List<Object> parameters, boolean reload, long TTL) throws SQLException {
     SharedEntry result = new SharedEntry(null, query, parameters, TTL);
-    if (sharedResults.containsKey(result.entryKey)) {
+
+    CollectionKey<Object> key = result.entryKey;
+    if (sharedResults.containsKey(key)) {
       result = sharedResults.get(key);
     } else {
       sharedResults.put(key, result);
@@ -47,7 +62,7 @@ public class SQLCache implements Serializable {
     return result.getEntry(reload);
   }
 
-  public static PreparedStatement getSharedStatement(Connection connection, String query) throws SQLException {
+  public PreparedStatement getSharedStatement(Connection connection, String query) throws SQLException {
     CollectionKey<Object> statementKey = new CollectionKey<Object>(2);
     statementKey.add(connection);
     statementKey.add(query);
@@ -69,12 +84,12 @@ public class SQLCache implements Serializable {
     return statement;
   }
 
-  public static ResultSet getSharedResult(String query, List<Object> parameters) throws SQLException {
-    return getSharedResult(query, parameters, false, TTL);
+  public ResultSet getSharedResult(String query, List<Object> parameters) throws SQLException {
+    return getSharedResult(query, parameters, false, ttl);
   }
 
-  public static ResultSet getSharedResult(String query, List<Object> parameters, boolean reload) throws SQLException {
-    return getSharedResult(query, parameters, reload, TTL);
+  public ResultSet getSharedResult(String query, List<Object> parameters, boolean reload) throws SQLException {
+    return getSharedResult(query, parameters, reload, ttl);
   }
 
   public static class SharedEntry implements Serializable {
@@ -92,6 +107,7 @@ public class SQLCache implements Serializable {
     public SharedEntry(Connection connection, String query, List<Object> parameters, long ttl) throws SQLException {
       this.connection = connection;
       this.query = query;
+      this.ttl = ttl;
 
       statementKey = new CollectionKey<Object>(2);
       if (connection != null) {
@@ -125,7 +141,7 @@ public class SQLCache implements Serializable {
 
       entryKey = new CollectionKey<Object>(target.size() + 1);
 
-      entryKey.add(query);
+      entryKey.add(new CaseInsensitiveString(query));
       entryKey.addAll(target);
 
       this.parameters = Collections.unmodifiableList(target);
@@ -179,8 +195,12 @@ public class SQLCache implements Serializable {
       return result;
     }
 
-    protected boolean isValid(long TTL) {
-      return TTL > (System.currentTimeMillis() - timestamp);
+    protected boolean isValid(long ttl) {
+      if (ttl<0) {
+        return true;
+      } else {
+        return ttl > (System.currentTimeMillis() - timestamp);
+      }
     }
   }
 }

@@ -95,6 +95,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   private transient PreparedStatement selectStatement;
   private transient PreparedStatement countStatement;
   private transient Map<String, PreparedStatement> cachedStatements = new HashMap<String, PreparedStatement>();
+  private transient SQLCache sqlCache;
   /**
    * Holds value of property uniqueID.
    */
@@ -2610,6 +2611,22 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  protected SQLCache getSqlCache() {
+    if (owner.getSharing()==DbDataSource.SHARING_GLOBAL) {
+      return SQLCache.getInstance();
+    } else if (sqlCache == null) {
+      sqlCache = new SQLCache();
+    }
+    return sqlCache;
+  }
+
+  @Override
+  public void clearSharedResults() {
+    if (owner.getSharing()==DbDataSource.SHARING_LOCAL) {
+      getSqlCache().clearSharedResults();
+    }
+  }
+
   protected void createCurrentResultSet() {
     try {
       Connection connection = getConnection();
@@ -2620,7 +2637,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           System.out.println(preparedSelectSql);
         }
         long timer = System.currentTimeMillis();
-        currentResultSet = new CurrentResultSet(owner.isShareResults() ? SQLCache.getSharedResult(preparedSelectSql, owner.getParameters()) : executeSql(getSelectStatement(preparedSelectSql, connection), owner.getParameters()));
+        currentResultSet = new CurrentResultSet(owner.isShareResults() ? getSqlCache().getSharedResult(preparedSelectSql, owner.getParameters()) : executeSql(getSelectStatement(preparedSelectSql, connection), owner.getParameters()));
         System.out.println(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
         if (DbDataSource.DUMP_SQL) {
           System.out.println("##############");
@@ -3877,7 +3894,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                   }
                   Connection connection = getConnection();
                   try {
-                    ResultSet rs = owner.isShareResults() ? SQLCache.getSharedResult(preparedCountSql, owner.getParameters()) : executeSql(getCountStatement(preparedCountSql, connection), owner.getParameters());
+                    ResultSet rs = owner.isShareResults() ? getSqlCache().getSharedResult(preparedCountSql, owner.getParameters()) : executeSql(getCountStatement(preparedCountSql, connection), owner.getParameters());
                     if (DbDataSource.DUMP_SQL) {
                       System.out.println("##############");
                     }
@@ -4394,7 +4411,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
     ResultSet result;
     if (owner.isShareResults()) {
-      result = SQLCache.getSharedResult(preparedSelectSql, owner.getParameters());
+      result = getSqlCache().getSharedResult(preparedSelectSql, owner.getParameters());
     } else {
       final Connection connection = getConnection();
       try {
@@ -4467,6 +4484,12 @@ public class SQLDataSource implements DbDataSourceImpl {
     return rowInserted() || rowUpdated();
   }
 
+  @Override
+  public boolean isRefreshPending() {
+    return this.refreshPending;
+  }
+
+  @Override
   public void updateRefreshPending() {
     boolean refreshPending = DataSourceEvent.isRefreshing(owner);
     if (this.refreshPending != refreshPending) {

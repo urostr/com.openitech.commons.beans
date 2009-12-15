@@ -86,6 +86,11 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public final static String LOAD_DATA = "loadData";
   public final static String DATA_LOADED = "dataLoaded";
   public final static long DEFAULT_QUEUED_DELAY = 108;
+
+  public final static int SHARING_OFF = 0;
+  public final static int SHARING_GLOBAL = 1;
+  public final static int SHARING_LOCAL = 2;
+
   private String componentName;
   private transient WeakListenerList activeRowChangeListeners;
   private transient WeakListenerList storeUpdatesListeners;
@@ -111,7 +116,6 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   private final ReentrantLock available = new ReentrantLock();
   private long queuedDelay = DEFAULT_QUEUED_DELAY;
   private boolean reloadsOnEventQueue = false;
-  private boolean shareResults = false;
   private boolean cacheStatements = true;
   private boolean cacheRowSet = true;
   private boolean autoInsert = false;
@@ -187,13 +191,37 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     this.connectOnDemand = connectOnDemand;
   }
 
+  public void clearSharedResults() {
+    implementation.clearSharedResults();
+  }
+  
+  private int sharing;
+
+  /**
+   * Get the value of sharing type (SHARING_OFF = 0, SHARING_GLOBAL = 1, SHARING_LOCAL = 2)
+   *
+   * @return the value of sharing
+   */
+  public int getSharing() {
+    return sharing;
+  }
+
+  /**
+   * Set the value of sharing type (SHARING_OFF = 0, SHARING_GLOBAL = 1, SHARING_LOCAL = 2)
+   *
+   * @param sharing new value of sharing
+   */
+  public void setSharing(int sharing) {
+    this.sharing = sharing;
+  }
+
   /**
    * Get the value of shareResults
    *
    * @return the value of shareResults
    */
   public boolean isShareResults() {
-    return shareResults;
+    return sharing>0;
   }
 
   /**
@@ -202,8 +230,9 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
    * @param shareResults new value of shareResults
    */
   public void setShareResults(boolean shareResults) {
-    this.shareResults = shareResults;
+    sharing = shareResults?SHARING_GLOBAL:SHARING_OFF;
   }
+  
   private boolean safeMode = true;
 
   /**
@@ -3325,6 +3354,10 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     implementation.updateRefreshPending();
   }
 
+  public boolean isRefreshPending() {
+    return implementation.isRefreshPending();
+  }
+
   public Map<Integer, Map<String, Object>> getStoredUpdates() {
     return implementation.getStoredUpdates();
   }
@@ -4565,6 +4598,32 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     protected boolean automaticReload = false;
 
     public SqlParameter() {
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final SqlParameter<T> other = (SqlParameter<T>) obj;
+      if (this.type != other.type) {
+        return false;
+      }
+      if (this.value != other.value && (this.value == null || !this.value.equals(other.value))) {
+        return false;
+      }
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 5;
+      hash = 29 * hash + this.type;
+      hash = 29 * hash + (this.value != null ? this.value.hashCode() : 0);
+      return hash;
     }
 
     public SqlParameter(int type, T value) {

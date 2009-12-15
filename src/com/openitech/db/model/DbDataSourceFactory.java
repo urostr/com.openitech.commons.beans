@@ -62,6 +62,7 @@ public class DbDataSourceFactory {
   }
 
   public static interface DbDataSourceImpl extends javax.sql.RowSet {
+    public void clearSharedResults();
 
     public void doDeleteRow() throws SQLException;
 
@@ -154,6 +155,8 @@ public class DbDataSourceFactory {
     public void setReadOnly(boolean readOnly);
 
     public boolean isReadOnly();
+
+    public boolean isRefreshPending();
 
   }
 }

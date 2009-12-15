@@ -129,7 +129,7 @@ public class CollectionKey<E> implements Collection<E> {
     calculateHash();
   }
 
-  private void calculateHash() {
+  private final void calculateHash() {
     int hash = 7;
     for (E value : this.values) {
       hash = 23 * hash + (value == null ? 0 : value.hashCode());
