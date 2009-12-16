@@ -48,29 +48,31 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
    * Creates new form JPIzbiraNaslova
    */
   public JPIzbiraNaslova() throws SQLException {
-    dbDataModel.initDataSources();
+    boolean init = dbDataModel.initDataSources();
     initComponents();
 
-    jtfUlice.addCaretListener(new FilterDocumentCaretListener(jtfUlice.getDocument(), dbDataModel.dsUliceFilter, dbDataModel.dsUliceFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
-    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsHisneStevilkeFilter, dbDataModel.dsHisneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
-    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
-    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
-    jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
+    if (init) {
+      jtfUlice.addCaretListener(new FilterDocumentCaretListener(jtfUlice.getDocument(), dbDataModel.dsUliceFilter, dbDataModel.dsUliceFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
+      jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsHisneStevilkeFilter, dbDataModel.dsHisneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
+      jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
+      jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
+      jtfUlice.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_UL_IME, DEFAULT_DELAY));
 
-    jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPosteFilter, DEFAULT_DELAY));
-    jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPostneStevilkeFilter, DEFAULT_DELAY));
-    jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsNaseljaFilter, DEFAULT_DELAY));
+      jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPosteFilter, DEFAULT_DELAY));
+      jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsPostneStevilkeFilter, DEFAULT_DELAY));
+      jtfHisnaStevilka.getDocument().addDocumentListener(new HisnaFilterDocumentListener(dbDataModel.dsNaseljaFilter, DEFAULT_DELAY));
 
-    jtfPostnaStevilka.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_PT_ID, DEFAULT_DELAY));
+      jtfPostnaStevilka.getDocument().addDocumentListener(new FilterDocumentListener(dbDataModel.dsNaseljaFilter, dbDataModel.dsNaseljaFilter.I_TYPE_PT_ID, DEFAULT_DELAY));
 
-    flDsPostneStevilePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
-    flPosta = new FilterDocumentCaretListener(jtfPosta.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_IME, DEFAULT_DELAY);
+      flDsPostneStevilePostnaStevilka = new FilterDocumentCaretListener(jtfPostnaStevilka.getDocument(), dbDataModel.dsPostneStevilkeFilter, dbDataModel.dsPostneStevilkeFilter.I_TYPE_PT_ID, DEFAULT_DELAY);
+      flPosta = new FilterDocumentCaretListener(jtfPosta.getDocument(), dbDataModel.dsPosteFilter, dbDataModel.dsPosteFilter.I_TYPE_PT_IME, DEFAULT_DELAY);
 
-    dbDataModel.dsUlice.setReloadsOnEventQueue(false);
-    dbDataModel.dsNaselja.setReloadsOnEventQueue(false);
-    dbDataModel.dsHisneStevilke.setReloadsOnEventQueue(false);
-    dbDataModel.dsPoste.setReloadsOnEventQueue(false);
-    dbDataModel.dsPostneStevilke.setReloadsOnEventQueue(false);
+      dbDataModel.dsUlice.setReloadsOnEventQueue(false);
+      dbDataModel.dsNaselja.setReloadsOnEventQueue(false);
+      dbDataModel.dsHisneStevilke.setReloadsOnEventQueue(false);
+      dbDataModel.dsPoste.setReloadsOnEventQueue(false);
+      dbDataModel.dsPostneStevilke.setReloadsOnEventQueue(false);
+    }
   }
 
   public DbDataSource getDataSource() {
@@ -870,7 +872,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
       String text = hshd.toString();
 
       FieldValue[] hshd_v = Naslov.splitHS_HD(text, new FieldValue(cnHisnaStevilka, dataSource.getType(cnHisnaStevilka), null),
-                                                  new FieldValue("HD", java.sql.Types.VARCHAR, null));
+              new FieldValue("HD", java.sql.Types.VARCHAR, null));
       result.hisnaStevilka = hshd_v[0];
       result.hisnaStevilkaDodatek = hshd_v[1];
     }

@@ -22,15 +22,15 @@ import javax.sql.rowset.CachedRowSet;
 public class DbNaslovDataModel {
 
   public final DbDataSource dsUlice = new DbDataSource();
-  protected final DsFilterRPE dsUliceFilter = new DsFilterRPE("<%filter_ulice%>");
+  protected DsFilterRPE dsUliceFilter;
   public final DbDataSource dsHisneStevilke = new DbDataSource();
-  protected final DsFilterRPE dsHisneStevilkeFilter = new DsFilterRPE("<%filter_hs%>");
+  protected DsFilterRPE dsHisneStevilkeFilter;
   public final DbDataSource dsPoste = new DbDataSource();
-  protected final DsFilterRPE dsPosteFilter = new DsFilterRPE("<%filter_pt%>");
+  protected DsFilterRPE dsPosteFilter;
   public final DbDataSource dsPostneStevilke = new DbDataSource();
-  protected final DsFilterRPE dsPostneStevilkeFilter = new DsFilterRPE("<%filter_pt%>");
+  protected DsFilterRPE dsPostneStevilkeFilter;
   protected final DbDataSource dsNaselja = new DbDataSource();
-  public final DsFilterRPE dsNaseljaFilter = new DsFilterRPE("<%filter_na%>");
+  public DsFilterRPE dsNaseljaFilter;
   public final DbDataSource dsMIDs = new DbDataSource();
   private PreparedStatement findHS_MID_1 = null;
   private PreparedStatement findHS_MID_2 = null;
@@ -44,30 +44,29 @@ public class DbNaslovDataModel {
   private static String getDialect() {
     if (dialect == null) {
       dialect = ConnectionManager.getInstance().getDialect();
-      if (dialect.length() > 0 && !dialect.endsWith("/")) {
+      if (dialect != null && dialect.length() > 0 && !dialect.endsWith("/")) {
         dialect = dialect + "/";
       }
     }
     return dialect;
   }
 
-  public DbNaslovDataModel() throws SQLException {
+  public DbNaslovDataModel() {
     super();
-    final String dialect = getDialect();
-    final Connection connection = ConnectionManager.getInstance().getConnection();
-    try {
-      selectHsMid = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "get_from_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-    } catch (NullPointerException ex) {
-      if (dialect.length() > 0) {
-        throw (IllegalStateException) (new IllegalStateException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
-      }
-    }
   }
 
-  protected void initDataSources() throws SQLException {
-    final String dialect = getDialect();
-    final Connection connection = ConnectionManager.getInstance().getConnection();
+  protected boolean initDataSources() throws SQLException {
+    boolean result = false;
     try {
+      final String dialect = getDialect();
+      final Connection connection = ConnectionManager.getInstance().getConnection();
+
+      dsUliceFilter = new DsFilterRPE("<%filter_ulice%>");
+      dsHisneStevilkeFilter = new DsFilterRPE("<%filter_hs%>");
+      dsPosteFilter = new DsFilterRPE("<%filter_pt%>");
+      dsPostneStevilkeFilter = new DsFilterRPE("<%filter_pt%>");
+      dsNaseljaFilter = new DsFilterRPE("<%filter_na%>");
+
       dsUliceFilter.setFilterRequired(true);
       dsUliceFilter.addRequired(dsUliceFilter.I_TYPE_UL_IME);
       dsUliceFilter.addRequired(dsUliceFilter.I_TYPE_NA_IME);
@@ -165,12 +164,15 @@ public class DbNaslovDataModel {
       dsNaselja.setFetchSize(108);
 //        dsNaselja.setQueuedDelay(54);
       dsNaseljaFilter.addDataSource(dsNaselja);
-      selectHsMid = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "get_from_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+
+      result = true;
     } catch (NullPointerException ex) {
-      if (dialect.length() > 0) {
-        throw (IllegalStateException) (new IllegalStateException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
+      if (dialect!=null && dialect.length() > 0) {
+        throw (SQLException) (new SQLException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
       }
     }
+
+    return result;
   }
 
   public void disableFilters(boolean disable) {
@@ -185,6 +187,11 @@ public class DbNaslovDataModel {
     Naslov result = null;
 
     try {
+      if (selectHsMid == null) {
+        final String dialect = getDialect();
+        final Connection connection = ConnectionManager.getInstance().getConnection();
+        selectHsMid = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "get_from_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+      }
       selectHsMid.setInt(1, hs_mid);
       CachedRowSet rsMid = new CachedRowSetImpl();
       rsMid.populate(selectHsMid.executeQuery());
@@ -214,6 +221,11 @@ public class DbNaslovDataModel {
   public Object[] getMids(int hs_mid) {
     Object[] result = null;
     try {
+      if (selectHsMid == null) {
+        final String dialect = getDialect();
+        final Connection connection = ConnectionManager.getInstance().getConnection();
+        selectHsMid = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "sql/" + dialect + "get_from_hs_mid.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+      }
       selectHsMid.setInt(1, hs_mid);
       CachedRowSet rsMid = new CachedRowSetImpl();
       rsMid.populate(selectHsMid.executeQuery());
