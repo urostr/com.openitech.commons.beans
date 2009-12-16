@@ -18,18 +18,18 @@ SELECT
     vval.[ObjectValue],
     vval.[ClobValue]
 FROM
-    [ChangeLog].[dbo].[Events] ev
-INNER JOIN [ChangeLog].[dbo].[EventValues] eval
+    <%ChangeLog%>.[dbo].[Events] ev
+INNER JOIN <%ChangeLog%>.[dbo].[EventValues] eval
 ON
     (
         ev.[Id] = eval.[EventId]
     )
-INNER JOIN [ChangeLog].[dbo].[SifrantVnosnihPolj] polje
+INNER JOIN <%ChangeLog%>.[dbo].[SifrantVnosnihPolj] polje
 ON
     (
         eval.[IdPolja] = polje.[Id]
     )
-LEFT OUTER JOIN [ChangeLog].[dbo].[VariousValues] vval
+LEFT OUTER JOIN <%ChangeLog%>.[dbo].[VariousValues] vval
 ON
     (
         eval.[ValueId] = vval.[Id]

@@ -1,5 +1,5 @@
 UPDATE
-    [ChangeLog].[dbo].[EventValues]
+    <%ChangeLog%>.[dbo].[EventValues]
     SET
     [ValueId]         = ?
 WHERE

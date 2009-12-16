@@ -38,13 +38,13 @@ SELECT
     SifrantVnosnihPolj.[UporabiSifrantXML],
     SifrantVnosnihPolj.[Opombe]
 FROM
-    [ChangeLog].[dbo].[SifrantiPolja] as SifrantiPolja
+    <%ChangeLog%>.[dbo].[SifrantiPolja] as SifrantiPolja
 LEFT OUTER JOIN
-    [ChangeLog].[dbo].SifrantVnosnihPolj as SifrantVnosnihPolj
+    <%ChangeLog%>.[dbo].SifrantVnosnihPolj as SifrantVnosnihPolj
     ON
     SifrantVnosnihPolj.Id = SifrantiPolja.IdPolja
 LEFT OUTER JOIN
-    [ChangeLog].[dbo].SeznamSifrantov
+    <%ChangeLog%>.[dbo].SeznamSifrantov
     ON
     SeznamSifrantov.Id = SifrantVnosnihPolj.[UporabiSifrantIdSifranta]
 LEFT OUTER JOIN (SELECT
@@ -53,8 +53,8 @@ LEFT OUTER JOIN (SELECT
     CASE WHEN ActivityEventsPolja.[TabName] IS NOT NULL THEN ActivityEventsPolja.[TabName] ELSE SifrantiPolja.[TabName] END [TabName],
     MIN(CASE WHEN ActivityEventsPolja.[ZapSt] IS NOT NULL THEN ActivityEventsPolja.[ZapSt] ELSE SifrantiPolja.[ZapSt] END) AS MinZapSt,
     COUNT(*) AS StTabNames
-    FROM [ChangeLog].[dbo].[SifrantiPolja] LEFT OUTER JOIN
-    [ChangeLog].[dbo].[ActivityEventsPolja]
+    FROM <%ChangeLog%>.[dbo].[SifrantiPolja] LEFT OUTER JOIN
+    <%ChangeLog%>.[dbo].[ActivityEventsPolja]
     ON
     ActivityEventsPolja.ActivityId = ? AND
     ActivityEventsPolja.ActivityIdSifranta = ? AND
@@ -72,7 +72,7 @@ GROUP BY
     CountTabNames.[IdSifre] = SifrantiPolja.[IdSifre] AND
     CountTabNames.[TabName] = SifrantiPolja.[TabName])
 LEFT OUTER JOIN
-    [ChangeLog].[dbo].[ActivityEventsPolja]
+    <%ChangeLog%>.[dbo].[ActivityEventsPolja]
     ON
     ActivityEventsPolja.ActivityId = ? AND
     ActivityEventsPolja.ActivityIdSifranta = ? AND

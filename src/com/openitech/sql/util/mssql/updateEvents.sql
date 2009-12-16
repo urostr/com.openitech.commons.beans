@@ -1,5 +1,5 @@
 UPDATE
-    [ChangeLog].[dbo].[Events]
+    <%ChangeLog%>.[dbo].[Events]
     SET
     [IdSifranta]  = ?,
     [IdSifre]     = ?,
