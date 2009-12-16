@@ -10,7 +10,7 @@ SELECT [Id]
             WHEN [FieldType] = 6 THEN [ClobValue]
             ELSE CAST((null) AS VARCHAR)
        END AS [PropertyValue]
-  FROM [ChangeLog].[dbo].[NamedPropertyValues]
-LEFT OUTER JOIN [ChangeLog].[dbo].[VariousValues]
+  FROM <%ChangeLog%>.[dbo].[NamedPropertyValues]
+LEFT OUTER JOIN <%ChangeLog%>.[dbo].[VariousValues]
   ON [VariousValues].[Id] = [NamedPropertyValues].[ValueId]
 WHERE [PropertyType] = ? AND [PropertyName] = ?
