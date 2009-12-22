@@ -62,4 +62,24 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
   public void fieldValueChanged(ActiveRowChangeEvent event) {
     super.setValue(fieldObserver.getValue());
   }
+  
+  private boolean identityField;
+
+  /**
+   * Get the value of indentity
+   *
+   * @return the value of indentity
+   */
+  public boolean isIndentityField() {
+    return identityField;
+  }
+
+  /**
+   * Set the value of indentity
+   *
+   * @param indentity new value of indentity
+   */
+  public void setIndentityField(boolean identityField) {
+    this.identityField = identityField;
+  }
 }

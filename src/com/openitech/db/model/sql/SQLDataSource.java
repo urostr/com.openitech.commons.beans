@@ -2612,7 +2612,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   protected SQLCache getSqlCache() {
-    if (owner.getSharing()==DbDataSource.SHARING_GLOBAL) {
+    if ((owner.getSharing() & DbDataSource.SHARING_GLOBAL) == DbDataSource.SHARING_GLOBAL) {
       return SQLCache.getInstance();
     } else if (sqlCache == null) {
       sqlCache = new SQLCache();
@@ -2622,7 +2622,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   @Override
   public void clearSharedResults() {
-    if (owner.getSharing()==DbDataSource.SHARING_LOCAL) {
+    if ((owner.getSharing() & DbDataSource.SHARING_LOCAL) == DbDataSource.SHARING_LOCAL) {
       getSqlCache().clearSharedResults();
     }
   }
@@ -3872,9 +3872,11 @@ public class SQLDataSource implements DbDataSourceImpl {
       return -1;
     } else {
       if (this.count == -1) {
-        if ((currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
+        if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
+          newCount = 1;
+        } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && (currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
           newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
-        } else if (owner.isCacheRowSet()) {
+        } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && owner.isCacheRowSet()) {
           if (loadData()) {
             return getRowCount();
           } else {
@@ -3894,7 +3896,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                   }
                   Connection connection = getConnection();
                   try {
-                    ResultSet rs = owner.isShareResults() ? getSqlCache().getSharedResult(preparedCountSql, owner.getParameters()) : executeSql(getCountStatement(preparedCountSql, connection), owner.getParameters());
+                    ResultSet rs = owner.isShareResults() && ((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) ? getSqlCache().getSharedResult(preparedCountSql, owner.getParameters()) : executeSql(getCountStatement(preparedCountSql, connection), owner.getParameters());
                     if (DbDataSource.DUMP_SQL) {
                       System.out.println("##############");
                     }
@@ -3995,7 +3997,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         storedUpdates.clear();
         cache.clear();
         pendingValuesCache.clear();
-        for (Object parameter:owner.getParameters()) {
+        for (Object parameter : owner.getParameters()) {
           if (parameter instanceof PendingSqlParameter) {
             ((PendingSqlParameter) parameter).emptyPendingValuesCache();
           }
@@ -4894,7 +4896,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           positioned = openSelectResultSet.first();
         }
 
-        if (owner.isSeekUpdatedRow()&&positioned) {
+        if (owner.isSeekUpdatedRow() && positioned) {
           if (!compareValues(openSelectResultSet, connection, oldValues)) {
             if (openSelectResultSet.first()) {
               while (!compareValues(openSelectResultSet, connection, oldValues) && !openSelectResultSet.isLast()) {

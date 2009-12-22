@@ -90,6 +90,9 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public final static int SHARING_OFF = 0;
   public final static int SHARING_GLOBAL = 1;
   public final static int SHARING_LOCAL = 2;
+  public final static int DISABLE_COUNT_CACHING = 8;
+  public final static int SHARING_SELECT_GLOBAL = SHARING_GLOBAL+DISABLE_COUNT_CACHING;
+  public final static int SHARING_SELECT_LOCAL = SHARING_LOCAL+DISABLE_COUNT_CACHING;
 
   private String componentName;
   private transient WeakListenerList activeRowChangeListeners;
