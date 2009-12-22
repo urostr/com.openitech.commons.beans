@@ -1,3 +1,3 @@
 SELECT * FROM
-SifrantVnosnihPolj
+<%ChangeLog%>.[dbo].SifrantVnosnihPolj
 WHERE SifrantVnosnihPolj.ImePolja = ?

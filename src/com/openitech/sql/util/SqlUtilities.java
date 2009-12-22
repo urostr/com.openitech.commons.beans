@@ -8,7 +8,6 @@ import com.openitech.sql.FieldValue;
 import com.openitech.sql.Field;
 import com.openitech.db.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
-import com.openitech.db.components.JPIzbiraNaslova;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.sql.ValueType;

@@ -189,10 +189,7 @@ public class SQLCache implements Serializable {
         Logger.getLogger(SQLCache.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-      CachedRowSet result = new CachedRowSetImpl();
-      entry.beforeFirst();
-      result.populate(entry);
-      return result;
+      return entry.createCopy();
     }
 
     protected boolean isValid(long ttl) {
