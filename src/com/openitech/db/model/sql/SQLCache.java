@@ -181,6 +181,7 @@ public class SQLCache implements Serializable {
               }
             }
             timestamp = System.currentTimeMillis();
+            System.out.println("Reloading cache entry");
           }
         } finally {
           lock.release();

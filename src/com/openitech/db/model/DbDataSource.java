@@ -4603,32 +4603,6 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     public SqlParameter() {
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      final SqlParameter<T> other = (SqlParameter<T>) obj;
-      if (this.type != other.type) {
-        return false;
-      }
-      if (this.value != other.value && (this.value == null || !this.value.equals(other.value))) {
-        return false;
-      }
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      int hash = 5;
-      hash = 29 * hash + this.type;
-      hash = 29 * hash + (this.value != null ? this.value.hashCode() : 0);
-      return hash;
-    }
-
     public SqlParameter(int type, T value) {
       this.type = type;
       this.value = value;
