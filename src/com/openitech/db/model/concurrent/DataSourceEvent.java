@@ -97,6 +97,10 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
     Future task = tasks.get(new Event(dataSource, Event.Type.REFRESH));
     return !(task==null||task.isDone()||task.isCancelled());
   }
+
+  public static boolean isSuspended(DbDataSource dataSource) {
+    return timestamps.containsKey(new Event(dataSource, Event.Type.SUSPEND));
+  }
   
   protected boolean isSuspended() {
     return timestamps.containsKey(suspend);

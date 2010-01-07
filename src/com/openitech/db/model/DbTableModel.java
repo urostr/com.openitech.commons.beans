@@ -16,9 +16,6 @@ import com.openitech.ref.WeakListenerList;
 import com.openitech.ref.WeakObjectReference;
 import com.openitech.ref.events.ListDataWeakListener;
 import java.awt.Component;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationTargetException;
-import java.security.acl.Owner;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +29,6 @@ import java.util.regex.Pattern;
 import javax.swing.JTable;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
-import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
@@ -123,7 +119,11 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         }
       }
     } catch (Exception ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "]");
+      StringBuilder sb = new StringBuilder();
+      for (String column:columnDescriptors[columnIndex].columnNames) {
+        sb.append(sb.length()>0?":":"").append(column);
+      }
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] "+sb.toString());
     }
     return null;
   }
@@ -838,7 +838,11 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
             return result.toString();
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "]");
+          StringBuilder sb = new StringBuilder();
+          for (String column:columnNames) {
+            sb.append(sb.length()>0?":":"").append(column);
+          }
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] "+sb.toString());
         }
         return null;
       }

@@ -96,7 +96,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     this.setFont((java.awt.Font) UIManager.getDefaults().get("TextField.font"));
     //this.addPropertyChangeListener("value", propertyChangeWeakListener);
 
-    setFocusLostBehavior(JFormattedTextField.PERSIST);
+    setFocusLostBehavior(JFormattedTextField.COMMIT);
 
 
     WindowsActions.addActions(this);

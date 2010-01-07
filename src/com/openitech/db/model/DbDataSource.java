@@ -3357,6 +3357,10 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     implementation.updateRefreshPending();
   }
 
+  public boolean isSuspended() {
+    return DataSourceEvent.isSuspended(this);
+  }
+
   public boolean isRefreshPending() {
     return implementation.isRefreshPending();
   }

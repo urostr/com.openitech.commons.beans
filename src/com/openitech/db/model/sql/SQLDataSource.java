@@ -3790,7 +3790,9 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (columnMapping.containsKey(columnName)) {
       return columnMapping.checkedGet(columnName).intValue();
     } else {
-      return Integer.MIN_VALUE;
+      int ci = openSelectResultSet().findColumn(columnName);
+      columnMapping.put(columnName, ci);
+      return ci;
     }
   }
 
@@ -4217,6 +4219,14 @@ public class SQLDataSource implements DbDataSourceImpl {
     return statement.executeQuery();
   }
 
+  public static boolean execute(String selectSQL, Object... parameters) throws SQLException {
+    List<Object> l = new ArrayList<Object>();
+    for (Object p:parameters) {
+      l.add(p);
+    }
+    return execute(selectSQL, l);
+  }
+
   public static boolean execute(String selectSQL, List<?> parameters) throws SQLException {
     String sql = substParameters(selectSQL, parameters);
     PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql);
@@ -4294,14 +4304,27 @@ public class SQLDataSource implements DbDataSourceImpl {
                 for (int c = 0; c < columnNames.length; c++) {
                   cn = columnNames[c].toUpperCase();
                   if (!pending.get(cn)) {
-                    value = openSelectResultSet.getObject(cn);
-                    if (openSelectResultSet.wasNull()) {
-                      value = null;
+                    boolean fail = false;
+                    if (!cn.equals(columnName)) {
+                      try {
+                        int ci = getColumnIndex(cn);
+                        value = openSelectResultSet.getObject(ci);
+                      } catch (SQLException ex) {
+                        value = null;
+                        fail = true;
+                      }
+                    } else {
+                      value = openSelectResultSet.getObject(cn);
                     }
-                    cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, value));
+                    if (!fail) {
+                      if (openSelectResultSet.wasNull()) {
+                        value = null;
+                      }
+                      cache.put(new CacheKey(row, cn), new CacheEntry<String, Object>(this, cn, value));
 
-                    if ((row == rowIndex) && cn.equals(columnName)) {
-                      result = value;
+                      if ((row == rowIndex) && cn.equals(columnName)) {
+                        result = value;
+                      }
                     }
                   }
                 }

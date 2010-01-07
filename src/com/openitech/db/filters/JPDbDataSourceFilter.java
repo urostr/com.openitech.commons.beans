@@ -238,7 +238,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       try {
         final String text = com.openitech.util.Document.getText(doc);
         if (text.isEmpty()) {
-          jcbSifrant.setSelectedIndex(0);
+          if (jcbSifrant.getModel().getSize()>0) {
+            jcbSifrant.setSelectedIndex(0);
+          }
         } else {
           jcbSifrant.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(text, null, null));
           if (jcbSifrant.getEditor() != null) {
