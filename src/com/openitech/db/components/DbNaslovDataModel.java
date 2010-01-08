@@ -611,8 +611,8 @@ public class DbNaslovDataModel {
     public static FieldValue[] splitHS_HD(Object hshd, FieldValue hs, FieldValue hd) {
       String text = hshd != null ? hshd.toString() : null;
 
-      Integer hs_v = null;
-      String hd_v = null;
+      Object hs_v = hs.getValue();
+      Object hd_v = hd.getValue();
 
       if ((text != null) && (text.length() > 0)) {
         text = text.trim();
