@@ -28,18 +28,17 @@ import javax.sql.rowset.CachedRowSet;
  * @author uros
  */
 public class SQLCache implements Serializable {
-  private static SQLCache instance;
 
+  private static SQLCache instance;
   private long ttl = 15000; //15s
   private transient Map<CollectionKey<Object>, PreparedStatement> sharedStatements = new ConcurrentHashMap<CollectionKey<Object>, PreparedStatement>();
   private Map<CollectionKey<Object>, SharedEntry> sharedResults = new ConcurrentHashMap<CollectionKey<Object>, SharedEntry>();
 
   public SQLCache() {
-
   }
 
   public static final SQLCache getInstance() {
-    if (instance==null) {
+    if (instance == null) {
       instance = new SQLCache();
     }
     return instance;
@@ -103,6 +102,7 @@ public class SQLCache implements Serializable {
     private final Connection connection;
     private final String query;
     private final List<Object> parameters;
+    private boolean createCopy = true;
 
     public SharedEntry(Connection connection, String query, List<Object> parameters, long ttl) throws SQLException {
       this.connection = connection;
@@ -153,10 +153,10 @@ public class SQLCache implements Serializable {
 //        statement = sharedStatements.get(statementKey);
 //      } else {
 
-        statement = connection.prepareStatement(query,
-                ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_READ_ONLY);
-        statement.setFetchSize(1008);
+      statement = connection.prepareStatement(query,
+              ResultSet.TYPE_FORWARD_ONLY,
+              ResultSet.CONCUR_READ_ONLY);
+      statement.setFetchSize(1008);
 
 //        if (!ConnectionManager.getInstance().isPooled()) {
 //          sharedStatements.put(statementKey, statement);
@@ -166,23 +166,21 @@ public class SQLCache implements Serializable {
       return statement;
     }
 
-    public CachedRowSet getEntry(boolean reload) throws SQLException {
+    private CachedRowSet reloadEntry() throws SQLException {
       try {
         lock.acquire();
         try {
-          if (reload || (entry == null) || (!isValid(ttl))) {
-            entry = new CachedRowSetImpl();
-            Connection connection = (this.connection == null) ? ConnectionManager.getInstance().getTemporaryConnection() : this.connection;
-            try {
-              entry.populate(SQLDataSource.executeQuery(getStatement(connection), parameters));
-            } finally {
-              if (this.connection == null) {
-                connection.close();
-              }
+          entry = new CachedRowSetImpl();
+          Connection connection = (this.connection == null) ? ConnectionManager.getInstance().getTemporaryConnection() : this.connection;
+          try {
+            entry.populate(SQLDataSource.executeQuery(getStatement(connection), parameters));
+          } finally {
+            if (this.connection == null) {
+              connection.close();
             }
-            timestamp = System.currentTimeMillis();
-            System.out.println("Reloading cache entry");
           }
+          timestamp = System.currentTimeMillis();
+          System.out.println("Reloading cache entry");
         } finally {
           lock.release();
         }
@@ -190,11 +188,47 @@ public class SQLCache implements Serializable {
         Logger.getLogger(SQLCache.class.getName()).log(Level.SEVERE, null, ex);
       }
 
-      return entry.createCopy();
+      return entry;
+    }
+
+    public CachedRowSet getEntry(boolean reload) throws SQLException {
+      boolean reloaded = false;
+      if (reload || (entry == null) || (!isValid(ttl))) {
+        reloadEntry();
+        reloaded = true;
+      }
+
+      CachedRowSet result = null;
+
+      if (createCopy) {
+        try {
+          result = entry.createCopy();
+          //javi napako ko hocemo kopirat clobe
+        } catch (SQLException ex) {
+          Logger.getLogger(SQLCache.class.getName()).log(Level.WARNING, ex.getMessage());
+          //zato pri tem sql-u disablamu uporabo create copy
+          createCopy = false;
+        }
+      }
+
+      if (!createCopy) {
+        result = new CachedRowSetImpl();
+        try {
+          result.populate(entry);
+          //stvar vcasih javi invalid cursor position, verjetno zaradi razlicnih threadov
+        } catch (SQLException ex) {
+          Logger.getLogger(SQLCache.class.getName()).log(Level.WARNING, ex.getMessage());
+
+          result = reloaded?entry:reloadEntry();
+          entry = null;
+        }
+      }
+
+      return result;
     }
 
     protected boolean isValid(long ttl) {
-      if (ttl<0) {
+      if (ttl < 0) {
         return true;
       } else {
         return ttl > (System.currentTimeMillis() - timestamp);

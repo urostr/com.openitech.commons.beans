@@ -3465,6 +3465,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     String delimiterRight = getDelimiterRight();
 
     if (insert) {
+      String catalogName = null;
       String schemaName = null;
       String tableName = updateTableName;
 
@@ -3479,7 +3480,20 @@ public class SQLDataSource implements DbDataSourceImpl {
       for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
         entry = i.next();
         columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
+
+        if (updateColumnNames.size()>0) {
+          if (!updateColumnNames.contains(entry.getKey())) {
+              skipValues.add(entry.getKey());
+              continue;
+            }
+        }
+
         if (!owner.isSingleTableSelect()) {
+          if (catalogName == null) {
+            catalogName = metaData.getCatalogName(columnIndex);
+          } else if (!catalogName.equalsIgnoreCase(metaData.getCatalogName(columnIndex))) {
+            throw new SQLException("Insert on different catalogs not supported. Shema: " + catalogName + " != " + metaData.getCatalogName(columnIndex));
+          }
           if (schemaName == null) {
             schemaName = metaData.getSchemaName(columnIndex);
           } else if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex))) {
@@ -3490,9 +3504,6 @@ public class SQLDataSource implements DbDataSourceImpl {
           } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
             if (updateTableName == null) {
               throw new SQLException("Insert on different tables not supported.");
-            } else if (!updateColumnNames.contains(entry.getKey())) {
-              skipValues.add(entry.getKey());
-              continue;
             }
           }
         }
@@ -3508,6 +3519,9 @@ public class SQLDataSource implements DbDataSourceImpl {
       StringBuilder sql = new StringBuilder();
 
       sql.append("INSERT INTO ");
+      if (catalogName.length()>0 && schemaName.length() > 0) {
+        sql.append(delimiterLeft).append(catalogName).append(delimiterRight).append(".");
+      }
       if (schemaName.length() > 0) {
         sql.append(delimiterLeft).append(schemaName).append(delimiterRight).append(".");
       }
@@ -3631,7 +3645,10 @@ public class SQLDataSource implements DbDataSourceImpl {
             for (String c : key.getColumnNames(connection)) {
               where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
             }
-            String sql = "UPDATE " + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
+            String sql = "UPDATE " + 
+                      (key.catalogName!=null && key.schemaName != null?delimiterLeft+key.catalogName+delimiterRight+".":"") +
+                      (key.schemaName != null?delimiterLeft+key.schemaName+delimiterRight+".":"") +
+                      delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
 
             PreparedStatement updateStatement = getTxConnection().prepareStatement(sql.toString());
             try {
@@ -3707,7 +3724,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       try {
         statement = this.getSelectStatement(preparedSelectSql, connection);
         if (statement != null) {
-          result = PrimaryKey.getPrimaryKeys(statement, connection);
+          result = PrimaryKey.getPrimaryKeys(statement, connection, getDelimiterLeft(), getDelimiterRight());
         }
       } finally {
         if (owner.isConnectOnDemand()) {
@@ -3719,7 +3736,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       result = new ArrayList<PrimaryKey>();
     }
     if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
-      PrimaryKey pk = new PrimaryKey(getUniqueID(), getUpdateTableName());
+      PrimaryKey pk = new PrimaryKey(getUniqueID(), getUpdateTableName(), getDelimiterLeft(), getDelimiterRight());
       result.add(pk);
     }
     return result;
@@ -5833,7 +5850,12 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   private static class PrimaryKey {
 
+    String catalogName = null;
+    String schemaName = null;
     String table = "NULL";
+    String delimiterLeft;
+    String delimiterRight;
+
     List<String> columnNames = new ArrayList<String>();
     PreparedStatement delete = null;
     PreparedStatement update = null;
@@ -5842,18 +5864,27 @@ public class SQLDataSource implements DbDataSourceImpl {
     boolean updateFailed = false;
     boolean virtual = false;
 
-    public PrimaryKey(String[] uniqueID, String table) {
+    public PrimaryKey(String[] uniqueID, String table, String delimiterLeft, String delimiterRight) {
       this.virtual = true;
       this.table = table;
+
+      this.delimiterLeft = delimiterLeft!=null?delimiterLeft:"";
+      this.delimiterRight = delimiterRight!=null?delimiterRight:"";
+
       for (String s : uniqueID) {
         columnNames.add(s.toUpperCase());
       }
       hashcode = table.hashCode();
+
     }
 
-    public PrimaryKey(String table) throws SQLException {
+    public PrimaryKey(String table, String delimiterLeft, String delimiterRight) throws SQLException {
       this.virtual = false;
       this.table = table;
+
+      this.delimiterLeft = delimiterLeft!=null?delimiterLeft:"";
+      this.delimiterRight = delimiterRight!=null?delimiterRight:"";
+      
       hashcode = table.hashCode();
     }
 
@@ -5865,6 +5896,12 @@ public class SQLDataSource implements DbDataSourceImpl {
           ResultSet rs = metaData.getPrimaryKeys(null, null, table);
 
           while (rs.next() && !rs.isAfterLast()) {
+            if (catalogName==null) {
+              catalogName = rs.getString("TABLE_CAT");
+            }
+            if (schemaName==null) {
+              schemaName = rs.getString("TABLE_SCHEM");
+            }
             if (rs.getString("TABLE_NAME").equalsIgnoreCase(table)) {
               columnNames.add(rs.getString("COLUMN_NAME").toUpperCase());
             } else {
@@ -5884,10 +5921,13 @@ public class SQLDataSource implements DbDataSourceImpl {
         StringBuilder sql = new StringBuilder();
 
         for (Iterator<String> c = columnNames.iterator(); c.hasNext();) {
-          sql.append(sql.length() > 0 ? " AND " : "").append(c.next()).append("=? ");
+          sql.append(sql.length() > 0 ? " AND " : "").append(delimiterLeft).append(c.next()).append(delimiterRight).append("=? ");
         }
 
-        sql.insert(0, "DELETE FROM " + table + " WHERE ");
+        sql.insert(0, "DELETE FROM " + 
+                      (catalogName!=null && schemaName != null?delimiterLeft+catalogName+delimiterRight+".":"") +
+                      (schemaName != null?delimiterLeft+schemaName+delimiterRight+".":"") +
+                      delimiterLeft +table+ delimiterRight + " WHERE ");
 
         delete = connection.prepareStatement(sql.toString());
       }
@@ -5909,10 +5949,13 @@ public class SQLDataSource implements DbDataSourceImpl {
           StringBuilder sql = new StringBuilder();
 
           for (String c : columnNames) {
-            sql.append(sql.length() > 0 ? " AND " : "").append(c).append("=? ");
+            sql.append(sql.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append("=? ");
           }
 
-          sql.insert(0, "SELECT * FROM " + table + " WHERE ");
+          sql.insert(0, "SELECT * FROM " +
+                      (catalogName!=null && schemaName != null?delimiterLeft+catalogName+delimiterRight+".":"") +
+                      (schemaName != null?delimiterLeft+schemaName+delimiterRight+".":"") +
+                      delimiterLeft +table+ delimiterRight + " WHERE ");
           sql.append(" FOR UPDATE");
 
           update = connection.prepareStatement(sql.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
@@ -6011,7 +6054,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
     }
 
-    public static List<PrimaryKey> getPrimaryKeys(PreparedStatement statement, Connection connection) throws SQLException {
+    public static List<PrimaryKey> getPrimaryKeys(PreparedStatement statement, Connection connection, String delimiterLeft, String delimiterRight) throws SQLException {
       List<PrimaryKey> result = new ArrayList<PrimaryKey>();
       ResultSetMetaData metaData = statement.getMetaData();
       if (metaData != null) {
@@ -6026,7 +6069,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           table = metaData.getTableName(c);
           if (table != null) {
             columnTables.put(metaData.getColumnName(c).toUpperCase(), table);
-            if (keys.indexOf(key = new PrimaryKey(table)) < 0) {
+            if (keys.indexOf(key = new PrimaryKey(table, delimiterLeft, delimiterRight)) < 0) {
               keys.add(key);
             }
           }
