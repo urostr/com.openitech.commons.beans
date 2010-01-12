@@ -114,10 +114,10 @@ public class SQLDataSource implements DbDataSourceImpl {
   private java.util.Set<String> updateColumnNames = new java.util.HashSet<String>();
   private java.util.Set<String> updateColumnNamesCS = new java.util.HashSet<String>(); //case sensitive
 
-  public SQLDataSource(DbDataSource owner, PreparedStatement psEvidenca, PreparedStatement psEvidencaCount, List<Object> params) {
+  public SQLDataSource(DbDataSource owner, PreparedStatement selectStatement, PreparedStatement countStatement, List<Object> params) {
     this.owner = owner;
-    this.selectStatement = psEvidenca;
-    this.countStatement = psEvidencaCount;
+    this.selectStatement = selectStatement;
+    this.countStatement = countStatement;
     owner.setParameters(params, false);
   }
 
@@ -777,7 +777,8 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   public int findColumn(String columnName) throws SQLException {
     if (loadData()) {
-      return openSelectResultSet().findColumn(columnName);
+      return getColumnIndex(columnName);
+//      return openSelectResultSet().findColumn(columnName);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -3481,11 +3482,11 @@ public class SQLDataSource implements DbDataSourceImpl {
         entry = i.next();
         columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
 
-        if (updateColumnNames.size()>0) {
+        if (updateColumnNames.size() > 0) {
           if (!updateColumnNames.contains(entry.getKey())) {
-              skipValues.add(entry.getKey());
-              continue;
-            }
+            skipValues.add(entry.getKey());
+            continue;
+          }
         }
 
         if (!owner.isSingleTableSelect()) {
@@ -3519,7 +3520,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       StringBuilder sql = new StringBuilder();
 
       sql.append("INSERT INTO ");
-      if (catalogName.length()>0 && schemaName.length() > 0) {
+      if (catalogName.length() > 0 && schemaName.length() > 0) {
         sql.append(delimiterLeft).append(catalogName).append(delimiterRight).append(".");
       }
       if (schemaName.length() > 0) {
@@ -3645,10 +3646,10 @@ public class SQLDataSource implements DbDataSourceImpl {
             for (String c : key.getColumnNames(connection)) {
               where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
             }
-            String sql = "UPDATE " + 
-                      (key.catalogName!=null && key.schemaName != null?delimiterLeft+key.catalogName+delimiterRight+".":"") +
-                      (key.schemaName != null?delimiterLeft+key.schemaName+delimiterRight+".":"") +
-                      delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
+            String sql = "UPDATE "
+                    + (key.catalogName != null && key.schemaName != null ? delimiterLeft + key.catalogName + delimiterRight + "." : "")
+                    + (key.schemaName != null ? delimiterLeft + key.schemaName + delimiterRight + "." : "")
+                    + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
 
             PreparedStatement updateStatement = getTxConnection().prepareStatement(sql.toString());
             try {
@@ -3807,7 +3808,14 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (columnMapping.containsKey(columnName)) {
       return columnMapping.checkedGet(columnName).intValue();
     } else {
-      int ci = openSelectResultSet().findColumn(columnName);
+      int ci = -1;
+      try {
+        ci = openSelectResultSet().findColumn(columnName);
+      } finally {
+        if (ci == -1) {
+          Logger.getLogger(SQLDataSource.class.getName()).log(Level.WARNING, "Invalid column name [" + columnName + "]");
+        }
+      }
       columnMapping.put(columnName, ci);
       return ci;
     }
@@ -4238,7 +4246,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public static boolean execute(String selectSQL, Object... parameters) throws SQLException {
     List<Object> l = new ArrayList<Object>();
-    for (Object p:parameters) {
+    for (Object p : parameters) {
       l.add(p);
     }
     return execute(selectSQL, l);
@@ -4687,16 +4695,8 @@ public class SQLDataSource implements DbDataSourceImpl {
     return result;
   }
 
-  private Object getStoredValue(int columnIndex) throws SQLException {
-    return getStoredValue(getRow(), getMetaData().getColumnName(columnIndex), null, Object.class);
-  }
-
-  private Object getStoredValue(String columnName) throws SQLException {
-    return getStoredValue(getRow(), columnName, null, Object.class);
-  }
-
   private <T> T getStoredValue(int row, int columnIndex, T nullValue, Class<? extends T> type) throws SQLException {
-    return getStoredValue(row, getMetaData().getColumnName(columnIndex), nullValue, type);
+    return getStoredValue(row, getColumnName(columnIndex), nullValue, type);
   }
 
   private <T> T getStoredValue(int row, String columnName, T nullValue, Class<? extends T> type) throws SQLException {
@@ -4777,30 +4777,30 @@ public class SQLDataSource implements DbDataSourceImpl {
         openSelectResultSet.absolute(row);
       }
 
-
+      int columnIndex = getColumnIndex(columnName);
 
       if (String.class.isAssignableFrom(type)) {
-        result = openSelectResultSet.getString(columnName);
+        result = openSelectResultSet.getString(columnIndex);
       } else if (Number.class.isAssignableFrom(type)) {
         if (Integer.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getInt(columnName);
+          result = openSelectResultSet.getInt(columnIndex);
         } else if (Short.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getShort(columnName);
+          result = openSelectResultSet.getShort(columnIndex);
         } else if (Double.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getDouble(columnName);
+          result = openSelectResultSet.getDouble(columnIndex);
         } else if (Byte.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getByte(columnName);
+          result = openSelectResultSet.getByte(columnIndex);
         } else if (Float.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getFloat(columnName);
+          result = openSelectResultSet.getFloat(columnIndex);
         } else if (Long.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getLong(columnName);
+          result = openSelectResultSet.getLong(columnIndex);
         } else {
-          result = openSelectResultSet.getBigDecimal(columnName);
+          result = openSelectResultSet.getBigDecimal(columnIndex);
         }
       } else if (Boolean.class.isAssignableFrom(type)) {
-        result = openSelectResultSet.getBoolean(columnName);
+        result = openSelectResultSet.getBoolean(columnIndex);
       } else if (Date.class.isAssignableFrom(type)) {
-        java.util.Date value = ((java.util.Date) openSelectResultSet.getObject(columnName));
+        java.util.Date value = ((java.util.Date) openSelectResultSet.getObject(columnIndex));
         if (value != null) {
           if (Time.class.isAssignableFrom(type)) {
             result = new java.sql.Time(value.getTime());
@@ -4811,9 +4811,9 @@ public class SQLDataSource implements DbDataSourceImpl {
           }
         }
       } else if (nullValue instanceof byte[]) {
-        result = openSelectResultSet.getBytes(columnName);
+        result = openSelectResultSet.getBytes(columnIndex);
       } else {
-        result = openSelectResultSet.getObject(columnName);
+        result = openSelectResultSet.getObject(columnIndex);
       }
 
       if (oldrow != row) {
@@ -5855,7 +5855,6 @@ public class SQLDataSource implements DbDataSourceImpl {
     String table = "NULL";
     String delimiterLeft;
     String delimiterRight;
-
     List<String> columnNames = new ArrayList<String>();
     PreparedStatement delete = null;
     PreparedStatement update = null;
@@ -5868,8 +5867,8 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.virtual = true;
       this.table = table;
 
-      this.delimiterLeft = delimiterLeft!=null?delimiterLeft:"";
-      this.delimiterRight = delimiterRight!=null?delimiterRight:"";
+      this.delimiterLeft = delimiterLeft != null ? delimiterLeft : "";
+      this.delimiterRight = delimiterRight != null ? delimiterRight : "";
 
       for (String s : uniqueID) {
         columnNames.add(s.toUpperCase());
@@ -5882,9 +5881,9 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.virtual = false;
       this.table = table;
 
-      this.delimiterLeft = delimiterLeft!=null?delimiterLeft:"";
-      this.delimiterRight = delimiterRight!=null?delimiterRight:"";
-      
+      this.delimiterLeft = delimiterLeft != null ? delimiterLeft : "";
+      this.delimiterRight = delimiterRight != null ? delimiterRight : "";
+
       hashcode = table.hashCode();
     }
 
@@ -5896,10 +5895,10 @@ public class SQLDataSource implements DbDataSourceImpl {
           ResultSet rs = metaData.getPrimaryKeys(null, null, table);
 
           while (rs.next() && !rs.isAfterLast()) {
-            if (catalogName==null) {
+            if (catalogName == null) {
               catalogName = rs.getString("TABLE_CAT");
             }
-            if (schemaName==null) {
+            if (schemaName == null) {
               schemaName = rs.getString("TABLE_SCHEM");
             }
             if (rs.getString("TABLE_NAME").equalsIgnoreCase(table)) {
@@ -5924,10 +5923,10 @@ public class SQLDataSource implements DbDataSourceImpl {
           sql.append(sql.length() > 0 ? " AND " : "").append(delimiterLeft).append(c.next()).append(delimiterRight).append("=? ");
         }
 
-        sql.insert(0, "DELETE FROM " + 
-                      (catalogName!=null && schemaName != null?delimiterLeft+catalogName+delimiterRight+".":"") +
-                      (schemaName != null?delimiterLeft+schemaName+delimiterRight+".":"") +
-                      delimiterLeft +table+ delimiterRight + " WHERE ");
+        sql.insert(0, "DELETE FROM "
+                + (catalogName != null && schemaName != null ? delimiterLeft + catalogName + delimiterRight + "." : "")
+                + (schemaName != null ? delimiterLeft + schemaName + delimiterRight + "." : "")
+                + delimiterLeft + table + delimiterRight + " WHERE ");
 
         delete = connection.prepareStatement(sql.toString());
       }
@@ -5952,10 +5951,10 @@ public class SQLDataSource implements DbDataSourceImpl {
             sql.append(sql.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append("=? ");
           }
 
-          sql.insert(0, "SELECT * FROM " +
-                      (catalogName!=null && schemaName != null?delimiterLeft+catalogName+delimiterRight+".":"") +
-                      (schemaName != null?delimiterLeft+schemaName+delimiterRight+".":"") +
-                      delimiterLeft +table+ delimiterRight + " WHERE ");
+          sql.insert(0, "SELECT * FROM "
+                  + (catalogName != null && schemaName != null ? delimiterLeft + catalogName + delimiterRight + "." : "")
+                  + (schemaName != null ? delimiterLeft + schemaName + delimiterRight + "." : "")
+                  + delimiterLeft + table + delimiterRight + " WHERE ");
           sql.append(" FOR UPDATE");
 
           update = connection.prepareStatement(sql.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
