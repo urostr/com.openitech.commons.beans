@@ -260,6 +260,11 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     return name;
   }
 
+  @Override
+  public String toString() {
+    return name==null?super.toString():name;
+  }
+
   /**
    * Updates the designated column with a <code>float	</code> value.
    * The updater methods are used to update column values in the
@@ -3125,6 +3130,9 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
         System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + (available.isHeldByCurrentThread() ? "owner:current:" + available.getHoldCount() : "queued:" + available.getQueueLength()));
 
         StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
+        if (stackTrace.getMethodName().equals("lock")) {
+          stackTrace = Thread.currentThread().getStackTrace()[4];
+        }
         System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
       }
       if (force) {
