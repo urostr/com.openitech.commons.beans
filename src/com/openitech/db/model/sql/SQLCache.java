@@ -7,6 +7,7 @@ package com.openitech.db.model.sql;
 import com.openitech.CaseInsensitiveString;
 import com.openitech.CollectionKey;
 import com.openitech.db.ConnectionManager;
+import com.openitech.ref.SoftHashMap;
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.Serializable;
 import java.sql.Connection;
@@ -17,7 +18,6 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,8 +31,8 @@ public class SQLCache implements Serializable {
 
   private static SQLCache instance;
   private long ttl = 15000; //15s
-  private transient Map<CollectionKey<Object>, PreparedStatement> sharedStatements = new ConcurrentHashMap<CollectionKey<Object>, PreparedStatement>();
-  private Map<CollectionKey<Object>, SharedEntry> sharedResults = new ConcurrentHashMap<CollectionKey<Object>, SharedEntry>();
+  private transient Map<CollectionKey<Object>, PreparedStatement> sharedStatements = Collections.synchronizedMap(new SoftHashMap<CollectionKey<Object>, PreparedStatement>());
+  private Map<CollectionKey<Object>, SharedEntry> sharedResults = Collections.synchronizedMap(new SoftHashMap<CollectionKey<Object>, SharedEntry>());
 
   public SQLCache() {
   }

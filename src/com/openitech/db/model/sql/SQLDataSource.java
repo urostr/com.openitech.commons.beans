@@ -18,6 +18,7 @@ import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.concurrent.DataSourceEvent;
 import com.openitech.db.proxy.ResultSetProxy;
 import com.openitech.formats.FormatFactory;
+import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
 import com.openitech.util.OwnerFrame;
 import com.sun.rowset.CachedRowSetImpl;
@@ -85,8 +86,8 @@ public class SQLDataSource implements DbDataSourceImpl {
   private DbDataSourceHashMap<String, Integer> columnMapping = new DbDataSourceHashMap<String, Integer>();
   private boolean[] storedResult = new boolean[]{false, false};
   private final Semaphore semaphore = new Semaphore(1);
-  private transient Map<CacheKey, CacheEntry<String, Object>> cache = new HashMap<CacheKey, CacheEntry<String, Object>>();
-  private transient Map<CollectionKey<NamedValue>, java.util.List<PendingValue>> pendingValuesCache = new HashMap<CollectionKey<NamedValue>, java.util.List<PendingValue>>();
+  private transient Map<CacheKey, CacheEntry<String, Object>> cache = new SoftHashMap<CacheKey, CacheEntry<String, Object>>();
+  private transient Map<CollectionKey<NamedValue>, java.util.List<PendingValue>> pendingValuesCache = new SoftHashMap<CollectionKey<NamedValue>, java.util.List<PendingValue>>();
   private final Runnable events = new RunnableEvents(this);
   private transient Connection connection = null;
   private boolean selectStatementReady = false;
@@ -94,7 +95,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   private transient CurrentResultSet currentResultSet = null;
   private transient PreparedStatement selectStatement;
   private transient PreparedStatement countStatement;
-  private transient Map<String, PreparedStatement> cachedStatements = new HashMap<String, PreparedStatement>();
+  private transient Map<String, PreparedStatement> cachedStatements = new SoftHashMap<String, PreparedStatement>();
   private transient SQLCache sqlCache;
   /**
    * Holds value of property uniqueID.
