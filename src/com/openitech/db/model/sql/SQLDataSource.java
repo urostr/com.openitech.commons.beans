@@ -3972,7 +3972,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     ResultSet currentResultSet;
 
     public CurrentResultSet(ResultSet currentResultSet) throws SQLException {
-      if (owner.isConnectOnDemand() || owner.isCacheRowSet()) {
+      if ((currentResultSet!=null) && (owner.isConnectOnDemand() || owner.isCacheRowSet())) {
         this.currentResultSet = new CachedRowSetImpl();
         this.currentResultSet.setFetchSize(getFetchSize());
         ((CachedRowSet) this.currentResultSet).populate(currentResultSet);
@@ -4306,6 +4306,8 @@ public class SQLDataSource implements DbDataSourceImpl {
         CacheEntry ce;
         if (cache.containsKey(ck) && ((ce = cache.get(ck)) != null)) {
           result = ce.value;
+        } else if (rowIndex>getRowCount()) {
+          throw new SQLException("Invalid row number "+rowIndex+" for "+toString());
         } else {
           owner.lock();
           try {
