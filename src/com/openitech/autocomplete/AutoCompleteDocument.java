@@ -138,36 +138,33 @@ public class AutoCompleteDocument implements StyledDocument {
     // insert the string into the document
     delegate.insertString(offs, str, a);
 
-    //if we don't want to lookup if the string is empty
-    if ((str != null) && (str.length() > 0)) {
-      // lookup and select a matching item
-      LookupResult lookupResult = lookupItem(getText(0, getLength()));
-      if (lookupResult.matchingItem != null) {
-        setSelectedItem(lookupResult.matchingItem, lookupResult.matchingString);
+    // lookup and select a matching item
+    LookupResult lookupResult = lookupItem(getText(0, getLength()));
+    if (lookupResult.matchingItem != null) {
+      setSelectedItem(lookupResult.matchingItem, lookupResult.matchingString);
+    } else {
+      if (strictMatching) {
+        // keep old item selected if there is no match
+        lookupResult.matchingItem = adaptor.getSelectedItem();
+        lookupResult.matchingString = adaptor.getSelectedItemAsString();
+        // imitate no insert (later on offs will be incremented by
+        // str.length(): selection won't move forward)
+        offs = offs - str.length();
+        // provide feedback to the user that his input has been received but can not be accepted
+        UIManager.getLookAndFeel().provideErrorFeedback(adaptor.getTextComponent());
       } else {
-        if (strictMatching) {
-          // keep old item selected if there is no match
-          lookupResult.matchingItem = adaptor.getSelectedItem();
-          lookupResult.matchingString = adaptor.getSelectedItemAsString();
-          // imitate no insert (later on offs will be incremented by
-          // str.length(): selection won't move forward)
-          offs = offs - str.length();
-          // provide feedback to the user that his input has been received but can not be accepted
-          UIManager.getLookAndFeel().provideErrorFeedback(adaptor.getTextComponent());
-        } else {
-          // no item matches => use the current input as selected item
-          lookupResult.matchingItem = getText(0, getLength());
-          lookupResult.matchingString = getText(0, getLength());
-          setSelectedItem(lookupResult.matchingItem, lookupResult.matchingString);
-        }
+        // no item matches => use the current input as selected item
+        lookupResult.matchingItem = getText(0, getLength());
+        lookupResult.matchingString = getText(0, getLength());
+        setSelectedItem(lookupResult.matchingItem, lookupResult.matchingString);
       }
-      //mora biti zakomentirano, ker v nasprotnem primeru vedno vpisuje staro vrednost v naslove
-      //ko se premikamo med naslovi (tam kjer imamo autocomplete na dokumentu)
-      if (isAutoComplete()) {
-        // select the completed part
-        setText(lookupResult.matchingString);
-        adaptor.markText(offs + str.length());
-      }
+    }
+    //mora biti zakomentirano, ker v nasprotnem primeru vedno vpisuje staro vrednost v naslove
+    //ko se premikamo med naslovi (tam kjer imamo autocomplete na dokumentu)
+    if (isAutoComplete()) {
+      // select the completed part
+      setText(lookupResult.matchingString);
+      adaptor.markText(offs + str.length());
     }
   }
   private boolean autoComplete = true;
@@ -276,6 +273,11 @@ public class AutoCompleteDocument implements StyledDocument {
     public LookupResult(Object matchingItem, String matchingString) {
       this.matchingItem = matchingItem;
       this.matchingString = matchingString;
+    }
+
+    @Override
+    public String toString() {
+      return "LookupResult:" + matchingString;
     }
   }
 
