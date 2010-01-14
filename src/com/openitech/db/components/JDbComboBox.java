@@ -9,6 +9,7 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
+import com.openitech.autocomplete.AutoCompleteDocument;
 import com.openitech.db.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
@@ -18,12 +19,16 @@ import com.openitech.db.model.DbFieldObserver;
 import com.openitech.ref.events.ActionWeakListener;
 import com.openitech.util.Equals;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
+import javax.swing.KeyStroke;
 import javax.swing.event.ListDataEvent;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 /**
  *
@@ -37,6 +42,7 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
   private transient ActionWeakListener actionWeakListener;
+  private Document document = null;
 
   /** Creates a new instance of JDbComboBox */
   public JDbComboBox() {
@@ -66,6 +72,25 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     this.addActionListener(actionWeakListener);
     if (decorate) {
       com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
+
+      document = ((JTextComponent) getEditor().getEditorComponent()).getDocument();
+      if (document instanceof AutoCompleteDocument) {
+        ((AutoCompleteDocument) document).setAutoComplete(false);
+      }
+    }
+  }
+
+  @Override
+  protected boolean processKeyBinding(KeyStroke ks, KeyEvent e, int condition, boolean pressed) {
+    if (document instanceof AutoCompleteDocument) {
+      try {
+        ((AutoCompleteDocument) document).setAutoComplete(true);
+        return super.processKeyBinding(ks, e, condition, pressed);
+      } finally {
+        ((AutoCompleteDocument) document).setAutoComplete(false);
+      }
+    } else {
+      return super.processKeyBinding(ks, e, condition, pressed);
     }
   }
 

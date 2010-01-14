@@ -3,12 +3,13 @@
  *
  * Created on April 2, 2006, 11:35 AM
  *
- * $Revision: 1.14 $
+ * $Revision: 1.15 $
  */
 package com.openitech.db.components;
 
 import com.openitech.Settings;
 import com.openitech.autocomplete.AutoCompleteDecorator;
+import com.openitech.autocomplete.AutoCompleteDocument;
 import com.openitech.autocomplete.AutoCompleteTextComponent;
 import com.openitech.components.WindowsActions;
 import com.openitech.db.FieldObserver;
@@ -26,11 +27,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ComboBoxModel;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.EventListenerList;
@@ -326,8 +329,27 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
       dataModel.addListDataListener(this);
 
       AutoCompleteDecorator.decorate(this, dataModel);
+      if (getDocument() instanceof AutoCompleteDocument) {
+        ((AutoCompleteDocument) getDocument()).setAutoComplete(false);
+      }
 
       firePropertyChange("autoCompleteModel", oldModel, dataModel);
+    }
+  }
+
+  @Override
+  protected boolean processKeyBinding(KeyStroke ks, KeyEvent e, int condition, boolean pressed) {
+    if ((autoCompleteModel!=null)&&(getDocument() instanceof AutoCompleteDocument)) {
+      AutoCompleteDocument document = (AutoCompleteDocument) getDocument();
+
+      try {
+        document.setAutoComplete(true);
+        return super.processKeyBinding(ks, e, condition, pressed);
+      } finally {
+        document.setAutoComplete(false);
+      }
+    } else {
+      return super.processKeyBinding(ks, e, condition, pressed);
     }
   }
 

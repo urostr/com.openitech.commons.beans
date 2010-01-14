@@ -234,9 +234,8 @@ public class AutoCompleteDecorator {
         //confirm selection and close popup
         if (comboBox.isPopupVisible() && (keyCode == KeyEvent.VK_ENTER)) {
           try {
-            String text = document.getText(0, document.getLength());
             document.remove(0, document.getLength());
-            document.insertString(0, text, null);
+            document.insertString(0, stringConverter.getPreferredStringForItem(comboBox.getSelectedItem()), null);
           } catch (BadLocationException e) {
             throw new RuntimeException(e.toString());
           }

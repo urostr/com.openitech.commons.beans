@@ -9,6 +9,7 @@ package com.openitech.db.components;
 
 import com.openitech.Settings;
 import com.openitech.autocomplete.AutoCompleteDecorator;
+import com.openitech.autocomplete.AutoCompleteDocument;
 import com.openitech.autocomplete.AutoCompleteTextComponent;
 import com.openitech.components.WindowsActions;
 import com.openitech.db.FieldObserver;
@@ -26,6 +27,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -40,6 +42,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -635,11 +638,29 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       dataModel.addListDataListener(this);
 
       AutoCompleteDecorator.decorate(this, dataModel);
+      if (getDocument() instanceof AutoCompleteDocument) {
+        ((AutoCompleteDocument) getDocument()).setAutoComplete(false);
+      }
 
       firePropertyChange("autoCompleteModel", oldModel, dataModel);
     }
   }
 
+  @Override
+  protected boolean processKeyBinding(KeyStroke ks, KeyEvent e, int condition, boolean pressed) {
+    if ((autoCompleteModel!=null)&&(getDocument() instanceof AutoCompleteDocument)) {
+      AutoCompleteDocument document = (AutoCompleteDocument) getDocument();
+
+      try {
+        document.setAutoComplete(true);
+        return super.processKeyBinding(ks, e, condition, pressed);
+      } finally {
+        document.setAutoComplete(false);
+      }
+    } else {
+      return super.processKeyBinding(ks, e, condition, pressed);
+    }
+  }
   /**
    * Adds a <code>PopupMenu</code> listener which will listen to notification
    * messages from the popup portion of the combo box.
