@@ -207,7 +207,7 @@ public class DbNaslovDataModel {
           result.naseljeMID = new FieldValue("na_mid", java.sql.Types.INTEGER, rsMid.getInt("na_mid"));
           result.naselje = new FieldValue("na_uime", java.sql.Types.VARCHAR, rsMid.getString("na_uime"));
           result.hisnaStevilka = new FieldValue("hs", java.sql.Types.INTEGER, rsMid.getInt("hs"));
-          result.hisnaStevilkaDodatek = new FieldValue("hd", java.sql.Types.VARCHAR, rsMid.getString("hd"));
+          result.hisnaStevilkaDodatek = new FieldValue("hd", java.sql.Types.VARCHAR, rsMid.getString("hd")==null?null:rsMid.getString("hd").trim());
         }
       } finally {
         rsMid.close();

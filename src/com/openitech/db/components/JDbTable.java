@@ -28,6 +28,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 
 /**
@@ -147,7 +148,6 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   public JMenuItem getActiveFiltersMenu() {
     return activeFiltersMenu;
   }
-
   private JMenuItem exportTableMenu = null;
 
   public JMenuItem getExportTableMenu() {
@@ -254,6 +254,9 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       if (newPos >= 0 && newPos < getRowCount()) {
         try {
           if (getSelectedRow() != newPos && newPos >= 0 && newPos < dbTableModel.getRowCount()) {
+            if (isEditing()) {
+              removeEditor();
+            }
             setRowSelectionInterval(newPos, newPos);
           }
           updateViewPosition();

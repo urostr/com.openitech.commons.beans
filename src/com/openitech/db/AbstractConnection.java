@@ -73,7 +73,7 @@ public abstract class AbstractConnection implements DbConnection {
 
   @Override
   public boolean isCacheRowSet() {
-    return Boolean.valueOf(settings.getProperty(DB_CACHEROWSET, "true"));
+    return Boolean.valueOf(settings.getProperty(DB_CACHEROWSET, "false"));
   }
 
   @Override
