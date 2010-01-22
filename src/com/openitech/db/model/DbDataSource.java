@@ -5266,6 +5266,43 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   }
 
   /**
+   * Get the value of catalogName
+   *
+   * @return the value of catalogName
+   */
+  public String getCatalogName() {
+    return implementation.getCatalogName();
+  }
+
+  /**
+   * Set the value of catalogName
+   *
+   * @param catalogName new value of catalogName
+   */
+  public void setCatalogName(String catalogName) {
+    implementation.setCatalogName(catalogName);
+  }
+
+
+  /**
+   * Get the value of schemaName
+   *
+   * @return the value of schemaName
+   */
+  public String getSchemaName() {
+    return implementation.getSchemaName();
+  }
+
+  /**
+   * Set the value of schemaName
+   *
+   * @param schemaName new value of schemaName
+   */
+  public void setSchemaName(String schemaName) {
+    implementation.setSchemaName(schemaName);
+  }
+
+  /**
    * Getter for property uniqueID.
    * @return Value of property uniqueID.
    */

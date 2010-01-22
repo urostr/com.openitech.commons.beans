@@ -163,8 +163,12 @@ public class AutoCompleteDocument implements StyledDocument {
     //ko se premikamo med naslovi (tam kjer imamo autocomplete na dokumentu)
     if (isAutoComplete()) {
       // select the completed part
-      setText(lookupResult.matchingString);
-      adaptor.markText(offs + str.length());
+      if (lookupResult!=null) {
+        setText(lookupResult.matchingString);
+      }
+      if (str!=null) {
+        adaptor.markText(offs + str.length());
+      }
     }
   }
   private boolean autoComplete = true;

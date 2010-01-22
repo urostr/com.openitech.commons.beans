@@ -3738,7 +3738,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       result = new ArrayList<PrimaryKey>();
     }
     if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
-      PrimaryKey pk = new PrimaryKey(getUniqueID(), getUpdateTableName(), getDelimiterLeft(), getDelimiterRight());
+      PrimaryKey pk = new PrimaryKey(getUniqueID(), getCatalogName(), getSchemaName(), getUpdateTableName(), getDelimiterLeft(), getDelimiterRight());
       result.add(pk);
     }
     return result;
@@ -5866,9 +5866,11 @@ public class SQLDataSource implements DbDataSourceImpl {
     boolean updateFailed = false;
     boolean virtual = false;
 
-    public PrimaryKey(String[] uniqueID, String table, String delimiterLeft, String delimiterRight) {
+    public PrimaryKey(String[] uniqueID, String catalogName, String schemaName, String table, String delimiterLeft, String delimiterRight) {
       this.virtual = true;
       this.table = table;
+      this.catalogName = catalogName;
+      this.schemaName = schemaName;
 
       this.delimiterLeft = delimiterLeft != null ? delimiterLeft : "";
       this.delimiterRight = delimiterRight != null ? delimiterRight : "";
@@ -6231,6 +6233,68 @@ public class SQLDataSource implements DbDataSourceImpl {
       owner.owner.fireActiveRowChange(new ActiveRowChangeEvent(owner.owner, pos, -1));
     }
   };
+
+  private String catalogName;
+
+  /**
+   * Get the value of catalogName
+   *
+   * @return the value of catalogName
+   */
+  public String getCatalogName() {
+    return catalogName;
+  }
+
+  /**
+   * Set the value of catalogName
+   *
+   * @param catalogName new value of catalogName
+   */
+  public void setCatalogName(String catalogName) {
+    if (catalogName!=null) {
+      if (catalogName.startsWith(getDelimiterLeft())) {
+        catalogName = catalogName.substring(getDelimiterLeft().length());
+      }
+      if (catalogName.endsWith(getDelimiterRight())) {
+        catalogName = catalogName.substring(0, catalogName.length()-getDelimiterRight().length());
+      }
+    }
+    this.catalogName = catalogName;
+    if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
+      this.primaryKeys = this.getPrimaryKeys();
+    }
+  }
+
+  private String schemaName;
+
+  /**
+   * Get the value of schemaName
+   *
+   * @return the value of schemaName
+   */
+  public String getSchemaName() {
+    return schemaName;
+  }
+
+  /**
+   * Set the value of schemaName
+   *
+   * @param schemaName new value of schemaName
+   */
+  public void setSchemaName(String schemaName) {
+    if (schemaName!=null) {
+      if (schemaName.startsWith(getDelimiterLeft())) {
+        schemaName = schemaName.substring(getDelimiterLeft().length());
+      }
+      if (catalogName.endsWith(getDelimiterRight())) {
+        schemaName = schemaName.substring(0, schemaName.length()-getDelimiterRight().length());
+      }
+    }
+    this.schemaName = schemaName;
+    if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
+      this.primaryKeys = this.getPrimaryKeys();
+    }
+  }
 
   /**
    * Getter for property uniqueID.

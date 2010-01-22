@@ -62,6 +62,7 @@ public class DbDataSourceFactory {
   }
 
   public static interface DbDataSourceImpl extends javax.sql.RowSet {
+
     public void clearSharedResults();
 
     public void doDeleteRow() throws SQLException;
@@ -130,6 +131,34 @@ public class DbDataSourceFactory {
 
     public void storeUpdates(boolean insert) throws SQLException;
 
+    /**
+     * Get the value of catalogName
+     *
+     * @return the value of catalogName
+     */
+    public String getCatalogName();
+
+    /**
+     * Set the value of catalogName
+     *
+     * @param catalogName new value of catalogName
+     */
+    public void setCatalogName(String catalogName);
+
+    /**
+     * Get the value of schemaName
+     *
+     * @return the value of schemaName
+     */
+    public String getSchemaName();
+
+    /**
+     * Set the value of schemaName
+     *
+     * @param schemaName new value of schemaName
+     */
+    public void setSchemaName(String schemaName);
+
     public String[] getUniqueID();
 
     public void setUniqueID(String[] uniqueID);
@@ -157,6 +186,5 @@ public class DbDataSourceFactory {
     public boolean isReadOnly();
 
     public boolean isRefreshPending();
-
   }
 }
