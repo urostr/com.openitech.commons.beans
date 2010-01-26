@@ -63,18 +63,20 @@ public class DataSourceFactory {
     return dbDataModel;
   }
 
-  public void configure(String resourceName) throws SQLException, JAXBException {
-    configure(this, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), resourceName);
+  public void configure(String opis, String resourceName) throws SQLException, JAXBException {
+    configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), resourceName);
   }
 
-  public static void configure(final DataSourceFactory waConfig, com.openitech.db.model.xml.DataSourceConfig config, String resourceName) throws SQLException, JAXBException {
+  public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.xml.DataSourceConfig config, String resourceName) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
     com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(DataSourceFactory.class.getResourceAsStream(resourceName));
 
-    configure(waConfig, config, workareaXML);
+    configure(waConfig, opis, config, workareaXML);
   }
 
-  public static void configure(final DataSourceFactory waConfig, com.openitech.db.model.xml.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea workareaXML) throws SQLException {
+  public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.xml.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea workareaXML) throws SQLException {
+    waConfig.opis = opis;
+
     final DbDataSource dsWorkAreaEvents = new DbDataSource();
 
     dsWorkAreaEvents.lock();
