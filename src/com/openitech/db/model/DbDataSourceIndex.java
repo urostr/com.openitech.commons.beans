@@ -398,7 +398,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     public DbIndexKey(DbDataSource dataSource, List<String> keys, int row) throws SQLException {
       StringBuilder key = new StringBuilder(27);
       for (String column : keys) {
-        Object value = row>=dataSource.getRowCount()?null:dataSource.getValueAt(row, column, keys.toArray(new String[keys.size()]));
+        Object value = row>dataSource.getRowCount()?null:dataSource.getValueAt(row, column, keys.toArray(new String[keys.size()]));
         if (value == null) {
           keyValuesList.add(NULL);
           key.append(key.length() > 0 ? ";" : "").append(NULL);
