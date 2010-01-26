@@ -18,7 +18,7 @@ import com.openitech.db.model.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.PendingSqlParameter;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.db.model.xml.config.DataSourceFilter;
-import com.openitech.db.model.xml.config.DataSourceFilterFactory;
+import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.db.model.xml.config.Workarea.DataModel.TableColumns.TableColumnDefinition;
@@ -63,13 +63,13 @@ public class DataSourceFactory {
     return dbDataModel;
   }
 
-  public void configure(String opis, String resourceName) throws SQLException, JAXBException {
-    configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), resourceName);
+  public void configure(String opis, Class clazz, String resourceName) throws SQLException, JAXBException {
+    configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), clazz, resourceName);
   }
 
-  public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.xml.DataSourceConfig config, String resourceName) throws SQLException, JAXBException {
+  public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.xml.DataSourceConfig config, Class clazz, String resourceName) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
-    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(DataSourceFactory.class.getResourceAsStream(resourceName));
+    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(clazz.getResourceAsStream(resourceName));
 
     configure(waConfig, opis, config, workareaXML);
   }
@@ -137,6 +137,7 @@ public class DataSourceFactory {
               Constructor constructor = gcls.getConstructor(String.class, com.openitech.db.model.xml.DataSourceConfig.class);
               newInstance = constructor.newInstance(dsf.getReplace(), config);
             } else if (dsf.getFactory().getClassName() != null) {
+              @SuppressWarnings("static-access")
               Class jcls = DataSourceFactory.class.forName(dsf.getFactory().getClassName());
               Constructor constructor = jcls.getConstructor(String.class, com.openitech.db.model.xml.DataSourceConfig.class);
               newInstance = constructor.newInstance(dsf.getReplace(), config);
@@ -166,16 +167,18 @@ public class DataSourceFactory {
           } catch (Exception ex) {
             Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
           }
-        } else if (parameter.getDataSourceFilterFactory() != null) {
+        } else if ((parameter.getDataSourceParametersFactory() != null)||
+                   (parameter.getDataSourceFilterFactory() != null)) {
           try {
             Object newInstance = null;
-            DataSourceFilterFactory dsf = parameter.getDataSourceFilterFactory();
+            DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null)?parameter.getDataSourceParametersFactory():parameter.getDataSourceFilterFactory();
             if (dsf.getFactory().getGroovy() != null) {
               GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
               Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + waConfig.getOpis() + "_" + System.currentTimeMillis());
               Constructor constructor = gcls.getConstructor(DbDataSource.class, com.openitech.db.model.xml.DataSourceConfig.class);
               newInstance = constructor.newInstance(dsWorkAreaEvents, config);
             } else if (dsf.getFactory().getClassName() != null) {
+              @SuppressWarnings("static-access")
               Class jcls = DataSourceFactory.class.forName(dsf.getFactory().getClassName());
               Constructor constructor = jcls.getConstructor(DbDataSource.class, com.openitech.db.model.xml.DataSourceConfig.class);
               newInstance = constructor.newInstance(dsWorkAreaEvents, config);

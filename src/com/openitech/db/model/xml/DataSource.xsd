@@ -18,7 +18,12 @@
                 <xsd:complexType>
                   <xsd:choice>
                     <xsd:element name="DataSourceFilter" type="tns:DataSourceFilter"></xsd:element>
-                    <xsd:element name="DataSourceFilterFactory" type="tns:DataSourceFilterFactory"></xsd:element>
+                    <xsd:element name="DataSourceFilterFactory" type="tns:DataSourceParametersFactory">
+                      <xsd:annotation>
+                        <xsd:documentation>Deprecated</xsd:documentation>
+                      </xsd:annotation>
+                    </xsd:element>
+                    <xsd:element name="DataSourceParametersFactory" type="tns:DataSourceParametersFactory"></xsd:element>
                     <xsd:element name="SubQuery" type="tns:SubQuery"></xsd:element>
                       <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
                   </xsd:choice>
@@ -97,7 +102,7 @@
       <xsd:element name="Factory"  type="tns:Factory"></xsd:element>
     </xsd:all>
   </xsd:complexType>
-  <xsd:complexType name="DataSourceFilterFactory">
+  <xsd:complexType name="DataSourceParametersFactory">
     <xsd:all>
       <xsd:element name="Factory"  type="tns:Factory"></xsd:element>
     </xsd:all>
@@ -147,6 +152,8 @@
         <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
     </xsd:complexType>
 </xsd:schema>
+
+
 
 
 
