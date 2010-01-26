@@ -3,7 +3,9 @@
     <nextCatalog catalog="nbproject/private/cache/retriever/catalog.xml"/>
     <system systemId="file:/Users/uros/Java/projects/common/db%20commons/src/com/openitech/db/model/xml/DataSourceConfig.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSourceConfig.xsd"/>
     <system systemId="file:/Users/uros/Java/projects/common/db%20commons/src/com/openitech/db/model/xml/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/db/model/xml/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE3_CONFIG/DataSource.xsd"/>
 </catalog>
+
 
 
 

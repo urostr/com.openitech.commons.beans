@@ -2695,6 +2695,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   protected PreparedStatement getSelectStatement(String sql, Connection connection) throws SQLException {
+    //TODO ni logièna koda. Ne uprablja se owner.isCacheStatements()
     if (this.selectStatement != null) {
       return this.selectStatement;
     } else {
@@ -3905,6 +3906,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && (currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
           newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && owner.isCacheRowSet()) {
+          //Moral bi vrniti CachedRowSet count, tako da naj poskusi še enkrat z ekspicitnim loadData()
           if (loadData()) {
             return getRowCount();
           } else {
