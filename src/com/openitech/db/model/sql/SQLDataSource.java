@@ -4445,7 +4445,9 @@ public class SQLDataSource implements DbDataSourceImpl {
                 }
               }
             }
-            openSelectResultSet.absolute(oldRow);
+            if (oldRow>0) {
+              openSelectResultSet.absolute(oldRow);
+            }
           } finally {
             owner.unlock();
           }
