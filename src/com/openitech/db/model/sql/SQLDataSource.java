@@ -186,6 +186,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateFloat(String columnName, float x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -206,6 +207,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateFloat(int columnIndex, float x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -231,6 +233,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Date getDate(String columnName, Calendar cal) throws SQLException {
     throw new SQLException("Unsupported operation.");
   }
@@ -252,6 +255,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Date getDate(int columnIndex, Calendar cal) throws SQLException {
     throw new SQLException("Unsupported operation.");
   }
@@ -273,6 +277,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Time getTime(String columnName, Calendar cal) throws SQLException {
     throw new SQLException("Unsupported operation.");
   }
@@ -294,6 +299,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Time getTime(int columnIndex, Calendar cal) throws SQLException {
     throw new SQLException("Unsupported operation.");
   }
@@ -315,6 +321,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Timestamp getTimestamp(String columnName, Calendar cal) throws SQLException {
     throw new SQLException("Unsupported operation.");
   }
@@ -336,6 +343,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
     throw new SQLException("Unsupported operation.");
   }
@@ -357,6 +365,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Object getObject(String columnName, Map<String, Class<?>> map) throws SQLException {
     throw new SQLException("Unsupported operation.");
   }
@@ -378,6 +387,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Object getObject(int columnIndex, Map<String, Class<?>> map) throws SQLException {
     throw new SQLException("Unsupported operation.");
   }
@@ -394,6 +404,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateDate(String columnName, Date x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -414,6 +425,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateShort(int columnIndex, short x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -435,6 +447,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateBlob(String columnName, Blob x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -456,6 +469,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateArray(String columnName, Array x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -476,6 +490,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateDouble(int columnIndex, double x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -497,6 +512,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateTimestamp(String columnName, Timestamp x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -517,6 +533,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateTime(int columnIndex, Time x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -538,6 +555,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBigDecimal(String columnName, BigDecimal x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -558,6 +576,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateDouble(String columnName, double x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -577,6 +596,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateNull(String columnName) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, null);
@@ -595,6 +615,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public long getLong(String columnName) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, 0l, Number.class);
@@ -614,6 +635,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public int getInt(String columnName) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, 0, Number.class);
@@ -633,6 +655,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public float getFloat(String columnName) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, 0f, Number.class);
@@ -652,6 +675,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public double getDouble(String columnName) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, 0d, Number.class);
@@ -671,6 +695,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Date getDate(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Date.class);
@@ -690,6 +715,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Clob getClob(String colName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), colName, null, Clob.class);
@@ -710,6 +736,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Reader getCharacterStream(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Reader.class);
@@ -729,6 +756,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public byte[] getBytes(String columnName) throws SQLException {
     if (loadData()) {
       return (byte[]) getStoredValue(getRow(), columnName, new byte[]{}, Object.class);
@@ -759,6 +787,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * the value returned is <code>null</code>.
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public InputStream getAsciiStream(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, InputStream.class);
@@ -776,6 +805,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if the <code>ResultSet</code> object
    * does not contain <code>columnName</code> or a database access error occurs
    */
+  @Override
   public int findColumn(String columnName) throws SQLException {
     if (loadData()) {
       return getColumnIndex(columnName);
@@ -797,6 +827,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public BigDecimal getBigDecimal(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, BigDecimal.class);
@@ -826,6 +857,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * if the value is SQL <code>NULL</code>, the result is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public InputStream getBinaryStream(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, InputStream.class);
@@ -845,6 +877,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Blob getBlob(String colName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), colName, null, Blob.class);
@@ -863,6 +896,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>false</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public boolean getBoolean(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, false, Boolean.class);
@@ -881,6 +915,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public byte getByte(String columnName) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, (byte) 0, Number.class);
@@ -916,6 +951,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @return a <code>java.lang.Object</code> holding the column value
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Object getObject(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Object.class);
@@ -935,6 +971,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Ref getRef(String colName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), colName, null, Ref.class);
@@ -953,6 +990,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public short getShort(String columnName) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, (short) 0, Number.class);
@@ -972,6 +1010,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public String getString(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, String.class);
@@ -991,6 +1030,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * the value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Time getTime(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Time.class);
@@ -1009,6 +1049,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Timestamp.class);
@@ -1031,6 +1072,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *            or if a URL is malformed
    * @since 1.4
    */
+  @Override
   public URL getURL(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, URL.class);
@@ -1067,6 +1109,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @deprecated use <code>getCharacterStream</code> instead
    */
   @Deprecated
+  @Override
   public InputStream getUnicodeStream(String columnName) throws SQLException {
     throw new RuntimeException("Unsupported operation");
   }
@@ -1084,6 +1127,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBytes(String columnName, byte[] x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -1105,6 +1149,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateRef(String columnName, Ref x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -1125,6 +1170,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateNull(int columnIndex) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, null);
@@ -1159,6 +1205,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @return a <code>java.lang.Object</code> holding the column value
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Object getObject(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, Object.class);
@@ -1177,6 +1224,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public long getLong(int columnIndex) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnIndex, 0l, Number.class);
@@ -1196,6 +1244,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public int getInt(int columnIndex) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnIndex, 0, Number.class);
@@ -1215,6 +1264,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public float getFloat(int columnIndex) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnIndex, 0f, Number.class);
@@ -1234,6 +1284,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public double getDouble(int columnIndex) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnIndex, 0d, Number.class);
@@ -1253,6 +1304,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Date getDate(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, Date.class);
@@ -1272,6 +1324,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Clob getClob(int i) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), i, null, Clob.class);
@@ -1292,6 +1345,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Reader getCharacterStream(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, Reader.class);
@@ -1311,6 +1365,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public byte[] getBytes(int columnIndex) throws SQLException {
     if (loadData()) {
       return (byte[]) getStoredValue(getRow(), columnIndex, new byte[]{}, Object.class);
@@ -1342,6 +1397,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public InputStream getAsciiStream(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, InputStream.class);
@@ -1361,6 +1417,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Array getArray(String columnName) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Array.class);
@@ -1380,6 +1437,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Array getArray(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, Array.class);
@@ -1422,6 +1480,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * occurs, or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean absolute(int row) throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -1455,6 +1514,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, BigDecimal.class);
@@ -1484,6 +1544,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *         <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, InputStream.class);
@@ -1503,6 +1564,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Blob getBlob(int i) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), i, null, Blob.class);
@@ -1521,6 +1583,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>false</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public boolean getBoolean(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, false, Boolean.class);
@@ -1539,6 +1602,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public byte getByte(int columnIndex) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnIndex, (byte) 0, Number.class);
@@ -1559,6 +1623,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Ref getRef(int i) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), i, null, Ref.class);
@@ -1577,6 +1642,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>0</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public short getShort(int columnIndex) throws SQLException {
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnIndex, (short) 0, Number.class);
@@ -1596,6 +1662,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public String getString(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, String.class);
@@ -1614,6 +1681,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Time getTime(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, Time.class);
@@ -1632,6 +1700,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * value returned is <code>null</code>
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public Timestamp getTimestamp(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, Timestamp.class);
@@ -1654,6 +1723,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *            or if a URL is malformed
    * @since 1.4
    */
+  @Override
   public URL getURL(int columnIndex) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, URL.class);
@@ -1691,6 +1761,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *              <code>getUnicodeStream</code>
    */
   @Deprecated
+  @Override
   public InputStream getUnicodeStream(int columnIndex) throws SQLException {
     throw new RuntimeException("Unsupported operation");
   }
@@ -1717,6 +1788,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *            <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean relative(int rows) throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -1757,6 +1829,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @see #getFetchDirection
    * @since 1.2
    */
+  @Override
   public void setFetchDirection(int direction) throws SQLException {
     if (isDataLoaded()) {
       openSelectResultSet().setFetchDirection(direction);
@@ -1781,6 +1854,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @see #getFetchSize
    * @since 1.2
    */
+  @Override
   public void setFetchSize(int rows) throws SQLException {
     this.fetchSize = rows;
     if (isDataLoaded()) {
@@ -1800,6 +1874,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBoolean(String columnName, boolean x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -1820,6 +1895,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateObject(String columnName, Object x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -1840,6 +1916,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateDate(int columnIndex, Date x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -1861,6 +1938,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateClob(String columnName, Clob x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -1882,6 +1960,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -1902,6 +1981,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateByte(String columnName, byte x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -1922,6 +2002,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateShort(String columnName, short x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -1942,6 +2023,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateLong(String columnName, long x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -1962,6 +2044,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateRef(int columnIndex, Ref x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -1982,6 +2065,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateArray(int columnIndex, Array x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2004,6 +2088,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2024,6 +2109,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateClob(int columnIndex, Clob x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2044,6 +2130,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateLong(int columnIndex, long x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2064,6 +2151,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBytes(int columnIndex, byte[] x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2084,6 +2172,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateByte(int columnIndex, byte x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2104,6 +2193,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateTime(String columnName, Time x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -2124,6 +2214,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.4
    */
+  @Override
   public void updateBlob(int columnIndex, Blob x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2144,6 +2235,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateString(int columnIndex, String x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2168,6 +2260,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateObject(String columnName, Object x, int scale) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, new Scale("updateObject", x, scale));
@@ -2188,6 +2281,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateObject(int columnIndex, Object x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2208,6 +2302,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateInt(String columnName, int x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -2230,6 +2325,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateCharacterStream(String columnName, Reader reader, int length) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, new Scale("updateCharacterStream", reader, length));
@@ -2252,6 +2348,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, new Scale("updateBinaryStream", x, length));
@@ -2273,6 +2370,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @deprecated
    */
   @Deprecated
+  @Override
   public BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, BigDecimal.class);
@@ -2295,6 +2393,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateAsciiStream(String columnName, InputStream x, int length) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, new Scale("updateAsciiStream", x, length));
@@ -2315,6 +2414,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBoolean(int columnIndex, boolean x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2335,6 +2435,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *         <code>NULL</code> and <code>false</code> otherwise
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public boolean wasNull() throws SQLException {
     if (isDataLoaded()) {
       return storedResult[0] ? storedResult[1] : openSelectResultSet().wasNull();
@@ -2355,6 +2456,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateString(String columnName, String x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
@@ -2383,6 +2485,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * if this method is called when the cursor is on the insert row
    * @since 1.2
    */
+  @Override
   public void updateRow() throws SQLException {
     boolean storeUpdates = true;
     try {
@@ -2416,6 +2519,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateObject(int columnIndex, Object x, int scale) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, new Scale("updateObject", x, scale));
@@ -2436,6 +2540,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateInt(int columnIndex, int x) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, x);
@@ -2457,6 +2562,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, new Scale("updateCharacterStream", x, length));
@@ -2479,6 +2585,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, new Scale("updateBinaryStream", x, length));
@@ -2494,6 +2601,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @return the description of this <code>ResultSet</code> object's columns
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public ResultSetMetaData getMetaData() throws SQLException {
     if (this.metaData != null) {
       return this.metaData;
@@ -2511,6 +2619,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @see #setFetchSize
    * @since 1.2
    */
+  @Override
   public int getFetchSize() throws SQLException {
     return this.fetchSize;
   }
@@ -2524,6 +2633,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @see #setFetchDirection
    * @since 1.2
    */
+  @Override
   public int getFetchDirection() throws SQLException {
     if (loadData()) {
       return openSelectResultSet().getFetchDirection();
@@ -2555,6 +2665,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @return the SQL name for this <code>ResultSet</code> object's cursor
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public String getCursorName() throws SQLException {
     if (loadData()) {
       return openSelectResultSet().getCursorName();
@@ -2574,6 +2685,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public int getConcurrency() throws SQLException {
     if (loadData()) {
       return openSelectResultSet().getConcurrency();
@@ -2592,6 +2704,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean first() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -2746,6 +2859,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * or if this method is called when the cursor is on the insert row
    * @since 1.2
    */
+  @Override
   public void deleteRow() throws SQLException {
     if (owner.isCanDeleteRows()) {
       if (isDataLoaded()) {
@@ -2797,6 +2911,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public void close() throws SQLException {
     if (isDataLoaded()) {
       if (!owner.isShareResults()) {
@@ -2818,6 +2933,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public void clearWarnings() throws SQLException {
     if (isDataLoaded()) {
       openSelectResultSet().clearWarnings();
@@ -2841,6 +2957,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *            on the insert row
    * @since 1.2
    */
+  @Override
   public void cancelRowUpdates() throws SQLException {
     if (isDataLoaded()) {
       if (isUpdating()) {
@@ -2874,6 +2991,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public void beforeFirst() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -2902,6 +3020,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public void afterLast() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -2933,6 +3052,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @deprecated
    */
   @Deprecated
+  @Override
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
     if (loadData()) {
       return getStoredValue(getRow(), columnIndex, null, BigDecimal.class);
@@ -2949,6 +3069,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public int getRow() throws SQLException {
     if (loadData()) {
       return inserting ? getRowCount() : openSelectResultSet().getRow();
@@ -2970,6 +3091,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public Statement getStatement() throws SQLException {
     return getSelectStatement(preparedSelectSql, getTxConnection());
   }
@@ -2985,6 +3107,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public int getType() throws SQLException {
     if (loadData()) {
       return openSelectResultSet().getType();
@@ -2993,6 +3116,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public int getType(int columnIndex) throws SQLException {
     if (getMetaData() != null) {
       return getMetaData().getColumnType(columnIndex);
@@ -3001,6 +3125,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public int getType(String columnName) throws SQLException {
     if (getMetaData() != null) {
       return getMetaData().getColumnType(columnMapping.checkedGet(columnName));
@@ -3032,6 +3157,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs or this method is
    *            called on a closed result set
    */
+  @Override
   public SQLWarning getWarnings() throws SQLException {
     if (isDataLoaded()) {
       return openSelectResultSet().getWarnings();
@@ -3051,6 +3177,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * the insert row have been given a value
    * @since 1.2
    */
+  @Override
   public void insertRow() throws SQLException {
     updateRow();
   }
@@ -3065,6 +3192,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public boolean isAfterLast() throws SQLException {
     if (isDataLoaded()) {
       return inserting ? false : openSelectResultSet().isAfterLast();
@@ -3083,6 +3211,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public boolean isBeforeFirst() throws SQLException {
     if (isDataLoaded()) {
       return inserting ? false : openSelectResultSet().isBeforeFirst();
@@ -3100,6 +3229,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public boolean isFirst() throws SQLException {
     if (isDataLoaded()) {
       return inserting ? false : openSelectResultSet().isFirst() || (getRowCount() == 0);
@@ -3121,6 +3251,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public boolean isLast() throws SQLException {
     if (isDataLoaded()) {
       return inserting ? true : openSelectResultSet().isLast() || (getRowCount() == 0);
@@ -3139,6 +3270,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean last() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -3169,6 +3301,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * or the result set is not updatable
    * @since 1.2
    */
+  @Override
   public void moveToCurrentRow() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -3210,6 +3343,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * or the result set is not updatable
    * @since 1.2
    */
+  @Override
   public void moveToInsertRow() throws SQLException {
     if (owner.isCanAddRows()) {
       if (loadData()) {
@@ -3265,6 +3399,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * <code>false</code> if there are no more rows
    * @exception SQLException if a database access error occurs
    */
+  @Override
   public boolean next() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -3300,6 +3435,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
    * @since 1.2
    */
+  @Override
   public boolean previous() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
@@ -3350,6 +3486,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * occurs or if this method is called when the cursor is on the insert row
    * @since 1.2
    */
+  @Override
   public void refreshRow() throws SQLException {
     if (isDataLoaded()) {
       if (rowUpdated()) {
@@ -3377,6 +3514,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @see DatabaseMetaData#deletesAreDetected
    * @since 1.2
    */
+  @Override
   public boolean rowDeleted() throws SQLException {
     if (isDataLoaded()) {
       return false; //vedno bomo takoj zbrisali vrstico
@@ -3396,6 +3534,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @see DatabaseMetaData#insertsAreDetected
    * @since 1.2
    */
+  @Override
   public boolean rowInserted() throws SQLException {
     if (isDataLoaded()) {
       return inserting;
@@ -3414,6 +3553,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @see DatabaseMetaData#updatesAreDetected
    * @since 1.2
    */
+  @Override
   public boolean rowUpdated() throws SQLException {
     if (isDataLoaded()) {
       return storedUpdates.containsKey(new Integer(getRow()));
@@ -3422,6 +3562,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public void startUpdate() throws SQLException {
     if (isDataLoaded()) {
       if ((getRowCount() > 0) && !rowUpdated()) {
@@ -3447,6 +3588,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * @exception SQLException if a database access error occurs
    * @since 1.2
    */
+  @Override
   public void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
     if (isDataLoaded()) {
       storeUpdate(columnIndex, new Scale("updateAsciiStream", x, length));
@@ -3455,6 +3597,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public void doStoreUpdates(boolean insert, Map<String, Object> columnValues, Map<Integer, Object> oldValues, Integer row) throws SQLException {
     Logger.getLogger(Settings.LOGGER).entering(this.getClass().toString(), "storeUpdates", insert);
     Scale scaledValue;
@@ -3648,10 +3791,7 @@ public class SQLDataSource implements DbDataSourceImpl {
             for (String c : key.getColumnNames(connection)) {
               where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
             }
-            String sql = "UPDATE "
-                    + (key.catalogName != null && key.schemaName != null ? delimiterLeft + key.catalogName + delimiterRight + "." : "")
-                    + (key.schemaName != null ? delimiterLeft + key.schemaName + delimiterRight + "." : "")
-                    + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
+            String sql = "UPDATE " + (key.catalogName != null && key.schemaName != null ? delimiterLeft + key.catalogName + delimiterRight + "." : "") + (key.schemaName != null ? delimiterLeft + key.schemaName + delimiterRight + "." : "") + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
 
             PreparedStatement updateStatement = getTxConnection().prepareStatement(sql.toString());
             try {
@@ -3712,6 +3852,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public void setUpdateTableName(String updateTableName) {
     this.updateTableName = updateTableName;
     if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
@@ -3745,10 +3886,12 @@ public class SQLDataSource implements DbDataSourceImpl {
     return result;
   }
 
+  @Override
   public String getUpdateTableName() {
     return updateTableName;
   }
 
+  @Override
   public void setSelectSql(String selectSql) throws SQLException {
     if (selectSql != null) {
       String oldvalue = this.selectSql;
@@ -3802,6 +3945,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public int getColumnIndex(String columnName) throws SQLException {
     if ((columnName != null) && (columnName instanceof String)) {
       columnName = ((String) columnName).toUpperCase();
@@ -3823,6 +3967,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public void setCountSql(String countSql) throws SQLException {
     String oldvalue = this.countSql;
     try {
@@ -3851,14 +3996,17 @@ public class SQLDataSource implements DbDataSourceImpl {
     owner.firePropertyChange("countSql", oldvalue, this.countSql);
   }
 
+  @Override
   public String getSelectSql() {
     return selectSql;
   }
 
+  @Override
   public String getCountSql() {
     return countSql;
   }
 
+  @Override
   public Connection getConnection() {
     if (this.connection == null) {
       if (ConnectionManager.getInstance() != null) {
@@ -3879,6 +4027,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     return (this.connection == null) ? ConnectionManager.getInstance().getTxConnection() : this.connection;
   }
 
+  @Override
   public void setConnection(Connection connection) throws SQLException {
     if (this.connection != connection) {
       for (PreparedStatement statement : cachedStatements.values()) {
@@ -3895,6 +4044,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public int getRowCount() {
     int newCount = this.count;
     if (!isDataLoaded() && refreshPending) {
@@ -3975,7 +4125,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     ResultSet currentResultSet;
 
     public CurrentResultSet(ResultSet currentResultSet) throws SQLException {
-      if ((currentResultSet!=null) && (owner.isConnectOnDemand() || owner.isCacheRowSet())) {
+      if ((currentResultSet != null) && (owner.isConnectOnDemand() || owner.isCacheRowSet())) {
         this.currentResultSet = new CachedRowSetImpl();
         this.currentResultSet.setFetchSize(getFetchSize());
         ((CachedRowSet) this.currentResultSet).populate(currentResultSet);
@@ -3993,6 +4143,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public boolean isDataLoaded() {
     return currentResultSet != null;
   }
@@ -4001,6 +4152,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     return loadData(reload, Integer.MIN_VALUE);
   }
 
+  @Override
   public boolean loadData(boolean reload, int oldRow) {
     boolean reloaded = false;
     if (reload) {
@@ -4281,20 +4433,24 @@ public class SQLDataSource implements DbDataSourceImpl {
     return statement.executeUpdate();
   }
 
+  @Override
   public int getColumnCount() throws SQLException {
     return getMetaData().getColumnCount();
   }
 
+  @Override
   public Object getValueAt(int rowIndex, int columnIndex) throws SQLException {
     return getValueAt(rowIndex, getMetaData().getColumnName(columnIndex));
   }
 
+  @Override
   public Object getValueAt(int rowIndex, String columnName) throws SQLException {
     String[] columns = this.getValueColumns.toArray(new String[this.getValueColumns.size() + 1]);
     columns[this.getValueColumns.size()] = columnName;
     return getValueAt(rowIndex, columnName, columns);
   }
 
+  @Override
   public Object getValueAt(int rowIndex, String columnName, String... columnNames) throws SQLException {
     if (!isDataLoaded() && refreshPending) {
       return null;
@@ -4309,8 +4465,8 @@ public class SQLDataSource implements DbDataSourceImpl {
         CacheEntry ce;
         if (cache.containsKey(ck) && ((ce = cache.get(ck)) != null)) {
           result = ce.value;
-        } else if (rowIndex>getRowCount()) {
-          throw new SQLException("Invalid row number "+rowIndex+" for "+toString());
+        } else if (rowIndex > getRowCount()) {
+          throw new SQLException("Invalid row number " + rowIndex + " for " + toString());
         } else {
           owner.lock();
           try {
@@ -4447,7 +4603,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                 }
               }
             }
-            if (oldRow>0) {
+            if (oldRow > 0) {
               openSelectResultSet.absolute(oldRow);
             }
           } finally {
@@ -4461,6 +4617,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public ResultSet getResultSet() throws SQLException {
     if (DbDataSource.DUMP_SQL) {
       System.out.println("##############");
@@ -4528,6 +4685,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     return currentResultSet.currentResultSet;
   }
 
+  @Override
   public String getColumnName(int columnIndex) throws SQLException {
     if (loadData()) {
       return openSelectResultSet().getMetaData().getColumnName(columnIndex);
@@ -4562,6 +4720,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public Map<Integer, Map<String, Object>> getStoredUpdates() {
     return java.util.Collections.unmodifiableMap(storedUpdates);
   }
@@ -4643,6 +4802,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     return equals;
   }
 
+  @Override
   public boolean hasChanged(int columnIndex) throws SQLException {
     if (inserting) {
       return true;
@@ -4653,6 +4813,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public boolean hasChanged(String columnName) throws SQLException {
     if (inserting) {
       return true;
@@ -4663,10 +4824,12 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
   public Object getOldValue(int columnIndex) throws SQLException {
     return openSelectResultSet().getObject(columnIndex);
   }
 
+  @Override
   public Object getOldValue(String columnName) throws SQLException {
     return openSelectResultSet().getObject(columnName);
   }
@@ -4683,6 +4846,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     return wasUpdated(row, getMetaData().getColumnName(columnIndex));
   }
 
+  @Override
   public boolean wasUpdated(int row, String columnName) throws SQLException {
     boolean result = false;
 
@@ -5846,6 +6010,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
     }
 
+    @Override
     public V put(K key, V value) {
       if (key instanceof String) {
         return super.put((K) (((String) key).toUpperCase()), value);
@@ -5932,10 +6097,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           sql.append(sql.length() > 0 ? " AND " : "").append(delimiterLeft).append(c.next()).append(delimiterRight).append("=? ");
         }
 
-        sql.insert(0, "DELETE FROM "
-                + (catalogName != null && schemaName != null ? delimiterLeft + catalogName + delimiterRight + "." : "")
-                + (schemaName != null ? delimiterLeft + schemaName + delimiterRight + "." : "")
-                + delimiterLeft + table + delimiterRight + " WHERE ");
+        sql.insert(0, "DELETE FROM " + (catalogName != null && schemaName != null ? delimiterLeft + catalogName + delimiterRight + "." : "") + (schemaName != null ? delimiterLeft + schemaName + delimiterRight + "." : "") + delimiterLeft + table + delimiterRight + " WHERE ");
 
         delete = connection.prepareStatement(sql.toString());
       }
@@ -5960,10 +6122,7 @@ public class SQLDataSource implements DbDataSourceImpl {
             sql.append(sql.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append("=? ");
           }
 
-          sql.insert(0, "SELECT * FROM "
-                  + (catalogName != null && schemaName != null ? delimiterLeft + catalogName + delimiterRight + "." : "")
-                  + (schemaName != null ? delimiterLeft + schemaName + delimiterRight + "." : "")
-                  + delimiterLeft + table + delimiterRight + " WHERE ");
+          sql.insert(0, "SELECT * FROM " + (catalogName != null && schemaName != null ? delimiterLeft + catalogName + delimiterRight + "." : "") + (schemaName != null ? delimiterLeft + schemaName + delimiterRight + "." : "") + delimiterLeft + table + delimiterRight + " WHERE ");
           sql.append(" FOR UPDATE");
 
           update = connection.prepareStatement(sql.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
@@ -6100,6 +6259,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       return result;
     }
 
+    @Override
     public boolean equals(Object obj) {
       if (obj instanceof PrimaryKey) {
         return Equals.equals(this.table, ((PrimaryKey) obj).table);
@@ -6145,6 +6305,7 @@ public class SQLDataSource implements DbDataSourceImpl {
      * @see java.lang.Object#equals(java.lang.Object)
      * @see java.util.Hashtable
      */
+    @Override
     public int hashCode() {
       return hashcode;
     }
@@ -6163,6 +6324,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.hash = ("" + row + "#" + this.columnName).hashCode();
     }
 
+    @Override
     public boolean equals(Object obj) {
       if (obj != null && (obj instanceof CacheKey)) {
         return (((CacheKey) obj).row == row) && (((CacheKey) obj).columnName.equals(columnName));
@@ -6171,6 +6333,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
     }
 
+    @Override
     public int hashCode() {
       return this.hash;
     }
@@ -6187,6 +6350,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.value = value;
     }
 
+    @Override
     public boolean equals(Object obj) {
       if (obj != null && (obj instanceof CacheEntry)) {
         if ((key != null) && (key instanceof Number)) {
@@ -6199,6 +6363,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
     }
 
+    @Override
     public String toString() {
       return value.toString();
     }
@@ -6220,6 +6385,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.owner = owner;
     }
 
+    @Override
     public void run() {
       Logger.getLogger(Settings.LOGGER).fine("Firing events '" + owner.selectSql + "'");
       owner.refreshPending = DataSourceEvent.isRefreshing(owner.owner);
@@ -6237,7 +6403,6 @@ public class SQLDataSource implements DbDataSourceImpl {
       owner.owner.fireActiveRowChange(new ActiveRowChangeEvent(owner.owner, pos, -1));
     }
   };
-
   private String catalogName;
 
   /**
@@ -6245,6 +6410,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *
    * @return the value of catalogName
    */
+  @Override
   public String getCatalogName() {
     return catalogName;
   }
@@ -6254,13 +6420,14 @@ public class SQLDataSource implements DbDataSourceImpl {
    *
    * @param catalogName new value of catalogName
    */
+  @Override
   public void setCatalogName(String catalogName) {
-    if (catalogName!=null) {
+    if (catalogName != null) {
       if (catalogName.startsWith(getDelimiterLeft())) {
         catalogName = catalogName.substring(getDelimiterLeft().length());
       }
       if (catalogName.endsWith(getDelimiterRight())) {
-        catalogName = catalogName.substring(0, catalogName.length()-getDelimiterRight().length());
+        catalogName = catalogName.substring(0, catalogName.length() - getDelimiterRight().length());
       }
     }
     this.catalogName = catalogName;
@@ -6268,7 +6435,6 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.primaryKeys = this.getPrimaryKeys();
     }
   }
-
   private String schemaName;
 
   /**
@@ -6276,6 +6442,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    *
    * @return the value of schemaName
    */
+  @Override
   public String getSchemaName() {
     return schemaName;
   }
@@ -6285,13 +6452,14 @@ public class SQLDataSource implements DbDataSourceImpl {
    *
    * @param schemaName new value of schemaName
    */
+  @Override
   public void setSchemaName(String schemaName) {
-    if (schemaName!=null) {
+    if (schemaName != null) {
       if (schemaName.startsWith(getDelimiterLeft())) {
         schemaName = schemaName.substring(getDelimiterLeft().length());
       }
       if (catalogName.endsWith(getDelimiterRight())) {
-        schemaName = schemaName.substring(0, schemaName.length()-getDelimiterRight().length());
+        schemaName = schemaName.substring(0, schemaName.length() - getDelimiterRight().length());
       }
     }
     this.schemaName = schemaName;
@@ -6304,6 +6472,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * Getter for property uniqueID.
    * @return Value of property uniqueID.
    */
+  @Override
   public String[] getUniqueID() {
     return this.uniqueID;
   }
@@ -6312,6 +6481,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    * Setter for property uniqueID.
    * @param uniqueID New value of property uniqueID.
    */
+  @Override
   public void setUniqueID(String[] uniqueID) {
     this.uniqueID = uniqueID;
     if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
