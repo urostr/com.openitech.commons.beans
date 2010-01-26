@@ -2,9 +2,9 @@ package com.openitech.db.filters;
 
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 
-public class DataSourceFiltersSeek<T> {
+public class DataSourceFiltersSeek<T extends AbstractSeekType> {
 
-  public DataSourceFiltersSeek(DataSourceFilters filter, AbstractSeekType<T> seek) {
+  public DataSourceFiltersSeek(DataSourceFilters filter, T seek) {
     super();
     this.filter = filter;
     this.seek = seek;
@@ -28,14 +28,14 @@ public class DataSourceFiltersSeek<T> {
   public void setFilter(DataSourceFilters filter) {
     this.filter = filter;
   }
-  public AbstractSeekType<T> seek;
+  public T seek;
 
   /**
    * Get the value of seek
    *
    * @return the value of seek
    */
-  public AbstractSeekType<T> getSeek() {
+  public T getSeek() {
     return seek;
   }
 
@@ -44,7 +44,7 @@ public class DataSourceFiltersSeek<T> {
    *
    * @param seek new value of seek
    */
-  public void setSeek(AbstractSeekType<T> seek) {
+  public void setSeek(T seek) {
     this.seek = seek;
   }
 }

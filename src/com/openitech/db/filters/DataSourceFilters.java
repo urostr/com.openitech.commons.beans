@@ -478,17 +478,15 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         return false;
       }
     }
-
     BetweenDateDocumentListener betweenDateDocumentListener;
-
 
     @Override
     public void setDocuments(DataSourceFilters filter, Document... documents) {
-      if (betweenDateDocumentListener!=null) {
+      if (betweenDateDocumentListener != null) {
         betweenDateDocumentListener.from.removeDocumentListener(betweenDateDocumentListener);
         betweenDateDocumentListener.to.removeDocumentListener(betweenDateDocumentListener);
       }
-      if ((documents!=null) && (documents.length>=2)) {
+      if ((documents != null) && (documents.length >= 2)) {
         if (betweenDateDocumentListener == null) {
           betweenDateDocumentListener = new BetweenDateDocumentListener(filter, this, documents[0], documents[1]);
         } else {
@@ -1069,10 +1067,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public static class TelefonSeekType extends AbstractSeekType<String> {
 
-    DataSourceFiltersSeek<String> omrezna;
-    DataSourceFiltersSeek<String> telefonska;
+    DataSourceFiltersSeek<VariousValuesSeekType> omrezna;
+    DataSourceFiltersSeek<VariousValuesSeekType> telefonska;
 
-    public TelefonSeekType(DataSourceFiltersSeek<String> omrezna, DataSourceFiltersSeek<String> telefonska) {
+    public TelefonSeekType(DataSourceFiltersSeek<VariousValuesSeekType> omrezna, DataSourceFiltersSeek<VariousValuesSeekType> telefonska) {
       super("", telefonska.seek.getSeekType(), 1);
 
       this.omrezna = omrezna;
@@ -1153,6 +1151,86 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     @Override
     public boolean hasValue() {
       return false;
+    }
+  }
+
+  public static class VariousValuesSeekType extends InnerJoinSeekType<String> {
+
+    private int min_length = 1;
+
+    public VariousValuesSeekType(String tableName, String valueIdField, String alias, String joinON, String valueType, int seekType) {
+      super(tableName + " " + alias, alias + "."+valueIdField+" = " + joinON + "\n AND ", alias + "." + valueType);
+      setSeekType(seekType);
+    }
+    private boolean useAlways = false;
+
+    /**
+     * Get the value of useAlways
+     *
+     * @return the value of useAlways
+     */
+    public boolean isUseAlways() {
+      return useAlways;
+    }
+
+    /**
+     * Set the value of useAlways
+     *
+     * @param useAlways new value of useAlways
+     */
+    public void setUseAlways(boolean useAlways) {
+      this.useAlways = useAlways;
+    }
+
+    @Override
+    public boolean setValue(String value) {
+      if (value == null) {
+        value = "";
+      } else if (value.endsWith("%")) {
+        value = value.substring(0, value.length() - 1);
+      }
+      value = value.trim();
+
+      if (value.length() < min_length) {
+        value = "";
+      } else {
+        value = caseSensitive ? value : value.toUpperCase();
+      }
+      if (!Equals.equals(getValue(), value)) {
+        this.value = value;
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    @Override
+    public String getJoinType() {
+      return (value != null && value.length() > 0) ? "INNER JOIN" : "LEFT OUTER JOIN";
+    }
+
+    @Override
+    public boolean hasValue() {
+      return isUseAlways() || (value != null && value.length() > 0);
+    }
+    private boolean caseSensitive = false;
+
+    /**
+     * Getter for property caseSensitive.
+     * @return Value of property caseSensitive.
+     */
+    @Override
+    public boolean isCaseSensitive() {
+      return this.caseSensitive;
+    }
+
+    /**
+     * Setter for property caseSensitive.
+     * @param caseSensitive New value of property caseSensitive.
+     */
+    @Override
+    public void setCaseSensitive(boolean caseSensitive) {
+      this.caseSensitive = caseSensitive;
     }
   }
 }
