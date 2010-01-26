@@ -88,10 +88,12 @@ public class ReadInputStream {
       List<String> result = new ArrayList<String>(sqls.length);
 
       for (String sql : sqls) {
+        sql = sql.trim();
         if (sql.trim().length() > 0 && !sql.startsWith("--")) {
-          result.add(sql.trim().replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB)));
-          result.add(sql.trim().replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB)));
-          result.add(sql.trim().replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB)));
+          sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+          sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+          sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+          result.add(sql);
         }
       }
       return result.toArray(new String[result.size()]);
