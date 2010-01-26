@@ -143,6 +143,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   }
 
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
+    //TODO ko spreminaniš eno spremenljivko, npr. cacheRowSet, ne veš, kako druge vplivajo. Še vedno se lahko dela cache.
     connectOnDemand = ConnectionManager.getInstance().isPooled() && ConnectionManager.getInstance().isConnectOnDemand();
     cacheRowSet = ConnectionManager.getInstance().isCacheRowSet();
     implementation = DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass);
