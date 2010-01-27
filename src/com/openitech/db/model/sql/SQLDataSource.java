@@ -3845,7 +3845,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public void filterChanged() throws SQLException {
     owner.lock();
     try {
-      setSelectSql(this.selectSql);
+      setSelectSql(this.selectSql, true);
       setCountSql(this.countSql);
     } finally {
       owner.unlock();
@@ -3893,6 +3893,10 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   @Override
   public void setSelectSql(String selectSql) throws SQLException {
+    setSelectSql(selectSql, false);
+  }
+
+  private void setSelectSql(String selectSql, boolean filterChange) throws SQLException {
     if (selectSql != null) {
       String oldvalue = this.selectSql;
       try {
@@ -3920,7 +3924,10 @@ public class SQLDataSource implements DbDataSourceImpl {
             for (int c = 1; c <= columnCount; c++) {
               this.columnMapping.put(this.metaData.getColumnName(c), c);
             }
-            primaryKeys = this.getPrimaryKeys();
+
+            if ((primaryKeys==null)||!filterChange) {
+              primaryKeys = this.getPrimaryKeys();
+            }
           }
         } finally {
           if (owner.isConnectOnDemand()) {

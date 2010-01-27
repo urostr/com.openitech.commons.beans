@@ -3043,13 +3043,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   }
 
   public void filterChanged() throws SQLException {
-    lock();
-    try {
-      setSelectSql(implementation.getSelectSql());
-      setCountSql(implementation.getCountSql());
-    } finally {
-      unlock();
-    }
+    implementation.filterChanged();
   }
 
   public void setUpdateTableName(String updateTableName) {

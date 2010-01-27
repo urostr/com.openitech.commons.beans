@@ -186,5 +186,7 @@ public class DbDataSourceFactory {
     public boolean isReadOnly();
 
     public boolean isRefreshPending();
+
+    public void filterChanged() throws SQLException;
   }
 }
