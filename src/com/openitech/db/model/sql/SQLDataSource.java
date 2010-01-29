@@ -188,6 +188,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public void updateFloat(String columnName, float x) throws SQLException {
+    //TODO float ni natanèen 7.45f se v bazo zapiše 7.449999809265137
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
     } else {
@@ -657,6 +658,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public float getFloat(String columnName) throws SQLException {
+    //TODO nenatanèno èe roèno vneseš v bazo. èe gre pisanje in branje preko programa potem je uredu
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, 0f, Number.class);
       return value == null ? null : value.floatValue();
@@ -1051,6 +1053,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
+    //TODO ne dela napaèno castanje
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Timestamp.class);
     } else {
@@ -2465,6 +2468,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  //TODO a se lahko spremeni metodo v askToSaveChanges()? Bolj logièno mi je
   public boolean canUpdateRow() {
     return (JOptionPane.showOptionDialog(OwnerFrame.getInstance().getOwner(),
             "Ali naj shranim spremembe ?",
@@ -3345,6 +3349,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public void moveToInsertRow() throws SQLException {
+    //TODO isreadOnly()?  zakaj ne uporabljamo moveToInsertRow() od resultset?
     if (owner.isCanAddRows()) {
       if (loadData()) {
         if (rowUpdated()) {
@@ -3445,6 +3450,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           cancelRowUpdates();
         }
       }
+      //TODO ali je to prav da ne gre na before first?
       if (!isFirst()) {
         final ResultSet openSelectResultSet = openSelectResultSet();
         int oldRow = openSelectResultSet.getRow();
@@ -3646,6 +3652,7 @@ public class SQLDataSource implements DbDataSourceImpl {
             throw new SQLException("Insert on different schemas not supported. Shema: " + schemaName + " != " + metaData.getSchemaName(columnIndex));
           }
           if (tableName == null) {
+            //TODO ne dela. vedno vraèa null
             tableName = metaData.getTableName(columnIndex);
           } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
             if (updateTableName == null) {
@@ -3698,6 +3705,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                 insertStatement.setObject(p++, scale.x, scale.scale);
               }
             } else {
+              //TODO preveriti èe je timestamp in dati setTimestamp
               insertStatement.setObject(p++, entry.getValue(), getType(entry.getKey()));
 
             }
@@ -3763,6 +3771,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                       }
                     }
                   } else {
+                    //TODO timestamp
                     updateResultSet.updateObject(entry.getKey(), entry.getValue());
                   }
                   cache.remove(new CacheKey(row.intValue(), entry.getKey()));
@@ -3816,6 +3825,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                       updateStatement.setObject(p++, scale.x, scale.scale);
                     }
                   } else {
+                    //TODO timestamp
                     updateStatement.setObject(p++, entry.getValue());
                   }
                   oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
@@ -3925,7 +3935,7 @@ public class SQLDataSource implements DbDataSourceImpl {
               this.columnMapping.put(this.metaData.getColumnName(c), c);
             }
 
-            if ((primaryKeys==null)||!filterChange) {
+            if ((primaryKeys == null) || !filterChange) {
               primaryKeys = this.getPrimaryKeys();
             }
           }
@@ -4061,9 +4071,10 @@ public class SQLDataSource implements DbDataSourceImpl {
         if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
           newCount = 1;
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && (currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
+          //TODO ne dela pravilno
           newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && owner.isCacheRowSet()) {
-          //Moral bi vrniti CachedRowSet count, tako da naj poskusi še enkrat z ekspicitnim loadData()
+          //Moral bi vrniti CachedRowSet count, tako da naj poskusi še enkrat z eksplicitnim loadData()
           if (loadData()) {
             return getRowCount();
           } else {
@@ -4746,10 +4757,12 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   private void storeUpdate(String columnName, Object value, boolean notify, boolean inserting) throws SQLException {
     if (!inserting) {
+      //TODO zakaj rowCount==0?
       if (getRowCount() == 0 && !isReadOnly() && owner.isAutoInsert()) {
         moveToInsertRow();
       }
     }
+    //TODO obvestilo o napaki?
     if (getRow() > 0 && !isReadOnly()) {
       columnName = columnName.toUpperCase();
       Integer row = new Integer(getRow());
@@ -4922,7 +4935,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         return (T) result;
       }
     }
-
+    //TODO ne vem èe je to uredu. mogoèe bi bilo potrebno dati napako
     if (row == 0) {
       storedResult[0] = true;
     } else if (isPending(columnName, row)) {

@@ -3412,6 +3412,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     implementation.storeUpdates(insert);
   }
 
+  //TODO a ne paše zraven tudi isreadOnly()?
   public boolean isCanAddRows() {
     return canAddRows && !DataSourceEvent.isRefreshing(this);
   }
@@ -3912,6 +3913,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   @Override
   public void setNull(String parameterName, int sqlType) throws SQLException {
+    //TODO zakaj ni veè setNull?
     throw new UnsupportedOperationException("Not supported yet.");
   }
 

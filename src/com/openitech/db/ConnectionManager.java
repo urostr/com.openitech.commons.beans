@@ -42,6 +42,7 @@ public class ConnectionManager implements DbConnection {
     }
   }
 
+  //TODO kaj pa èe je managedConnectionClass null in connection null?
   private DbConnection getDbConnection() {
     if ((connection == null) && (managedConnectionClass != null)) {
       try {

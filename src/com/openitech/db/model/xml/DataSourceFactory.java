@@ -261,6 +261,7 @@ public class DataSourceFactory {
               Constructor constructor = gcls.getConstructor(com.openitech.db.model.xml.DataSourceConfig.class);
               newInstance = constructor.newInstance(config);
             } else if (panel.getClassName() != null) {
+              @SuppressWarnings("static-access")
               Class jcls = DataSourceFactory.class.forName(panel.getClassName());
               Constructor constructor = jcls.getConstructor(com.openitech.db.model.xml.DataSourceConfig.class);
               newInstance = constructor.newInstance(config);

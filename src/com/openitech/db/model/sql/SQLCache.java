@@ -186,6 +186,7 @@ public class SQLCache implements Serializable {
         }
       } catch (InterruptedException ex) {
         Logger.getLogger(SQLCache.class.getName()).log(Level.SEVERE, null, ex);
+        //TODO Ali se lock vedno sprosti?
       }
 
       return entry;
