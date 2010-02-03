@@ -4071,7 +4071,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
           newCount = 1;
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && (currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
-          //TODO ne dela pravilno
+          //TODO ne dela pravilno pri shared results
           newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && owner.isCacheRowSet()) {
           //Moral bi vrniti CachedRowSet count, tako da naj poskusi še enkrat z eksplicitnim loadData()
