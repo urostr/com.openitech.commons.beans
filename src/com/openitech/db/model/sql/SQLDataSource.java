@@ -1053,7 +1053,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
-    //TODO ne dela napaèno castanje
+    //TODO ne dela napaèno castanje. Oèitno èe hoèem date potem dela
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Timestamp.class);
     } else {
