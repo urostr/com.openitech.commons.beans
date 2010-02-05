@@ -167,6 +167,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
             wasNull = dataSource.wasNull();
           }
 
+          //TODO zakaj pa to? èe da datasource 0 potem bi moral tudi fieldObserver vrniti 0
           if (wasNull) {
             result = Integer.MIN_VALUE;
           }
@@ -204,7 +205,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     }
     return result;
   }
-
+  //TODO motoda ki vraèa date in ne timestamp
   public Date getValueAsDate() {
     Date result = null;
     wasNull = true;
@@ -482,6 +483,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
     return columnName;
   }
 
+  //TODO fireactiveRowChanged?
   public void dataSource_activeRowChanged(ActiveRowChangeEvent event) {
     if (!updatingActiveRow) {
       if (hasValueChanged()) {
