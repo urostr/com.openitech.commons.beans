@@ -20,6 +20,7 @@ public interface DbConnection {
   String DB_CACHEROWSET = "db.cache.rowset";
   String DB_TEST = "db.test";
   String DB_POOL_SIZE = "db.pool.size";
+  String DB_POOL_NAME = "db.pool.name";
   String DB_MAX_POOL_SIZE="db.max.pool.size";
   String DB_MAX_ACTIVE_TIME="db.max.active.time";
   String DB_CONNECT_ON_DEMAND="db.connect.on.demand";
