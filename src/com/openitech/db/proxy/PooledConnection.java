@@ -95,8 +95,9 @@ public class PooledConnection {
     }
 
     String max_pool_size = settings.getProperty(ConnectionManager.DB_MAX_POOL_SIZE, ""+pool_size * 9);
+    String pool_name = settings.getProperty(ConnectionManager.DB_POOL_NAME, "default" );
 
-    String PROXOOL_DB_URL = "proxool.default:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
+    String PROXOOL_DB_URL = "proxool."+pool_name+":" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
     connect.setProperty(ProxoolConstants.FATAL_SQL_EXCEPTION_PROPERTY, "the Connection object is closed,attempting to read when no request has been sent,TDS Protocol error");
     connect.setProperty(ProxoolConstants.MINIMUM_CONNECTION_COUNT_PROPERTY, "1");
     connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + pool_size);
@@ -111,7 +112,7 @@ public class PooledConnection {
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
 
     connect.setProperty(ProxoolConstants.MAXIMUM_ACTIVE_TIME_PROPERTY, settings.getProperty(ConnectionManager.DB_MAX_ACTIVE_TIME, "15000"));
-    PROXOOL_DB_URL = "proxool.temporary:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
+    PROXOOL_DB_URL = "proxool."+pool_name+"_temporary:" + settings.getProperty(ConnectionManager.DB_DRIVER_NET) + ":" + DB_URL;
     connect.setProperty(ProxoolConstants.MAXIMUM_CONNECTION_COUNT_PROPERTY, "" + max_pool_size);
     ProxoolFacade.registerConnectionPool(PROXOOL_DB_URL, connect);
 
@@ -186,7 +187,7 @@ public class PooledConnection {
       }
     };
 
-    ProxoolFacade.addConnectionListener("default", clTX);
+    ProxoolFacade.addConnectionListener(pool_name, clTX);
     
     final String execute_on_crate = settings.getProperty(ConnectionManager.DB_POOL_EXECUTE_ON_CREATE, "");
 
@@ -218,20 +219,20 @@ public class PooledConnection {
       }
     };
 
-    ProxoolFacade.addConnectionListener("temporary", clTEMP);
+    ProxoolFacade.addConnectionListener(pool_name+"_temporary", clTEMP);
 
     Connection result = DriverManager.getConnection(PROXOOL_DB_URL, connect);
 
     if (result != null) {
-      this.proxoolPool = "proxool.default";
-      this.proxoolTemporary = "proxool.temporary";
+      this.proxoolPool = "proxool."+pool_name;
+      this.proxoolTemporary = "proxool."+pool_name+"_temporary";
       System.out.println("Using proxool pool");
 
       pool.add(new ConnectionProxy(proxoolPool, connectionTest, result));
 
     } else {
-      ProxoolFacade.removeConnectionPool("proxool.default");
-      ProxoolFacade.removeConnectionPool("proxool.temporary");
+      ProxoolFacade.removeConnectionPool("proxool."+pool_name);
+      ProxoolFacade.removeConnectionPool("proxool."+pool_name+"_temporary");
     }
 
     return result != null;
