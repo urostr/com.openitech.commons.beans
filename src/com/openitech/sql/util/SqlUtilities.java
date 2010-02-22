@@ -442,6 +442,8 @@ public abstract class SqlUtilities {
 
   public abstract FieldValue getNextIdentity(Field field) throws SQLException;
 
+  public abstract FieldValue getParrentIdentity(Field field) throws SQLException;
+
   public abstract Long storeEvent(Event event) throws SQLException;
 
   public CachedRowSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException {
