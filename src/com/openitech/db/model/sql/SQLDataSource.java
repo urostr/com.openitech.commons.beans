@@ -4675,7 +4675,9 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   private ResultSet openSelectResultSet() throws SQLException {
-    if (isDataLoaded()) {
+    if (!isDataLoaded()) {
+      loadData();
+    }
       if ((currentResultSet.currentResultSet instanceof CachedRowSet) || (currentResultSet.currentResultSet instanceof ResultSetProxy)) {
         return currentResultSet.currentResultSet;
       } else {
@@ -4699,7 +4701,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           }
         }
       }
-    }
+    
     return currentResultSet.currentResultSet;
   }
 
