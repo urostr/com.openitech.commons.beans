@@ -100,6 +100,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
    * @param columnIndex 	the column whose value is to be queried
    * @return the value Object at the specified cell
    */
+  @Override
   public Object getValueAt(int rowIndex, int columnIndex) {
     try {
       if (this.dataSource != null) {
@@ -169,6 +170,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
    * @return the number of rows in the model
    * @see #getColumnCount
    */
+  @Override
   public int getRowCount() {
     int result = this.dataSource == null ? 0 : this.dataSource.getRowCount();
 
@@ -188,6 +190,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
    * @return the number of columns in the model
    * @see #getRowCount
    */
+  @Override
   public int getColumnCount() {
     return columns.length;
   }
@@ -374,14 +377,17 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     return dataSource;
   }
 
+  @Override
   public void intervalAdded(ListDataEvent e) {
     fireTableRowsInserted(e.getIndex0(), e.getIndex1());
   }
 
+  @Override
   public void intervalRemoved(ListDataEvent e) {
     fireTableRowsDeleted(e.getIndex0(), e.getIndex1());
   }
 
+  @Override
   public void contentsChanged(ListDataEvent e) {
 //    dataSource.lock();
 //    try {
@@ -396,6 +402,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 //    }
   }
 
+  @Override
   public void activeRowChanged(ActiveRowChangeEvent event) {
 //    dataSource.lock();
 //    try {
@@ -405,6 +412,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 //    }
   }
 
+  @Override
   public void fieldValueChanged(ActiveRowChangeEvent event) {
 //    dataSource.lock();
     try {
@@ -450,10 +458,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     }
   }
 
+  @Override
   public String getColumnName(int column) {
     return columns[column][0];
   }
 
+  @Override
   public Class<?> getColumnClass(int columnIndex) {
     return ColumnDescriptor.class;
   }
@@ -474,6 +484,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
      * @param column the column of the cell to render
      * @return the default table cell renderer
      */
+    @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
       if (value instanceof java.util.Date) {
         value = FormatFactory.DATETIME_FORMAT.format((java.util.Date) value);
@@ -501,6 +512,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
      *    attribute: visualUpdate true
      *  description: Defines the single line of text this component will display.
      */
+    @Override
     public void setText(String text) {
       super.setText(text);
       if (text != null && text.length() > 12) {
@@ -532,6 +544,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
        *    attribute: visualUpdate true
        *  description: Defines the single line of text this component will display.
        */
+      @Override
       public void setText(String text) {
         super.setText(text);
         if (text != null && text.length() > 12) {

@@ -163,6 +163,7 @@ public interface DbNavigatorDataSource {
   boolean previous() throws SQLException;
 
   boolean reload();
+  boolean reload(int row);
 
   /**
    * Retrieves whether the current row has had an insertion.
