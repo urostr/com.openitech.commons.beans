@@ -233,7 +233,11 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
   private void jbReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbReloadActionPerformed
     if (dataSource != null) {
-      dataSource.reload();
+      try {
+        dataSource.reload(dataSource.getRow());
+      } catch (SQLException ex) {
+        Logger.getLogger(JDbNavigator.class.getName()).log(Level.SEVERE, null, ex);
+      }
     }
   }//GEN-LAST:event_jbReloadActionPerformed
 

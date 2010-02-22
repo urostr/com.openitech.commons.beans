@@ -21,7 +21,6 @@ import java.awt.EventQueue;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
@@ -255,6 +254,11 @@ public class JDbXTable extends JXTable implements ListSelectionListener, DbNavig
 
   public int getRow() throws SQLException {
     return (getDataSource()!=null)?getDataSource().getRow():0;
+  }
+
+  @Override
+  public boolean reload(int row) {
+    return (getDataSource()!=null)?getDataSource().reload(row):false;
   }
   
   private class UpdateViewRunnable implements Runnable {

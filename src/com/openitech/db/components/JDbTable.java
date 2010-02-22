@@ -28,7 +28,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 
 /**
@@ -124,6 +123,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke", "RELOAD");
     aReload.addActionListener(new ActionListener() {
 
+      @Override
       public void actionPerformed(ActionEvent e) {
         if (getDataSource() != null) {
           getDataSource().reload();
@@ -198,6 +198,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
    * @beaninfo bound: true
    *  description: The model that is the source of the data for this view.
    */
+  @Override
   public void setModel(TableModel dataModel) {
     if (this.getModel() instanceof DbTableModel) {
       ((DbTableModel) this.getModel()).removeActiveRowChangeListener(activeRowChangeWeakListener);
@@ -267,6 +268,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
   }
 
+  @Override
   public void valueChanged(ListSelectionEvent e) {
     if (this.getModel() != null) {
       if (!e.getValueIsAdjusting()) {
@@ -312,6 +314,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
   }
 
+  @Override
   public DbDataSource getDataSource() {
     if (this.getModel() instanceof DbTableModel) {
       return ((DbTableModel) this.getModel()).getDataSource();
@@ -320,18 +323,21 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
   }
 
+  @Override
   public void cancelRowUpdates() throws SQLException {
     if (getDataSource() != null) {
       getDataSource().cancelRowUpdates();
     }
   }
 
+  @Override
   public void deleteRow() throws SQLException {
     if (getDataSource() != null) {
       getDataSource().deleteRow();
     }
   }
 
+  @Override
   public boolean first() throws SQLException {
     if (getRowCount() > 0) {
       setRowSelectionInterval(0, 0);
@@ -342,22 +348,27 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
   }
 
+  @Override
   public boolean isCanAddRows() {
     return (getDataSource() != null) ? getDataSource().isCanAddRows() : false;
   }
 
+  @Override
   public boolean isCanDeleteRows() {
     return (getDataSource() != null) ? getDataSource().isCanDeleteRows() : false;
   }
 
+  @Override
   public boolean isFirst() throws SQLException {
     return getSelectedRow() <= 0;
   }
 
+  @Override
   public boolean isLast() throws SQLException {
     return getSelectedRow() == (getRowCount() - 1);
   }
 
+  @Override
   public boolean last() throws SQLException {
     if (getRowCount() > 0) {
       setRowSelectionInterval(getRowCount() - 1, getRowCount() - 1);
@@ -368,12 +379,14 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
   }
 
+  @Override
   public void moveToInsertRow() throws SQLException {
     if (getDataSource() != null) {
       getDataSource().moveToInsertRow();
     }
   }
 
+  @Override
   public boolean next() throws SQLException {
     final int selectedRow = getSelectedRow();
     final int selectRow = Math.min(getRowCount() - 1, selectedRow + 1);
@@ -382,6 +395,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     return selectRow == (selectedRow + 1);
   }
 
+  @Override
   public boolean previous() throws SQLException {
     if (getRowCount() > 0) {
       final int selectedRow = getSelectedRow();
@@ -394,56 +408,68 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
   }
 
+  @Override
   public boolean reload() {
     return (getDataSource() != null) ? getDataSource().reload() : false;
   }
 
+  @Override
   public boolean rowInserted() throws SQLException {
     return (getDataSource() != null) ? getDataSource().rowInserted() : false;
   }
 
+  @Override
   public boolean rowUpdated() throws SQLException {
     return (getDataSource() != null) ? getDataSource().rowUpdated() : false;
   }
 
+  @Override
   public void updateRow() throws SQLException {
     if (getDataSource() != null) {
       getDataSource().updateRow();
     }
   }
 
+  @Override
   public void addActiveRowChangeListener(ActiveRowChangeListener l) {
     if (getDataSource() != null) {
       getDataSource().addActiveRowChangeListener(l);
     }
   }
 
+  @Override
   public void removeActiveRowChangeListener(ActiveRowChangeListener l) {
     if (getDataSource() != null) {
       getDataSource().removeActiveRowChangeListener(l);
     }
   }
 
+  @Override
   public boolean lock() {
     return getDataSource().lock();
   }
 
+  @Override
   public boolean lock(boolean fatal) {
     return getDataSource().lock(fatal);
   }
 
+  @Override
   public void unlock() {
     getDataSource().unlock();
   }
 
+  @Override
   public boolean isDataLoaded() {
     return (getDataSource() != null) ? getDataSource().isDataLoaded() : false;
   }
 
+  @Override
   public boolean loadData() {
     return (getDataSource() != null) ? getDataSource().loadData() : false;
   }
 
+  @Override
   public int getRow() throws SQLException {
     return (getDataSource() != null) ? getDataSource().getRow() : 0;
   }
@@ -460,6 +486,11 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
   }
 
+  @Override
+  public boolean reload(int row) {
+    return (getDataSource() != null) ? getDataSource().reload(row) : false;
+  }
+
   private class UpdateViewRunnable implements Runnable {
 
     java.awt.Rectangle position;
@@ -467,6 +498,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     UpdateViewRunnable() {
     }
 
+    @Override
     public void run() {
       scrollRectToVisible(position);
     }
