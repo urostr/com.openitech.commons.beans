@@ -435,7 +435,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       tb_seznam_sifrantov.setValue(dataBase + ".[SeznamSifrantov] AS ");
     }
     params.add(tb_seznam_sifrantov);
-    for (int i=1; i<parameters.size(); i++) {
+    for (int i = 1; i < parameters.size(); i++) {
       params.add(parameters.get(i));
     }
 
@@ -591,7 +591,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 6:
               java.sql.Clob value = rs.getClob("ClobValue");
-              if ((value!=null) && (value.length()>0)) {
+              if ((value != null) && (value.length() > 0)) {
                 result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, value.getSubString(1L, (int) value.length())));
               } else {
                 result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, ""));
@@ -642,6 +642,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (event.getPrimaryKey() != null) {
         seek = valuesSet == primaryKey.size();
       }
+      
+       java.util.List parametersVecVrednosti = new java.util.ArrayList<Object>();
+      parametersVecVrednosti.add(event.getSifrant());
+      parametersVecVrednosti.add(event.getSifra());
+
+      ResultSet rsVecVrednosti = SQLDataSource.executeQuery(getCheckVecVrednostiEventSQL(), parametersVecVrednosti, ConnectionManager.getInstance().getTxConnection());
+      if (rsVecVrednosti.next()) {
+        if (rsVecVrednosti.getInt(1) > 0) {
+          seek = false;
+        }
+      }
 
       if (seek) {
         ResultSet rs = SQLDataSource.executeQuery(getFindEventSQL(), parameters, ConnectionManager.getInstance().getTxConnection());
@@ -671,7 +682,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     getGeneratedFields.clearParameters();
     int param = 1;
-    if (activityEvent!=null) {
+    if (activityEvent != null) {
       getGeneratedFields.setLong(param++, activityEvent.getActivityId());
       getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
       getGeneratedFields.setString(param++, activityEvent.getIdSifre());
@@ -763,6 +774,50 @@ public class SqlUtilitesImpl extends SqlUtilities {
         storeEvent(system);
       }
 
+      return value;
+    }
+  }
+
+  @Override
+  public FieldValue getParrentIdentity(Field field) throws SQLException {
+    SYSTEM_IDENTITIES.setPrimaryKey(new Field[]{});
+    Event system = findEvent(SYSTEM_IDENTITIES);
+    system = system == null ? SYSTEM_IDENTITIES : system;
+    List<FieldValue> get = system.getEventValues().get(field);
+    if ((get == null) || (get.size() == 0)) {
+      ValueType type = ValueType.getType(field.getType());
+      FieldValue start = new FieldValue(field);
+
+      switch (type) {
+        case RealValue:
+        case IntValue:
+          start.setValue(1);
+          break;
+        case StringValue:
+          start.setValue("AAA000000001");
+          break;
+        default:
+          start = null;
+      }
+
+      return start;
+    } else {
+      FieldValue value = get.get(0);
+      ValueType type = ValueType.getType(value.getType());
+
+      switch (type) {
+        case RealValue:
+          value.setValue(((Number) value.getValue()).doubleValue());
+          break;
+        case IntValue:
+          value.setValue(((Number) value.getValue()).longValue());
+          break;
+        case StringValue:
+          value.setValue((String) value.getValue());
+          break;
+        default:
+          value = null;
+      }
       return value;
     }
   }
@@ -907,18 +962,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
         final String ev_alias = "[ev_" + f.getName() + "]";
         final String vp_alias = "[vp_" + f.getName() + "]";
         final String val_alias = "[val_" + f.getName() + "]";
-        sb.append("\nLEFT OUTER JOIN "+SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB)+".[dbo].[EventValues] ").append(ev_alias).append(" ON (");
+        sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues] ").append(ev_alias).append(" ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
         if (fieldNames.containsKey(fn)) {
           sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
         } else {
           sb.append(") ");
-          sb.append("\nLEFT OUTER JOIN "+SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB)+".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
+          sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
           sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
           sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
         }
-        sb.append("\nINNER JOIN "+SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB)+".[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+        sb.append("\nINNER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[VariousValues] ").append(val_alias).append(" ON (");
         sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
         List<FieldValue> values;
         if (event.getEventValues().containsKey(f)) {
@@ -1002,18 +1057,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
         final String ev_alias = "[ev_" + f.getName() + "]";
         final String vp_alias = "[vp_" + f.getName() + "]";
         final String val_alias = "[val_" + f.getName() + "]";
-        sb.append("\nLEFT OUTER JOIN "+SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB)+".[dbo].[EventValues] ").append(ev_alias).append(" ON (");
+        sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues] ").append(ev_alias).append(" ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
         if (fieldNames.containsKey(fn)) {
           sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
         } else {
           sb.append(") ");
-          sb.append("\nLEFT OUTER JOIN "+SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB)+".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
+          sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
           sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
           sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
         }
-        sb.append("\nLEFT OUTER JOIN "+SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB)+".[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+        sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[VariousValues] ").append(val_alias).append(" ON (");
         sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
 
         int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
@@ -1055,6 +1110,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   private static String getFindEventSQL() {
     return com.openitech.util.ReadInputStream.getResourceAsString(SqlUtilitesImpl.class, "find_event_by_values.sql", "cp1250");
+  }
+
+  private static String getCheckVecVrednostiEventSQL() {
+    return com.openitech.util.ReadInputStream.getResourceAsString(SqlUtilitesImpl.class, "event_vecVrednosti.sql", "cp1250");
   }
 
   @Override
