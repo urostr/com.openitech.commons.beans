@@ -11,6 +11,7 @@ public class Field {
 
   String name;
   int type;
+  int fieldIndex = 1;
 
   /**
    *
@@ -23,6 +24,19 @@ public class Field {
     this.type = type;
   }
 
+
+  /**
+   *
+   * @param name fieldName
+   * @param type fieldType java.sql.Type
+   */
+  public Field(String name, int type, int fieldIndex) {
+    super();
+    this.name = name;
+    this.type = type;
+    this.fieldIndex = fieldIndex;
+  }
+
   /**
    *
    * @param name fieldName
@@ -32,6 +46,7 @@ public class Field {
     super();
     this.name = field.name;
     this.type = field.type;
+    this.fieldIndex = field.fieldIndex;
   }
 
 
@@ -44,6 +59,9 @@ public class Field {
       return false;
     }
     final Field other = (Field) obj;
+    if (this.fieldIndex!=other.fieldIndex) {
+      return false;
+    }
     if ((this.name == null) ? (other.name != null) : !this.name.equalsIgnoreCase(other.name)) {
       return false;
     }
@@ -66,10 +84,19 @@ public class Field {
     return type;
   }
 
+  /**
+   * Get the value of fieldIndex
+   *
+   * @return the value of fieldIndex
+   */
+  public int getFieldIndex() {
+    return fieldIndex;
+  }
+
   @Override
   public int hashCode() {
     int hash = 7;
-    hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0);
+    hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0) + fieldIndex;
     return hash;
   }
   

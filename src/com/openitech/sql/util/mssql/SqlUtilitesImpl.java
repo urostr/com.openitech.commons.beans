@@ -966,12 +966,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
         if (fieldNames.containsKey(fn)) {
-          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
+          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId);
+          sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
         } else {
+          sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex());
           sb.append(") ");
           sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
           sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
-          sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
+          sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' )");
         }
         sb.append("\nINNER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[VariousValues] ").append(val_alias).append(" ON (");
         sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
@@ -1061,8 +1063,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
         if (fieldNames.containsKey(fn)) {
-          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId).append(")");
+          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId);
+          sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
         } else {
+          sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex());
           sb.append(") ");
           sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" ON (");
           sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
