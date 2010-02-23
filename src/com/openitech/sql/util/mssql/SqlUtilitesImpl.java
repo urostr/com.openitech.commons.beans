@@ -222,11 +222,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
             FieldValue value = fieldValues.get(i);
             Long valueId = storeValue(value.getValueType(), value.getValue());
 
+            String fieldName = field.getName();
+            int fieldValueIndex = field.getFieldIndex();
+
+            
+            if (fieldValueIndex > 1) {
+              int indexOfFieldValueIndex = field.getName().indexOf(Integer.toString(fieldValueIndex));
+              fieldName = fieldName.substring(0, indexOfFieldValueIndex);
+            }
             param = 1;
-            get_field.setString(param, field.getName());
+            get_field.setString(param, fieldName);
+
 
             ResultSet rs_field = get_field.executeQuery();
-            rs_field.next();
+            if (!rs_field.next()) {
+              throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
+            }
 
             int field_id = rs_field.getInt("Id");
 
@@ -234,7 +245,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             findEventValue.clearParameters();
             findEventValue.setLong(param++, events_ID);
             findEventValue.setInt(param++, field_id);
-            findEventValue.setInt(param++, i + 1);  //indexPolja
+            findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
 
             ResultSet rs = findEventValue.executeQuery();
             rs.next();
@@ -245,7 +256,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               insertEventValues.clearParameters();
               insertEventValues.setLong(param++, events_ID);
               insertEventValues.setInt(param++, field_id);
-              insertEventValues.setInt(param++, i + 1);  //indexPolja
+              insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
               if (valueId == null) {
                 insertEventValues.setNull(param++, java.sql.Types.BIGINT);
               } else {
@@ -264,7 +275,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               }
               updateEventValues.setLong(param++, events_ID);
               updateEventValues.setInt(param++, field_id);
-              updateEventValues.setInt(param++, i + 1);  //indexPolja
+              updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
 
               success = success && updateEventValues.executeUpdate() > 0;
             }
@@ -642,8 +653,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (event.getPrimaryKey() != null) {
         seek = valuesSet == primaryKey.size();
       }
-      
-       java.util.List parametersVecVrednosti = new java.util.ArrayList<Object>();
+
+      java.util.List parametersVecVrednosti = new java.util.ArrayList<Object>();
       parametersVecVrednosti.add(event.getSifrant());
       parametersVecVrednosti.add(event.getSifra());
 
