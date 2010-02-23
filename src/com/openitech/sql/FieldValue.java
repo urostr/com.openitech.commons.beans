@@ -7,7 +7,6 @@ import java.sql.Types;
 
 public class FieldValue extends Field {
 
-
   public FieldValue(Field field) {
     this(field.name, field.type);
   }
@@ -21,10 +20,13 @@ public class FieldValue extends Field {
   }
 
   public FieldValue(String name, int type, Object value) {
-    super(name, type);
-    this.value = value;
+    this(name, type, 1, value);
   }
 
+  public FieldValue(String name, int type, int fieldValueIndex, Object value) {
+    super(name, type, fieldValueIndex);
+    this.value = value;
+  }
   private Object value;
 
   /**
@@ -48,7 +50,6 @@ public class FieldValue extends Field {
       propertyChangeSupport.firePropertyChange("value", oldValue, value);
     }
   }
-
 
   public boolean isNull() {
     return value == null;
@@ -87,6 +88,6 @@ public class FieldValue extends Field {
 
   @Override
   public String toString() {
-    return name+":"+type+":"+ValueType.getType(type)+":"+value;
+    return name + ":" + type + ":" + ValueType.getType(type) + ":" + value;
   }
 }

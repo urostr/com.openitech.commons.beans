@@ -11,7 +11,7 @@ public class Field {
 
   String name;
   int type;
-  int fieldIndex = 1;
+  int fieldIndex;
 
   /**
    *
@@ -22,6 +22,7 @@ public class Field {
     super();
     this.name = name;
     this.type = type;
+    this.fieldIndex = 1;
   }
 
 
