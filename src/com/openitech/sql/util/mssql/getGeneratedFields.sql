@@ -14,7 +14,15 @@ SELECT
     CASE WHEN ActivityEventsPolja.[ShowInTable] IS NOT NULL THEN ActivityEventsPolja.[ShowInTable] ELSE SifrantiPolja.[ShowInTable] END AS [ShowInTable],
     SifrantiPolja.[PrimaryKey],
     CASE WHEN ActivityEventsPolja.[UporabiPrivzetoVrednost] IS NOT NULL THEN ActivityEventsPolja.[UporabiPrivzetoVrednost] ELSE SifrantiPolja.[UporabiPrivzetoVrednost] END AS [UporabiPrivzetoVrednost],
-    CASE WHEN ActivityEventsPolja.[PrivzetaVrednost] IS NOT NULL THEN ActivityEventsPolja.[PrivzetaVrednost] ELSE SifrantiPolja.[PrivzetaVrednost] END AS [PrivzetaVrednost],
+    CASE WHEN ActivityEventsPolja.[PrivzetaVrednostID] IS NOT NULL THEN ActivityEventsPolja.[PrivzetaVrednostID] ELSE SifrantiPolja.[PrivzetaVrednostID] END AS [PrivzetaVrednostID],
+
+    VariousValues.IntValue,
+    VariousValues.RealValue,
+    VariousValues.StringValue,
+    VariousValues.DateValue,
+    VariousValues.ObjectValue,
+    VariousValues.ClobValue,
+
     CASE WHEN ActivityEventsPolja.[OpisNadVnosom] IS NOT NULL THEN ActivityEventsPolja.[OpisNadVnosom] ELSE SifrantiPolja.[OpisNadVnosom] END AS [OpisNadVnosom],
     CASE WHEN ActivityEventsPolja.[FieldActions] IS NOT NULL THEN ActivityEventsPolja.[FieldActions] ELSE SifrantiPolja.[FieldActions] END AS [FieldActions],
     CASE WHEN ActivityEventsPolja.[ReadOnly] IS NOT NULL THEN ActivityEventsPolja.[ReadOnly] ELSE SifrantiPolja.[ReadOnly] END AS [ReadOnly],
@@ -82,6 +90,10 @@ LEFT OUTER JOIN
     ActivityEventsPolja.IdSifre = SifrantiPolja.[IdSifre] AND
     ActivityEventsPolja.IdPolja = SifrantiPolja.[IdPolja] AND
     ActivityEventsPolja.FieldValueIndex = SifrantiPolja.FieldValueIndex
+LEFT OUTER JOIN
+  <%ChangeLog%>.[dbo].VariousValues
+  ON
+  VariousValues.Id = CASE WHEN ActivityEventsPolja.[PrivzetaVrednostID] IS NOT NULL THEN ActivityEventsPolja.[PrivzetaVrednostID] ELSE SifrantiPolja.[PrivzetaVrednostID] END
 WHERE
     SifrantiPolja.IdSifranta = ?
     AND (1=? OR SifrantiPolja.IdSifre= ?)
