@@ -19,12 +19,8 @@ public class Field {
    * @param type fieldType java.sql.Type
    */
   public Field(String name, int type) {
-    super();
-    this.name = name;
-    this.type = type;
-    this.fieldIndex = 1;
+    this(name, type, 1);
   }
-
 
   /**
    *
@@ -44,12 +40,8 @@ public class Field {
    * @param type fieldType java.sql.Type
    */
   public Field(Field field) {
-    super();
-    this.name = field.name;
-    this.type = field.type;
-    this.fieldIndex = field.fieldIndex;
+    this(field.name, field.type, field.fieldIndex);
   }
-
 
   @Override
   public boolean equals(Object obj) {
@@ -60,7 +52,7 @@ public class Field {
       return false;
     }
     final Field other = (Field) obj;
-    if (this.fieldIndex!=other.fieldIndex) {
+    if (this.fieldIndex != other.fieldIndex) {
       return false;
     }
     if ((this.name == null) ? (other.name != null) : !this.name.equalsIgnoreCase(other.name)) {
@@ -100,7 +92,6 @@ public class Field {
     hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0) + fieldIndex;
     return hash;
   }
-  
   protected PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
   /**
@@ -123,6 +114,6 @@ public class Field {
 
   @Override
   public String toString() {
-    return name+":"+type+":"+ValueType.getType(type);
+    return name + ":" + type + ":" + ValueType.getType(type);
   }
 }

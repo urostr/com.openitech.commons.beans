@@ -8,15 +8,19 @@ import java.sql.Types;
 public class FieldValue extends Field {
 
   public FieldValue(Field field) {
-    this(field.name, field.type);
+    this(field.name, field.type, field.fieldIndex, null);
   }
 
   public FieldValue(Field field, Object value) {
-    this(field.name, field.type, value);
+    this(field.name, field.type, field.fieldIndex, value);
   }
 
   public FieldValue(String name, int type) {
-    super(name, type);
+    this(name, type, 1, null);
+  }
+
+  public FieldValue(String name, int type, int fieldValueIndex) {
+    this(name, type, fieldValueIndex, null);
   }
 
   public FieldValue(String name, int type, Object value) {

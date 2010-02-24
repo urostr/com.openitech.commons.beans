@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.openitech.sql;
 
 import com.openitech.db.events.ActiveRowChangeEvent;
@@ -15,6 +14,7 @@ import com.openitech.db.model.DbFieldObserver;
  * @author uros
  */
 public class FieldValueProxy extends FieldValue implements ActiveRowChangeListener {
+
   private ActiveRowChangeWeakListener listener = new ActiveRowChangeWeakListener(this);
 
   public FieldValueProxy(String name, int type) {
@@ -26,6 +26,10 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
     setFieldObserver(fieldObserver);
   }
 
+  public FieldValueProxy(String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver) {
+    super(name, type, fieldValueIndex);
+    setFieldObserver(fieldObserver);
+  }
   private DbFieldObserver fieldObserver;
 
   /**
@@ -43,11 +47,11 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
    * @param fieldObserver new value of fieldObserver
    */
   public void setFieldObserver(DbFieldObserver fieldObserver) {
-    if (this.fieldObserver!=null) {
+    if (this.fieldObserver != null) {
       this.fieldObserver.removeActiveRowChangeListener(listener);
     }
     this.fieldObserver = fieldObserver;
-    if (this.fieldObserver!=null) {
+    if (this.fieldObserver != null) {
       this.fieldObserver.addActiveRowChangeListener(listener);
       fieldValueChanged(null);
     }
@@ -62,7 +66,6 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
   public void fieldValueChanged(ActiveRowChangeEvent event) {
     super.setValue(fieldObserver.getValue());
   }
-  
   private boolean identityField;
 
   /**
