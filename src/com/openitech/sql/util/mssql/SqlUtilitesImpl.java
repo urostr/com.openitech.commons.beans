@@ -1011,21 +1011,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
               //Integer
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
+                sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName() + fieldValueIndex).append("]");
               }
               break;
             case 2:
               //Real
               sb.append(val_alias).append(".RealValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
+                sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName() + fieldValueIndex).append("]");
               }
               break;
             case 3:
               //String
               sb.append(val_alias).append(".StringValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
+                sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName() + fieldValueIndex).append("]");
               }
               break;
             case 4:
@@ -1035,21 +1035,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
               //Date
               sb.append(val_alias).append(".DateValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
+                sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName() + fieldValueIndex).append("]");
               }
               break;
             case 6:
               //Clob
               sb.append(val_alias).append(".ClobValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
+                sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName() + fieldValueIndex).append("]");
               }
               break;
             case 7:
               //Boolean
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
+                sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
               }
           }
           DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
@@ -1091,30 +1091,30 @@ public class SqlUtilitesImpl extends SqlUtilities {
         int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
         switch (tipPolja) {
           case 1:
-            sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 2:
             //Real
-            sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 3:
             //String
-            sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 4:
           case 8:
           case 9:
           case 10:
             //Date
-            sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 6:
             //Clob
-            sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 7:
             //Boolean
-            sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
+            sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
         }
       }
     }
