@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util;
 
+import com.openitech.sql.events.UpdateEvent;
 import com.openitech.sql.FieldValue;
 import com.openitech.sql.Field;
 import com.openitech.db.ConnectionManager;
@@ -34,7 +35,7 @@ import javax.sql.rowset.CachedRowSet;
  *
  * @author uros
  */
-public abstract class SqlUtilities {
+public abstract class SqlUtilities implements UpdateEvent {
 
   private static final Map<String, Class<? extends SqlUtilities>> implementations = new HashMap<String, Class<? extends SqlUtilities>>();
   private static SqlUtilities instance;
