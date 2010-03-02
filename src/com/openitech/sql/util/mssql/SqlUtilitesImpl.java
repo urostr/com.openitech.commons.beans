@@ -303,7 +303,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     int pos = 0;
     FieldValue[] fieldValues = new FieldValue[7];
-    fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, fieldType.getTypeIndex());
+    fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, new Integer(fieldType.getTypeIndex()));
     java.sql.ResultSet rs;
     Long newValueId = null;
     if (value != null) {
