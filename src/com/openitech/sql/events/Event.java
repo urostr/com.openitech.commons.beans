@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.openitech.sql.events;
 
 import com.openitech.sql.Field;
@@ -17,6 +16,7 @@ import java.util.Map;
  * @author uros
  */
 public class Event {
+
   public static final Field EVENT_SOURCE = new Field("EVENT_SOURCE", java.sql.Types.INTEGER);
   public static final Field EVENT_DATE = new Field("EVENT_DATE", java.sql.Types.DATE);
 
@@ -31,14 +31,13 @@ public class Event {
   public Event(Event parent, int sifrant, String sifra) {
     this(parent, sifrant, sifra, Integer.MIN_VALUE);
   }
-  
+
   public Event(Event parent, int sifrant, String sifra, int eventSource) {
     this.parent = parent;
     this.sifrant = sifrant;
     this.sifra = sifra;
     this.eventSource = eventSource;
   }
-
   private long id = -1;
 
   /**
@@ -58,7 +57,6 @@ public class Event {
   public void setId(long id) {
     this.id = id;
   }
-  
   private final Event parent;
 
   /**
@@ -69,7 +67,6 @@ public class Event {
   public Event getParent() {
     return parent;
   }
-  
   private int sifrant;
 
   /**
@@ -89,7 +86,6 @@ public class Event {
   public void setSifrant(int sifrant) {
     this.sifrant = sifrant;
   }
-  
   private String sifra;
 
   /**
@@ -128,7 +124,6 @@ public class Event {
   public void setDatum(Date datum) {
     this.datum = datum;
   }
-
   private String opomba;
 
   /**
@@ -148,7 +143,6 @@ public class Event {
   public void setOpomba(String opomba) {
     this.opomba = opomba;
   }
-
   private int eventSource = Integer.MIN_VALUE;
 
   /**
@@ -168,9 +162,7 @@ public class Event {
   public void setEventSource(int eventSource) {
     this.eventSource = eventSource;
   }
-
-
-  java.util.Map<Field, java.util.List<FieldValue>> eventValues = new java.util.LinkedHashMap<Field, java.util.List<FieldValue>> ();
+  java.util.Map<Field, java.util.List<FieldValue>> eventValues = new java.util.LinkedHashMap<Field, java.util.List<FieldValue>>();
 
   public void addValue(FieldValue value) {
     getFieldValues(value).add(value);
@@ -184,16 +176,22 @@ public class Event {
     return eventValues;
   }
 
+  public void setEventValues(Map<Field, List<FieldValue>> eventValues) {
+    this.eventValues = eventValues;
+  }
+
+  
+
   public List<FieldValue> getFieldValues() {
     List<FieldValue> result = new java.util.ArrayList<FieldValue>();
 
-    for (java.util.Map.Entry<Field, java.util.List<FieldValue>> entry: eventValues.entrySet()) {
+    for (java.util.Map.Entry<Field, java.util.List<FieldValue>> entry : eventValues.entrySet()) {
       result.addAll(entry.getValue());
     }
 
     return Collections.unmodifiableList(result);
   }
-  
+
   private List<FieldValue> getFieldValues(FieldValue value) {
     List<FieldValue> fieldValues;
     Field key = new Field(value);
@@ -205,7 +203,6 @@ public class Event {
     }
     return fieldValues;
   }
-
   private Field[] primaryKey;
 
   /**
@@ -225,7 +222,6 @@ public class Event {
   public void setPrimaryKey(Field... primaryKey) {
     this.primaryKey = primaryKey;
   }
-
 
   @Override
   public boolean equals(Object obj) {
@@ -251,6 +247,6 @@ public class Event {
 
   @Override
   public String toString() {
-    return (parent!=null?"P:"+parent.toString():"E:") + sifrant + "-" + sifra + ":" + id;
+    return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id;
   }
 }
