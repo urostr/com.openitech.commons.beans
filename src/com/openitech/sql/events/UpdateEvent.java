@@ -5,7 +5,6 @@
 
 package com.openitech.sql.events;
 
-import com.openitech.sql.events.Event;
 import java.sql.SQLException;
 
 /**
@@ -14,6 +13,6 @@ import java.sql.SQLException;
  */
 public interface UpdateEvent {
 
-  Long updateEvent(Event event) throws SQLException;
-
+  Long updateEvent(Event newValues, Event oldValues) throws SQLException;
+  
 }
