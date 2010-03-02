@@ -4677,31 +4677,31 @@ public class SQLDataSource implements DbDataSourceImpl {
   private ResultSet openSelectResultSet() throws SQLException {
     if (!isDataLoaded()) {
       loadData();
-    }
-      if ((currentResultSet.currentResultSet instanceof CachedRowSet) || (currentResultSet.currentResultSet instanceof ResultSetProxy)) {
-        return currentResultSet.currentResultSet;
-      } else {
-        int oldRow = 1;
-        boolean check = false;
+      }
+    if ((currentResultSet.currentResultSet instanceof CachedRowSet) || (currentResultSet.currentResultSet instanceof ResultSetProxy)) {
+      return currentResultSet.currentResultSet;
+    } else {
+      int oldRow = 1;
+      boolean check = false;
+      try {
+        oldRow = currentResultSet.currentResultSet.getRow();
+      } catch (Exception ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, ex.getMessage());
+        check = true;
+      }
+      if (check) {
+        owner.lock();
         try {
-          oldRow = currentResultSet.currentResultSet.getRow();
-        } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, ex.getMessage());
-          check = true;
-        }
-        if (check) {
-          owner.lock();
-          try {
-            currentResultSet.currentResultSet.relative(0);
-          } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
-            createCurrentResultSet();
-          } finally {
-            owner.unlock();
-          }
+          currentResultSet.currentResultSet.relative(0);
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
+          createCurrentResultSet();
+        } finally {
+          owner.unlock();
         }
       }
-    
+    }
+
     return currentResultSet.currentResultSet;
   }
 

@@ -225,7 +225,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             String fieldName = field.getName();
             int fieldValueIndex = field.getFieldIndex();
 
-            
+
             if (fieldValueIndex > 1) {
               int indexOfFieldValueIndex = field.getName().indexOf(Integer.toString(fieldValueIndex));
               fieldName = fieldName.substring(0, indexOfFieldValueIndex);
@@ -303,7 +303,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     int pos = 0;
     FieldValue[] fieldValues = new FieldValue[7];
-    fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, new Integer(fieldType.getTypeIndex()));
+    fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, fieldType.getTypeIndex());
     java.sql.ResultSet rs;
     Long newValueId = null;
     if (value != null) {
@@ -970,9 +970,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (!(Event.EVENT_SOURCE.equals(f) ||
               Event.EVENT_DATE.equals(f))) {
         valuesSet++;
-        final String ev_alias = "[ev_" + f.getName() + "]";
-        final String vp_alias = "[vp_" + f.getName() + "]";
-        final String val_alias = "[val_" + f.getName() + "]";
+        String fieldValueIndex = f.getFieldIndex() > 1 ? Integer.toString(f.getFieldIndex()) : "";
+        final String ev_alias = "[ev_" + f.getName() + fieldValueIndex + "]";
+        final String vp_alias = "[vp_" + f.getName() + fieldValueIndex + "]";
+        final String val_alias = "[val_" + f.getName() + fieldValueIndex + "]";
         sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues] ").append(ev_alias).append(" ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
@@ -1067,9 +1068,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     for (Field f : resultFields) {
       if (!searchFields.contains(f)) {
-        final String ev_alias = "[ev_" + f.getName() + "]";
-        final String vp_alias = "[vp_" + f.getName() + "]";
-        final String val_alias = "[val_" + f.getName() + "]";
+        String fieldValueIndex = f.getFieldIndex() > 1 ? Integer.toString(f.getFieldIndex()) : "";
+        final String ev_alias = "[ev_" + f.getName() + fieldValueIndex + "]";
+        final String vp_alias = "[vp_" + f.getName() + fieldValueIndex + "]";
+        final String val_alias = "[val_" + f.getName() + fieldValueIndex + "]";
         sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues] ").append(ev_alias).append(" ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
