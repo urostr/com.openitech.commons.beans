@@ -970,10 +970,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (!(Event.EVENT_SOURCE.equals(f) ||
               Event.EVENT_DATE.equals(f))) {
         valuesSet++;
-        String fieldValueIndex = f.getFieldIndex() > 1 ? Integer.toString(f.getFieldIndex()) : "";
-        final String ev_alias = "[ev_" + f.getName() + fieldValueIndex + "]";
-        final String vp_alias = "[vp_" + f.getName() + fieldValueIndex + "]";
-        final String val_alias = "[val_" + f.getName() + fieldValueIndex + "]";
+
+        final String ev_alias = "[ev_" + f.getName() + "]";
+        final String vp_alias = "[vp_" + f.getName() + "]";
+        final String val_alias = "[val_" + f.getName() + "]";
         sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues] ").append(ev_alias).append(" ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
@@ -1011,21 +1011,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
               //Integer
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName() + fieldValueIndex).append("]");
+                sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
               }
               break;
             case 2:
               //Real
               sb.append(val_alias).append(".RealValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName() + fieldValueIndex).append("]");
+                sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
               }
               break;
             case 3:
               //String
               sb.append(val_alias).append(".StringValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName() + fieldValueIndex).append("]");
+                sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
               }
               break;
             case 4:
@@ -1035,21 +1035,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
               //Date
               sb.append(val_alias).append(".DateValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName() + fieldValueIndex).append("]");
+                sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
               }
               break;
             case 6:
               //Clob
               sb.append(val_alias).append(".ClobValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName() + fieldValueIndex).append("]");
+                sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
               }
               break;
             case 7:
               //Boolean
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
-                sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
+                sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
               }
           }
           DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
