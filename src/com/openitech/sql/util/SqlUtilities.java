@@ -431,6 +431,7 @@ public abstract class SqlUtilities implements UpdateEvent {
     return updateEvent(event, event); //event vsebuje eventId oz. se dodaja
   }
 
+  @Override
   public Long updateEvent(Event newValues, Event oldValues) throws SQLException {
     Event find = findEvent(oldValues);
     if (find != null) {
