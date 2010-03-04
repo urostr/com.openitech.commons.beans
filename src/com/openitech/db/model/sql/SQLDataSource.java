@@ -2609,6 +2609,12 @@ public class SQLDataSource implements DbDataSourceImpl {
   public ResultSetMetaData getMetaData() throws SQLException {
     if (this.metaData != null) {
       return this.metaData;
+    } else if ((this.metaData=openSelectResultSet().getMetaData())!=null) {
+      int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
+      for (int c = 1; c <= columnCount; c++) {
+        this.columnMapping.put(this.metaData.getColumnName(c), c);
+      }
+      return this.metaData;
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
