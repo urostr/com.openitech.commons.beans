@@ -25,6 +25,7 @@ import com.openitech.db.model.xml.config.Workarea.DataModel.TableColumns.TableCo
 import com.openitech.db.model.xml.config.Workarea.DataSource.Parameters;
 import com.openitech.sql.Field;
 import com.openitech.sql.FieldValueProxy;
+import com.openitech.sql.util.SqlUtilities;
 import groovy.lang.GroovyClassLoader;
 import java.awt.Component;
 import java.lang.reflect.Constructor;
@@ -40,7 +41,6 @@ import javax.swing.JMenu;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-
 
 /**
  *
@@ -105,10 +105,10 @@ public class DataSourceFactory {
           TemporarySubselectSqlParameter ttParameter = new TemporarySubselectSqlParameter(tt.getReplace());
 
           ttParameter.setValue(tt.getTableName());
-          ttParameter.setCheckTableSql(tt.getCheckTableSql());
+          ttParameter.setCheckTableSql(getReplacedSql(tt.getCheckTableSql()));
           ttParameter.setCreateTableSqls(tt.getCreateTableSqls().getQuery().toArray(new String[]{}));
-          ttParameter.setEmptyTableSql(tt.getEmptyTableSql());
-          ttParameter.setFillTableSql(tt.getFillTableSql());
+          ttParameter.setEmptyTableSql(getReplacedSql(tt.getEmptyTableSql()));
+          ttParameter.setFillTableSql(getReplacedSql(tt.getFillTableSql()));
 
           if (tt.isFillOnceOnly() != null) {
             ttParameter.setFillOnceOnly(tt.isFillOnceOnly());
@@ -167,11 +167,11 @@ public class DataSourceFactory {
           } catch (Exception ex) {
             Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
           }
-        } else if ((parameter.getDataSourceParametersFactory() != null)||
-                   (parameter.getDataSourceFilterFactory() != null)) {
+        } else if ((parameter.getDataSourceParametersFactory() != null) ||
+                (parameter.getDataSourceFilterFactory() != null)) {
           try {
             Object newInstance = null;
-            DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null)?parameter.getDataSourceParametersFactory():parameter.getDataSourceFilterFactory();
+            DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
             if (dsf.getFactory().getGroovy() != null) {
               GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
               Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + waConfig.getOpis() + "_" + System.currentTimeMillis());
@@ -387,5 +387,13 @@ public class DataSourceFactory {
    */
   public List<JMenu> getViewMenuItems() {
     return viewMenuItems;
+  }
+
+  public static String getReplacedSql(String sql) {
+    sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+    sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+    sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+
+    return sql;
   }
 }
