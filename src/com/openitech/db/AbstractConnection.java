@@ -83,7 +83,7 @@ public abstract class AbstractConnection implements DbConnection {
 
   @Override
   public String getDialect() {
-    if (dialect==null) {
+    if (dialect == null) {
       try {
         String url = this.getUrl().toLowerCase();
         if (url.startsWith("jdbc:jtds:sqlserver:")) {
@@ -138,19 +138,20 @@ public abstract class AbstractConnection implements DbConnection {
         return connection;
       }
     } else {
-      if (Boolean.valueOf(settings.getProperty(DB_USE_POOL, "false"))) {
-        try {
-          Class.forName("org.logicalcobwebs.proxool.ProxoolDriver");
-          useProxool = true;
-        } catch (ClassNotFoundException ex) {
-          useProxool = false;
-        }
-      } else {
-        useProxool = false;
-      }
 
       try {
         if (connection == null || connection.isClosed()) {
+          if (Boolean.valueOf(settings.getProperty(DB_USE_POOL, "false"))) {
+            try {
+              Class.forName("org.logicalcobwebs.proxool.ProxoolDriver");
+              useProxool = true;
+            } catch (ClassNotFoundException ex) {
+              useProxool = false;
+            }
+          } else {
+            useProxool = false;
+          }
+          
           String DB_USER = settings.getProperty(ConnectionManager.DB_USER);
           String DB_PASS = settings.getProperty(ConnectionManager.DB_PASS);
 
