@@ -340,18 +340,20 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
 //        } finally {
 //          documentWeakListener.setEnabled(true);
 //        }
-        EventQueue.invokeLater(new Runnable() {
+        if (dbFieldObserver.getDataSource()!=null) {
+          EventQueue.invokeLater(new Runnable() {
 
-          @Override
-          public void run() {
-            disableColumnUpdates = true;
-            try {
-              firePropertyChange("value", (java.util.Date) null, dbFieldObserver.getValueAsDate());
-            } finally {
-              disableColumnUpdates = false;
+            @Override
+            public void run() {
+              disableColumnUpdates = true;
+              try {
+                firePropertyChange("value", (java.util.Date) null, dbFieldObserver.getValueAsDate());
+              } finally {
+                disableColumnUpdates = false;
+              }
             }
-          }
-        });
+          });
+        }
         break;
       }
     }
