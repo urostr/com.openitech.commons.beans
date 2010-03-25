@@ -22,12 +22,15 @@ public final class RefreshDataSource extends DataSourceEvent {
   List<Object> parameters = new ArrayList<Object>();
   Map<String,Object> defaults = new HashMap<String,Object>();
   boolean filterChange = false;
-  
+  private boolean tryLock = true;
+  private long queuedDelay = DbDataSource.DEFAULT_QUEUED_DELAY;
+
   protected RefreshDataSource(RefreshDataSource object) {
     super(object);
     this.parameters = object.parameters;
     this.defaults = object.defaults;
     this.filterChange = object.filterChange;
+    this.queuedDelay = object.queuedDelay;
   }
   
   public RefreshDataSource(DbDataSource dataSource) {
@@ -57,7 +60,35 @@ public final class RefreshDataSource extends DataSourceEvent {
     else
       this.defaults=null;
     this.filterChange = filterChange;
+    this.queuedDelay = dataSource.getQueuedDelay();
   }
+
+  public void setQueuedDelay(long queuedDelay) {
+    this.queuedDelay = queuedDelay;
+  }
+
+  public long getQueuedDelay() {
+    return queuedDelay;
+  }
+
+  /**
+   * Get the value of tryLock
+   *
+   * @return the value of tryLock
+   */
+  public boolean isTryLock() {
+    return tryLock;
+  }
+
+  /**
+   * Set the value of tryLock
+   *
+   * @param tryLock new value of tryLock
+   */
+  public void setTryLock(boolean tryLock) {
+    this.tryLock = tryLock;
+  }
+
   
   private void setBusy(final String label) {
     if (busy!=null) {
@@ -104,8 +135,8 @@ public final class RefreshDataSource extends DataSourceEvent {
       resubmit();
     } else {
       try {
-        System.out.println("QUEUED DELAY:"+event.dataSource.getQueuedDelay()+"ms:"+event.dataSource.getName()+":"+(isSuspended()?"SUSPENDED":"ACTIVE"));
-        Thread.sleep(event.dataSource.getQueuedDelay());
+        System.out.println("QUEUED DELAY:"+this.queuedDelay+"ms:"+event.dataSource.getName()+":"+(isSuspended()?"SUSPENDED":"ACTIVE"));
+        Thread.sleep(this.queuedDelay);
       } catch (InterruptedException ex) {
         Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
       }
