@@ -85,6 +85,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public final static String STORE_UPDATES = "storeUpdates";
   public final static String LOAD_DATA = "loadData";
   public final static String DATA_LOADED = "dataLoaded";
+  public final static String UPDATING_STARTED = "updatingStarted";
   public final static long DEFAULT_QUEUED_DELAY = 108;
 
   public final static int SHARING_OFF = 0;
