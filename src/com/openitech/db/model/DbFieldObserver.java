@@ -249,7 +249,6 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
               case Types.BIT:
                 Object value = dataSource.getObject(columnName);
                 wasNull = dataSource.wasNull();
-                System.out.println("Column="+columnName + " value="+value);
                 if (value instanceof Boolean) {
                   result = (Boolean) value;
                 } else {
