@@ -249,6 +249,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
               case Types.BIT:
                 Object value = dataSource.getObject(columnName);
                 wasNull = dataSource.wasNull();
+                System.out.println("Column="+columnName + " value="+value);
                 if (value instanceof Boolean) {
                   result = (Boolean) value;
                 } else {
@@ -486,7 +487,7 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
   //TODO fireactiveRowChanged?
   public void dataSource_activeRowChanged(ActiveRowChangeEvent event) {
     if (!updatingActiveRow) {
-      if (hasValueChanged()) {
+//      if (hasValueChanged()) {
         updatingActiveRow = true;
         try {
           oldValue = getValue();
@@ -494,7 +495,9 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
         } finally {
           updatingActiveRow = false;
         }
-      }
+//      }else{
+//        System.out.println("Column="+columnName + " hasValueChanged() = false");
+//      }
     }
   }
 
