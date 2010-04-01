@@ -29,6 +29,7 @@ import com.openitech.sql.util.SqlUtilities;
 import groovy.lang.GroovyClassLoader;
 import java.awt.Component;
 import java.lang.reflect.Constructor;
+import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -67,6 +68,13 @@ public class DataSourceFactory {
     configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), clazz, resourceName);
   }
 
+  public void configure(String opis, Clob resource) throws SQLException, JAXBException {
+    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
+    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(resource.getCharacterStream());
+
+    configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), workareaXML);
+  }
+
   public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.xml.DataSourceConfig config, Class clazz, String resourceName) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
     com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(clazz.getResourceAsStream(resourceName));
@@ -82,8 +90,11 @@ public class DataSourceFactory {
     dsWorkAreaEvents.lock();
     try {
       dsWorkAreaEvents.setQueuedDelay(0);
-      dsWorkAreaEvents.setCanAddRows(false);
-      dsWorkAreaEvents.setCanDeleteRows(false);
+
+      Boolean canAddRows = workareaXML.getDataSource().isCanAddRows();
+      Boolean canDeleteRows = workareaXML.getDataSource().isCanDeleteRows();      
+      dsWorkAreaEvents.setCanAddRows(canAddRows == null ? false : canAddRows);
+      dsWorkAreaEvents.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
 
 
       java.util.List parameters = new java.util.ArrayList();
@@ -229,7 +240,10 @@ public class DataSourceFactory {
       DataSourceEvent.suspend(dsWorkAreaEvents);
       DataSourceLimit.Limit.LALL.setSelected();
       dataSourceLimit.setValue(DataSourceLimit.Limit.LALL.getValue());
-      dsWorkAreaEvents.setQueuedDelay(DbDataSource.DEFAULT_QUEUED_DELAY);
+
+      Long delay = workareaXML.getDataSource().getQueuedDelay();
+      dsWorkAreaEvents.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
+
       dataSourceLimit.reloadDataSources();
 
       waConfig.dataSource = dsWorkAreaEvents;
