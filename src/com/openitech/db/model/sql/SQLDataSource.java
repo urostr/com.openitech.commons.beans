@@ -2499,6 +2499,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
     if (storeUpdates) {
       storeUpdates(rowInserted());
+      removeSharedResult();
     }
     try {
       owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.ROW_UPDATED));
@@ -2752,7 +2753,17 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+   protected void removeSharedResult() throws SQLException {
+     if (owner.isShareResults()) {
+       getSqlCache().removeSharedResult(preparedSelectSql, owner.getParameters());
+     }
+   }
+
   protected void createCurrentResultSet() {
+    createCurrentResultSet(false);
+  }
+  
+  protected void createCurrentResultSet(boolean reload) {
     owner.lock();
     try {
       Connection connection = getConnection();
@@ -2763,7 +2774,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           System.out.println(preparedSelectSql);
         }
         long timer = System.currentTimeMillis();
-        currentResultSet = new CurrentResultSet(owner.isShareResults() ? getSqlCache().getSharedResult(preparedSelectSql, owner.getParameters()) : executeSql(getSelectStatement(preparedSelectSql, connection), owner.getParameters()));
+        currentResultSet = new CurrentResultSet(owner.isShareResults() ? getSqlCache().getSharedResult(preparedSelectSql, owner.getParameters(), reload) : executeSql(getSelectStatement(preparedSelectSql, connection), owner.getParameters()));
         System.out.println(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
         if (DbDataSource.DUMP_SQL) {
           System.out.println("##############");
@@ -4497,11 +4508,27 @@ public class SQLDataSource implements DbDataSourceImpl {
         } else {
           owner.lock();
           try {
+            /*
+            ResultSet selectResultSet = openSelectResultSet();
+
+            if (selectResultSet instanceof CachedRowSet) {
+              if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
+                createCurrentResultSet();
+                selectResultSet = openSelectResultSet();
+                
+                if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
+                  throw new SQLException("Invalid row number " + rowIndex + " for " + toString());
+                }
+              }
+            }
+            final ResultSet openSelectResultSet = selectResultSet; //*/
             final ResultSet openSelectResultSet = openSelectResultSet();
             final int oldRow = openSelectResultSet.getRow();
 
             int max = Math.min(rowIndex + getFetchSize(), getRowCount());
             int min = Math.max(max - getFetchSize(), 1);
+            Logger.getAnonymousLogger().warning("Max=" + max + " Min=" + min +
+                    " fetchSize=" + getFetchSize() + " oldRow=" + oldRow);
             openSelectResultSet.absolute(min);
             String cn;
             Object value;

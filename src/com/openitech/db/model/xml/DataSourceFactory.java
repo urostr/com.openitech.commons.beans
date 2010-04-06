@@ -92,7 +92,7 @@ public class DataSourceFactory {
       dsWorkAreaEvents.setQueuedDelay(0);
 
       Boolean canAddRows = workareaXML.getDataSource().isCanAddRows();
-      Boolean canDeleteRows = workareaXML.getDataSource().isCanDeleteRows();      
+      Boolean canDeleteRows = workareaXML.getDataSource().isCanDeleteRows();
       dsWorkAreaEvents.setCanAddRows(canAddRows == null ? false : canAddRows);
       dsWorkAreaEvents.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
 
@@ -294,6 +294,10 @@ public class DataSourceFactory {
         }
       }
     } finally {
+      Boolean resume = workareaXML.getDataSource().isResumeAfterCreation();
+      if (resume && dsWorkAreaEvents.isSuspended()) {
+        DataSourceEvent.resume(dsWorkAreaEvents);
+      }
       dsWorkAreaEvents.unlock();
     }
   }

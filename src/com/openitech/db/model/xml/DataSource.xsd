@@ -32,6 +32,7 @@
               <xsd:element name="CanAddRows" type="xsd:boolean" minOccurs="0"></xsd:element>
               <xsd:element name="CanDeleteRows" type="xsd:boolean" minOccurs="0"></xsd:element>
               <xsd:element name="QueuedDelay" type="xsd:long" minOccurs="0"></xsd:element>
+              <xsd:element name="resumeAfterCreation" type="xsd:boolean" minOccurs="0"></xsd:element>
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
@@ -155,6 +156,7 @@
         <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
     </xsd:complexType>
 </xsd:schema>
+
 
 
 

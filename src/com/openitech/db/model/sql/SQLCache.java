@@ -48,16 +48,19 @@ public class SQLCache implements Serializable {
     sharedResults.clear();
   }
 
-  public CachedRowSet getSharedResult(String query, List<Object> parameters, boolean reload, long TTL) throws SQLException {
-    SharedEntry result = new SharedEntry(null, query, parameters, TTL);
+  private SharedEntry getSharedEntry(String query, List<Object> parameters, long TTL) throws SQLException {
+    return new SharedEntry(null, query, parameters, TTL);
+  }
 
+  public CachedRowSet getSharedResult(String query, List<Object> parameters, boolean reload, long TTL) throws SQLException {
+    SharedEntry result = getSharedEntry(query, parameters, TTL);
     CollectionKey<Object> key = result.entryKey;
     if (sharedResults.containsKey(key)) {
       result = sharedResults.get(key);
     } else {
       sharedResults.put(key, result);
     }
-
+    
     return result.getEntry(reload);
   }
 
@@ -81,6 +84,14 @@ public class SQLCache implements Serializable {
     }
 
     return statement;
+  }
+
+  public void removeSharedResult(String query, List<Object> parameters) throws SQLException {
+    SharedEntry result = getSharedEntry(query, parameters, ttl);
+
+    if (result != null) {
+      sharedResults.remove(result.entryKey);
+    }
   }
 
   public ResultSet getSharedResult(String query, List<Object> parameters) throws SQLException {
@@ -220,7 +231,7 @@ public class SQLCache implements Serializable {
         } catch (SQLException ex) {
           Logger.getLogger(SQLCache.class.getName()).log(Level.WARNING, ex.getMessage());
 
-          result = reloaded?entry:reloadEntry();
+          result = reloaded ? entry : reloadEntry();
           entry = null;
         }
       }

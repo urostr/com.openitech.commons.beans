@@ -487,13 +487,13 @@ public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.
   public void dataSource_activeRowChanged(ActiveRowChangeEvent event) {
     if (!updatingActiveRow) {
 //      if (hasValueChanged()) {
-        updatingActiveRow = true;
-        try {
-          oldValue = getValue();
-          fireFieldValueChanged(new ActiveRowChangeEvent(event.getSource(), columnName, -1));
-        } finally {
-          updatingActiveRow = false;
-        }
+      updatingActiveRow = true;
+      try {
+        oldValue = getValue();
+        fireFieldValueChanged(new ActiveRowChangeEvent(event.getSource(), columnName, -1));
+      } finally {
+        updatingActiveRow = false;
+      }
 //      }else{
 //        System.out.println("Column="+columnName + " hasValueChanged() = false");
 //      }
