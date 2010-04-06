@@ -213,9 +213,9 @@ public class DataSourceFactory {
       dsWorkAreaEvents.setParameters(parameters);
 
       if (workareaXML.getDataSource().getCOUNTSQL() != null) {
-        dsWorkAreaEvents.setCountSql(workareaXML.getDataSource().getCOUNTSQL());
+        dsWorkAreaEvents.setCountSql(getReplacedSql(workareaXML.getDataSource().getCOUNTSQL()));
       }
-      dsWorkAreaEvents.setSelectSql(workareaXML.getDataSource().getSQL());
+      dsWorkAreaEvents.setSelectSql(getReplacedSql(workareaXML.getDataSource().getSQL()));
       dsWorkAreaEvents.setName("DS:WORKAREA:" + waConfig.getOpis());
 
       List<String> eventColumns = workareaXML.getDataSource().getEventColumns();
