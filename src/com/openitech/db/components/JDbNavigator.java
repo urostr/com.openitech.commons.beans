@@ -342,19 +342,23 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
   }//GEN-LAST:event_jbFirstActionPerformed
 
   public void setDataSource(com.openitech.db.model.DbNavigatorDataSource dataSource) {
-    if (!Equals.equals(this.dataSource, dataSource)) {
-      if (this.dataSource != null) {
-        this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-        this.dataSource.removePropertyChangeListener("model", propertyChangeWeakListener);
-      }
-      this.dataSource = dataSource;
-      if (this.dataSource != null) {
-        this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
-        this.dataSource.addPropertyChangeListener("model", propertyChangeWeakListener);
-        if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
-          checkButtons();
+    try {
+      if (!Equals.equals(this.dataSource, dataSource)) {
+        if (this.dataSource != null) {
+          this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
+          this.dataSource.removePropertyChangeListener("model", propertyChangeWeakListener);
+        }
+        this.dataSource = dataSource;
+        if (this.dataSource != null) {
+          this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
+          this.dataSource.addPropertyChangeListener("model", propertyChangeWeakListener);
+          if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
+            checkButtons();
+          }
         }
       }
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
   }
 
