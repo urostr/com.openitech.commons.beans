@@ -4527,8 +4527,6 @@ public class SQLDataSource implements DbDataSourceImpl {
 
             int max = Math.min(rowIndex + getFetchSize(), getRowCount());
             int min = Math.max(max - getFetchSize(), 1);
-            Logger.getAnonymousLogger().warning("Max=" + max + " Min=" + min +
-                    " fetchSize=" + getFetchSize() + " oldRow=" + oldRow);
             openSelectResultSet.absolute(min);
             String cn;
             Object value;
