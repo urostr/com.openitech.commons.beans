@@ -44,7 +44,7 @@ public class SQLCache implements Serializable {
     return instance;
   }
 
-  protected void clearSharedResults() {
+  public void clearSharedResults() {
     sharedResults.clear();
   }
 
