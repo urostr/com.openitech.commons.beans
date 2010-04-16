@@ -65,7 +65,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
   private String metaDataValue;
   private int tag;
   private int state;
-  private DbWebRowSetImpl rs;
+  private DbEventWebRowSetImpl rs;
   private boolean nullVal;
   private boolean emptyStringVal;
   private RowSetMetaData md;
@@ -353,7 +353,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
    */
   public XmlReaderContentHandler(RowSet r) {
     // keep the rowset we've been given
-    rs = (DbWebRowSetImpl) r;
+    rs = (DbEventWebRowSetImpl) r;
 
     // set-up the token maps
     initMaps();
@@ -1078,23 +1078,24 @@ public class XmlReaderContentHandler extends DefaultHandler {
         break;
       case SyncProviderNameTag:
         if (nullValue) {
-          rs.setSyncProvider(null);
+          //rs.setSyncProvider(null);
+          //uporabi paè default providerja
         } else {
           String str = s;//s.substring(0,s.indexOf("@")+1);
           rs.setSyncProvider(str);
         }
         break;
       case SyncProviderVendorTag:
-        // to be implemented
+        //TODO to be implemented
         break;
       case SyncProviderVersionTag:
-        // to be implemented
+        //TODO to be implemented
         break;
       case SyncProviderGradeTag:
-        // to be implemented
+        //TODO to be implemented
         break;
       case DataSourceLock:
-        // to be implemented
+        //TODO to be implemented
         break;
       default:
         break;
@@ -1398,7 +1399,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
    * @return the <code>Row</code> object on which the <code>RowSet</code>
    *           implementation objects's cursor is positioned
    */
-  private Row getPresentRow(DbWebRowSetImpl rs) throws SQLException {
+  private Row getPresentRow(DbEventWebRowSetImpl rs) throws SQLException {
     //rs.setOriginalRow();
     // ResultSetMetaData rsmd = rs.getMetaData();
     // int numCols = rsmd.getColumnCount();

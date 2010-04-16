@@ -6,22 +6,17 @@
  */
 package com.openitech.db.model.sync;
 
-import com.openitech.db.ConnectionManager;
-import com.openitech.db.model.DbDataSource;
-import com.openitech.db.model.rowSet.DbWebRowSetImpl;
+import com.openitech.db.model.sql.SQLCache;
 import java.sql.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.sql.*;
 import javax.naming.*;
 import java.io.*;
-import com.openitech.db.model.Types;
 
 import com.openitech.db.model.sql.SQLDataSource;
 import com.sun.rowset.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
 
@@ -68,8 +63,8 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
    * @serial
    */
   private int writerCalls = 0;
-  private boolean userCon = false;
   private int startPosition;
+  private SQLCache sqlCache = new SQLCache();
   private JdbcRowSetResourceBundle resBundle;
   // private Connection connection;
 
@@ -139,14 +134,7 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
       // Get a connection.  This reader assumes that the necessary
       // properties have been set on the caller to let it supply a
       // connection.
-      userCon = false;
-
-      if (caller.getConnection() != null) {
-        con = caller.getConnection();
-        userCon = true;
-      } else {
-        con = getTxConnection();
-      }
+      con = connect(caller);
 
       // Check our assumptions.
       if (con == null) {//|| crs.getCommand() == null) {
@@ -158,7 +146,7 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
       } catch (Exception ex) {
       }
       // Use JDBC to read the data.
-      PreparedStatement pstmt = con.prepareStatement("SELECT [ChangeLog].[dbo].[getEventXMLRowSet] (?,?,? )");
+      PreparedStatement pstmt = sqlCache.getSharedStatement(con, "SELECT [ChangeLog].[dbo].[getEventXMLRowSet] (?,?,? )");
       // Pass any input parameters to JDBC.
       List<Object> param = new ArrayList<Object>();
       for (Object value : caller.getParams()) {
@@ -189,10 +177,14 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
       ResultSet rs = SQLDataSource.executeQuery(pstmt, param);
       if (rs.next()) {
 
-        String test = rs.getString(1);
-        System.out.println(test);
-        if (test.length() > 0) {
-          wrs.readXml(rs.getCharacterStream(1));
+        String xml = rs.getString(1);
+//        System.out.println(test);
+        
+        Logger.getAnonymousLogger().warning(xml);
+        if (xml.length() > 0) {
+          wrs.release();
+          wrs.clearParameters();
+          wrs.readXml(new StringReader(xml));
         }
 
       } else {
@@ -200,85 +192,11 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
       }
       rs.close();
       // Get the data.
-      pstmt.close();
-
-      // only close connections we created...
-      if (getCloseConnection()) {
-//        con.close();
-      }
+      //pstmt.close();
     } catch (SQLException ex) {
       // Throw an exception if reading fails for any reason.
       throw ex;
-    } finally {
-      try {
-        // only close connections we created...
-        if (con != null && getCloseConnection()) {
-//          con.close();
-//          con = null;
-        }
-      } catch (Exception e) {
-        // will get exception if something already went wrong, but don't
-        // override that exception with this one
-      }
     }
-  }
-
-  private static int setParameters(PreparedStatement statement, List<?> parameters, int pos, boolean subset) throws SQLException {
-    if (!subset) {
-      statement.clearParameters();
-    }
-
-    ParameterMetaData metaData = null;
-    int parameterCount = Integer.MAX_VALUE;
-    try {
-      metaData = statement.getParameterMetaData();
-      parameterCount = metaData.getParameterCount();
-    } catch (SQLException err) {
-      err.printStackTrace();
-    }
-    Object value;
-    Integer type;
-
-    for (Iterator values = parameters.iterator(); (pos <= parameterCount) && values.hasNext();) {
-      value = values.next();
-      if (value instanceof DbDataSource.SqlParameter) {
-        type = ((DbDataSource.SqlParameter) value).getType();
-        if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
-          if (((DbDataSource.SqlParameter) value).getValue() != null) {
-            statement.setObject(pos++, ((DbDataSource.SqlParameter) value).getValue(),
-                    ((DbDataSource.SqlParameter) value).getType());
-            if (DbDataSource.DUMP_SQL) {
-              System.out.println("--[" + (pos - 1) + "]=" + ((DbDataSource.SqlParameter) value).getValue().toString());
-            }
-          } else {
-            statement.setNull(pos++, ((DbDataSource.SqlParameter) value).getType());
-            if (DbDataSource.DUMP_SQL) {
-              System.out.println("--[" + (pos - 1) + "]=null");
-            }
-          }
-        } else if ((value instanceof DbDataSource.SubstSqlParameter) && (((DbDataSource.SubstSqlParameter) value).getParameters().size() > 0)) {
-          pos = setParameters(statement, ((DbDataSource.SubstSqlParameter) value).getParameters(), pos, true);
-        }
-      } else {
-        if (value == null) {
-          statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
-          if (DbDataSource.DUMP_SQL) {
-            System.out.println("--[" + (pos - 1) + "]=null");
-          }
-        } else {
-          statement.setObject(pos++, value);
-          if (DbDataSource.DUMP_SQL) {
-            System.out.println("--[" + (pos - 1) + "]=" + value.toString());
-          }
-        }
-      }
-    }
-    if (parameterCount < Integer.MAX_VALUE) {
-      while ((pos <= parameterCount) && !subset) {
-        statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
-      }
-    }
-    return pos;
   }
 
   /**
@@ -297,10 +215,6 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
     return writerCalls == 1;
   }
 
-  public Connection getTxConnection() {
-    //return (this.connection == null) ? ConnectionManager.getInstance().getTxConnection() : this.connection;
-    return ConnectionManager.getInstance().getTxConnection();
-  }
 
   /**
    * Establishes a connection with the data source for the given
@@ -327,10 +241,6 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
 
     // Get a JDBC connection.
     if (caller.getConnection() != null) {
-      // A connection was passed to execute(), so use it.
-      // As we are using a connection the user gave us we
-      // won't close it.
-      userCon = true;
       return caller.getConnection();
     } else if (((RowSet) caller).getDataSourceName() != null) {
       // Connect using JNDI.
@@ -365,136 +275,13 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
   }
 
   /**
-   * Sets the parameter placeholders
-   * in the rowset's command (the given <code>PreparedStatement</code>
-   * object) with the parameters in the given array.
-   * This method, called internally by the method
-   * <code>CachedRowSetReader.readData</code>, reads each parameter, and
-   * based on its type, determines the correct
-   * <code>PreparedStatement.setXXX</code> method to use for setting
-   * that parameter.
-   *
-   * @param params an array of parameters to be used with the given
-   *               <code>PreparedStatement</code> object
-   * @param pstmt  the <code>PreparedStatement</code> object that is the
-   *               command for the calling rowset and into which
-   *               the given parameters are to be set
-   * @throws SQLException if an access error occurs
-   */
-  private void decodeParams(Object[] params,
-          PreparedStatement pstmt) throws SQLException {
-    // There is a corresponding decodeParams in JdbcRowSetImpl
-    // which does the same as this method. This is a design flaw.
-    // Update the JdbcRowSetImpl.decodeParams when you update
-    // this method.
-
-    // Adding the same comments to JdbcRowSetImpl.decodeParams.
-
-    int arraySize;
-    Object[] param = null;
-
-    for (int i = 0; i < params.length; i++) {
-      if (params[i] instanceof Object[]) {
-        param = (Object[]) params[i];
-
-        if (param.length == 2) {
-          if (param[0] == null) {
-            pstmt.setNull(i + 1, ((Integer) param[1]).intValue());
-            continue;
-          }
-
-          if (param[0] instanceof java.sql.Date ||
-                  param[0] instanceof java.sql.Time ||
-                  param[0] instanceof java.sql.Timestamp) {
-            System.err.println(resBundle.handleGetObject("crsreader.datedetected").toString());
-            if (param[1] instanceof java.util.Calendar) {
-              System.err.println(resBundle.handleGetObject("crsreader.caldetected").toString());
-              pstmt.setDate(i + 1, (java.sql.Date) param[0],
-                      (java.util.Calendar) param[1]);
-              continue;
-            } else {
-              throw new SQLException(resBundle.handleGetObject("crsreader.paramtype").toString());
-            }
-          }
-
-          if (param[0] instanceof Reader) {
-            pstmt.setCharacterStream(i + 1, (Reader) param[0],
-                    ((Integer) param[1]).intValue());
-            continue;
-          }
-
-          /*
-           * What's left should be setObject(int, Object, scale)
-           */
-          if (param[1] instanceof Integer) {
-            pstmt.setObject(i + 1, param[0], ((Integer) param[1]).intValue());
-            continue;
-          }
-
-        } else if (param.length == 3) {
-
-          if (param[0] == null) {
-            pstmt.setNull(i + 1, ((Integer) param[1]).intValue(),
-                    (String) param[2]);
-            continue;
-          }
-
-          if (param[0] instanceof java.io.InputStream) {
-            switch (((Integer) param[2]).intValue()) {
-              case CachedRowSetImpl.UNICODE_STREAM_PARAM:
-                pstmt.setUnicodeStream(i + 1,
-                        (java.io.InputStream) param[0],
-                        ((Integer) param[1]).intValue());
-              case CachedRowSetImpl.BINARY_STREAM_PARAM:
-                pstmt.setBinaryStream(i + 1,
-                        (java.io.InputStream) param[0],
-                        ((Integer) param[1]).intValue());
-              case CachedRowSetImpl.ASCII_STREAM_PARAM:
-                pstmt.setAsciiStream(i + 1,
-                        (java.io.InputStream) param[0],
-                        ((Integer) param[1]).intValue());
-              default:
-                throw new SQLException(resBundle.handleGetObject("crsreader.paramtype").toString());
-            }
-          }
-
-          /*
-           * no point at looking at the first element now;
-           * what's left must be the setObject() cases.
-           */
-          if (param[1] instanceof Integer && param[2] instanceof Integer) {
-            pstmt.setObject(i + 1, param[0], ((Integer) param[1]).intValue(),
-                    ((Integer) param[2]).intValue());
-            continue;
-          }
-
-          throw new SQLException(resBundle.handleGetObject("crsreader.paramtype").toString());
-
-        } else {
-          // common case - this catches all SQL92 types
-          pstmt.setObject(i + 1, params[i]);
-          continue;
-        }
-      } else {
-        // Try to get all the params to be set here
-        pstmt.setObject(i + 1, params[i]);
-
-      }
-    }
-  }
-
-  /**
    * Assists in determining whether the current connection was created by this
    * CachedRowSet to ensure incorrect connections are not prematurely terminated.
    *
    * @return a boolean giving the status of whether the connection has been closed.
    */
   protected boolean getCloseConnection() {
-    if (userCon) {
-      return false;
-    }
-
-    return true;
+    return false;
   }
 
   /**
@@ -506,18 +293,6 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
    */
   public void setStartPosition(int pos) {
     startPosition = pos;
-  }
-
-  private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-    // Default state initialization happens here
-    ois.defaultReadObject();
-    // Initialization of  Res Bundle happens here .
-    try {
-      resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-    } catch (IOException ioe) {
-      throw new RuntimeException(ioe);
-    }
-
   }
   static final long serialVersionUID = 5049738185801363801L;
 }

@@ -87,14 +87,12 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public final static String DATA_LOADED = "dataLoaded";
   public final static String UPDATING_STARTED = "updatingStarted";
   public final static long DEFAULT_QUEUED_DELAY = 108;
-
   public final static int SHARING_OFF = 0;
   public final static int SHARING_GLOBAL = 1;
   public final static int SHARING_LOCAL = 2;
   public final static int DISABLE_COUNT_CACHING = 8;
-  public final static int SHARING_SELECT_GLOBAL = SHARING_GLOBAL+DISABLE_COUNT_CACHING;
-  public final static int SHARING_SELECT_LOCAL = SHARING_LOCAL+DISABLE_COUNT_CACHING;
-
+  public final static int SHARING_SELECT_GLOBAL = SHARING_GLOBAL + DISABLE_COUNT_CACHING;
+  public final static int SHARING_SELECT_LOCAL = SHARING_LOCAL + DISABLE_COUNT_CACHING;
   private String componentName;
   private transient WeakListenerList activeRowChangeListeners;
   private transient WeakListenerList storeUpdatesListeners;
@@ -199,7 +197,6 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public void clearSharedResults() {
     implementation.clearSharedResults();
   }
-  
   private int sharing;
 
   /**
@@ -226,7 +223,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
    * @return the value of shareResults
    */
   public boolean isShareResults() {
-    return sharing>0;
+    return sharing > 0;
   }
 
   /**
@@ -235,9 +232,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
    * @param shareResults new value of shareResults
    */
   public void setShareResults(boolean shareResults) {
-    sharing = shareResults?SHARING_GLOBAL:SHARING_OFF;
+    sharing = shareResults ? SHARING_GLOBAL : SHARING_OFF;
   }
-  
   private boolean safeMode = true;
 
   /**
@@ -264,7 +260,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   @Override
   public String toString() {
-    return name==null?super.toString():name;
+    return name == null ? super.toString() : name;
   }
 
   /**
@@ -3120,9 +3116,10 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   }
 
   public boolean lock(boolean fatal, boolean force) {
+    long begin = System.currentTimeMillis();
     boolean result = false;
     try {
-      if (DUMP_SQL) {
+      if (true) {//if (DUMP_SQL) {
         System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + (available.isHeldByCurrentThread() ? "owner:current:" + available.getHoldCount() : "queued:" + available.getQueueLength()));
 
         StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
@@ -3144,6 +3141,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     } catch (InterruptedException ex) {
       throw (IllegalStateException) (new IllegalStateException("Can't obtain lock")).initCause(ex);
     }
+    System.out.println(getName() + " :cas lokanja:= " + (System.currentTimeMillis() - begin));
     return result;
   }
 
@@ -3624,8 +3622,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public void firePropertyChange(String propertyName,
           Object oldValue, Object newValue) {
     PropertyChangeSupport changeSupport = this.changeSupport;
-    if (changeSupport == null
-            || (oldValue != null && newValue != null && oldValue.equals(newValue))) {
+    if (changeSupport == null || (oldValue != null && newValue != null && oldValue.equals(newValue))) {
       return;
     }
     if (EventQueue.isDispatchThread() || !isSafeMode()) {
@@ -4832,8 +4829,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     protected void firePropertyChange(String propertyName,
             Object oldValue, Object newValue) {
       PropertyChangeSupport changeSupport = this.changeSupport;
-      if (changeSupport == null
-              || (oldValue != null && newValue != null && oldValue.equals(newValue))) {
+      if (changeSupport == null || (oldValue != null && newValue != null && oldValue.equals(newValue))) {
         return;
       }
       changeSupport.firePropertyChange(propertyName, oldValue, newValue);
@@ -5280,7 +5276,6 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public void setCatalogName(String catalogName) {
     implementation.setCatalogName(catalogName);
   }
-
 
   /**
    * Get the value of schemaName

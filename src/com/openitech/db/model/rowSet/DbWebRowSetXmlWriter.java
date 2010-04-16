@@ -368,7 +368,7 @@ public class DbWebRowSetXmlWriter implements XmlWriter, Serializable {
           if (caller.wasNull()) {
             writeNull();
           } else {
-            writeInteger(caller.getInt(idx));
+            writeInteger(i);
           }
           break;
         case java.sql.Types.BIGINT:

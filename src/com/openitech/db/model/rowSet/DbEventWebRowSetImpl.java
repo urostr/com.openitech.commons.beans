@@ -6,6 +6,7 @@
  */
 package com.openitech.db.model.rowSet;
 
+import com.openitech.db.model.sync.DbEventSyncProvider;
 import com.sun.rowset.CachedRowSetImpl;
 import com.sun.rowset.JdbcRowSetResourceBundle;
 import java.sql.*;
@@ -13,6 +14,8 @@ import java.io.*;
 import java.util.*;
 
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
 
@@ -22,7 +25,7 @@ import javax.sql.rowset.spi.*;
  *
  * @author Jonathan Bruce, Amit Handa
  */
-public class DbWebRowSetImpl extends DbEventChachedRowSetImpl implements WebRowSet {
+public class DbEventWebRowSetImpl extends DbEventChachedRowSetImpl implements WebRowSet {
 
   /**
    * The <code>WebRowSetXmlReader</code> object that this
@@ -56,9 +59,17 @@ public class DbWebRowSetImpl extends DbEventChachedRowSetImpl implements WebRowS
    * @throws SQLException if an error occurs in configuring the default
    * synchronization providers for relational and XML providers.
    */
-  public DbWebRowSetImpl() throws SQLException {
+  public DbEventWebRowSetImpl() throws SQLException {
     super();
 
+    SyncFactory.registerProvider(DbEventSyncProvider.PROVIDER);
+
+    String providerName = DbEventSyncProvider.PROVIDER;
+
+
+    // set the Reader, this maybe overridden latter
+    provider = (SyncProvider) SyncFactory.getInstance(providerName);
+    setSyncProvider(providerName);
     // %%%
     // Needs to use to SPI  XmlReader,XmlWriters
     //
@@ -75,7 +86,7 @@ public class DbWebRowSetImpl extends DbEventChachedRowSetImpl implements WebRowS
    * synchronization providers for the relational and XML providers; or
    * if the Hashtanle is null
    */
-  public DbWebRowSetImpl(Hashtable env) throws SQLException {
+  public DbEventWebRowSetImpl(Hashtable env) throws SQLException {
     super();
     try {
       resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
@@ -89,9 +100,14 @@ public class DbWebRowSetImpl extends DbEventChachedRowSetImpl implements WebRowS
     String providerName =
             (String) env.get(javax.sql.rowset.spi.SyncFactory.ROWSET_SYNC_PROVIDER);
 
+    if(providerName == null){
+      provider = SyncFactory.getInstance(DEFAULT_SYNC_PROVIDER);
+    }else{
     // set the Reader, this maybe overridden latter
     provider = (SyncProvider) SyncFactory.getInstance(providerName);
-    setSyncProvider(providerName);
+    }
+//    setSyncProvider(providerName);
+setSyncProvider(provider);
 
     xmlReader = new DbWebRowSetXmlReader();
     xmlWriter = new DbWebRowSetXmlWriter();
@@ -263,5 +279,8 @@ public class DbWebRowSetImpl extends DbEventChachedRowSetImpl implements WebRowS
     }
 
   }
+
   static final long serialVersionUID = -8771775154092422943L;
+
+  
 }

@@ -17,7 +17,8 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.concurrent.DataSourceEvent;
-import com.openitech.db.model.rowSet.DbWebRowSetImpl;
+import com.openitech.db.model.rowSet.DbEventChachedRowSetImpl;
+import com.openitech.db.model.rowSet.DbEventWebRowSetImpl;
 import com.openitech.db.proxy.ResultSetProxy;
 import com.openitech.formats.FormatFactory;
 import com.openitech.ref.SoftHashMap;
@@ -63,7 +64,6 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.RowSetListener;
-import javax.sql.rowset.BaseRowSet;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.WebRowSet;
 import javax.swing.JOptionPane;
@@ -101,6 +101,7 @@ public class EventDataSource implements DbDataSourceImpl {
   private transient PreparedStatement countStatement;
   private transient Map<String, PreparedStatement> cachedStatements = new SoftHashMap<String, PreparedStatement>();
   private transient SQLCache sqlCache;
+//  private WebRowSet webRowSet;
   /**
    * Holds value of property uniqueID.
    */
@@ -2757,16 +2758,16 @@ public class EventDataSource implements DbDataSourceImpl {
     }
   }
 
-   protected void removeSharedResult() throws SQLException {
-     if (owner.isShareResults()) {
-       getSqlCache().removeSharedResult(preparedSelectSql, owner.getParameters());
-     }
-   }
+  protected void removeSharedResult() throws SQLException {
+    if (owner.isShareResults()) {
+      getSqlCache().removeSharedResult(preparedSelectSql, owner.getParameters());
+    }
+  }
 
   protected void createCurrentResultSet() {
     createCurrentResultSet(false);
   }
-  
+
   protected void createCurrentResultSet(boolean reload) {
     owner.lock();
     try {
@@ -2779,12 +2780,15 @@ public class EventDataSource implements DbDataSourceImpl {
         }
         long timer = System.currentTimeMillis();
 
-        WebRowSet wrs = new DbWebRowSetImpl();
+//        if (webRowSet == null) {
+//          webRowSet = new DbEventWebRowSetImpl();
+//        }
+        WebRowSet wrs = (currentResultSet == null) || (currentResultSet.currentResultSet == null) ? new DbEventWebRowSetImpl() : currentResultSet.currentResultSet;
 
 
-        currentResultSet = new CurrentResultSet(executeQuery(wrs, owner.getParameters(), getConnection()));
-        System.out.println(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
+        currentResultSet = new CurrentResultSet(executeQuery(wrs, owner.getParameters(), connection));
         if (DbDataSource.DUMP_SQL) {
+          System.out.println(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
           System.out.println("##############");
         }
         currentResultSet.currentResultSet.first();
@@ -3634,250 +3638,32 @@ public class EventDataSource implements DbDataSourceImpl {
   @Override
   public void doStoreUpdates(boolean insert, Map<String, Object> columnValues, Map<Integer, Object> oldValues, Integer row) throws SQLException {
     Logger.getLogger(Settings.LOGGER).entering(this.getClass().toString(), "storeUpdates", insert);
-    Scale scaledValue;
-    Entry<String, Object> entry;
+    WebRowSet thisResultSet = openSelectResultSet();
 
-    final Connection connection = getTxConnection();
-
-    int columnCount = getColumnCount();
-
-    String delimiterLeft = getDelimiterLeft();
-    String delimiterRight = getDelimiterRight();
-
-    if (insert) {
-      String catalogName = null;
-      String schemaName = null;
-      String tableName = updateTableName;
-
-      StringBuilder columns = new StringBuilder();
-      StringBuilder values = new StringBuilder();
-
-      ResultSetMetaData metaData = getMetaData();
-      List<String> skipValues = new ArrayList<String>();
-
-      int columnIndex;
-
-      for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-        entry = i.next();
-        columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
-
-        if (updateColumnNames.size() > 0) {
-          if (!updateColumnNames.contains(entry.getKey())) {
-            skipValues.add(entry.getKey());
-            continue;
-          }
-        }
-
-        if (!owner.isSingleTableSelect()) {
-          if (catalogName == null) {
-            catalogName = metaData.getCatalogName(columnIndex);
-          } else if (!catalogName.equalsIgnoreCase(metaData.getCatalogName(columnIndex))) {
-            throw new SQLException("Insert on different catalogs not supported. Shema: " + catalogName + " != " + metaData.getCatalogName(columnIndex));
-          }
-          if (schemaName == null) {
-            schemaName = metaData.getSchemaName(columnIndex);
-          } else if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex))) {
-            throw new SQLException("Insert on different schemas not supported. Shema: " + schemaName + " != " + metaData.getSchemaName(columnIndex));
-          }
-          if (tableName == null) {
-            //TODO ne dela. vedno vraèa null
-            tableName = metaData.getTableName(columnIndex);
-          } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
-            if (updateTableName == null) {
-              throw new SQLException("Insert on different tables not supported.");
-            }
-          }
-        }
-        if (entry.getValue() != null || metaData.isNullable(columnIndex) != ResultSetMetaData.columnNoNulls) {
-          columns.append(columns.length() > 0 ? "," : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight);
-          values.append(values.length() > 0 ? "," : "").append("?");
+    for (Entry<String, Object> entry : columnValues.entrySet()) {
+      final int columnType = metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue());
+      if ((columnType == java.sql.Types.DATE)||
+          (columnType == java.sql.Types.TIMESTAMP)) {
+        if (entry.getValue() instanceof java.util.Date) {
+          thisResultSet.updateTimestamp(entry.getKey(), new java.sql.Timestamp(((java.util.Date) entry.getValue()).getTime()));
+        } else if (entry.getValue() == null) {
+          thisResultSet.updateObject(entry.getKey(), entry.getValue());
         } else {
-          skipValues.add(entry.getKey());
-          Logger.getLogger(Settings.LOGGER).info("Skipping null value: '" + entry.getKey() + "'");
-        }
-      }
-
-      StringBuilder sql = new StringBuilder();
-
-      sql.append("INSERT INTO ");
-      if (catalogName.length() > 0 && schemaName.length() > 0) {
-        sql.append(delimiterLeft).append(catalogName).append(delimiterRight).append(".");
-      }
-      if (schemaName.length() > 0) {
-        sql.append(delimiterLeft).append(schemaName).append(delimiterRight).append(".");
-      }
-      sql.append(delimiterLeft).append(tableName).append(delimiterRight).append(" (").append(columns).append(") ");
-      sql.append("VALUES (").append(values).append(")");
-
-      PreparedStatement insertStatement = getTxConnection().prepareStatement(sql.toString());
-      try {
-        ParameterMetaData parameterMetaData = insertStatement.getParameterMetaData();
-
-        int p = 1;
-
-        for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-          entry = i.next();
-          if (skipValues.indexOf(entry.getKey()) == -1) {
-            /*if (entry.getValue()==null)
-            insertStatement.setNull(p, parameterMetaData.getParameterType(p++));
-            else//*/
-            if (entry.getValue() instanceof Scale) {
-              Scale scale = (Scale) entry.getValue();
-              if (scale.method.equals("updateCharacterStream")) {
-                insertStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
-              } else if (scale.method.equals("updateBinaryStream")) {
-                insertStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
-              } else if (scale.method.equals("updateAsciiStream")) {
-                insertStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
-              } else {
-                insertStatement.setObject(p++, scale.x, scale.scale);
-              }
-            } else {
-              //TODO preveriti èe je timestamp in dati setTimestamp
-              insertStatement.setObject(p++, entry.getValue(), getType(entry.getKey()));
-
-            }
-            oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-          }
-        }
-        Logger.getLogger(Settings.LOGGER).info("Executing insert : '" + sql + "'");
-        insertStatement.setQueryTimeout(15);
-        insertStatement.executeUpdate();
-      } finally {
-        insertStatement.close();
-      }
-    } else {
-      final ResultSet openSelectResultSet = openSelectResultSet();
-      ResultSetMetaData metaData = openSelectResultSet.getMetaData();
-      List<String> skipColumns = new ArrayList<String>();
-      for (int c = 1; c <= columnCount; c++) {
-        String columnName = metaData.getColumnName(c).toUpperCase();
-        if ((updateTableName == null || (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) && (updateColumnNames.size() == 0 || updateColumnNames.contains(columnName))) {
           try {
-            Object value = openSelectResultSet.getObject(c);
-            oldValues.put(c, value);
-          } catch (Exception err) {
-            Logger.getLogger(Settings.LOGGER).info("Skipping illegal value for: '" + columnName + "'");
-            skipColumns.add(columnName);
-          }
-        } else {
-          skipColumns.add(columnName);
-        }
-      }
-      PrimaryKey key;
-      for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
-        key = pk.next();
-        ResultSet updateResultSet = key.getUpdateResultSet(openSelectResultSet, connection);
-
-        if (updateResultSet != null) {
-          try {
-            for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-              entry = i.next();
-              if (skipColumns.indexOf(entry.getKey()) == -1) {
-                if (key.isUpdateColumn(entry.getKey())) {
-                  if (entry.getValue() instanceof Scale) {
-                    scaledValue = (Scale) entry.getValue();
-                    if (scaledValue.method.equals("updateAsciiStream")) {
-                      updateResultSet.updateAsciiStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                    } else if (scaledValue.method.equals("updateBinaryStream")) {
-                      updateResultSet.updateBinaryStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                    } else if (scaledValue.method.equals("updateCharacterStream")) {
-                      updateResultSet.updateCharacterStream(entry.getKey(), (Reader) scaledValue.x, scaledValue.scale);
-                    } else {
-                      updateResultSet.updateObject(entry.getKey(), scaledValue.x, scaledValue.scale);
-                    }
-                  } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
-                    if (entry.getValue() instanceof java.util.Date) {
-                      updateResultSet.updateTimestamp(entry.getKey(), new java.sql.Timestamp(((java.util.Date) entry.getValue()).getTime()));
-                    } else if (entry.getValue() == null) {
-                      updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                    } else {
-                      try {
-                        updateResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
-                      } catch (ParseException ex) {
-                        updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                      }
-                    }
-                  } else {
-                    //TODO timestamp
-                    updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                  }
-                  cache.remove(new CacheKey(row.intValue(), entry.getKey()));
-                  oldValues.put(columnMapping.checkedGet(entry.getKey()), updateResultSet.getObject(entry.getKey()));
-                }
-              }
-            }
-            updateResultSet.updateRow();
-          } finally {
-            updateResultSet.close();
-          }
-        } else {
-          int updateCount = 0;
-          StringBuilder set = new StringBuilder(540);
-          for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-            entry = i.next();
-            if ((skipColumns.indexOf(entry.getKey()) == -1) && (metaData.getTableName(columnMapping.checkedGet(entry.getKey()).intValue()).equalsIgnoreCase(key.table))) {
-              set.append(set.length() > 0 ? ", " : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight).append(" = ?");
-              updateCount++;
-            }
-          }
-
-          if (updateCount > 0) {
-            StringBuilder where = new StringBuilder();
-
-            for (String c : key.getColumnNames(connection)) {
-              where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
-            }
-            String sql = "UPDATE " + (key.catalogName != null && key.schemaName != null ? delimiterLeft + key.catalogName + delimiterRight + "." : "") + (key.schemaName != null ? delimiterLeft + key.schemaName + delimiterRight + "." : "") + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
-
-            PreparedStatement updateStatement = getTxConnection().prepareStatement(sql.toString());
-            try {
-              ParameterMetaData parameterMetaData = updateStatement.getParameterMetaData();
-
-              int p = 1;
-
-              for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-                entry = i.next();
-                if (skipColumns.indexOf(entry.getKey()) == -1) {
-                  if (entry.getValue() == null) {
-                    updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                  } else if (entry.getValue() instanceof Scale) {
-                    Scale scale = (Scale) entry.getValue();
-                    if (scale.method.equals("updateCharacterStream")) {
-                      updateStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
-                    } else if (scale.method.equals("updateBinaryStream")) {
-                      updateStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
-                    } else if (scale.method.equals("updateAsciiStream")) {
-                      updateStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
-                    } else {
-                      updateStatement.setObject(p++, scale.x, scale.scale);
-                    }
-                  } else {
-                    //TODO timestamp
-                    updateStatement.setObject(p++, entry.getValue());
-                  }
-                  oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-                }
-              }
-              for (String c : key.getColumnNames(connection)) {
-                Object value = openSelectResultSet.getObject(c);
-                if (value == null) {
-                  updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                } else {
-                  updateStatement.setObject(p++, value);
-                }
-                oldValues.put(columnMapping.checkedGet(c).intValue(), value);
-              }
-              Logger.getLogger(Settings.LOGGER).info("Executing update : '" + sql + "'");
-              updateStatement.setQueryTimeout(15);
-              updateStatement.executeUpdate();
-            } finally {
-              updateStatement.close();
-            }
+            thisResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
+          } catch (ParseException ex) {
+            thisResultSet.updateObject(entry.getKey(), entry.getValue());
           }
         }
+      } else {
+        //TODO timestamp
+        
+        thisResultSet.updateObject(entry.getKey(), entry.getValue());
       }
     }
+    thisResultSet.updateRow();
+    thisResultSet.acceptChanges();
+
   }
 
   public void filterChanged() throws SQLException {
@@ -4096,74 +3882,80 @@ public class EventDataSource implements DbDataSourceImpl {
       return -1;
     } else {
       if (this.count == -1) {
-        if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
-          newCount = 1;
+        newCount = 1;
+//        if ((currentResultSet==null)||(currentResultSet.currentResultSet==null)) {
+//          createCurrentResultSet();
+//        }
+//        newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
+
+        /*        if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
+        newCount = 1;
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && (currentResultSet != null) && (currentResultSet.currentResultSet instanceof CachedRowSet)) {
-          //TODO ne dela pravilno pri shared results
-          newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
+        //TODO ne dela pravilno pri shared results
+        newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && owner.isCacheRowSet()) {
-          //Moral bi vrniti CachedRowSet count, tako da naj poskusi še enkrat z eksplicitnim loadData()
-          if (loadData()) {
-            return getRowCount();
-          } else {
-            return -1;
-          }
-        } else if (owner.lock(false)) {
-          try {
-            if (this.count == -1) {
-              if (preparedCountSql != null) {
-                if (preparedCountSql.equalsIgnoreCase(SELECT_1)) {
-                  newCount = 1;
-                } else {
-                  Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedCountSql + "'");
-                  if (DbDataSource.DUMP_SQL) {
-                    System.out.println("############## count(*) ");
-                    System.out.println(preparedCountSql);
-                  }
-                  Connection connection = getConnection();
-                  try {
-                    WebRowSet wrs = new DbWebRowSetImpl();
-
-
-                    ResultSet rs = executeQuery(wrs, owner.getParameters(), getConnection());
-                    
-                    if (DbDataSource.DUMP_SQL) {
-                      System.out.println("##############");
-                    }
-                    if (rs.first()) {
-                      newCount = rs.getInt(1);
-                    }
-                  } finally {
-                    if (owner.isConnectOnDemand()) {
-                      connection.close();
-                    }
-                  }
-                }
-              } else if (preparedSelectSql != null) {
-                if (currentResultSet == null) {
-                  createCurrentResultSet();
-                }
-
-                if (currentResultSet != null) {
-                  int row = currentResultSet.currentResultSet.getRow();
-                  currentResultSet.currentResultSet.last();
-                  newCount = currentResultSet.currentResultSet.getRow();
-                  if (row > 0) {
-                    currentResultSet.currentResultSet.absolute(row);
-                  }
-                }
-              }
-            }
-          } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count for " + owner.getName(), ex);
-            newCount = this.count;
-          } finally {
-            owner.unlock();
-            this.count = newCount;
-          }
+        //Moral bi vrniti CachedRowSet count, tako da naj poskusi še enkrat z eksplicitnim loadData()
+        if (loadData()) {
+        return getRowCount();
         } else {
-          return -1;
+        return -1;
         }
+        } else if (owner.lock(false)) {
+        try {
+        if (this.count == -1) {
+        if (preparedCountSql != null) {
+        if (preparedCountSql.equalsIgnoreCase(SELECT_1)) {
+        newCount = 1;
+        } else {
+        Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedCountSql + "'");
+        if (DbDataSource.DUMP_SQL) {
+        System.out.println("############## count(*) ");
+        System.out.println(preparedCountSql);
+        }
+        Connection connection = getConnection();
+        try {
+        WebRowSet wrs = new DbEventWebRowSetImpl();
+
+
+        ResultSet rs = executeQuery(wrs, owner.getParameters(), getConnection());
+
+        if (DbDataSource.DUMP_SQL) {
+        System.out.println("##############");
+        }
+        if (rs.first()) {
+        newCount = rs.getInt(1);
+        }
+        } finally {
+        if (owner.isConnectOnDemand()) {
+        connection.close();
+        }
+        }
+        }
+        } else if (preparedSelectSql != null) {
+        if (currentResultSet == null) {
+        createCurrentResultSet();
+        }
+
+        if (currentResultSet != null) {
+        int row = currentResultSet.currentResultSet.getRow();
+        currentResultSet.currentResultSet.last();
+        newCount = currentResultSet.currentResultSet.getRow();
+        if (row > 0) {
+        currentResultSet.currentResultSet.absolute(row);
+        }
+        }
+        }
+        }
+        } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count for " + owner.getName(), ex);
+        newCount = this.count;
+        } finally {
+        owner.unlock();
+        this.count = newCount;
+        }
+        } else {
+        return -1;
+        }//*/
       }
 
       return newCount + (inserting ? 1 : 0);
@@ -4172,16 +3964,16 @@ public class EventDataSource implements DbDataSourceImpl {
 
   private class CurrentResultSet {
 
-    ResultSet currentResultSet;
+    WebRowSet currentResultSet;
 
-    public CurrentResultSet(ResultSet currentResultSet) throws SQLException {
-      if ((currentResultSet != null) && (owner.isConnectOnDemand() || owner.isCacheRowSet())) {
-        this.currentResultSet = new CachedRowSetImpl();
-        this.currentResultSet.setFetchSize(getFetchSize());
-        ((CachedRowSet) this.currentResultSet).populate(currentResultSet);
-      } else {
-        this.currentResultSet = currentResultSet;
-      }
+    public CurrentResultSet(WebRowSet currentResultSet) throws SQLException {
+//      if ((currentResultSet != null) && (owner.isConnectOnDemand() || owner.isCacheRowSet())) {
+//        this.currentResultSet = new DbEventChachedRowSetImpl();
+//        this.currentResultSet.setFetchSize(getFetchSize());
+//        (this.currentResultSet).populate(currentResultSet);
+//      } else {
+      this.currentResultSet = currentResultSet;
+//      }
     }
 
     private void close() throws SQLException {
@@ -4378,8 +4170,7 @@ public class EventDataSource implements DbDataSourceImpl {
     return pos;
   }
 
-
-  public static ResultSet executeQuery(CachedRowSet statement, List<?> parameters, Connection connection) throws SQLException {
+  public static WebRowSet executeQuery(WebRowSet statement, List<?> parameters, Connection connection) throws SQLException {
     setParameters(statement, parameters, 1, false);
     statement.execute(connection);
     return statement;
@@ -4426,14 +4217,14 @@ public class EventDataSource implements DbDataSourceImpl {
             ResultSet selectResultSet = openSelectResultSet();
 
             if (selectResultSet instanceof CachedRowSet) {
-              if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
-                createCurrentResultSet();
-                selectResultSet = openSelectResultSet();
-                
-                if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
-                  throw new SQLException("Invalid row number " + rowIndex + " for " + toString());
-                }
-              }
+            if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
+            createCurrentResultSet();
+            selectResultSet = openSelectResultSet();
+
+            if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
+            throw new SQLException("Invalid row number " + rowIndex + " for " + toString());
+            }
+            }
             }
             final ResultSet openSelectResultSet = selectResultSet; //*/
             final ResultSet openSelectResultSet = openSelectResultSet();
@@ -4585,12 +4376,12 @@ public class EventDataSource implements DbDataSourceImpl {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    CachedRowSet crs = new DbWebRowSetImpl();
+    CachedRowSet crs = new DbEventWebRowSetImpl();
     crs.populate(currentResultSet.currentResultSet);
-    return  crs;
+    return crs;
   }
 
-  private ResultSet openSelectResultSet() throws SQLException {
+  private WebRowSet openSelectResultSet() throws SQLException {
     if (currentResultSet == null) {
       createCurrentResultSet();
     } else {
@@ -4989,6 +4780,7 @@ public class EventDataSource implements DbDataSourceImpl {
 
   @Override
   public void storeUpdates(boolean insert) throws SQLException {
+
     if (isDataLoaded()) {
       Integer row = new Integer(getRow());
       Map<String, Object> columnValues = storedUpdates.get(row);
