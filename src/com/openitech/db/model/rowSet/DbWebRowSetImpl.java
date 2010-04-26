@@ -7,6 +7,7 @@
 package com.openitech.db.model.rowSet;
 
 import com.openitech.db.model.sync.DbEventSyncProvider;
+import com.openitech.db.model.sync.DbSecondarySyncProvider;
 import com.sun.rowset.CachedRowSetImpl;
 import com.sun.rowset.JdbcRowSetResourceBundle;
 import java.sql.*;
@@ -25,7 +26,7 @@ import javax.sql.rowset.spi.*;
  *
  * @author Jonathan Bruce, Amit Handa
  */
-public class DbEventWebRowSetImpl extends DbEventChachedRowSetImpl implements WebRowSet {
+public class DbWebRowSetImpl extends DbChachedRowSetImpl implements WebRowSet {
 
   /**
    * The <code>WebRowSetXmlReader</code> object that this
@@ -59,7 +60,7 @@ public class DbEventWebRowSetImpl extends DbEventChachedRowSetImpl implements We
    * @throws SQLException if an error occurs in configuring the default
    * synchronization providers for relational and XML providers.
    */
-  public DbEventWebRowSetImpl() throws SQLException {
+  public DbWebRowSetImpl() throws SQLException {
     super();
 
     SyncFactory.registerProvider(DbEventSyncProvider.PROVIDER);
@@ -86,7 +87,7 @@ public class DbEventWebRowSetImpl extends DbEventChachedRowSetImpl implements We
    * synchronization providers for the relational and XML providers; or
    * if the Hashtanle is null
    */
-  public DbEventWebRowSetImpl(Hashtable env) throws SQLException {
+  public DbWebRowSetImpl(Hashtable env) throws SQLException {
     super();
     try {
       resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
@@ -100,14 +101,11 @@ public class DbEventWebRowSetImpl extends DbEventChachedRowSetImpl implements We
     String providerName =
             (String) env.get(javax.sql.rowset.spi.SyncFactory.ROWSET_SYNC_PROVIDER);
 
-    if(providerName == null){
-      provider = SyncFactory.getInstance(DEFAULT_SYNC_PROVIDER);
-    }else{
+    SyncFactory.registerProvider(providerName);
+
     // set the Reader, this maybe overridden latter
     provider = (SyncProvider) SyncFactory.getInstance(providerName);
-    }
-//    setSyncProvider(providerName);
-setSyncProvider(provider);
+    setSyncProvider(provider);
 
     xmlReader = new DbWebRowSetXmlReader();
     xmlWriter = new DbWebRowSetXmlWriter();
@@ -279,8 +277,5 @@ setSyncProvider(provider);
     }
 
   }
-
   static final long serialVersionUID = -8771775154092422943L;
-
-  
 }

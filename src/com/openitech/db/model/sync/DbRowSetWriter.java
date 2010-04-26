@@ -51,7 +51,7 @@ import javax.sql.rowset.spi.*;
  * @see javax.sql.rowset.spi.SyncFactory
  * @see javax.sql.rowset.spi.SyncFactoryException
  */
-public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
+public class DbRowSetWriter implements TransactionalWriter, Serializable {
 
   /**
    * The <code>Connection</code> object that this writer will use to make a
@@ -132,7 +132,7 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    *
    * @serial
    */
-  private DbEventRowSetReader reader;
+  private RowSetReader reader;
   /**
    * The <code>ResultSetMetaData</code> object that contains information
    * about the columns in the <code>CachedRowSet</code> object
@@ -152,7 +152,7 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    * This <code>CachedRowSet<code> will hold the conflicting values
    *  retrieved from the db and hold it.
    */
-  private DbEventChachedRowSetImpl crsResolve;
+  private DbChachedRowSetImpl crsResolve;
   /**
    * This <code>ArrayList<code> will hold the values of SyncResolver.*
    */
@@ -169,7 +169,7 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
   private int iChangedValsinDbOnly;
   private JdbcRowSetResourceBundle resBundle;
 
-  public DbEventRowSetWriter() {
+  public DbRowSetWriter() {
     try {
       resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
     } catch (IOException ioe) {
@@ -242,15 +242,16 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
 
     // We assume caller is a CachedRowSet
     WebRowSet wrs = (WebRowSet) caller;
-    // crsResolve = new DbEventChachedRowSetImpl();
-    this.crsResolve = new DbEventChachedRowSetImpl();
+    // crsResolve = new DbChachedRowSetImpl();
+    this.crsResolve = new DbChachedRowSetImpl();
     ;
 
     // The reader is registered with the writer at design time.
     // This is not required, in general.  The reader has logic
     // to get a JDBC connection, so call it.
 
-    con = reader.connect(caller);
+    //con = reader.connect(caller);
+    con = caller.getConnection();
 
     if (con == null) {
       throw new SQLException(resBundle.handleGetObject("crswriter.connect").toString());
@@ -260,9 +261,9 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
     try {
       writer.flush();
     } catch (IOException ex) {
-      Logger.getLogger(DbEventRowSetWriter.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(DbRowSetWriter.class.getName()).log(Level.SEVERE, null, ex);
     }
-    Logger.getLogger(DbEventChachedRowSetImpl.class.getName()).warning(writer.toString());
+    Logger.getLogger(DbChachedRowSetImpl.class.getName()).warning(writer.toString());
 
     executeStoreEvent(writer.toString());
 
@@ -813,7 +814,7 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    * @throws SQLException if a database access error occurs
    */
   private boolean insertNewRow(CachedRowSet crs,
-          PreparedStatement pstmt, DbEventChachedRowSetImpl crsRes) throws SQLException {
+          PreparedStatement pstmt, DbChachedRowSetImpl crsRes) throws SQLException {
     int i = 0;
     int icolCount = crs.getMetaData().getColumnCount();
 
@@ -914,7 +915,7 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    *         there was no conflict; <code>true</code> otherwise
    * @throws SQLException if there was a database access error
    */
-  private boolean deleteOriginalRow(CachedRowSet crs, DbEventChachedRowSetImpl crsRes) throws SQLException {
+  private boolean deleteOriginalRow(CachedRowSet crs, DbChachedRowSetImpl crsRes) throws SQLException {
     PreparedStatement pstmt;
     int i;
     int idx = 0;
@@ -1021,7 +1022,7 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    *
    * @throws SQLException if a database access error occurs
    */
-  public void setReader(DbEventRowSetReader reader) throws SQLException {
+  public void setReader(RowSetReader reader) throws SQLException {
     this.reader = reader;
   }
 
@@ -1030,7 +1031,7 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    *
    * @throws SQLException if a database access error occurs
    */
-  public DbEventRowSetReader getReader() throws SQLException {
+  public RowSetReader getReader() throws SQLException {
     return reader;
   }
 
@@ -1378,12 +1379,12 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    */
   public void commit() throws SQLException {
     con.commit();
-    if (reader.getCloseConnection() == true) {
-      con.close();
-    }
+//    if (reader.getCloseConnection() == true) {
+//      con.close();
+//    }
   }
 
-  public void commit(DbEventChachedRowSetImpl crs, boolean updateRowset) throws SQLException {
+  public void commit(CachedRowSet crs, boolean updateRowset) throws SQLException {
     con.commit();
     if (updateRowset) {
       if (crs.getCommand() != null) {
@@ -1391,9 +1392,9 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
       }
     }
 
-    if (reader.getCloseConnection() == true) {
-      con.close();
-    }
+//    if (reader.getCloseConnection() == true) {
+//      con.close();
+//    }
   }
 
   /**
@@ -1401,9 +1402,9 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    */
   public void rollback() throws SQLException {
     con.rollback();
-    if (reader.getCloseConnection() == true) {
-      con.close();
-    }
+//    if (reader.getCloseConnection() == true) {
+//      con.close();
+//    }
   }
 
   /**
@@ -1411,9 +1412,9 @@ public class DbEventRowSetWriter implements TransactionalWriter, Serializable {
    */
   public void rollback(Savepoint s) throws SQLException {
     con.rollback(s);
-    if (reader.getCloseConnection() == true) {
-      con.close();
-    }
+//    if (reader.getCloseConnection() == true) {
+//      con.close();
+//    }
   }
 
   private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {

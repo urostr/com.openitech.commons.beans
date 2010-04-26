@@ -1,5 +1,5 @@
 /*
- * @(#)DbEventChachedRowSetImpl.java	1.30 10/03/23
+ * @(#)DbChachedRowSetImpl.java	1.30 10/03/23
  *
  * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -7,7 +7,7 @@
 package com.openitech.db.model.rowSet;
 
 import com.openitech.db.model.sync.DbEventRowSetReader;
-import com.openitech.db.model.sync.DbEventRowSetWriter;
+import com.openitech.db.model.sync.DbRowSetWriter;
 import com.openitech.db.model.sync.DbEventSyncProvider;
 import com.sun.rowset.JdbcRowSetResourceBundle;
 import java.sql.*;
@@ -29,11 +29,11 @@ import com.sun.rowset.providers.*;
  * See interface defintion for full behaviour and implementation requirements.
  * This reference implementation has made provision for a one-to-one write back
  * facility and it is curremtly be possible to change the peristence provider
- * during the life-time of any DbEventChachedRowSetImpl.
+ * during the life-time of any DbChachedRowSetImpl.
  *
  * @author Jonathan Bruce, Amit Handa
  */
-public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowSetInternal, Serializable, Cloneable, CachedRowSet {
+public class DbChachedRowSetImpl extends BaseRowSet implements RowSet, RowSetInternal, Serializable, Cloneable, CachedRowSet {
 
   /**
    * The <code>SyncProvider</code> used by the CachedRowSet
@@ -55,24 +55,24 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   private RowSetWriter rowSetWriter;
   /**
    * The <code>Connection</code> object that connects with this
-   * <code>DbEventChachedRowSetImpl</code> object's current underlying data source.
+   * <code>DbChachedRowSetImpl</code> object's current underlying data source.
    */
   private transient Connection conn;
   /**
    * The <code>ResultSetMetaData</code> object that contains information
    * about the columns in the <code>ResultSet</code> object that is the
-   * current source of data for this <code>DbEventChachedRowSetImpl</code> object.
+   * current source of data for this <code>DbChachedRowSetImpl</code> object.
    */
   private transient ResultSetMetaData RSMD;
   /**
    * The <code>RowSetMetaData</code> object that contains information about
-   * the columns in this <code>DbEventChachedRowSetImpl</code> object.
+   * the columns in this <code>DbChachedRowSetImpl</code> object.
    * @serial
    */
   private RowSetMetaDataImpl RowSetMD;
   // Properties of this RowSet
   /**
-   * An array containing the columns in this <code>DbEventChachedRowSetImpl</code>
+   * An array containing the columns in this <code>DbChachedRowSetImpl</code>
    * object that form a unique identifier for a row. This array
    * is used by the writer.
    * @serial
@@ -88,18 +88,18 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   private String tableName;
   /**
    * A <code>Vector</code> object containing the <code>Row</code>
-   * objects that comprise  this <code>DbEventChachedRowSetImpl</code> object.
+   * objects that comprise  this <code>DbChachedRowSetImpl</code> object.
    * @serial
    */
   private Vector rvh;
   /**
-   * The current postion of the cursor in this <code>DbEventChachedRowSetImpl</code>
+   * The current postion of the cursor in this <code>DbChachedRowSetImpl</code>
    * object.
    * @serial
    */
   private int cursorPos;
   /**
-   * The current postion of the cursor in this <code>DbEventChachedRowSetImpl</code>
+   * The current postion of the cursor in this <code>DbChachedRowSetImpl</code>
    * object not counting rows that have been deleted, if any.
    * <P>
    * For example, suppose that the cursor is on the last row of a rowset
@@ -110,13 +110,13 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    */
   private int absolutePos;
   /**
-   * The number of deleted rows currently in this <code>DbEventChachedRowSetImpl</code>
+   * The number of deleted rows currently in this <code>DbChachedRowSetImpl</code>
    * object.
    * @serial
    */
   private int numDeleted;
   /**
-   * The total number of rows currently in this <code>DbEventChachedRowSetImpl</code>
+   * The total number of rows currently in this <code>DbChachedRowSetImpl</code>
    * object.
    * @serial
    */
@@ -164,7 +164,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    */
   private RowSetWarning rowsetWarning;
   /**
-   * The default SyncProvider for the RI DbEventChachedRowSetImpl
+   * The default SyncProvider for the RI DbChachedRowSetImpl
    */
   public String DEFAULT_SYNC_PROVIDER = "com.sun.rowset.providers.RIOptimisticProvider";
   /**
@@ -236,7 +236,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * CachedRowSet reader object to read the data from the ResultSet when a connection
    * parameter is passed to populate the CachedRowSet object for paging.
    */
-  private DbEventRowSetReader crsReader;
+  private RowSetReader crsReader;
   /**
    * The Vector holding the Match Columns
    */
@@ -258,7 +258,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   private boolean updateOnInsert;
 
   /**
-   * Constructs a new default <code>DbEventChachedRowSetImpl</code> object with
+   * Constructs a new default <code>DbChachedRowSetImpl</code> object with
    * the capacity to hold 100 rows. This new object has no metadata
    * and has the following default values:
    * <pre>
@@ -281,13 +281,13 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    *     absolutePos = 0
    *     numRows = 0
    * </pre>
-   * A <code>DbEventChachedRowSetImpl</code> object is configured to use the default
+   * A <code>DbChachedRowSetImpl</code> object is configured to use the default
    * <code>RIOptimisticProvider</code> implementation to provide connectivity
    * and synchronization capabilities to the set data source.
    * <P>
    * @throws SQLException if an error occurs
    */
-  public DbEventChachedRowSetImpl() throws SQLException {
+  public DbChachedRowSetImpl() throws SQLException {
 
     try {
       resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
@@ -305,7 +305,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 ////        }
 //
 //        rowSetReader = (DbEventRowSetReader)provider.getRowSetReader();
-//        rowSetWriter = (DbEventRowSetWriter)provider.getRowSetWriter();
+//        rowSetWriter = (DbRowSetWriter)provider.getRowSetWriter();
 
     // allocate the parameters collection
     initParams();
@@ -326,7 +326,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Provides a <code>DbEventChachedRowSetImpl</code> instance with the same default properties as
+   * Provides a <code>DbChachedRowSetImpl</code> instance with the same default properties as
    * as the zero parameter constructor.
    * <pre>
    *     onInsertRow = false
@@ -352,7 +352,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * However, applications will have the means to specify at runtime the
    * desired <code>SyncProvider</code> object.
    * <p>
-   * For example, creating a <code>DbEventChachedRowSetImpl</code> object as follows ensures
+   * For example, creating a <code>DbChachedRowSetImpl</code> object as follows ensures
    * that a it is established with the <code>com.foo.provider.Impl</code> synchronization
    * implementation providing the synchronization mechanism for this disconnected
    * <code>RowSet</code> object.
@@ -360,7 +360,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    *     Hashtable env = new Hashtable();
    *     env.put(javax.sql.rowset.spi.SyncFactory.ROWSET_PROVIDER_NAME,
    *         "com.foo.provider.Impl");
-   *     DbEventChachedRowSetImpl crs = new CachedRowSet(env);
+   *     DbChachedRowSetImpl crs = new CachedRowSet(env);
    * </pre>
    * <p>
    * Calling this constructor with a <code>null</code> parameter will
@@ -389,7 +389,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * synchonization factory
    * @see SyncProvider
    */
-  public DbEventChachedRowSetImpl(Hashtable env) throws SQLException {
+  public DbChachedRowSetImpl(Hashtable env) throws SQLException {
 
 
     try {
@@ -409,8 +409,8 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
     provider =
             (SyncProvider) SyncFactory.getInstance(providerName);
 
-    rowSetReader = (DbEventRowSetReader) provider.getRowSetReader();
-    rowSetWriter = (DbEventRowSetWriter) provider.getRowSetWriter();
+    rowSetReader =  provider.getRowSetReader();
+    rowSetWriter =  provider.getRowSetWriter();
 
     initParams(); // allocate the parameters collection
     initContainer();
@@ -432,7 +432,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Sets the properties for this <code>DbEventChachedRowSetImpl</code> object to
+   * Sets the properties for this <code>DbChachedRowSetImpl</code> object to
    * their default values. This method is called internally by the
    * default constructor.
    */
@@ -504,7 +504,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   // Properties
   //-----------------------------------------------------------------------
   /**
-   * Sets this <code>DbEventChachedRowSetImpl</code> object's command property
+   * Sets this <code>DbChachedRowSetImpl</code> object's command property
    * to the given <code>String</code> object and clears the parameters,
    * if any, that were set for the previous command.
    * <P>
@@ -530,7 +530,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   // Reading and writing data
   //---------------------------------------------------------------------
   /**
-   * Populates this <code>DbEventChachedRowSetImpl</code> object with data from
+   * Populates this <code>DbChachedRowSetImpl</code> object with data from
    * the given <code>ResultSet</code> object.  This
    * method is an alternative to the method <code>execute</code>
    * for filling the rowset with data.  The method <code>populate</code>
@@ -540,7 +540,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * is given the <code>ResultSet</code> object from
    * which to get data and thus does not need to use the properties
    * required for setting up a connection and executing this
-   * <code>DbEventChachedRowSetImpl</code> object's command.
+   * <code>DbChachedRowSetImpl</code> object's command.
    * <P>
    * After populating this rowset with data, the method
    * <code>populate</code> sets the rowset's metadata and
@@ -548,7 +548,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * to all registered listeners prior to returning.
    *
    * @param data the <code>ResultSet</code> object containing the data
-   *             to be read into this <code>DbEventChachedRowSetImpl</code> object
+   *             to be read into this <code>DbChachedRowSetImpl</code> object
    * @throws SQLException if an error occurs; or the max row setting is
    *          violated while populating the RowSet
    * @see #execute
@@ -641,7 +641,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * in the given <code>ResultSetMetaData</code> object.
    *
    * @param md the <code>RowSetMetaData</code> object for this
-   *           <code>DbEventChachedRowSetImpl</code> object, which will be set with
+   *           <code>DbChachedRowSetImpl</code> object, which will be set with
    *           values from rsmd
    * @param rsmd the <code>ResultSetMetaData</code> object from which new
    *             values for md will be read
@@ -708,7 +708,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Populates this <code>DbEventChachedRowSetImpl</code> object with data,
+   * Populates this <code>DbChachedRowSetImpl</code> object with data,
    * using the given connection to produce the result set from
    * which data will be read.  A second form of this method,
    * which takes no arguments, uses the values from this rowset's
@@ -730,8 +730,8 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
     setConnection(conn);
 
     if (getPageSize() != 0) {
-      crsReader = (DbEventRowSetReader) provider.getRowSetReader();
-      crsReader.setStartPosition(1);
+      crsReader =  provider.getRowSetReader();
+//      crsReader.setStartPosition(1);
       callWithCon = true;
       crsReader.readData((RowSetInternal) this);
     } // Now call the current reader's readData method
@@ -749,17 +749,17 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Sets this <code>DbEventChachedRowSetImpl</code> object's connection property
+   * Sets this <code>DbChachedRowSetImpl</code> object's connection property
    * to the given <code>Connection</code> object.  This method is called
    * internally by the version of the method <code>execute</code> that takes a
    * <code>Connection</code> object as an argument. The reader for this
-   * <code>DbEventChachedRowSetImpl</code> object can retrieve the connection stored
+   * <code>DbChachedRowSetImpl</code> object can retrieve the connection stored
    * in the rowset's connection property by calling its
    * <code>getConnection</code> method.
    *
    * @param connection the <code>Connection</code> object that was passed in
    *                   to the method <code>execute</code> and is to be stored
-   *                   in this <code>DbEventChachedRowSetImpl</code> object's connection
+   *                   in this <code>DbChachedRowSetImpl</code> object's connection
    *                   property
    */
   private void setConnection(Connection connection) {
@@ -768,7 +768,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Propagates all row update, insert, and delete changes to the
-   * underlying data source backing this <code>DbEventChachedRowSetImpl</code>
+   * underlying data source backing this <code>DbChachedRowSetImpl</code>
    * object.
    * <P>
    * <b>Note</b>In the reference implementation an optimistic concurrency implementation
@@ -825,7 +825,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
         } else {
           tWriter = (TransactionalWriter) rowSetWriter;
 
-          ((DbEventRowSetWriter) tWriter).commit(this, updateOnInsert);
+          ((DbRowSetWriter) tWriter).commit(this, updateOnInsert);
           success = true;
         }
       }
@@ -848,7 +848,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Propagates all row update, insert, and delete changes to the
-   * data source backing this <code>DbEventChachedRowSetImpl</code> object
+   * data source backing this <code>DbChachedRowSetImpl</code> object
    * using the given <code>Connection</code> object.
    * <P>
    * The reference implementation <code>RIOptimisticProvider</code>
@@ -883,7 +883,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
 
   /**
-   * Restores this <code>DbEventChachedRowSetImpl</code> object to its original state,
+   * Restores this <code>DbChachedRowSetImpl</code> object to its original state,
    * that is, its state before the last set of changes.
    * <P>
    * Before returning, this method moves the cursor before the first row
@@ -917,7 +917,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Releases the current contents of this <code>DbEventChachedRowSetImpl</code>
+   * Releases the current contents of this <code>DbChachedRowSetImpl</code>
    * object and sends a <code>rowSetChanged</code> event object to all
    * registered listeners.
    *
@@ -961,7 +961,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Immediately removes the current row from this
-   * <code>DbEventChachedRowSetImpl</code> object if the row has been inserted, and
+   * <code>DbChachedRowSetImpl</code> object if the row has been inserted, and
    * also notifies listeners the a row has changed.  An exception is thrown
    * if the row is not a row that has been inserted or the cursor is before
    * the first row, after the last row, or on the insert row.
@@ -1028,11 +1028,11 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   //--------------------------------------------------------------------
   /**
    * Returns a new <code>RowSet</code> object backed by the same data as
-   * that of this <code>DbEventChachedRowSetImpl</code> object and sharing a set of cursors
+   * that of this <code>DbChachedRowSetImpl</code> object and sharing a set of cursors
    * with it. This allows cursors to interate over a shared set of rows, providing
    * multiple views of the underlying data.
    *
-   * @return a <code>RowSet</code> object that is a copy of this <code>DbEventChachedRowSetImpl</code>
+   * @return a <code>RowSet</code> object that is a copy of this <code>DbChachedRowSetImpl</code>
    * object and shares a set of cursors with it
    * @throws SQLException if an error occurs or cloning is
    *                         not supported
@@ -1051,7 +1051,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Returns a new <code>RowSet</code> object containing by the same data
-   * as this <code>DbEventChachedRowSetImpl</code> object.  This method
+   * as this <code>DbChachedRowSetImpl</code> object.  This method
    * differs from the method <code>createCopy</code> in that it throws a
    * <code>CloneNotSupportedException</code> object instead of an
    * <code>SQLException</code> object, as the method <code>createShared</code>
@@ -1060,9 +1060,9 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * which catches the <code>CloneNotSupportedException</code> object
    * and in turn throws a new <code>SQLException</code> object.
    *
-   * @return a copy of this <code>DbEventChachedRowSetImpl</code> object
+   * @return a copy of this <code>DbChachedRowSetImpl</code> object
    * @throws CloneNotSupportedException if an error occurs when
-   * attempting to clone this <code>DbEventChachedRowSetImpl</code> object
+   * attempting to clone this <code>DbChachedRowSetImpl</code> object
    * @see #createShared
    */
   protected Object clone() throws CloneNotSupportedException {
@@ -1071,7 +1071,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Creates a <code>RowSet</code> object that is a deep copy of
-   * this <code>DbEventChachedRowSetImpl</code> object's data, including
+   * this <code>DbChachedRowSetImpl</code> object's data, including
    * constraints.  Updates made
    * on a copy are not visible to the original rowset;
    * a copy of a rowset is completely independent from the original.
@@ -1082,10 +1082,10 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * remote database server.
    * @return a new <code>CachedRowSet</code> object that is a deep copy
    *           of this <code>CachedRowSet</code> object and is
-   *           completely independent from this <code>DbEventChachedRowSetImpl</code>
+   *           completely independent from this <code>DbChachedRowSetImpl</code>
    *           object.
    * @throws SQLException if an error occurs in generating the copy of this
-   *           of the <code>DbEventChachedRowSetImpl</code>
+   *           of the <code>DbChachedRowSetImpl</code>
    * @see #createShared
    * @see javax.sql.RowSetEvent
    * @see javax.sql.RowSetListener
@@ -1113,7 +1113,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
     try {
       //return ((CachedRowSet)(in.readObject()));
-      DbEventChachedRowSetImpl crsTemp = (DbEventChachedRowSetImpl) in.readObject();
+      DbChachedRowSetImpl crsTemp = (DbChachedRowSetImpl) in.readObject();
       crsTemp.resBundle = this.resBundle;
       return ((CachedRowSet) crsTemp);
 
@@ -1128,7 +1128,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Creates a <code>RowSet</code> object that is a copy of
-   * this <code>DbEventChachedRowSetImpl</code> object's table structure
+   * this <code>DbChachedRowSetImpl</code> object's table structure
    * and the constraints only.
    * There will be no data in the object being returned.
    * Updates made on a copy are not visible to the original rowset.
@@ -1137,7 +1137,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * be used as the basis for populating a <code>WebRowSet</code>.
    *
    * @return a new <code>CachedRowSet</code> object that is a copy
-   * of this <code>DbEventChachedRowSetImpl</code> object's schema and
+   * of this <code>DbChachedRowSetImpl</code> object's schema and
    * retains all the constraints on the original rowset but contains
    * no data
    * @throws SQLException if an error occurs in generating the copy
@@ -1167,14 +1167,14 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Creates a <code>CachedRowSet</code> object that is a copy of
-   * this <code>DbEventChachedRowSetImpl</code> object's data only.
+   * this <code>DbChachedRowSetImpl</code> object's data only.
    * All constraints set in this object will not be there
    * in the returning object.  Updates made
    * on a copy are not visible to the original rowset.
    *
    * @return a new <code>CachedRowSet</code> object that is a deep copy
-   * of this <code>DbEventChachedRowSetImpl</code> object and is
-   * completely independent from this <code>DbEventChachedRowSetImpl</code> object
+   * of this <code>DbChachedRowSetImpl</code> object and is
+   * completely independent from this <code>DbChachedRowSetImpl</code> object
    * @throws SQLException if an error occurs in generating the copy of the
    * of the <code>CachedRowSet</code>
    * @see #createShared
@@ -1185,8 +1185,8 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    */
   public CachedRowSet createCopyNoConstraints() throws SQLException {
     // Copy the whole data ONLY without any constraints.
-    DbEventChachedRowSetImpl crs;
-    crs = (DbEventChachedRowSetImpl) this.createCopy();
+    DbChachedRowSetImpl crs;
+    crs = (DbChachedRowSetImpl) this.createCopy();
 
     crs.initProperties();
     try {
@@ -1205,7 +1205,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Converts this <code>DbEventChachedRowSetImpl</code> object to a collection
+   * Converts this <code>DbChachedRowSetImpl</code> object to a collection
    * of tables. The sample implementation utilitizes the <code>TreeMap</code>
    * collection type.
    * This class guarantees that the map will be in ascending key order,
@@ -1213,7 +1213,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    *
    * @return a <code>Collection</code> object consisting of tables,
    *         each of which is a copy of a row in this
-   *         <code>DbEventChachedRowSetImpl</code> object
+   *         <code>DbChachedRowSetImpl</code> object
    * @throws SQLException if an error occurs in generating the collection
    * @see #toCollection(int)
    * @see #toCollection(String)
@@ -1238,7 +1238,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Returns the specified column of this <code>DbEventChachedRowSetImpl</code> object
+   * Returns the specified column of this <code>DbChachedRowSetImpl</code> object
    * as a <code>Collection</code> object.  This method makes a copy of the
    * column's data and utilitizes the <code>Vector</code> to establish the
    * collection. The <code>Vector</code> class implements a growable array
@@ -1247,7 +1247,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    *
    * @return a <code>Collection</code> object that contains the value(s)
    *         stored in the specified column of this
-   * 	       <code>DbEventChachedRowSetImpl</code>
+   * 	       <code>DbChachedRowSetImpl</code>
    *         object
    * @throws SQLException if an error occurs generated the collection; or
    * 		an invalid column is provided.
@@ -1263,8 +1263,8 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
     vec = new Vector(nRows);
 
     // create a copy
-    DbEventChachedRowSetImpl crsTemp;
-    crsTemp = (DbEventChachedRowSetImpl) this.createCopy();
+    DbChachedRowSetImpl crsTemp;
+    crsTemp = (DbChachedRowSetImpl) this.createCopy();
 
     while (nRows != 0) {
       crsTemp.next();
@@ -1276,7 +1276,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Returns the specified column of this <code>DbEventChachedRowSetImpl</code> object
+   * Returns the specified column of this <code>DbChachedRowSetImpl</code> object
    * as a <code>Collection</code> object.  This method makes a copy of the
    * column's data and utilitizes the <code>Vector</code> to establish the
    * collection. The <code>Vector</code> class implements a growable array
@@ -1285,7 +1285,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    *
    * @return a <code>Collection</code> object that contains the value(s)
    *         stored in the specified column of this
-   * 	       <code>DbEventChachedRowSetImpl</code>
+   * 	       <code>DbChachedRowSetImpl</code>
    *         object
    * @throws SQLException if an error occurs generated the collection; or
    * 		an invalid column is provided.
@@ -1302,7 +1302,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   //--------------------------------------------------------------------
   /**
    * Returns the <code>SyncProvider</code> implementation being used
-   * with this <code>DbEventChachedRowSetImpl</code> implementation rowset.
+   * with this <code>DbChachedRowSetImpl</code> implementation rowset.
    *
    * @return the SyncProvider used by the rowset. If not provider was
    * 		set when the rowset was instantiated, the reference
@@ -1325,8 +1325,8 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
     provider =
             (SyncProvider) SyncFactory.getInstance(providerStr);
 
-    rowSetReader = (DbEventRowSetReader) provider.getRowSetReader();
-    rowSetWriter = (DbEventRowSetWriter) provider.getRowSetWriter();
+    rowSetReader = provider.getRowSetReader();//(DbEventRowSetReader) provider.getRowSetReader();
+    rowSetWriter = (DbRowSetWriter) provider.getRowSetWriter();
   }
 
   /**
@@ -1352,7 +1352,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   // Reading and writing data
   //---------------------------------------------------------------------
   /**
-   * Populates this <code>DbEventChachedRowSetImpl</code> object with data.
+   * Populates this <code>DbChachedRowSetImpl</code> object with data.
    * This form of the method uses the rowset's user, password, and url or
    * data source name properties to create a database
    * connection.  If properties that are needed
@@ -1418,7 +1418,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the next
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the next
    * row and returns <code>true</code> if the cursor is still in the rowset;
    * returns <code>false</code> if the cursor has moved to the position after
    * the last row.
@@ -1468,11 +1468,11 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Closes this <code>DbEventChachedRowSetImpl</code> objecy and releases any resources
+   * Closes this <code>DbChachedRowSetImpl</code> objecy and releases any resources
    * it was using.
    *
    * @throws SQLException if an error occurs when releasing any resources in use
-   * by this <code>DbEventChachedRowSetImpl</code> object
+   * by this <code>DbChachedRowSetImpl</code> object
    */
   public void close() throws SQLException {
 
@@ -1525,7 +1525,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   // Methods for accessing results by column index
   /**
    * Checks to see whether the given index is a valid column number
-   * in this <code>DbEventChachedRowSetImpl</code> object and throws
+   * in this <code>DbChachedRowSetImpl</code> object and throws
    * an <code>SQLException</code> if it is not. The index is out of bounds
    * if it is less than <code>1</code> or greater than the number of
    * columns in this rowset.
@@ -1533,7 +1533,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * This method is called internally by the <code>getXXX</code> and
    * <code>updateXXX</code> methods.
    *
-   * @param idx the number of a column in this <code>DbEventChachedRowSetImpl</code>
+   * @param idx the number of a column in this <code>DbChachedRowSetImpl</code>
    *            object; must be between <code>1</code> and the number of
    *            rows in this rowset
    * @throws SQLException if the given index is out of bounds
@@ -1545,7 +1545,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Checks to see whether the cursor for this <code>DbEventChachedRowSetImpl</code>
+   * Checks to see whether the cursor for this <code>DbChachedRowSetImpl</code>
    * object is on a row in the rowset and throws an
    * <code>SQLException</code> if it is not.
    * <P>
@@ -1553,7 +1553,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * <code>updateXXX</code> methods, and by methods that update, insert,
    * or delete a row or that cancel a row update, insert, or delete.
    *
-   * @throws SQLException if the cursor for this <code>DbEventChachedRowSetImpl</code>
+   * @throws SQLException if the cursor for this <code>DbChachedRowSetImpl</code>
    *         object is not on a valid row
    */
   private void checkCursor() throws SQLException {
@@ -1564,12 +1564,12 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Returns the column number of the column with the given name in this
-   * <code>DbEventChachedRowSetImpl</code> object.  This method throws an
+   * <code>DbChachedRowSetImpl</code> object.  This method throws an
    * <code>SQLException</code> if the given name is not the name of
    * one of the columns in this rowset.
    *
    * @param name a <code>String</code> object that is the name of a column in
-   *              this <code>DbEventChachedRowSetImpl</code> object
+   *              this <code>DbChachedRowSetImpl</code> object
    * @throws SQLException if the given name does not match the name of one of
    *         the columns in this rowset
    */
@@ -1593,9 +1593,9 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Returns the insert row or the current row of this
-   * <code>DbEventChachedRowSetImpl</code>object.
+   * <code>DbChachedRowSetImpl</code>object.
    *
-   * @return the <code>Row</code> object on which this <code>DbEventChachedRowSetImpl</code>
+   * @return the <code>Row</code> object on which this <code>DbChachedRowSetImpl</code>
    * objects's cursor is positioned
    */
   protected BaseRow getCurrentRow() {
@@ -1623,7 +1623,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>String</code> object.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -1661,7 +1661,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>boolean</code> value.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -1713,7 +1713,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>byte</code> value.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -1756,7 +1756,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>short</code> value.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -1800,7 +1800,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as an
+   * of this <code>DbChachedRowSetImpl</code> object as an
    * <code>int</code> value.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -1843,7 +1843,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>long</code> value.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -1886,7 +1886,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>float</code> value.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -1929,7 +1929,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>double</code> value.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -1973,7 +1973,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>java.math.BigDecimal</code> object.
    * <P>
    * This method is deprecated; use the version of <code>getBigDecimal</code>
@@ -2019,7 +2019,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>byte</code> array value.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -2052,7 +2052,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>java.sql.Date</code> object.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -2117,7 +2117,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>java.sql.Time</code> object.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -2180,7 +2180,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>java.sql.Timestamp</code> object.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -2247,7 +2247,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row of this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
+   * <code>DbChachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
    * object.
    *
    * A column value can be retrieved as a stream of ASCII characters
@@ -2258,7 +2258,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * <P><B>Note:</B> All the data in the returned stream must be
    * read prior to getting the value of any other column. The next
    * call to a get method implicitly closes the stream. . Also, a
-   * stream may return <code>0</code> for <code>DbEventChachedRowSetImpl.available()</code>
+   * stream may return <code>0</code> for <code>DbChachedRowSetImpl.available()</code>
    * whether there is data available or not.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -2354,7 +2354,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row of this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
+   * <code>DbChachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
    * object.
    * <P>
    * A column value can be retrieved as a stream of uninterpreted bytes
@@ -2365,7 +2365,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * read prior to getting the value of any other column. The next
    * call to a get method implicitly closes the stream. Also, a
    * stream may return <code>0</code> for
-   * <code>DbEventChachedRowSetImpl.available()</code> whether there is data
+   * <code>DbChachedRowSetImpl.available()</code> whether there is data
    * available or not.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -2414,7 +2414,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>String</code> object.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>null</code>
    * @throws SQLException if (1) the given column name is not the name of
@@ -2434,7 +2434,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>boolean</code> value.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value as a <code>boolean</code> in the Java programming
    *        language; if the value is SQL <code>NULL</code>,
    *        the result is <code>false</code>
@@ -2453,7 +2453,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>byte</code> value.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value as a <code>byte</code> in the Java programming
    * language; if the value is SQL <code>NULL</code>, the result is <code>0</code>
    * @throws SQLException if (1) the given column name is not the name of
@@ -2473,7 +2473,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>short</code> value.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>0</code>
    * @throws SQLException if (1) the given column name is not the name of
@@ -2494,7 +2494,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as an <code>int</code> value.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>0</code>
    * @throws SQLException if (1) the given column name is not the name
@@ -2515,7 +2515,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>long</code> value.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>0</code>
    * @throws SQLException if (1) the given column name is not the name of
@@ -2536,7 +2536,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>float</code> value.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>0</code>
    * @throws SQLException if (1) the given column name is not the name of
@@ -2554,11 +2554,11 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value stored in the designated column
-   * of the current row of this <code>DbEventChachedRowSetImpl</code> object
+   * of the current row of this <code>DbChachedRowSetImpl</code> object
    * as a <code>double</code> value.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>0</code>
    * @throws SQLException if (1) the given column name is not the name of
@@ -2579,7 +2579,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>java.math.BigDecimal</code> object.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @param scale the number of digits to the right of the decimal point
    * @return a java.math.BugDecimal object with <code><i>scale</i></code>
    * number of digits to the right of the decimal point.
@@ -2604,7 +2604,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * The bytes represent the raw values returned by the driver.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value as a <code>byte</code> array in the Java programming
    * language; if the value is SQL <code>NULL</code>, the result is <code>null</code>
    * @throws SQLException if (1) the given column name is not the name of
@@ -2624,7 +2624,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>java.sql.Date</code> object.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>null</code>
    * @throws SQLException if (1) the given column name is not the name of
@@ -2642,7 +2642,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>java.sql.Time</code> object.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>null</code>
    * @throws SQLException if the given column name does not match one of
@@ -2658,7 +2658,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * of the current row as a <code>java.sql.Timestamp</code> object.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return the column value; if the value is SQL <code>NULL</code>,
    *         the result is <code>null</code>
    * @throws SQLException if the given column name does not match one of
@@ -2671,7 +2671,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row of this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
+   * <code>DbChachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
    * object.
    *
    * A column value can be retrieved as a stream of ASCII characters
@@ -2685,7 +2685,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * next call to a <code>getXXX</code> method implicitly closes the stream.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return a Java input stream that delivers the database column value
    *         as a stream of one-byte ASCII characters.  If the value is SQL
    *         <code>NULL</code>, the result is <code>null</code>.
@@ -2716,7 +2716,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * next call to a <code>getXXX</code> method implicitly closes the stream.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return a Java input stream that delivers the database column value
    *         as a stream of two-byte Unicode characters.  If the value is
    *         SQL <code>NULL</code>, the result is <code>null</code>.
@@ -2731,7 +2731,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row of this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
+   * <code>DbChachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
    * object.
    * <P>
    * A column value can be retrieved as a stream of uninterpreted bytes
@@ -2741,11 +2741,11 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * <P><B>Note:</B> All the data in the returned stream must be
    * read prior to getting the value of any other column. The next
    * call to a get method implicitly closes the stream. Also, a
-   * stream may return <code>0</code> for <code>DbEventChachedRowSetImpl.available()</code>
+   * stream may return <code>0</code> for <code>DbChachedRowSetImpl.available()</code>
    * whether there is data available or not.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return a Java input stream that delivers the database column value
    *         as a stream of uninterpreted bytes.  If the value is SQL
    *         <code>NULL</code>, the result is <code>null</code>.
@@ -2764,8 +2764,8 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   // Advanced features:
   /**
-   * The first warning reported by calls on this <code>DbEventChachedRowSetImpl</code>
-   * object is returned. Subsequent <code>DbEventChachedRowSetImpl</code> warnings will
+   * The first warning reported by calls on this <code>DbChachedRowSetImpl</code>
+   * object is returned. Subsequent <code>DbChachedRowSetImpl</code> warnings will
    * be chained to this <code>SQLWarning</code>.
    *
    * <P>The warning chain is automatically cleared each time a new
@@ -2783,10 +2783,10 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Clears all the warnings reporeted for the <code>DbEventChachedRowSetImpl</code>
+   * Clears all the warnings reporeted for the <code>DbChachedRowSetImpl</code>
    * object. After a call to this method, the <code>getWarnings</code> method
    * returns <code>null</code> until a new warning is reported for this
-   * <code>DbEventChachedRowSetImpl</code> object.
+   * <code>DbChachedRowSetImpl</code> object.
    */
   public void clearWarnings() {
     sqlwarn = null;
@@ -2794,7 +2794,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the name of the SQL cursor used by this
-   * <code>DbEventChachedRowSetImpl</code> object.
+   * <code>DbChachedRowSetImpl</code> object.
    *
    * <P>In SQL, a result table is retrieved through a cursor that is
    * named. The current row of a <code>ResultSet</code> can be updated or deleted
@@ -2812,7 +2812,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * <P><B>Note:</B> If positioned updates are not supported, an
    * <code>SQLException</code> is thrown.
    *
-   * @return the SQL cursor name for this <code>DbEventChachedRowSetImpl</code> object's
+   * @return the SQL cursor name for this <code>DbChachedRowSetImpl</code> object's
    *         cursor
    * @throws SQLException if an error occurs
    */
@@ -2830,7 +2830,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * <P>
    * For example:
    * <pre>
-   * CachedRowSet crs = new DbEventChachedRowSetImpl();
+   * CachedRowSet crs = new DbChachedRowSetImpl();
    * RowSetMetaDataImpl metaData =
    *     (RowSetMetaDataImpl)crs.getMetaData();
    * // Set the number of columns in the RowSet object for
@@ -2841,9 +2841,9 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * </pre>
    *
    * @return the <code>ResultSetMetaData</code> object that describes this
-   *         <code>DbEventChachedRowSetImpl</code> object's columns
+   *         <code>DbChachedRowSetImpl</code> object's columns
    * @throws SQLException if an error occurs in generating the RowSet
-   * meta data; or if the <code>DbEventChachedRowSetImpl</code> is empty.
+   * meta data; or if the <code>DbChachedRowSetImpl</code> is empty.
    * @see javax.sql.RowSetMetaData
    */
   public ResultSetMetaData getMetaData() throws SQLException {
@@ -2852,7 +2852,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as an
+   * of this <code>DbChachedRowSetImpl</code> object as an
    * <code>Object</code> value.
    * <P>
    * The type of the <code>Object</code> will be the default
@@ -2930,7 +2930,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as an
+   * of this <code>DbChachedRowSetImpl</code> object as an
    * <code>Object</code> value.
    * <P>
    * The type of the <code>Object</code> will be the default
@@ -2966,7 +2966,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   //----------------------------------------------------------------
   /**
-   * Maps the given column name for one of this <code>DbEventChachedRowSetImpl</code>
+   * Maps the given column name for one of this <code>DbChachedRowSetImpl</code>
    * object's columns to its column number.
    *
    * @param columnName a <code>String</code> object that must match the
@@ -3043,7 +3043,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * next call to a <code>getXXX</code> method implicitly closes the stream.
    *
    * @param columnName a <code>String</code> object giving the SQL name of
-   *        a column in this <code>DbEventChachedRowSetImpl</code> object
+   *        a column in this <code>DbChachedRowSetImpl</code> object
    * @return a Java input stream that delivers the database column value
    *         as a stream of two-byte Unicode characters.  If the value is
    *         SQL <code>NULL</code>, the result is <code>null</code>.
@@ -3060,7 +3060,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>java.math.BigDecimal</code> object.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -3103,7 +3103,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>java.math.BigDecimal</code> object.
    *
    * @param columnName a <code>String</code> object that must match the
@@ -3128,7 +3128,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   // Traversal/Positioning
   //---------------------------------------------------------------------
   /**
-   * Returns the number of rows in this <code>DbEventChachedRowSetImpl</code> object.
+   * Returns the number of rows in this <code>DbChachedRowSetImpl</code> object.
    *
    * @return number of rows in the rowset
    */
@@ -3138,7 +3138,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Indicates whether the cursor is before the first row in this
-   * <code>DbEventChachedRowSetImpl</code> object.
+   * <code>DbChachedRowSetImpl</code> object.
    *
    * @return <code>true</code> if the cursor is before the first row;
    *         <code>false</code> otherwise or if the rowset contains no rows
@@ -3154,7 +3154,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Indicates whether the cursor is after the last row in this
-   * <code>DbEventChachedRowSetImpl</code> object.
+   * <code>DbChachedRowSetImpl</code> object.
    *
    * @return <code>true</code> if the cursor is after the last row;
    *         <code>false</code> otherwise or if the rowset contains no rows
@@ -3170,7 +3170,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Indicates whether the cursor is on the first row in this
-   * <code>DbEventChachedRowSetImpl</code> object.
+   * <code>DbChachedRowSetImpl</code> object.
    *
    * @return <code>true</code> if the cursor is on the first row;
    *         <code>false</code> otherwise or if the rowset contains no rows
@@ -3192,7 +3192,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Indicates whether the cursor is on the last row in this
-   * <code>DbEventChachedRowSetImpl</code> object.
+   * <code>DbChachedRowSetImpl</code> object.
    * <P>
    * Note: Calling the method <code>isLast</code> may be expensive
    * because the JDBC driver might need to fetch ahead one row in order
@@ -3220,7 +3220,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the front of
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the front of
    * the rowset, just before the first row. This method has no effect if
    * this rowset contains no rows.
    *
@@ -3237,7 +3237,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the end of
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the end of
    * the rowset, just after the last row. This method has no effect if
    * this rowset contains no rows.
    *
@@ -3252,13 +3252,13 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the first row
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the first row
    * and returns <code>true</code> if the operation was successful.  This
    * method also notifies registered listeners that the cursor has moved.
    *
    * @return <code>true</code> if the cursor is on a valid row;
    *         <code>false</code> otherwise or if there are no rows in this
-   *         <code>DbEventChachedRowSetImpl</code> object
+   *         <code>DbChachedRowSetImpl</code> object
    * @throws SQLException if the type of this rowset
    *            is <code>ResultSet.TYPE_FORWARD_ONLY</code>
    */
@@ -3275,7 +3275,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the first
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the first
    * row and returns <code>true</code> if the operation is successful.
    * <P>
    * This method is called internally by the methods <code>first</code>,
@@ -3312,13 +3312,13 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the last row
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the last row
    * and returns <code>true</code> if the operation was successful.  This
    * method also notifies registered listeners that the cursor has moved.
    *
    * @return <code>true</code> if the cursor is on a valid row;
    *         <code>false</code> otherwise or if there are no rows in this
-   *         <code>DbEventChachedRowSetImpl</code> object
+   *         <code>DbChachedRowSetImpl</code> object
    * @throws SQLException if the type of this rowset
    *            is <code>ResultSet.TYPE_FORWARD_ONLY</code>
    */
@@ -3335,7 +3335,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the last
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the last
    * row and returns <code>true</code> if the operation is successful.
    * <P>
    * This method is called internally by the method <code>last</code>
@@ -3371,7 +3371,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Returns the number of the current row in this <code>DbEventChachedRowSetImpl</code>
+   * Returns the number of the current row in this <code>DbChachedRowSetImpl</code>
    * object. The first row is number 1, the second number 2, and so on.
    *
    * @return the number of the current row;  <code>0</code> if there is no
@@ -3394,13 +3394,13 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the row number
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the row number
    * specified.
    *
    * <p>If the number is positive, the cursor moves to an absolute row with
    * respect to the beginning of the rowset.  The first row is row 1, the second
    * is row 2, and so on.  For example, the following command, in which
-   * <code>crs</code> is a <code>DbEventChachedRowSetImpl</code> object, moves the cursor
+   * <code>crs</code> is a <code>DbChachedRowSetImpl</code> object, moves the cursor
    * to the fourth row, starting from the beginning of the rowset.
    * <PRE><code>
    *
@@ -3412,7 +3412,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * with respect to the end of the rowset.  For example, calling
    * <code>absolute(-1)</code> positions the cursor on the last row,
    * <code>absolute(-2)</code> moves it on the next-to-last row, and so on.
-   * If the <code>DbEventChachedRowSetImpl</code> object <code>crs</code> has five rows,
+   * If the <code>DbChachedRowSetImpl</code> object <code>crs</code> has five rows,
    * the following command moves the cursor to the fourth-to-last row, which
    * in the case of a  rowset with five rows, is also the second row, counting
    * from the beginning.
@@ -3497,7 +3497,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * If the number is positive, the cursor moves the specified number of
    * rows toward the end of the rowset, starting at the current row.
    * For example, the following command, in which
-   * <code>crs</code> is a <code>DbEventChachedRowSetImpl</code> object with 100 rows,
+   * <code>crs</code> is a <code>DbChachedRowSetImpl</code> object with 100 rows,
    * moves the cursor forward four rows from the current row.  If the
    * current row is 50, the cursor would move to row 54.
    * <PRE><code>
@@ -3511,7 +3511,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * For example, calling the method
    * <code>absolute(-1)</code> positions the cursor on the last row,
    * <code>absolute(-2)</code> moves it on the next-to-last row, and so on.
-   * If the <code>DbEventChachedRowSetImpl</code> object <code>crs</code> has five rows,
+   * If the <code>DbChachedRowSetImpl</code> object <code>crs</code> has five rows,
    * the following command moves the cursor to the fourth-to-last row, which
    * in the case of a  rowset with five rows, is also the second row
    * from the beginning.
@@ -3538,7 +3538,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    *             backward; must not move the cursor past the valid
    *             rows
    * @return <code>true</code> if the cursor is on a row in this
-   *         <code>DbEventChachedRowSetImpl</code> object; <code>false</code>
+   *         <code>DbChachedRowSetImpl</code> object; <code>false</code>
    *         otherwise
    * @throws SQLException if there are no rows in this rowset, the cursor is
    *         positioned either before the first row or after the last row, or
@@ -3587,11 +3587,11 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves this <code>DbEventChachedRowSetImpl</code> object's cursor to the
+   * Moves this <code>DbChachedRowSetImpl</code> object's cursor to the
    * previous row and returns <code>true</code> if the cursor is on
    * a valid row or <code>false</code> if it is not.
    * This method also notifies all listeners registered with this
-   * <code>DbEventChachedRowSetImpl</code> object that its cursor has moved.
+   * <code>DbChachedRowSetImpl</code> object that its cursor has moved.
    * <P>
    * Note: calling the method <code>previous()</code> is not the same
    * as calling the method <code>relative(-1)</code>.  This is true
@@ -3604,7 +3604,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * and moving toward the beginning. The loop ends when <code>previous</code>
    * returns <code>false</code>, meaning that there are no more rows.
    * For example, the following code fragment retrieves all the data in
-   * the <code>DbEventChachedRowSetImpl</code> object <code>crs</code>, which has
+   * the <code>DbChachedRowSetImpl</code> object <code>crs</code>, which has
    * three columns.  Note that the cursor must initially be positioned
    * after the last row so that the first call to the method
    * <code>previous</code> places the cursor on the last line.
@@ -3648,7 +3648,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves the cursor to the previous row in this <code>DbEventChachedRowSetImpl</code>
+   * Moves the cursor to the previous row in this <code>DbChachedRowSetImpl</code>
    * object, skipping past deleted rows that are not visible; returns
    * <code>true</code> if the cursor is on a row in this rowset and
    * <code>false</code> when the cursor goes before the first row.
@@ -3695,7 +3695,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   // Updates
   //---------------------------------------------------------------------
   /**
-   * Indicates whether the current row of this <code>DbEventChachedRowSetImpl</code>
+   * Indicates whether the current row of this <code>DbChachedRowSetImpl</code>
    * object has been updated.  The value returned
    * depends on whether this rowset can detect updates: <code>false</code>
    * will always be returned if it does not detect updates.
@@ -3719,7 +3719,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Indicates whether the designated column of the current row of
-   * this <code>DbEventChachedRowSetImpl</code> object has been updated. The
+   * this <code>DbChachedRowSetImpl</code> object has been updated. The
    * value returned depends on whether this rowset can detcted updates:
    * <code>false</code> will always be returned if it does not detect updates.
    *
@@ -3742,7 +3742,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Indicates whether the designated column of the current row of
-   * this <code>DbEventChachedRowSetImpl</code> object has been updated. The
+   * this <code>DbChachedRowSetImpl</code> object has been updated. The
    * value returned depends on whether this rowset can detcted updates:
    * <code>false</code> will always be returned if it does not detect updates.
    *
@@ -4128,7 +4128,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated nullable column in the current row or the
-   * insert row of this <code>DbEventChachedRowSetImpl</code> object with
+   * insert row of this <code>DbChachedRowSetImpl</code> object with
    * <code>null</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4165,7 +4165,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>boolean</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4200,7 +4200,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>byte</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4236,7 +4236,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>short</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4272,7 +4272,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>int</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4307,7 +4307,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>long</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4344,7 +4344,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>float</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4380,7 +4380,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>double</code> value.
    *
    * This method updates a column value in either the current row or
@@ -4415,7 +4415,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.math.BigDecimal</code> object.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4451,7 +4451,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>String</code> object.
    * <P>
    * This method updates a column value in either the current row or
@@ -4486,7 +4486,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>byte</code> array.
    *
    * This method updates a column value in either the current row or
@@ -4522,7 +4522,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Date</code> object.
    *
    * This method updates a column value in either the current row or
@@ -4559,7 +4559,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Time</code> object.
    *
    * This method updates a column value in either the current row or
@@ -4596,7 +4596,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Timestamp</code> object.
    *
    * This method updates a column value in either the current row or
@@ -4634,7 +4634,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * ASCII stream value.
    * <P>
    * This method updates a column value in either the current row or
@@ -4683,7 +4683,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.io.InputStream</code> object.
    * <P>
    * This method updates a column value in either the current row or
@@ -4732,7 +4732,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.io.Reader</code> object.
    * <P>
    * This method updates a column value in either the current row or
@@ -4786,7 +4786,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Object</code> value.  The <code>scale</code> parameter indicates
    * the number of digits to the right of the decimal point and is ignored
    * if the new column value is not a type that will be mapped to an SQL
@@ -4827,7 +4827,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Object</code> value.
    * <P>
    * This method updates a column value in either the current row or
@@ -4859,7 +4859,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated nullable column in the current row or the
-   * insert row of this <code>DbEventChachedRowSetImpl</code> object with
+   * insert row of this <code>DbChachedRowSetImpl</code> object with
    * <code>null</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4883,7 +4883,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>boolean</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4909,7 +4909,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>byte</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4935,7 +4935,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>short</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4961,7 +4961,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>int</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -4987,7 +4987,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>long</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -5013,7 +5013,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>float</code> value.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -5039,7 +5039,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>double</code> value.
    *
    * This method updates a column value in either the current row or
@@ -5065,7 +5065,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.math.BigDecimal</code> object.
    * <P>
    * This method updates a column value in the current row or the insert
@@ -5091,7 +5091,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>String</code> object.
    *
    * This method updates a column value in either the current row or
@@ -5117,7 +5117,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>byte</code> array.
    *
    * This method updates a column value in either the current row or
@@ -5143,7 +5143,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Date</code> object.
    *
    * This method updates a column value in either the current row or
@@ -5171,7 +5171,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Time</code> object.
    *
    * This method updates a column value in either the current row or
@@ -5199,7 +5199,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Timestamp</code> object.
    *
    * This method updates a column value in either the current row or
@@ -5230,7 +5230,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * ASCII stream value.
    * <P>
    * This method updates a column value in either the current row or
@@ -5255,7 +5255,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.io.InputStream</code> object.
    * <P>
    * This method updates a column value in either the current row or
@@ -5285,7 +5285,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.io.Reader</code> object.
    * <P>
    * This method updates a column value in either the current row or
@@ -5318,7 +5318,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Object</code> value.  The <code>scale</code> parameter
    * indicates the number of digits to the right of the decimal point
    * and is ignored if the new column value is not a type that will be
@@ -5349,7 +5349,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Object</code> value.
    * <P>
    * This method updates a column value in either the current row or
@@ -5374,7 +5374,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Inserts the contents of this <code>DbEventChachedRowSetImpl</code> object's insert
+   * Inserts the contents of this <code>DbChachedRowSetImpl</code> object's insert
    * row into this rowset immediately following the current row.
    * If the current row is the
    * position after the last row or before the first row, the new row will
@@ -5427,7 +5427,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Marks the current row of this <code>DbEventChachedRowSetImpl</code> object as
+   * Marks the current row of this <code>DbChachedRowSetImpl</code> object as
    * updated and notifies listeners registered with this rowset that the
    * row has changed.
    * <P>
@@ -5452,7 +5452,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Deletes the current row from this <code>DbEventChachedRowSetImpl</code> object and
+   * Deletes the current row from this <code>DbChachedRowSetImpl</code> object and
    * notifies listeners registered with this rowset that a row has changed.
    * This method cannot be called when the cursor is on the insert row.
    * <P>
@@ -5504,7 +5504,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Rolls back any updates made to the current row of this
-   * <code>DbEventChachedRowSetImpl</code> object and notifies listeners that
+   * <code>DbChachedRowSetImpl</code> object and notifies listeners that
    * a row has changed.  To have an effect, this method
    * must be called after an <code>updateXXX</code> method has been
    * called and before the method <code>updateRow</code> has been called.
@@ -5531,7 +5531,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves the cursor for this <code>DbEventChachedRowSetImpl</code> object
+   * Moves the cursor for this <code>DbChachedRowSetImpl</code> object
    * to the insert row.  The current row in the rowset is remembered
    * while the cursor is on the insert row.
    * <P>
@@ -5553,7 +5553,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * method has been called on that column; otherwise, the value returned is
    * undetermined.
    *
-   * @throws SQLException if this <code>DbEventChachedRowSetImpl</code> object is
+   * @throws SQLException if this <code>DbChachedRowSetImpl</code> object is
    *            <code>ResultSet.CONCUR_READ_ONLY</code>
    */
   public void moveToInsertRow() throws SQLException {
@@ -5581,7 +5581,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Moves the cursor for this <code>DbEventChachedRowSetImpl</code> object to
+   * Moves the cursor for this <code>DbChachedRowSetImpl</code> object to
    * the current row.  The current row is the row the cursor was on
    * when the method <code>moveToInsertRow</code> was called.
    * <P>
@@ -5611,7 +5611,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as an <code>Object</code> in
+   * <code>DbChachedRowSetImpl</code> object as an <code>Object</code> in
    * the Java programming language, using the given
    * <code>java.util.Map</code> object to custom map the value if
    * appropriate.
@@ -5676,7 +5676,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>Ref</code> object
+   * <code>DbChachedRowSetImpl</code> object as a <code>Ref</code> object
    * in the Java programming language.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -5715,7 +5715,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>Blob</code> object
+   * <code>DbChachedRowSetImpl</code> object as a <code>Blob</code> object
    * in the Java programming language.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -5755,7 +5755,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>Clob</code> object
+   * <code>DbChachedRowSetImpl</code> object as a <code>Clob</code> object
    * in the Java programming language.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -5795,7 +5795,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as an <code>Array</code> object
+   * <code>DbChachedRowSetImpl</code> object as an <code>Array</code> object
    * in the Java programming language.
    *
    * @param columnIndex the first column is <code>1</code>, the second
@@ -5835,7 +5835,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as an <code>Object</code> in
+   * <code>DbChachedRowSetImpl</code> object as an <code>Object</code> in
    * the Java programming language, using the given
    * <code>java.util.Map</code> object to custom map the value if
    * appropriate.
@@ -5858,7 +5858,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>Ref</code> object
+   * <code>DbChachedRowSetImpl</code> object as a <code>Ref</code> object
    * in the Java programming language.
    *
    * @param colName a <code>String</code> object that must match the
@@ -5876,7 +5876,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>Blob</code> object
+   * <code>DbChachedRowSetImpl</code> object as a <code>Blob</code> object
    * in the Java programming language.
    *
    * @param colName a <code>String</code> object that must match the
@@ -5894,7 +5894,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>Clob</code> object
+   * <code>DbChachedRowSetImpl</code> object as a <code>Clob</code> object
    * in the Java programming language.
    *
    * @param colName a <code>String</code> object that must match the
@@ -5913,7 +5913,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as an <code>Array</code> object
+   * <code>DbChachedRowSetImpl</code> object as an <code>Array</code> object
    * in the Java programming langugage.
    *
    * @param colName a <code>String</code> object that must match the
@@ -5932,7 +5932,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a <code>java.sql.Date</code>
+   * of this <code>DbChachedRowSetImpl</code> object as a <code>java.sql.Date</code>
    * object, using the given <code>Calendar</code> object to construct an
    * appropriate millisecond value for the date.
    *
@@ -5993,7 +5993,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a <code>java.sql.Date</code>
+   * of this <code>DbChachedRowSetImpl</code> object as a <code>java.sql.Date</code>
    * object, using the given <code>Calendar</code> object to construct an
    * appropriate millisecond value for the date.
    *
@@ -6015,7 +6015,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a <code>java.sql.Time</code>
+   * of this <code>DbChachedRowSetImpl</code> object as a <code>java.sql.Time</code>
    * object, using the given <code>Calendar</code> object to construct an
    * appropriate millisecond value for the date.
    *
@@ -6072,7 +6072,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a <code>java.sql.Time</code>
+   * of this <code>DbChachedRowSetImpl</code> object as a <code>java.sql.Time</code>
    * object, using the given <code>Calendar</code> object to construct an
    * appropriate millisecond value for the date.
    *
@@ -6094,7 +6094,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a <code>java.sql.Timestamp</code>
+   * of this <code>DbChachedRowSetImpl</code> object as a <code>java.sql.Timestamp</code>
    * object, using the given <code>Calendar</code> object to construct an
    * appropriate millisecond value for the date.
    *
@@ -6154,7 +6154,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in the current row
-   * of this <code>DbEventChachedRowSetImpl</code> object as a
+   * of this <code>DbChachedRowSetImpl</code> object as a
    * <code>java.sql.Timestamp</code> object, using the given
    * <code>Calendar</code> object to construct an appropriate
    * millisecond value for the date.
@@ -6180,7 +6180,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    */
   /**
    * Retrieves the <code>Connection</code> object passed to this
-   * <code>DbEventChachedRowSetImpl</code> object.  This connection may be
+   * <code>DbChachedRowSetImpl</code> object.  This connection may be
    * used to populate this rowset with data or to write data back
    * to its underlying data source.
    *
@@ -6193,7 +6193,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Sets the metadata for this <code>DbEventChachedRowSetImpl</code> object
+   * Sets the metadata for this <code>DbChachedRowSetImpl</code> object
    * with the given <code>RowSetMetaData</code> object.
    *
    * @param md a <code>RowSetMetaData</code> object instance containing
@@ -6207,7 +6207,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Returns a result set containing the original value of the rowset. The
-   * original value is the state of the <code>DbEventChachedRowSetImpl</code> after the
+   * original value is the state of the <code>DbChachedRowSetImpl</code> after the
    * last population or synchronization (whichever occured most recently) with
    * the data source.
    * <p>
@@ -6220,7 +6220,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    *           <code>ResultSet</code> object
    */
   public ResultSet getOriginal() throws SQLException {
-    DbEventChachedRowSetImpl crs = new DbEventChachedRowSetImpl();
+    DbChachedRowSetImpl crs = new DbChachedRowSetImpl();
     crs.RowSetMD = RowSetMD;
     crs.numRows = numRows;
     crs.cursorPos = 0;
@@ -6242,7 +6242,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   /**
    * Returns a result set containing the original value of the current
    * row only.
-   * The original value is the state of the <code>DbEventChachedRowSetImpl</code> after
+   * The original value is the state of the <code>DbChachedRowSetImpl</code> after
    * the last population or synchronization (whichever occured most recently)
    * with the data source.
    *
@@ -6251,7 +6251,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * @see #setOriginalRow
    */
   public ResultSet getOriginalRow() throws SQLException {
-    DbEventChachedRowSetImpl crs = new DbEventChachedRowSetImpl();
+    DbChachedRowSetImpl crs = new DbChachedRowSetImpl();
     crs.RowSetMD = RowSetMD;
     crs.numRows = 1;
     crs.cursorPos = 0;
@@ -6339,7 +6339,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * rowset.
    *
    * @return a <code>String</code> object that identifies the table from
-   *         which this <code>DbEventChachedRowSetImpl</code> object was derived
+   *         which this <code>DbChachedRowSetImpl</code> object was derived
    * @throws SQLException if an error occurs
    */
   public String getTableName() throws SQLException {
@@ -6351,7 +6351,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * to the given table name.
    *
    * @param tabName a <code>String</code> object that identifies the
-   * 		table from which this <code>DbEventChachedRowSetImpl</code> object
+   * 		table from which this <code>DbChachedRowSetImpl</code> object
    * 		was derived
    * @throws SQLException if an error occurs
    */
@@ -6365,7 +6365,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Returns the columns that make a key to uniquely identify a
-   * row in this <code>DbEventChachedRowSetImpl</code> object.
+   * row in this <code>DbChachedRowSetImpl</code> object.
    *
    * @return an array of column numbers that constitutes a primary
    *           key for this rowset. This array should be empty
@@ -6379,14 +6379,14 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * Sets this <code>DbEventChachedRowSetImpl</code> object's
+   * Sets this <code>DbChachedRowSetImpl</code> object's
    * <code>keyCols</code> field with the given array of column
    * numbers, which forms a key for uniquely identifying a row
    * in this rowset.
    *
    * @param keys an array of <code>int</code> indicating the
    *        columns that form a primary key for this
-   *        <code>DbEventChachedRowSetImpl</code> object; every
+   *        <code>DbChachedRowSetImpl</code> object; every
    *        element in the array must be greater than
    *        <code>0</code> and less than or equal to the number
    *        of columns in this rowset
@@ -6415,7 +6415,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>Ref</code> value.
    *
    * This method updates a column value in either the current row or
@@ -6450,7 +6450,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>double</code> value.
    *
    * This method updates a column value in either the current row or
@@ -6476,7 +6476,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>double</code> value.
    *
    * This method updates a column value in either the current row or
@@ -6516,7 +6516,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>double</code> value.
    *
    * This method updates a column value in either the current row or
@@ -6542,7 +6542,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.sql.Blob</code> value.
    *
    * This method updates a column value in either the current row or
@@ -6582,7 +6582,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.sql.Blob </code> value.
    *
    * This method updates a column value in either the current row or
@@ -6608,7 +6608,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.sql.Array</code> values.
    *
    * This method updates a column value in either the current row or
@@ -6643,7 +6643,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Sets the designated column in either the current row or the insert
-   * row of this <code>DbEventChachedRowSetImpl</code> object with the given
+   * row of this <code>DbChachedRowSetImpl</code> object with the given
    * <code>java.sql.Array</code> value.
    *
    * This method updates a column value in either the current row or
@@ -6669,7 +6669,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>java.net.URL</code> object
+   * <code>DbChachedRowSetImpl</code> object as a <code>java.net.URL</code> object
    * in the Java programming language.
    *
    * @return a java.net.URL object containing the resource reference described by
@@ -6708,7 +6708,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
 
   /**
    * Retrieves the value of the designated column in this
-   * <code>DbEventChachedRowSetImpl</code> object as a <code>java.net.URL</code> object
+   * <code>DbChachedRowSetImpl</code> object as a <code>java.net.URL</code> object
    * in the Java programming language.
    *
    * @return a java.net.URL object containing the resource reference described by
@@ -6726,8 +6726,8 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * The first warning reported by calls on this <code>DbEventChachedRowSetImpl</code>
-   * object is returned. Subsequent <code>DbEventChachedRowSetImpl</code> warnings will
+   * The first warning reported by calls on this <code>DbChachedRowSetImpl</code>
+   * object is returned. Subsequent <code>DbChachedRowSetImpl</code> warnings will
    * be chained to this <code>SQLWarning</code>. All <code>RowSetWarnings</code>
    * warnings are generated in the disconnected environment and remain a
    * seperate warning chain to that provided by the <code>getWarnings</code>
@@ -7154,7 +7154,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * is given the <code>ResultSet</code> object from
    * which to get data and thus does not need to use the properties
    * required for setting up a connection and executing this
-   * <code>DbEventChachedRowSetImpl</code> object's command.
+   * <code>DbChachedRowSetImpl</code> object's command.
    * <P>
    * After populating this rowset with data, the method
    * <code>populate</code> sets the rowset's metadata and
@@ -7162,10 +7162,10 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
    * to all registered listeners prior to returning.
    *
    * @param data the <code>ResultSet</code> object containing the data
-   *             to be read into this <code>DbEventChachedRowSetImpl</code> object
+   *             to be read into this <code>DbChachedRowSetImpl</code> object
    * @param start the integer specifing the position in the
    *        <code>ResultSet</code> object to popultate the
-   *        <code>DbEventChachedRowSetImpl</code> object.
+   *        <code>DbChachedRowSetImpl</code> object.
    * @throws SQLException if an error occurs; or the max row setting is
    *          violated while populating the RowSet.Also id the start position
    *          is negative.
@@ -7312,7 +7312,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
   }
 
   /**
-   * The nextPage gets the next page, that is a <code>DbEventChachedRowSetImpl</code> object
+   * The nextPage gets the next page, that is a <code>DbChachedRowSetImpl</code> object
    * containing the number of rows specified by page size.
    * @return boolean value true indicating whether there are more pages to come and
    *         false indicating that this is the last page.
@@ -7326,7 +7326,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
     // Fix for 6554186
     onFirstPage = false;
     if (callWithCon) {
-      crsReader.setStartPosition(endPos);
+//      crsReader.setStartPosition(endPos);
       crsReader.readData((RowSetInternal) this);
       resultSet = null;
     } else {
@@ -7404,7 +7404,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
     if (rem == 0) {
       maxRowsreached -= (2 * pS);
       if (callWithCon) {
-        crsReader.setStartPosition(startPrev);
+//        crsReader.setStartPosition(startPrev);
         crsReader.readData((RowSetInternal) this);
         resultSet = null;
       } else {
@@ -7414,7 +7414,7 @@ public class DbEventChachedRowSetImpl extends BaseRowSet implements RowSet, RowS
     } else {
       maxRowsreached -= (pS + rem);
       if (callWithCon) {
-        crsReader.setStartPosition(startPrev);
+//        crsReader.setStartPosition(startPrev);
         crsReader.readData((RowSetInternal) this);
         resultSet = null;
       } else {

@@ -17,8 +17,8 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.concurrent.DataSourceEvent;
-import com.openitech.db.model.rowSet.DbEventChachedRowSetImpl;
-import com.openitech.db.model.rowSet.DbEventWebRowSetImpl;
+import com.openitech.db.model.rowSet.DbChachedRowSetImpl;
+import com.openitech.db.model.rowSet.DbWebRowSetImpl;
 import com.openitech.db.proxy.ResultSetProxy;
 import com.openitech.formats.FormatFactory;
 import com.openitech.ref.SoftHashMap;
@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +67,7 @@ import java.util.logging.Logger;
 import javax.sql.RowSetListener;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.WebRowSet;
+import javax.sql.rowset.spi.SyncFactory;
 import javax.swing.JOptionPane;
 import javax.swing.event.ListDataEvent;
 
@@ -73,7 +75,7 @@ import javax.swing.event.ListDataEvent;
  *
  * @author uros
  */
-public class EventDataSource implements DbDataSourceImpl {
+public class WebDataSource implements DbDataSourceImpl {
 
   public static final String SELECT_1 = "SELECT 1";
   private String selectSql;
@@ -101,7 +103,7 @@ public class EventDataSource implements DbDataSourceImpl {
   private transient PreparedStatement countStatement;
   private transient Map<String, PreparedStatement> cachedStatements = new SoftHashMap<String, PreparedStatement>();
   private transient SQLCache sqlCache;
-//  private WebRowSet webRowSet;
+  private Hashtable provider;
   /**
    * Holds value of property uniqueID.
    */
@@ -111,7 +113,7 @@ public class EventDataSource implements DbDataSourceImpl {
   private boolean readOnly = false;
 
   /** Creates a new instance of DbDataSource */
-  public EventDataSource(DbDataSource owner) {
+  public WebDataSource(DbDataSource owner) {
     this.owner = owner;
   }
   /**
@@ -120,11 +122,19 @@ public class EventDataSource implements DbDataSourceImpl {
   private java.util.Set<String> updateColumnNames = new java.util.HashSet<String>();
   private java.util.Set<String> updateColumnNamesCS = new java.util.HashSet<String>(); //case sensitive
 
-  public EventDataSource(DbDataSource owner, PreparedStatement selectStatement, PreparedStatement countStatement, List<Object> params) {
+  public WebDataSource(DbDataSource owner, PreparedStatement selectStatement, PreparedStatement countStatement, List<Object> params) {
     this.owner = owner;
     this.selectStatement = selectStatement;
     this.countStatement = countStatement;
     owner.setParameters(params, false);
+  }
+
+  @Override
+  public void setProvider(String providerName) {
+    if (providerName != null) {
+      this.provider = new Hashtable();
+      this.provider.put(SyncFactory.ROWSET_SYNC_PROVIDER, providerName);
+    }
   }
 
   /**
@@ -2765,10 +2775,6 @@ public class EventDataSource implements DbDataSourceImpl {
   }
 
   protected void createCurrentResultSet() {
-    createCurrentResultSet(false);
-  }
-
-  protected void createCurrentResultSet(boolean reload) {
     owner.lock();
     try {
       Connection connection = getConnection();
@@ -2781,9 +2787,9 @@ public class EventDataSource implements DbDataSourceImpl {
         long timer = System.currentTimeMillis();
 
 //        if (webRowSet == null) {
-//          webRowSet = new DbEventWebRowSetImpl();
+//          webRowSet = new DbWebRowSetImpl();
 //        }
-        WebRowSet wrs = (currentResultSet == null) || (currentResultSet.currentResultSet == null) ? new DbEventWebRowSetImpl() : currentResultSet.currentResultSet;
+        WebRowSet wrs = (currentResultSet == null) || (currentResultSet.currentResultSet == null) ? (provider == null ? new DbWebRowSetImpl() : new DbWebRowSetImpl(provider)) : currentResultSet.currentResultSet;
 
 
         currentResultSet = new CurrentResultSet(executeQuery(wrs, owner.getParameters(), connection));
@@ -3642,8 +3648,8 @@ public class EventDataSource implements DbDataSourceImpl {
 
     for (Entry<String, Object> entry : columnValues.entrySet()) {
       final int columnType = metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue());
-      if ((columnType == java.sql.Types.DATE)||
-          (columnType == java.sql.Types.TIMESTAMP)) {
+      if ((columnType == java.sql.Types.DATE) ||
+              (columnType == java.sql.Types.TIMESTAMP)) {
         if (entry.getValue() instanceof java.util.Date) {
           thisResultSet.updateTimestamp(entry.getKey(), new java.sql.Timestamp(((java.util.Date) entry.getValue()).getTime()));
         } else if (entry.getValue() == null) {
@@ -3657,7 +3663,7 @@ public class EventDataSource implements DbDataSourceImpl {
         }
       } else {
         //TODO timestamp
-        
+
         thisResultSet.updateObject(entry.getKey(), entry.getValue());
       }
     }
@@ -3790,7 +3796,7 @@ public class EventDataSource implements DbDataSourceImpl {
         ci = openSelectResultSet().findColumn(columnName);
       } finally {
         if (ci == -1) {
-          Logger.getLogger(EventDataSource.class.getName()).log(Level.WARNING, "Invalid column name [" + columnName + "]");
+          Logger.getLogger(WebDataSource.class.getName()).log(Level.WARNING, "Invalid column name [" + columnName + "]");
         }
       }
       columnMapping.put(columnName, ci);
@@ -3882,7 +3888,16 @@ public class EventDataSource implements DbDataSourceImpl {
       return -1;
     } else {
       if (this.count == -1) {
-        newCount = 1;
+        if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
+          newCount = 1;
+        } else {
+          if ((currentResultSet == null) || (currentResultSet.currentResultSet == null)) {
+            createCurrentResultSet();
+          }
+          newCount = currentResultSet.currentResultSet.size();
+
+        }
+     
 //        if ((currentResultSet==null)||(currentResultSet.currentResultSet==null)) {
 //          createCurrentResultSet();
 //        }
@@ -3914,7 +3929,7 @@ public class EventDataSource implements DbDataSourceImpl {
         }
         Connection connection = getConnection();
         try {
-        WebRowSet wrs = new DbEventWebRowSetImpl();
+        WebRowSet wrs = new DbWebRowSetImpl();
 
 
         ResultSet rs = executeQuery(wrs, owner.getParameters(), getConnection());
@@ -3968,7 +3983,7 @@ public class EventDataSource implements DbDataSourceImpl {
 
     public CurrentResultSet(WebRowSet currentResultSet) throws SQLException {
 //      if ((currentResultSet != null) && (owner.isConnectOnDemand() || owner.isCacheRowSet())) {
-//        this.currentResultSet = new DbEventChachedRowSetImpl();
+//        this.currentResultSet = new DbChachedRowSetImpl();
 //        this.currentResultSet.setFetchSize(getFetchSize());
 //        (this.currentResultSet).populate(currentResultSet);
 //      } else {
@@ -4376,7 +4391,7 @@ public class EventDataSource implements DbDataSourceImpl {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    CachedRowSet crs = new DbEventWebRowSetImpl();
+    CachedRowSet crs = new DbWebRowSetImpl();
     crs.populate(currentResultSet.currentResultSet);
     return crs;
   }
@@ -4838,15 +4853,15 @@ public class EventDataSource implements DbDataSourceImpl {
           positioned = openSelectResultSet.first();
         }
 
-        if (owner.isSeekUpdatedRow() && positioned) {
-          if (!compareValues(openSelectResultSet, connection, oldValues)) {
-            if (openSelectResultSet.first()) {
-              while (!compareValues(openSelectResultSet, connection, oldValues) && !openSelectResultSet.isLast()) {
-                openSelectResultSet.next();
-              }
-            }
-          }
-        }
+//        if (owner.isSeekUpdatedRow() && positioned) {
+//          if (!compareValues(openSelectResultSet, connection, oldValues)) {
+//            if (openSelectResultSet.first()) {
+//              while (!compareValues(openSelectResultSet, connection, oldValues) && !openSelectResultSet.isLast()) {
+//                openSelectResultSet.next();
+//              }
+//            }
+//          }
+//        }
 
         count = -1; //reset row count
 
@@ -5127,7 +5142,7 @@ public class EventDataSource implements DbDataSourceImpl {
           return ((javax.sql.RowSet) openSelectResultSet()).getDataSourceName();
         }
       } catch (SQLException ex) {
-        Logger.getLogger(EventDataSource.class.getName()).log(Level.SEVERE, null, ex);
+        Logger.getLogger(WebDataSource.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
 
@@ -6070,12 +6085,12 @@ public class EventDataSource implements DbDataSourceImpl {
     }
   }
 
-  private static class CacheEntry<K, V> extends SoftReference<EventDataSource> {
+  private static class CacheEntry<K, V> extends SoftReference<WebDataSource> {
 
     K key;
     V value;
 
-    private CacheEntry(EventDataSource referent, K key, V value) {
+    private CacheEntry(WebDataSource referent, K key, V value) {
       super(referent);
       this.key = key;
       this.value = value;
@@ -6110,9 +6125,9 @@ public class EventDataSource implements DbDataSourceImpl {
 
   private final static class RunnableEvents implements Runnable {
 
-    EventDataSource owner;
+    WebDataSource owner;
 
-    RunnableEvents(EventDataSource owner) {
+    RunnableEvents(WebDataSource owner) {
       this.owner = owner;
     }
 

@@ -35,4 +35,8 @@ public interface EventQuery {
    * @return the value of namedParameters
    */
   public Map<Field, SqlParameter<Object>> getNamedParameters();
+
+  public int getSifrant();
+
+  public String getSifra();
 }

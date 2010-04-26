@@ -188,5 +188,7 @@ public class DbDataSourceFactory {
     public boolean isRefreshPending();
 
     public void filterChanged() throws SQLException;
+
+    public void setProvider(String providerClassName);
   }
 }

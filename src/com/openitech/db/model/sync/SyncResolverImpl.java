@@ -54,7 +54,7 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
      * The RowSetWriter associated with the original
      * CachedRowSet object which is being synchronized.
      */
-    private DbEventRowSetWriter crw;
+    private DbRowSetWriter crw;
 
     /**
      * Row number identifier
@@ -90,7 +90,7 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
         try {
             crsSync = new CachedRowSetImpl();
             crsRes = new CachedRowSetImpl();
-            crw = new DbEventRowSetWriter();
+            crw = new DbRowSetWriter();
             row = new CachedRowSetImpl();
             rowStatus = 1;
             try {
@@ -281,7 +281,7 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
      *         maybe beacuse <code>Connection</code> has timed out.
      **/
      private void writeData(CachedRowSet row) throws SQLException {
-        crw.updateResolvedConflictToDB(row, crw.getReader().connect((RowSetInternal)crsSync));
+        crw.updateResolvedConflictToDB(row, crsSync.getConnection());
      }
 
     /**
@@ -422,7 +422,7 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
      * This is used to set the handle to the writer object
      * which will write the resolved values back to datasource
      **/
-    void setCachedRowSetWriter(DbEventRowSetWriter CRWriter) {
+    void setCachedRowSetWriter(DbRowSetWriter CRWriter) {
          crw = CRWriter;
     }
 

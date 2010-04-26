@@ -224,11 +224,14 @@ public class DbWebRowSetXmlWriter implements XmlWriter, Serializable {
       // Remove the string after "@xxxx"
       // before writing it to the xml file.
       String strProviderInstance = (caller.getSyncProvider()).toString();
+      //toString vraèa ime razreda + @ + hex
       String strProvider = strProviderInstance.substring(0, (caller.getSyncProvider()).toString().indexOf("@"));
+      String vendor = caller.getSyncProvider().getVendor();
+      String version = caller.getSyncProvider().getVersion();
 
       propString("sync-provider-name", strProvider);
-      propString("sync-provider-vendor", "Sun Microsystems Inc.");
-      propString("sync-provider-version", "1.0");
+      propString("sync-provider-vendor", vendor);
+      propString("sync-provider-version", version);
       propInteger("sync-provider-grade", caller.getSyncProvider().getProviderGrade());
       propInteger("data-source-lock", caller.getSyncProvider().getDataSourceLock());
 
@@ -305,7 +308,7 @@ public class DbWebRowSetXmlWriter implements XmlWriter, Serializable {
       caller.beforeFirst();
       caller.setShowDeleted(true);
       while (caller.next()) {
-        if (caller.rowDeleted() && caller.rowInserted()) {
+        if(caller.rowUpdated()){//if (caller.rowDeleted() && caller.rowInserted()) {
           beginSection("modifyRow");
         } else if (caller.rowDeleted()) {
           beginSection("deleteRow");

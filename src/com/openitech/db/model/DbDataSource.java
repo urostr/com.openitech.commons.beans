@@ -3119,7 +3119,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     long begin = System.currentTimeMillis();
     boolean result = false;
     try {
-      if (true) {//if (DUMP_SQL) {
+      if (false) {//if (DUMP_SQL) {
         System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + (available.isHeldByCurrentThread() ? "owner:current:" + available.getHoldCount() : "queued:" + available.getQueueLength()));
 
         StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
@@ -3141,14 +3141,14 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     } catch (InterruptedException ex) {
       throw (IllegalStateException) (new IllegalStateException("Can't obtain lock")).initCause(ex);
     }
-    System.out.println(getName() + " :cas lokanja:= " + (System.currentTimeMillis() - begin));
+   // System.out.println(getName() + " :cas lokanja:= " + (System.currentTimeMillis() - begin));
     return result;
   }
 
   @Override
   public void unlock() {
     available.unlock();
-    if (DUMP_SQL) {
+    if(false){//if (DUMP_SQL) {
       StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
       System.out.println(getName() + ":unlocking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
       System.out.println(getName() + ":unlocking:[" + Thread.currentThread().getName() + "]:" + available.getHoldCount());
@@ -4598,6 +4598,10 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   @Override
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
     throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  public void setProvider(String providerClassName) {
+    implementation.setProvider(providerClassName);
   }
 
   public static class SqlParameter<T> {

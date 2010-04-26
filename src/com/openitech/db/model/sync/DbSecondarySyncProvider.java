@@ -69,15 +69,16 @@ defined in the <code>CachedRowSet</code> interface
  * @see javax.sql.rowset.spi.SyncFactoryException
  *
  */
-public final class DbEventSyncProvider extends SyncProvider implements Serializable {
+public final class DbSecondarySyncProvider extends SyncProvider implements Serializable {
 
-  private DbEventRowSetReader reader;
+  private DbSecondaryRowSetReader reader;
   private DbRowSetWriter writer;
-  public static String PROVIDER = "com.openitech.db.model.sync.DbEventSyncProvider";
   /**
    * The unique provider indentifier.
    */
-  private String providerID = PROVIDER;//"com.openitech.db.model.sync.DbEventSyncProvider";
+  private final static String providerID = DbSecondarySyncProvider.class.getName();
+  public final static String PROVIDER = providerID;
+    //      PROVIDER;//"com.openitech.db.model.sync.DbEventSyncProvider";
   /**
    * The vendor name of this SyncProvider implementation
    */
@@ -99,9 +100,9 @@ public final class DbEventSyncProvider extends SyncProvider implements Serializa
    * This provider is available to all disconnected <code>RowSet</code> implementations
    *  as the default persistence provider.
    */
-  public DbEventSyncProvider() {
-    providerID = this.getClass().getName();
-    reader = new DbEventRowSetReader();
+  public DbSecondarySyncProvider() {
+//    providerID = this.getClass().getName();
+    reader = new DbSecondaryRowSetReader();
     writer = new DbRowSetWriter();
     try {
       resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();

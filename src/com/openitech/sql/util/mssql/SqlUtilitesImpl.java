@@ -1172,6 +1172,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
      *
      * @return the value of sifra
      */
+    @Override
     public String getSifra() {
       return sifra;
     }
@@ -1181,6 +1182,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
      *
      * @return the value of sifrant
      */
+    @Override
     public int getSifrant() {
       return sifrant;
     }

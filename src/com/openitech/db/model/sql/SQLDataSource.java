@@ -4158,6 +4158,11 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
+  public void setProvider(String providerClassName) {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
   private class CurrentResultSet {
 
     ResultSet currentResultSet;
@@ -4320,7 +4325,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     return pos;
   }
 
-  private static int setParameters(PreparedStatement statement, List<?> parameters, int pos, boolean subset) throws SQLException {
+  public static int setParameters(PreparedStatement statement, List<?> parameters, int pos, boolean subset) throws SQLException {
     if (!subset) {
       statement.clearParameters();
     }
