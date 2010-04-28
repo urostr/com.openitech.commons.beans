@@ -162,8 +162,8 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
 
       }
 
-      dropProcedure(con);
-      createSecondarySP(eq, con);
+      //  dropProcedure(con);
+      String procedureName = createSecondarySP(eq, con, wrs.toString());
 
 
 
@@ -179,10 +179,10 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
       if (steviloParametrov > 0) {
         parametri = parametri.substring(0, parametri.length() - 1);//pobrišem zadnjo vejco
       }
-      String exePrecedure = "EXECUTE [ChangeLog].[dbo].[getSecondaryXMLRowSet] ( " + parametri + " ) ";
+      String exePrecedure = " [dbo].[" + procedureName + "] ( " + parametri + " ) ";
       Logger.getAnonymousLogger().info(exePrecedure);
-      PreparedStatement pstmt = sqlCache.getSharedStatement(con, exePrecedure);
-      
+      //PreparedStatement pstmt = sqlCache.getSharedStatement(con, exePrecedure);
+      PreparedStatement pstmt = con.prepareCall("{ call " + exePrecedure + " }");
       try {
         pstmt.setMaxRows(wrs.getMaxRows());
         pstmt.setMaxFieldSize(wrs.getMaxFieldSize());
@@ -318,7 +318,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
   }
   static final long serialVersionUID = 5049738185801363801L;
 
-  private void createSecondarySP(EventQuery eq, Connection conn) {
+  private String createSecondarySP(EventQuery eq, Connection conn, String imeProcedure) {
     String parametri = "";
     int steviloParametrov = 0;
     List<String> param = new ArrayList<String>();
@@ -349,7 +349,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
             //            "GO  " +
             //            "SET QUOTED_IDENTIFIER ON " +
             //            "GO  " +
-            " CREATE PROCEDURE [dbo].[getSecondaryXMLRowSet] (  " +
+            " CREATE PROCEDURE [dbo].[" + imeProcedure + "] (  " +
             parametri +
             //            "	@idSifranta [int], " +
             //            "	@idPrivolitveneIzjave [varchar] (100), " +
@@ -678,13 +678,43 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
             "END";
 
     Logger.getAnonymousLogger().log(Level.INFO, preparedSQL);
+    String result = null;
     try {
-//      PreparedStatement psCreateProcedure = sqlCache.getSharedStatement(conn, "EXECUTE dbo.CreateSecondaryProcedure ( '"+ preparedSQL+"' ");
-      PreparedStatement psCreateProcedure = sqlCache.getSharedStatement(conn, preparedSQL);
-      psCreateProcedure.execute();
+//
+      String findSQL = "SELECT Id, ImeProcedure, Procedura FROM ChangeLog.dbo.StoredProcedures WHERE ImeProcedure = ?";
+      PreparedStatement findProcedure = sqlCache.getSharedStatement(conn, findSQL);
+      findProcedure.setString(1, imeProcedure);
+
+      ResultSet rsFindProcedure = findProcedure.executeQuery();
+      if (rsFindProcedure.next()) {
+        result = rsFindProcedure.getString("ImeProcedure");
+      } else {
+
+
+        //SqlUtilities.getInstance().beginTransaction();
+        Statement statement = conn.createStatement();
+        statement.executeUpdate(preparedSQL);
+        result = imeProcedure;
+
+        int par = 1;
+        String insertSQL = "INSERT INTO ChangeLog.dbo.StoredProcedures ([ImeProcedure], Procedura) VALUES ( ?, ?)";
+        PreparedStatement insertProcedure = sqlCache.getSharedStatement(conn, insertSQL);
+
+        insertProcedure.setString(par++, imeProcedure);
+        insertProcedure.setString(par++, preparedSQL);
+        insertProcedure.executeUpdate();
+      }
+
     } catch (SQLException ex) {
       Logger.getLogger(DbSecondaryRowSetReader.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+//      try {
+//        SqlUtilities.getInstance().endTransaction(true);
+//      } catch (SQLException ex) {
+//        Logger.getLogger(DbSecondaryRowSetReader.class.getName()).log(Level.SEVERE, null, ex);
+//      }
     }
+    return result;
   }
 
   private String typeToString(int type) {
