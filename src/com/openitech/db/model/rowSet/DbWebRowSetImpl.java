@@ -278,4 +278,28 @@ public class DbWebRowSetImpl extends DbChachedRowSetImpl implements WebRowSet {
 
   }
   static final long serialVersionUID = -8771775154092422943L;
+  private String name;
+
+  /**
+   * Get the value of name
+   *
+   * @return the value of name
+   */
+  public String getName() {
+    return name;
+  }
+
+  /**
+   * Set the value of name
+   *
+   * @param name new value of name
+   */
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  @Override
+  public String toString() {
+    return name == null ? super.toString() : name.replaceAll(":", "_").replaceAll("\\[", "_").replaceAll("\\]", "_").replaceAll("\\-", "_");
+  }
 }
