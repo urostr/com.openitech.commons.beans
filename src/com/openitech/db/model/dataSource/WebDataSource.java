@@ -25,6 +25,7 @@ import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
 import com.openitech.util.OwnerFrame;
 import com.sun.rowset.CachedRowSetImpl;
+import com.sun.rowset.WebRowSetImpl;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.io.InputStream;
@@ -2790,7 +2791,7 @@ public class WebDataSource implements DbDataSourceImpl {
 //          webRowSet = new DbWebRowSetImpl();
 //        }
         WebRowSet wrs = (currentResultSet == null) || (currentResultSet.currentResultSet == null) ? (provider == null ? new DbWebRowSetImpl() : new DbWebRowSetImpl(provider)) : currentResultSet.currentResultSet;
-
+        ((DbWebRowSetImpl) wrs).setName(owner.getName());
 
         currentResultSet = new CurrentResultSet(executeQuery(wrs, owner.getParameters(), connection));
         if (DbDataSource.DUMP_SQL) {
@@ -3897,7 +3898,7 @@ public class WebDataSource implements DbDataSourceImpl {
           newCount = currentResultSet.currentResultSet.size();
 
         }
-     
+
 //        if ((currentResultSet==null)||(currentResultSet.currentResultSet==null)) {
 //          createCurrentResultSet();
 //        }
