@@ -102,6 +102,28 @@ public class SQLCache implements Serializable {
     return getSharedResult(query, parameters, reload, ttl);
   }
 
+  public PreparedStatement getSharedCall(Connection connection, String query) throws SQLException {
+    CollectionKey<Object> statementKey = new CollectionKey<Object>(2);
+    statementKey.add(connection);
+    statementKey.add(query);
+
+    PreparedStatement statement;
+
+
+    if (sharedStatements.containsKey(statementKey)) {
+      statement = sharedStatements.get(statementKey);
+    } else {
+      statement = connection.prepareCall(query,
+              ResultSet.TYPE_FORWARD_ONLY,
+              ResultSet.CONCUR_READ_ONLY);
+      statement.setFetchSize(1008);
+
+      sharedStatements.put(statementKey, statement);
+    }
+
+    return statement;
+  }
+
   public static class SharedEntry implements Serializable {
 
     private Semaphore lock = new Semaphore(1);
