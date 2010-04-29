@@ -181,8 +181,8 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
       }
       String exePrecedure = " [dbo].[" + procedureName + "] ( " + parametri + " ) ";
       Logger.getAnonymousLogger().info(exePrecedure);
-      //PreparedStatement pstmt = sqlCache.getSharedStatement(con, exePrecedure);
-      PreparedStatement pstmt = con.prepareCall("{ call " + exePrecedure + " }");
+      PreparedStatement pstmt = sqlCache.getSharedCall(con, "{ call " + exePrecedure + " }");
+
       try {
         pstmt.setMaxRows(wrs.getMaxRows());
         pstmt.setMaxFieldSize(wrs.getMaxFieldSize());
@@ -677,42 +677,48 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
             " SELECT CAST(@xmlWRS AS [xml]);  " +
             "END";
 
-    Logger.getAnonymousLogger().log(Level.INFO, preparedSQL);
+    //Logger.getAnonymousLogger().log(Level.INFO, preparedSQL);
     String result = null;
+    int par;
     try {
 //
       String findSQL = "SELECT Id, ImeProcedure, Procedura FROM ChangeLog.dbo.StoredProcedures WHERE ImeProcedure = ?";
       PreparedStatement findProcedure = sqlCache.getSharedStatement(conn, findSQL);
-      findProcedure.setString(1, imeProcedure);
+     
+      par = 1;
+      findProcedure.setString(par++, imeProcedure);
 
       ResultSet rsFindProcedure = findProcedure.executeQuery();
       if (rsFindProcedure.next()) {
         result = rsFindProcedure.getString("ImeProcedure");
       } else {
 
+        boolean commit = false;
 
-        //SqlUtilities.getInstance().beginTransaction();
-        Statement statement = conn.createStatement();
-        statement.executeUpdate(preparedSQL);
-        result = imeProcedure;
+        try {
+          SqlUtilities.getInstance().beginTransaction();
+          Statement statement = conn.createStatement();
+          statement.executeUpdate(preparedSQL);
+          result = imeProcedure;
 
-        int par = 1;
-        String insertSQL = "INSERT INTO ChangeLog.dbo.StoredProcedures ([ImeProcedure], Procedura) VALUES ( ?, ?)";
-        PreparedStatement insertProcedure = sqlCache.getSharedStatement(conn, insertSQL);
+          par = 1;
+          String insertSQL = "INSERT INTO ChangeLog.dbo.StoredProcedures ([ImeProcedure], Procedura) VALUES ( ?, ?)";
+          PreparedStatement insertProcedure = sqlCache.getSharedStatement(conn, insertSQL);
 
-        insertProcedure.setString(par++, imeProcedure);
-        insertProcedure.setString(par++, preparedSQL);
-        insertProcedure.executeUpdate();
+          insertProcedure.setString(par++, imeProcedure);
+          insertProcedure.setString(par++, preparedSQL);
+          insertProcedure.executeUpdate();
+
+          commit = true;
+        } catch (SQLException ex) {
+          Logger.getLogger(DbSecondaryRowSetReader.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+          SqlUtilities.getInstance().endTransaction(commit);
+        }
       }
 
     } catch (SQLException ex) {
       Logger.getLogger(DbSecondaryRowSetReader.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-//      try {
-//        SqlUtilities.getInstance().endTransaction(true);
-//      } catch (SQLException ex) {
-//        Logger.getLogger(DbSecondaryRowSetReader.class.getName()).log(Level.SEVERE, null, ex);
-//      }
     }
     return result;
   }
