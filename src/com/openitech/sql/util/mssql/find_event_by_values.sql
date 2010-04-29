@@ -4,7 +4,7 @@ SELECT <%ev_result_limit%>
     ev.[IdSifranta],
     ev.[IdSifre],
     ev.[IdEventSource],
-    ChangeLog.dbo.dateTimeToLong(ev.[Datum]) AS Datum
+    ev.Datum
 <%ev_field_results%>
 FROM (SELECT ev.* FROM
     <%ChangeLog%>.[dbo].[Events] ev
