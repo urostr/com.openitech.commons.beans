@@ -12,6 +12,7 @@ import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.filters.DataSourceLimit;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.concurrent.DataSourceEvent;
@@ -71,21 +72,34 @@ public class DataSourceFactory {
   public void configure(String opis, Clob resource) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
     com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(resource.getCharacterStream());
-
-    configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), workareaXML);
+    try {
+      configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), workareaXML);
+    } catch (ClassNotFoundException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    }
   }
 
   public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.xml.DataSourceConfig config, Class clazz, String resourceName) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
     com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(clazz.getResourceAsStream(resourceName));
-
-    configure(waConfig, opis, config, workareaXML);
+    try {
+      configure(waConfig, opis, config, workareaXML);
+    } catch (ClassNotFoundException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    }
   }
 
-  public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.xml.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea workareaXML) throws SQLException {
+  public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.xml.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea workareaXML) throws SQLException, ClassNotFoundException {
     waConfig.opis = opis;
 
-    final DbDataSource dsWorkAreaEvents = new DbDataSource();
+
+    String className = workareaXML.getDataSource().getClassName();
+    String provider = workareaXML.getDataSource().getProviderClassName();
+
+    final DbDataSource dsWorkAreaEvents = className == null ? new DbDataSource() : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
+    if (provider != null) {
+      dsWorkAreaEvents.setProvider(provider);
+    }
 
     dsWorkAreaEvents.lock();
     try {
