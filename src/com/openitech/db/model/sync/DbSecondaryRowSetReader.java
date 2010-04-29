@@ -336,7 +336,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
       parametri = parametri.substring(0, parametri.length() - 1);//pobrišem zadnjo vejco
     }
 
-    String sql = eq.getQuery();
+    String sql = getQuery("secondary_event");
     sql = SQLDataSource.substParameters(sql, eq.getParameters());//mi pusti vprašaje
     sql = substParameters(sql, param);
 
@@ -682,7 +682,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
     int par;
     try {
 //
-      String findSQL = "SELECT Id, ImeProcedure, Procedura FROM ChangeLog.dbo.StoredProcedures WHERE ImeProcedure = ?";
+      String findSQL = getQuery("findProcedure");
       PreparedStatement findProcedure = sqlCache.getSharedStatement(conn, findSQL);
      
       par = 1;
@@ -702,7 +702,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
           result = imeProcedure;
 
           par = 1;
-          String insertSQL = "INSERT INTO ChangeLog.dbo.StoredProcedures ([ImeProcedure], Procedura) VALUES ( ?, ?)";
+          String insertSQL = getQuery("insertStoreProcedure");
           PreparedStatement insertProcedure = sqlCache.getSharedStatement(conn, insertSQL);
 
           insertProcedure.setString(par++, imeProcedure);
@@ -759,5 +759,9 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
 
     Logger.getAnonymousLogger().log(Level.INFO, sql);
     return sql;
+  }
+
+  private String getQuery(String fileName){
+    return com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+fileName+".sql", "cp1250");
   }
 }

@@ -16,6 +16,7 @@ import com.openitech.db.model.sql.SQLDataSource;
 import com.sun.rowset.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
@@ -67,7 +68,7 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
   private SQLCache sqlCache = new SQLCache();
   private JdbcRowSetResourceBundle resBundle;
   // private Connection connection;
-
+  
   public DbEventRowSetReader() {
     try {
       resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
@@ -146,7 +147,8 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
       } catch (Exception ex) {
       }
       // Use JDBC to read the data.
-      PreparedStatement pstmt = sqlCache.getSharedStatement(con, "SELECT [ChangeLog].[dbo].[getEventXMLRowSet] (?,?,? )");
+//      PreparedStatement pstmt = sqlCache.getSharedStatement(con, "SELECT [ChangeLog].[dbo].[getEventXMLRowSet] (?,?,? )");
+      PreparedStatement pstmt = sqlCache.getSharedCall(con, "{ call  [ChangeLog].[dbo].[getEventXMLRowSet] (?,?,? )  }");
       // Pass any input parameters to JDBC.
       List<Object> param = new ArrayList<Object>();
       for (Object value : caller.getParams()) {
@@ -174,18 +176,24 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
       }
 
       //ResultSet rs = pstmt.executeQuery();
+      long start = System.currentTimeMillis();
       ResultSet rs = SQLDataSource.executeQuery(pstmt, param);
+      long end = System.currentTimeMillis();
+      Logger.getAnonymousLogger().warning("Izvajanje Event execute=" + (end - start) +" ms.");
       if (rs.next()) {
 
         String xml = rs.getString(1);
 //        System.out.println(test);
-        
+
         Logger.getAnonymousLogger().warning(xml);
+        Logger.getAnonymousLogger().warning(param.toString());
         if (xml.length() > 0) {
           wrs.release();
           wrs.clearParameters();
           wrs.readXml(new StringReader(xml));
         }
+        Logger.getAnonymousLogger().warning("Izvajanje Event exe + read xml=" + (System.currentTimeMillis() - start));
+
 
       } else {
         throw new SQLException("Ni podatkov");
@@ -214,7 +222,6 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
     writerCalls++;
     return writerCalls == 1;
   }
-
 
   /**
    * Establishes a connection with the data source for the given
