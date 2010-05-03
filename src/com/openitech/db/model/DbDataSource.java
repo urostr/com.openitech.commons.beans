@@ -3119,7 +3119,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     long begin = System.currentTimeMillis();
     boolean result = false;
     try {
-      if (false) {//if (DUMP_SQL) {
+      if(true){//if (DUMP_SQL) {
         System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + (available.isHeldByCurrentThread() ? "owner:current:" + available.getHoldCount() : "queued:" + available.getQueueLength()));
 
         StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
@@ -3141,7 +3141,10 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     } catch (InterruptedException ex) {
       throw (IllegalStateException) (new IllegalStateException("Can't obtain lock")).initCause(ex);
     }
-   // System.out.println(getName() + " :cas lokanja:= " + (System.currentTimeMillis() - begin));
+    if(true){// if (DUMP_SQL) {
+      long end = System.currentTimeMillis();
+    System.out.println(getName() + " :cas lokanja:= " + (end - begin) + " ms.");
+    }
     return result;
   }
 

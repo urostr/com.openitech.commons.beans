@@ -1,12 +1,11 @@
 /*
- * @(#)RIOptimisticProvider.java	1.11 10/03/23
+ * @(#)DbSecondarySyncProvider.java	1.11 10/03/23
  *
  * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package com.openitech.db.model.sync;
 
-import com.openitech.db.model.rowSet.*;
 import com.sun.rowset.JdbcRowSetResourceBundle;
 
 import javax.sql.*;
@@ -22,20 +21,20 @@ import javax.sql.rowset.spi.*;
  * <h3>1.0 Backgroud</h3>
  * This synchronization provider is registered with the
  * <code>SyncFactory</code> by default as the
- * <code>com.sun.rowset.providers.RIOptimisticProvider</code>.
+ * <code>com.openitech.db.model.sync.DbSecondarySyncProvider</code>.
  * As an extension of the <code>SyncProvider</code> abstract
  * class, it provides the reader and writer classes required by disconnected
  * rowsets as <code>javax.sql.RowSetReader</code> and <code>javax.sql.RowSetWriter</code>
  * interface implementations. As a reference implementation,
- * <code>RIOptimisticProvider</code> provides a
+ * <code>DbSecondarySyncProvider</code> provides a
  * fully functional implementation offering a medium grade classification of
  * syncrhonization, namely GRADE_CHECK_MODIFIED_AT_COMMIT. A
  * disconnected <code>RowSet</code> implementation using the
- * <code>RIOptimisticProvider</code> can expect the writer to
+ * <code>DbSecondarySyncProvider</code> can expect the writer to
  * check only rows that have been modified in the <code>RowSet</code> against
  * the values in the data source.  If there is a conflict, that is, if a value
  * in the data source has been changed by another party, the
- * <code>RIOptimisticProvider</code> will not write any of the changes to the data
+ * <code>DbSecondarySyncProvider</code> will not write any of the changes to the data
  * source and  will throw a <code>SyncProviderException</code> object.
  *
  * <h3>2.0 Usage</h3>
@@ -46,23 +45,23 @@ import javax.sql.rowset.spi.*;
 defined in the <code>CachedRowSet</code> interface
  * <pre>
  *     CachedRowset crs = new FooCachedRowSetImpl();
- *     crs.setSyncProvider("com.sun.rowset.providers.RIOptimisticProvider");
+ *     crs.setSyncProvider("com.openitech.db.model.sync.DbSecondarySyncProvider");
  * </pre>
  *  <LI>By specifying it in the constructor of the <code>RowSet</code>
  *      implementation
  * <pre>
  *     CachedRowset crs = new FooCachedRowSetImpl(
- *                         "com.sun.rowset.providers.RIOptimisticProvider");
+ *                         "com.openitech.db.model.sync.DbSecondarySyncProvider");
  * </pre>
  * </OL>
- * Note that because the <code>RIOptimisticProvider</code> implementation is
+ * Note that because the <code>DbSecondarySyncProvider</code> implementation is
  * the default provider, it will always be the provider when no provider ID is
  * specified to the constructor.
  * <P>
  * See the standard <code>RowSet</code> reference implementations in the
  * <code>com.sun.rowset</code> package for more details.
  *
- * @author  Jonathan Bruce
+ * @author  Domen Bašiè
  * @see javax.sql.rowset.spi.SyncProvider
  * @see javax.sql.rowset.spi.SyncProviderException
  * @see javax.sql.rowset.spi.SyncFactory
@@ -77,8 +76,8 @@ public final class DbSecondarySyncProvider extends SyncProvider implements Seria
    * The unique provider indentifier.
    */
   private final static String providerID = DbSecondarySyncProvider.class.getName();
-  public final static String PROVIDER = providerID;
-    //      PROVIDER;//"com.openitech.db.model.sync.DbEventSyncProvider";
+  public final String PROVIDER = providerID;
+
   /**
    * The vendor name of this SyncProvider implementation
    */
@@ -93,7 +92,7 @@ public final class DbSecondarySyncProvider extends SyncProvider implements Seria
   private JdbcRowSetResourceBundle resBundle;
 
   /**
-   * Creates an <code>RIOptimisticProvider</code> object initialized with the
+   * Creates an <code>DbSecondarySyncProvider</code> object initialized with the
    * fully qualified class name of this <code>SyncProvider</code> implementation
    * and a default reader and writer.
    * <P>
@@ -112,7 +111,7 @@ public final class DbSecondarySyncProvider extends SyncProvider implements Seria
   }
 
   /**
-   * Returns the <code>'javax.sql.rowset.providers.RIOptimisticProvider'</code>
+   * Returns the <code>'javax.sql.rowset.providers.DbSecondarySyncProvider'</code>
    * provider identification string.
    *
    * @return String Provider ID of this persistence provider
@@ -124,11 +123,11 @@ public final class DbSecondarySyncProvider extends SyncProvider implements Seria
 
   /**
    * Returns the <code>javax.sql.RowSetWriter</code> object for this
-   * <code>RIOptimisticProvider</code> object.  This is the writer that will
+   * <code>DbSecondarySyncProvider</code> object.  This is the writer that will
    * write changes made to the <code>Rowset</code> object back to the data source.
    *
    * @return the <code>javax.sql.RowSetWriter</code> object for this
-   *     <code>RIOptimisticProvider</code> object
+   *     <code>DbSecondarySyncProvider</code> object
    */
   @Override
   public RowSetWriter getRowSetWriter() {
@@ -141,11 +140,11 @@ public final class DbSecondarySyncProvider extends SyncProvider implements Seria
 
   /**
    * Returns the <code>javax.sql.RowSetReader</code> object for this
-   * <code>RIOptimisticProvider</code> object.  This is the reader that will
-   * populate a <code>RowSet</code> object using this <code>RIOptimisticProvider</code>.
+   * <code>DbSecondarySyncProvider</code> object.  This is the reader that will
+   * populate a <code>RowSet</code> object using this <code>DbSecondarySyncProvider</code>.
    *
    * @return the <code>javax.sql.RowSetReader</code> object for this
-   *     <code>RIOptimisticProvider</code> object
+   *     <code>DbSecondarySyncProvider</code> object
    */
   @Override
   public RowSetReader getRowSetReader() {

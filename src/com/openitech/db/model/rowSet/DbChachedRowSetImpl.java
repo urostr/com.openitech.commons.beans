@@ -729,6 +729,7 @@ public class DbChachedRowSetImpl extends BaseRowSet implements RowSet, RowSetInt
     // store the connection so the reader can find it.
     setConnection(conn);
 
+    //eno in isto
     if (getPageSize() != 0) {
       crsReader =  provider.getRowSetReader();
 //      crsReader.setStartPosition(1);

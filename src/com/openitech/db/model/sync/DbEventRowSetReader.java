@@ -16,30 +16,36 @@ import com.openitech.db.model.sql.SQLDataSource;
 import com.sun.rowset.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
 
 /**
- * The facility called by the <code>RIOptimisticProvider</code> object
+ * The facility called by the <code>DbEventRowSetProvider</code> object
  * internally to read data into it.  The calling <code>RowSet</code> object
  * must have implemented the <code>RowSetInternal</code> interface
  * and have the standard <code>CachedRowSetReader</code> object set as its
  * reader.
  * <P>
  * This implementation always reads all rows of the data source,
- * and it assumes that the <code>command</code> property for the caller
- * is set with a query that is appropriate for execution by a
- * <code>PreparedStatement</code> object.
+ * and it assumes that the database has stored procedure <code>getEventXMLRowSet</code>.
  * <P>
  * Typically the <code>SyncFactory</code> manages the <code>RowSetReader</code> and
  * the <code>RowSetWriter</code> implementations using <code>SyncProvider</code> objects.
  * Standard JDBC RowSet implementations provide an object instance of this
  * reader by invoking the <code>SyncProvider.getRowSetReader()</code> method.
  *
- * @version 0.2
- * @author Jonathan Bruce
+ * This implementation does not use <code>command</code> property, but uses pre-created stored procedure
+ * which returns standard webRowSet xml for <code>WebRowSet</code> which populates itself with that data.
+ *
+ * <P>
+ * Store procedure requires tree parameters, passed by webRowSet:
+ *     <code>EventID</code>
+ *     <code>IDSifranta</code>
+ *     <code>IDSifre</code>
+ * 
+ * @version 1.0
+ * @author Domen Bašiè
  * @see javax.sql.rowset.spi.SyncProvider
  * @see javax.sql.rowset.spi.SyncFactory
  * @see javax.sql.rowset.spi.SyncFactoryException
