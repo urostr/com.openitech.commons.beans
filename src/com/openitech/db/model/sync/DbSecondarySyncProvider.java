@@ -76,7 +76,7 @@ public final class DbSecondarySyncProvider extends SyncProvider implements Seria
    * The unique provider indentifier.
    */
   private final static String providerID = DbSecondarySyncProvider.class.getName();
-  public final String PROVIDER = providerID;
+  public final static String PROVIDER = providerID;
 
   /**
    * The vendor name of this SyncProvider implementation
