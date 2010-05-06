@@ -27,7 +27,7 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
   }
 
   public FieldValueProxy(String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver) {
-    super(name, type, fieldValueIndex);
+    super(name, type, fieldValueIndex, null);
     setFieldObserver(fieldObserver);
   }
   private DbFieldObserver fieldObserver;

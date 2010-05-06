@@ -19,10 +19,6 @@ public class FieldValue extends Field {
     this(name, type, 1, null);
   }
 
-  public FieldValue(String name, int type, int fieldValueIndex) {
-    this(name, type, fieldValueIndex, null);
-  }
-
   public FieldValue(String name, int type, Object value) {
     this(name, type, 1, value);
   }

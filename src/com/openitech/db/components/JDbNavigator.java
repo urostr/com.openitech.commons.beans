@@ -9,11 +9,9 @@ import com.openitech.Settings;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
-import com.openitech.db.model.DbDataSource;
 import com.openitech.ref.events.PropertyChangeWeakListener;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -22,7 +20,6 @@ import java.util.EnumSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import com.openitech.components.JMnemonicButton;
 import com.openitech.util.Equals;
 
 /**

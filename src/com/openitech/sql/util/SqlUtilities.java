@@ -126,7 +126,7 @@ public abstract class SqlUtilities implements UpdateEvent {
   public int executeUpdate(java.sql.PreparedStatement statement,
           FieldValue... fieldValues) throws SQLException {
     statement.clearParameters();
-    //System.out.println("Setting parameters");
+    System.out.println("Setting parameters");
     for (int pos = 1; pos <= fieldValues.length; pos++) {
       FieldValue fieldValue = fieldValues[pos - 1];
       final String fieldName = fieldValue.getName();
@@ -135,7 +135,7 @@ public abstract class SqlUtilities implements UpdateEvent {
       final boolean wasNull = fieldValue.isNull();
 
 
-      //System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
+      System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
       if (wasNull) {
         statement.setNull(pos, type);
       } else {

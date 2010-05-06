@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1250"?>
+
+<!--
+    Document   : Event.xml
+    Created on : March 30, 2010, 4:17 PM
+    Author     : uros
+    Description:
+        Purpose of the document follows.
+-->
+
+<ns0:Event  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+   xmlns:ns0='http://xml.netbeans.org/schema/Event'
+   xsi:schemaLocation='http://xml.netbeans.org/schema/Event Event.xsd'>
+  <ns0:sifrant></ns0:sifrant>
+  <ns0:sifra></ns0:sifra>
+  <ns0:eventSource></ns0:eventSource>
+  <ns0:primaryKey name="" fieldValueIndex="">
+    <ns0:IntValue></ns0:IntValue>
+  </ns0:primaryKey>
+  <ns0:fieldValue name="" fieldValueIndex="">
+    <ns0:IntValue></ns0:IntValue>
+  </ns0:fieldValue>
+
+</ns0:Event>

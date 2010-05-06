@@ -2495,6 +2495,14 @@ public class SQLDataSource implements DbDataSourceImpl {
     try {
       owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.UPDATE_ROW));
     } catch (Exception err) {
+      if ((err instanceof SQLNotificationException)||
+          (err.getCause() instanceof SQLNotificationException)) {
+        if (err instanceof SQLNotificationException) {
+          throw (SQLNotificationException) err;
+        } else {
+          throw (SQLNotificationException) err.getCause();
+        }
+      }
       storeUpdates = false;
     }
     if (storeUpdates) {
@@ -3663,12 +3671,12 @@ public class SQLDataSource implements DbDataSourceImpl {
         if (!owner.isSingleTableSelect()) {
           if (catalogName == null) {
             catalogName = metaData.getCatalogName(columnIndex);
-          } else if (!catalogName.equalsIgnoreCase(metaData.getCatalogName(columnIndex))) {
+          } else if ((updateTableName == null)&&(!catalogName.equalsIgnoreCase(metaData.getCatalogName(columnIndex)))) {
             throw new SQLException("Insert on different catalogs not supported. Shema: " + catalogName + " != " + metaData.getCatalogName(columnIndex));
           }
           if (schemaName == null) {
             schemaName = metaData.getSchemaName(columnIndex);
-          } else if (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex))) {
+          } else if ((updateTableName == null)&&(!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex)))) {
             throw new SQLException("Insert on different schemas not supported. Shema: " + schemaName + " != " + metaData.getSchemaName(columnIndex));
           }
           if (tableName == null) {
@@ -3688,6 +3696,9 @@ public class SQLDataSource implements DbDataSourceImpl {
           Logger.getLogger(Settings.LOGGER).info("Skipping null value: '" + entry.getKey() + "'");
         }
       }
+
+      catalogName = catalogName==null?"":catalogName;
+      schemaName  = schemaName ==null?"":schemaName;
 
       StringBuilder sql = new StringBuilder();
 

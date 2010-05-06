@@ -309,7 +309,8 @@ public class DataSourceFactory {
       }
     } finally {
       Boolean resume = workareaXML.getDataSource().isResumeAfterCreation();
-      if (resume && dsWorkAreaEvents.isSuspended()) {
+
+      if (resume!=null && resume && dsWorkAreaEvents.isSuspended()) {
         DataSourceEvent.resume(dsWorkAreaEvents);
       }
       dsWorkAreaEvents.unlock();
