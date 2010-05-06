@@ -132,7 +132,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           statement.executeQuery(checkTableSql);
         }
 
-        if (fill) {
+        if ((fill) && (emptyTableSql.length()>0)) {
           statement.executeUpdate(emptyTableSql);
         }
       } catch (SQLException ex) {
