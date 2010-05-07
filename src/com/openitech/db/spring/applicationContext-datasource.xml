@@ -17,5 +17,4 @@
     <property name="targetObject" ref="dataSource"/>
     <property name="targetField"  value="connection"/>
   </bean>
-  <bean id="sqlPropertyRetriever" class="com.openitech.sql.properties.SqlPropertyRetriever" />
 </beans>

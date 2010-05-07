@@ -31,7 +31,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * @author uros
  */
 public class SpringContextManager {
-  private static final Logger LOG = Logger.getLogger(LoginContextManager.class.getCanonicalName());
+  private static final Logger LOG = Logger.getLogger(SpringContextManager.class.getCanonicalName());
   private static SpringContextManager instance = null;
   
   
