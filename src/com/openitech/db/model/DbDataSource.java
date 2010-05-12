@@ -3143,7 +3143,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     }
     if(true){// if (DUMP_SQL) {
       long end = System.currentTimeMillis();
-    System.out.println(getName() + " :cas lokanja:= " + (end - begin) + " ms.");
+      System.out.println(getName() + " :locking time: " + (end - begin) + " ms.");
     }
     return result;
   }
