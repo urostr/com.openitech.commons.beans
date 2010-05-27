@@ -121,10 +121,10 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       }
     } catch (Exception ex) {
       StringBuilder sb = new StringBuilder();
-      for (String column:columnDescriptors[columnIndex].columnNames) {
-        sb.append(sb.length()>0?":":"").append(column);
+      for (String column : columnDescriptors[columnIndex].columnNames) {
+        sb.append(sb.length() > 0 ? ":" : "").append(column);
       }
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] "+sb.toString());
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] " + sb.toString());
     }
     return null;
   }
@@ -373,6 +373,21 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     fireTableDataChanged();
   }
 
+  public void populate() throws SQLException {
+    if (!this.dataSource.isDataLoaded()) {
+      this.dataSource.loadData();
+    }
+
+    String[][] columns = new String[this.dataSource.getColumnCount()][2];
+
+    for (int c = 1; c <= columns.length; c++) {
+      columns[c - 1][0] = this.dataSource.getColumnName(c);
+      columns[c - 1][1] = columns[c - 1][0];
+    }
+
+    setColumns(columns);
+  }
+
   public DbDataSource getDataSource() {
     return dataSource;
   }
@@ -391,8 +406,8 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   public void contentsChanged(ListDataEvent e) {
 //    dataSource.lock();
 //    try {
-    if (e.getIndex0() == -1 ||
-            e.getIndex1() == -1) {
+    if (e.getIndex0() == -1
+            || e.getIndex1() == -1) {
       fireTableDataChanged();
     } else {
       fireTableRowsUpdated(e.getIndex0(), e.getIndex1());
@@ -814,14 +829,14 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
                 if (value instanceof java.util.Date) {
                   value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
                 } else if (value instanceof java.lang.Number) {
-                  if ((value instanceof java.math.BigDecimal) ||
-                          (value instanceof java.lang.Double) ||
-                          (value instanceof java.lang.Float)) {
+                  if ((value instanceof java.math.BigDecimal)
+                          || (value instanceof java.lang.Double)
+                          || (value instanceof java.lang.Float)) {
                     value = DECIMAL_FORMAT.format((java.lang.Number) value);
                   } else {
                     value = INTEGER_FORMAT.format((java.lang.Number) value);
                   }
-                } else if (((value instanceof java.sql.Clob)||(value instanceof javax.sql.rowset.serial.SerialClob)) && (value != null)) {
+                } else if (((value instanceof java.sql.Clob) || (value instanceof javax.sql.rowset.serial.SerialClob)) && (value != null)) {
                   try {
                     if (((java.sql.Clob) value).length() > 0) {
                       value = ((java.sql.Clob) value).getSubString(1L, (int) ((java.sql.Clob) value).length());
@@ -852,10 +867,10 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           }
         } catch (Exception ex) {
           StringBuilder sb = new StringBuilder();
-          for (String column:columnNames) {
-            sb.append(sb.length()>0?":":"").append(column);
+          for (String column : columnNames) {
+            sb.append(sb.length() > 0 ? ":" : "").append(column);
           }
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] "+sb.toString());
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] " + sb.toString());
         }
         return null;
       }
@@ -921,8 +936,8 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
                 result = 0;
               } else if (this_value != null && that_value == null) {
                 result = 1;
-              } else if ((this_value instanceof Comparable) &&
-                      (that_value instanceof Comparable)) {
+              } else if ((this_value instanceof Comparable)
+                      && (that_value instanceof Comparable)) {
                 result = ((Comparable) this_value).compareTo(that_value);
               } else {
                 result = this_value.toString().compareTo(that_value.toString());
