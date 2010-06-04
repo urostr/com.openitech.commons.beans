@@ -2502,6 +2502,8 @@ public class SQLDataSource implements DbDataSourceImpl {
         } else {
           throw (SQLNotificationException) err.getCause();
         }
+      } else {
+        err.printStackTrace();
       }
       storeUpdates = false;
     }
@@ -3645,9 +3647,9 @@ public class SQLDataSource implements DbDataSourceImpl {
     String delimiterRight = getDelimiterRight();
 
     if (insert) {
-      String catalogName = null;
-      String schemaName = null;
-      String tableName = updateTableName;
+      String catalogName = getCatalogName();
+      String schemaName = getSchemaName();
+      String tableName = getUpdateTableName();
 
       StringBuilder columns = new StringBuilder();
       StringBuilder values = new StringBuilder();
@@ -4478,7 +4480,17 @@ public class SQLDataSource implements DbDataSourceImpl {
     String sql = substParameters(selectSQL, parameters);
     PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql);
 
-    return executeUpdate(statement, parameters);
+    try {
+      if (DbDataSource.DUMP_SQL) {
+        System.out.println("##############");
+        System.out.println(sql);
+      }
+      return executeUpdate(statement, parameters);
+    } finally {
+      if (DbDataSource.DUMP_SQL) {
+        System.out.println("##############");
+      }
+    }
   }
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {

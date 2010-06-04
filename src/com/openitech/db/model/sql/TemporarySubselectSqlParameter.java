@@ -144,11 +144,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       }
 
       if (fill) {
-        if (DbDataSource.DUMP_SQL) {
-          System.out.println("##############");
-          System.out.println(fillTableSql);
-        }
-
         SQLDataSource.executeUpdate(fillTableSql, getParameters());
         if (DbDataSource.DUMP_SQL) {
           System.out.println("temporary:fill:" + (System.currentTimeMillis() - timer) + "ms");

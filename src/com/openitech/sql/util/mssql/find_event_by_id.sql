@@ -19,17 +19,17 @@ SELECT
     vval.[ClobValue]
 FROM
     <%ChangeLog%>.[dbo].[Events] ev
-INNER JOIN <%ChangeLog%>.[dbo].[EventValues] eval
+INNER JOIN <%ChangeLog%>.[dbo].[EventValues] eval WITH (NOLOCK)
 ON
     (
         ev.[Id] = eval.[EventId]
     )
-INNER JOIN <%ChangeLog%>.[dbo].[SifrantVnosnihPolj] polje
+INNER JOIN <%ChangeLog%>.[dbo].[SifrantVnosnihPolj] polje WITH (NOLOCK)
 ON
     (
         eval.[IdPolja] = polje.[Id]
     )
-LEFT OUTER JOIN <%ChangeLog%>.[dbo].[VariousValues] vval
+LEFT OUTER JOIN <%ChangeLog%>.[dbo].[VariousValues] vval WITH (NOLOCK)
 ON
     (
         eval.[ValueId] = vval.[Id]
