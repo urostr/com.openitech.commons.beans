@@ -1,6 +1,6 @@
 INSERT 
 INTO 
-    <%ChangeLog%>.[dbo].[Events]
+    <%ChangeLog%>.[dbo].[Events] WITH (ROWLOCK)
     (
         
         [IdSifranta], 

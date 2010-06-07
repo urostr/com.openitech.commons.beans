@@ -1,5 +1,5 @@
 UPDATE
-    <%ChangeLog%>.[dbo].[Events]
+    <%ChangeLog%>.[dbo].[Events] WITH (ROWLOCK)
     SET
     [IdSifranta]  = ?,
     [IdSifre]     = ?,

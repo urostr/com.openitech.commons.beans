@@ -1,6 +1,6 @@
 INSERT
 INTO
-    <%ChangeLog%>.[dbo].<%ChangeLog%>
+    <%ChangeLog%>.[dbo].[ChangeLog] WITH (ROWLOCK)
     (
         [Application],
         [Database],

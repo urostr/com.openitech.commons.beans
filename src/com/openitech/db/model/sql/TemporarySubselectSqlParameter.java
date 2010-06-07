@@ -131,10 +131,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         if (checkTableSql != null) {
           statement.executeQuery(checkTableSql);
         }
-
-        if ((fill) && (emptyTableSql.length()>0)) {
-          statement.executeUpdate(emptyTableSql);
-        }
       } catch (SQLException ex) {
         for (String sql : createTableSqls) {
           statement.addBatch(sql.replaceAll("<%TS%>", Long.toString(System.currentTimeMillis())));
@@ -144,6 +140,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       }
 
       if (fill) {
+        if (emptyTableSql.length()>0) {
+          statement.executeUpdate(emptyTableSql);
+        }
+
         SQLDataSource.executeUpdate(fillTableSql, getParameters());
         if (DbDataSource.DUMP_SQL) {
           System.out.println("temporary:fill:" + (System.currentTimeMillis() - timer) + "ms");

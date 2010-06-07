@@ -824,6 +824,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     public SifrantSeekType(AbstractSeekType<String> seekType, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined) {
+      this(seekType, sifrantSkupina, sifrantOpis, textNotDefined, null, null);
+    }
+    
+    public SifrantSeekType(AbstractSeekType<String> seekType, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined, final List<String> allowedValues, final List<String> excludedValues) {
       super("", PREFORMATTED, 1);
 
       this.seekType = seekType;
@@ -838,7 +842,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         public DbComboBoxModel call() {
           DbSifrantModel result = null;
           try {
-            result = new DbSifrantModel(textNotDefined);
+            result = new DbSifrantModel(textNotDefined,"",allowedValues, excludedValues);
             result.setSifrantOpis(sifrantOpis);
             result.setSifrantSkupina(sifrantSkupina);
           } catch (SQLException ex) {

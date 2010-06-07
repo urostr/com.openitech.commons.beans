@@ -4560,7 +4560,7 @@ public class SQLDataSource implements DbDataSourceImpl {
             Object value;
             java.util.Set<PendingSqlParameter> fetchcached = new java.util.HashSet<PendingSqlParameter>();
             for (int row = min; !openSelectResultSet.isAfterLast() && (row <= max); row++) {
-              if (!cache.containsKey(new CacheKey(row, columnName))) {
+              if (!cache.containsKey(new CacheKey(row, columnName.toUpperCase()))) {
                 java.util.Map<String, Boolean> pending = new HashMap<String, Boolean>();
                 for (int c = 0; c < columnNames.length; c++) {
                   cn = columnNames[c].toUpperCase();

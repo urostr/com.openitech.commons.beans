@@ -1,4 +1,4 @@
-INSERT INTO <%ChangeLog%>.[dbo].[VariousValues]
+INSERT INTO <%ChangeLog%>.[dbo].[VariousValues] WITH (ROWLOCK)
            ([FieldType]
            ,[IntValue]
            ,[RealValue]
