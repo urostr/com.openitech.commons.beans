@@ -4134,9 +4134,17 @@ public class SQLDataSource implements DbDataSourceImpl {
               final ResultSet openSelectResultSet = openSelectResultSet();
 
               int row = openSelectResultSet.getRow();
-              openSelectResultSet.last();
-              newCount = openSelectResultSet.getRow();
-              openSelectResultSet.absolute(row);
+              if (openSelectResultSet.last()) {
+                newCount = openSelectResultSet.getRow();
+              } else {
+                newCount = 0;
+              }
+
+              if (newCount>0) {
+                openSelectResultSet.absolute(row);
+              } else {
+                openSelectResultSet.first();
+              }
             } else if (this.count == -1) {
               if (preparedCountSql != null) {
                 if (preparedCountSql.equalsIgnoreCase(SELECT_1)) {
