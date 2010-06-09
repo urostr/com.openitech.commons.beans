@@ -3119,7 +3119,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     long begin = System.currentTimeMillis();
     boolean result = false;
     try {
-      if(true){//if (DUMP_SQL) {
+      if (DUMP_SQL) {
         System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + (available.isHeldByCurrentThread() ? "owner:current:" + available.getHoldCount() : "queued:" + available.getQueueLength()));
 
         StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
@@ -3141,7 +3141,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     } catch (InterruptedException ex) {
       throw (IllegalStateException) (new IllegalStateException("Can't obtain lock")).initCause(ex);
     }
-    if(true){// if (DUMP_SQL) {
+    if (DUMP_SQL) {
       long end = System.currentTimeMillis();
       System.out.println(getName() + " :locking time: " + (end - begin) + " ms.");
     }
@@ -3164,6 +3164,32 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public void setReloadsOnEventQueue(boolean reloadsOnEventQueue) {
     this.reloadsOnEventQueue = reloadsOnEventQueue;
+  }
+
+  public boolean isSortable() {
+    boolean result = false;
+
+    for (Object parameter:parameters) {
+      result = (parameter instanceof DbSortable);
+      if (result) {
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  public DbSortable getSortable() {
+    DbSortable result = null;
+
+    for (Object parameter:parameters) {
+      if (parameter instanceof DbSortable) {
+        result = (DbSortable) parameter;
+        break;
+      }
+    }
+
+    return result;
   }
 
   @Override

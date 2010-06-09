@@ -15,6 +15,7 @@ import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbNavigatorDataSource;
 import com.openitech.db.model.DbTableModel;
+import com.openitech.db.model.DbTableRowSorter;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -220,13 +221,23 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     if (sortable) {
       try {
         if (isEnableSorting()) {
-          Object rowSorter = constructRowSorter.newInstance(dataModel);
-
-          for (int column = 0; column < dataModel.getColumnCount(); column++) {
-            setComparator.invoke(rowSorter, column, DbTableModel.ColumnDescriptor.ValueMethodComparator.getInstance());
+          boolean dbSortable = true;
+          if (dataModel instanceof DbTableModel) {
+            dbSortable = ((DbTableModel) dataModel).getDataSource().isSortable();
           }
+          if (dbSortable) {
+            DbTableRowSorter rowSorter = new DbTableRowSorter((DbTableModel) dataModel);
 
-          setRowSorter.invoke(this, rowSorter);
+            setRowSorter.invoke(this, rowSorter);
+          } else {
+            Object rowSorter = constructRowSorter.newInstance(dataModel);
+
+            for (int column = 0; column < dataModel.getColumnCount(); column++) {
+              setComparator.invoke(rowSorter, column, DbTableModel.ColumnDescriptor.ValueMethodComparator.getInstance());
+            }
+
+            setRowSorter.invoke(this, rowSorter);
+          }
         } else {
           setRowSorter.invoke(this, new Object[]{null});
         }

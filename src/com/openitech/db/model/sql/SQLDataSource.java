@@ -4017,13 +4017,28 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  private List<Object> getCountParameters(List<Object> parameters) {
+    List<Object> result = new ArrayList<Object>(parameters.size());
+
+    for (Object parameter : parameters) {
+      if ((parameter instanceof DbSortable)&&
+          (parameter instanceof DbDataSource.SubstSqlParameter)) {
+        result.add(new DbDataSource.SubstSqlParameter(((DbDataSource.SubstSqlParameter) parameter).getReplace()));
+      } else {
+        result.add(parameter);
+      }
+    }
+
+    return result;
+  }
+
   @Override
   public void setCountSql(String countSql) throws SQLException {
     String oldvalue = this.countSql;
     try {
       semaphore.acquire();
       this.countSql = countSql;
-      String sql = substParameters(countSql, owner.getParameters());
+      String sql = substParameters(countSql, getCountParameters(owner.getParameters()));
       Logger.getLogger(Settings.LOGGER).finest(
               "\n################# COUNT SQL #################\n" + sql + "\n################# ######### #################");
       preparedCountSql = null;
@@ -4555,12 +4570,15 @@ public class SQLDataSource implements DbDataSourceImpl {
 
             int max = Math.min(rowIndex + getFetchSize(), getRowCount());
             int min = Math.max(max - getFetchSize(), 1);
+            if (DbDataSource.DUMP_SQL) {
+              System.out.println(owner.getName()+":getValueAt ["+min+"-"+max+"]");
+            }
             openSelectResultSet.absolute(min);
             String cn;
             Object value;
             java.util.Set<PendingSqlParameter> fetchcached = new java.util.HashSet<PendingSqlParameter>();
             for (int row = min; !openSelectResultSet.isAfterLast() && (row <= max); row++) {
-              if (!cache.containsKey(new CacheKey(row, columnName.toUpperCase()))) {
+//              if (!cache.containsKey(new CacheKey(row, columnName.toUpperCase()))) {
                 java.util.Map<String, Boolean> pending = new HashMap<String, Boolean>();
                 for (int c = 0; c < columnNames.length; c++) {
                   cn = columnNames[c].toUpperCase();
@@ -4647,7 +4665,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                     }
                   }
                 }
-              }
+//              }
               openSelectResultSet.next();
             }
             if (!fetchcached.isEmpty()) {

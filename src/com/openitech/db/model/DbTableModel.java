@@ -18,6 +18,7 @@ import com.openitech.ref.events.ListDataWeakListener;
 import java.awt.Component;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -90,6 +91,10 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
    */
   public void setValuesAsString(boolean valuesAsString) {
     this.valuesAsString = valuesAsString;
+  }
+
+  public List<String> getDataSourceColumns(int columnIndex) {
+    return Collections.unmodifiableList(columnDescriptors[columnIndex].columnNames);
   }
 
   /**
