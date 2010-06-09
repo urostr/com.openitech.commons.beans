@@ -114,7 +114,11 @@ public class SQLOrderByParameter extends DbDataSource.SubstSqlParameter implemen
       result.setLength(0);
     }
 
-    return "ORDER BY " + result.toString();
+    if (result.length() > 0) {
+      return "ORDER BY " + result.toString();
+    } else {
+      return "";
+    }
   }
 
   private RowSorter.SortKey toggle(RowSorter.SortKey key) {

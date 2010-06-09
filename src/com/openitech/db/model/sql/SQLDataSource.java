@@ -2495,8 +2495,8 @@ public class SQLDataSource implements DbDataSourceImpl {
     try {
       owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.UPDATE_ROW));
     } catch (Exception err) {
-      if ((err instanceof SQLNotificationException)||
-          (err.getCause() instanceof SQLNotificationException)) {
+      if ((err instanceof SQLNotificationException)
+              || (err.getCause() instanceof SQLNotificationException)) {
         if (err instanceof SQLNotificationException) {
           throw (SQLNotificationException) err;
         } else {
@@ -2763,16 +2763,16 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
-   protected void removeSharedResult() throws SQLException {
-     if (owner.isShareResults()) {
-       getSqlCache().removeSharedResult(preparedSelectSql, owner.getParameters());
-     }
-   }
+  protected void removeSharedResult() throws SQLException {
+    if (owner.isShareResults()) {
+      getSqlCache().removeSharedResult(preparedSelectSql, owner.getParameters());
+    }
+  }
 
   protected void createCurrentResultSet() {
     createCurrentResultSet(false);
   }
-  
+
   protected void createCurrentResultSet(boolean reload) {
     owner.lock();
     try {
@@ -3673,12 +3673,12 @@ public class SQLDataSource implements DbDataSourceImpl {
         if (!owner.isSingleTableSelect()) {
           if (catalogName == null) {
             catalogName = metaData.getCatalogName(columnIndex);
-          } else if ((updateTableName == null)&&(!catalogName.equalsIgnoreCase(metaData.getCatalogName(columnIndex)))) {
+          } else if ((updateTableName == null) && (!catalogName.equalsIgnoreCase(metaData.getCatalogName(columnIndex)))) {
             throw new SQLException("Insert on different catalogs not supported. Shema: " + catalogName + " != " + metaData.getCatalogName(columnIndex));
           }
           if (schemaName == null) {
             schemaName = metaData.getSchemaName(columnIndex);
-          } else if ((updateTableName == null)&&(!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex)))) {
+          } else if ((updateTableName == null) && (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex)))) {
             throw new SQLException("Insert on different schemas not supported. Shema: " + schemaName + " != " + metaData.getSchemaName(columnIndex));
           }
           if (tableName == null) {
@@ -3699,8 +3699,8 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
 
-      catalogName = catalogName==null?"":catalogName;
-      schemaName  = schemaName ==null?"":schemaName;
+      catalogName = catalogName == null ? "" : catalogName;
+      schemaName = schemaName == null ? "" : schemaName;
 
       StringBuilder sql = new StringBuilder();
 
@@ -4021,8 +4021,8 @@ public class SQLDataSource implements DbDataSourceImpl {
     List<Object> result = new ArrayList<Object>(parameters.size());
 
     for (Object parameter : parameters) {
-      if ((parameter instanceof DbSortable)&&
-          (parameter instanceof DbDataSource.SubstSqlParameter)) {
+      if ((parameter instanceof DbSortable)
+              && (parameter instanceof DbDataSource.SubstSqlParameter)) {
         result.add(new DbDataSource.SubstSqlParameter(((DbDataSource.SubstSqlParameter) parameter).getReplace()));
       } else {
         result.add(parameter);
@@ -4130,7 +4130,14 @@ public class SQLDataSource implements DbDataSourceImpl {
           }
         } else if (owner.lock(false)) {
           try {
-            if (this.count == -1) {
+            if (isDataLoaded()) {
+              final ResultSet openSelectResultSet = openSelectResultSet();
+
+              int row = openSelectResultSet.getRow();
+              openSelectResultSet.last();
+              newCount = openSelectResultSet.getRow();
+              openSelectResultSet.absolute(row);
+            } else if (this.count == -1) {
               if (preparedCountSql != null) {
                 if (preparedCountSql.equalsIgnoreCase(SELECT_1)) {
                   newCount = 1;
@@ -4555,30 +4562,30 @@ public class SQLDataSource implements DbDataSourceImpl {
             ResultSet selectResultSet = openSelectResultSet();
 
             if (selectResultSet instanceof CachedRowSet) {
-              if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
-                createCurrentResultSet();
-                selectResultSet = openSelectResultSet();
-                
-                if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
-                  throw new SQLException("Invalid row number " + rowIndex + " for " + toString());
-                }
-              }
+            if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
+            createCurrentResultSet();
+            selectResultSet = openSelectResultSet();
+
+            if (rowIndex > ((CachedRowSet) selectResultSet).size()) {
+            throw new SQLException("Invalid row number " + rowIndex + " for " + toString());
+            }
+            }
             }
             final ResultSet openSelectResultSet = selectResultSet; //*/
             final ResultSet openSelectResultSet = openSelectResultSet();
             final int oldRow = openSelectResultSet.getRow();
 
             int max = Math.min(rowIndex + getFetchSize(), getRowCount());
-            int min = Math.max(max - getFetchSize(), 1);
+            int min = Math.max(rowIndex - getFetchSize(), 1);
             if (DbDataSource.DUMP_SQL) {
-              System.out.println(owner.getName()+":getValueAt ["+min+"-"+max+"]");
+              System.out.println(owner.getName() + ":getValueAt [" + min + "-" + max + "]");
             }
             openSelectResultSet.absolute(min);
             String cn;
             Object value;
             java.util.Set<PendingSqlParameter> fetchcached = new java.util.HashSet<PendingSqlParameter>();
             for (int row = min; !openSelectResultSet.isAfterLast() && (row <= max); row++) {
-//              if (!cache.containsKey(new CacheKey(row, columnName.toUpperCase()))) {
+              if (!cache.containsKey(new CacheKey(row, columnName.toUpperCase()))) {
                 java.util.Map<String, Boolean> pending = new HashMap<String, Boolean>();
                 for (int c = 0; c < columnNames.length; c++) {
                   cn = columnNames[c].toUpperCase();
@@ -4665,7 +4672,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                     }
                   }
                 }
-//              }
+              }
               openSelectResultSet.next();
             }
             if (!fetchcached.isEmpty()) {
