@@ -329,10 +329,12 @@ public abstract class SqlUtilities implements UpdateEvent {
     }
 
     activeSavepoints.push(connection.setSavepoint());
-    if (activeSavepoints.size() > 1) {
-      System.err.println("-- SET SAVEPOINT (" + activeSavepoints.peek().toString() + ") -- ");
-    } else {
-      System.err.println("-- BEGIN TRANSACTION (" + activeSavepoints.peek().toString() + ") -- ");
+    if (DbDataSource.DUMP_SQL) {
+      if (activeSavepoints.size() > 1) {
+        System.err.println("-- SET SAVEPOINT (" + activeSavepoints.peek().toString() + ") -- ");
+      } else {
+        System.err.println("-- BEGIN TRANSACTION (" + activeSavepoints.peek().toString() + ") -- ");
+      }
     }
 
     return activeSavepoints.peek();
@@ -363,7 +365,9 @@ public abstract class SqlUtilities implements UpdateEvent {
         }
         if (activeSavepoints.size() == 0) {
           connection.commit();
-          System.err.println("-- COMMIT TRANSACTION -- ");
+          if (DbDataSource.DUMP_SQL) {
+            System.err.println("-- COMMIT TRANSACTION -- ");
+          }
         } else if (savepoint != null) {
           System.err.println("-- RELEASE SAVEPOINT (" + savepoint.toString() + ") -- ");
         }

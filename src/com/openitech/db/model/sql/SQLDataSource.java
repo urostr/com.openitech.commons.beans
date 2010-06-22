@@ -4472,12 +4472,18 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
     List<Object> queryParameters = new java.util.ArrayList(parameters.size());
+    List<TemporarySubselectSqlParameter> temporarySubselectSqlParameters = new java.util.ArrayList<TemporarySubselectSqlParameter>(parameters.size());
     for (Object parameter : parameters) {
       if (parameter instanceof TemporarySubselectSqlParameter) {
-        ((TemporarySubselectSqlParameter) parameter).executeQuery(statement.getConnection());
+        temporarySubselectSqlParameters.add((TemporarySubselectSqlParameter) parameter);
       } else {
         queryParameters.add(parameter);
       }
+    }
+
+    for (TemporarySubselectSqlParameter tempSubselect:temporarySubselectSqlParameters) {
+      tempSubselect.setParameters(queryParameters);
+      tempSubselect.executeQuery(statement.getConnection());
     }
 
     setParameters(statement, queryParameters, 1, false);

@@ -10,6 +10,7 @@ import com.openitech.db.model.Types;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
 /**
  *
@@ -62,6 +63,25 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
    */
   public void setFillTableSql(String fillTableSql) {
     this.fillTableSql = fillTableSql;
+  }
+  private String[] cleanTableSqls;
+
+  /**
+   * Get the value of cleanTableSqls
+   *
+   * @return the value of cleanTableSqls
+   */
+  public String[] getCleanTableSqls() {
+    return cleanTableSqls;
+  }
+
+  /**
+   * Set the value of cleanTableSqls
+   *
+   * @param cleanTableSqls new value of cleanTableSqls
+   */
+  public void setCleanTableSqls(String... cleanTableSqls) {
+    this.cleanTableSqls = cleanTableSqls;
   }
   private boolean fillOnceOnly = false;
 
@@ -145,6 +165,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
 
         SQLDataSource.executeUpdate(fillTableSql, getParameters());
+        if (cleanTableSqls!=null) {
+          for (String sql : cleanTableSqls) {
+             SQLDataSource.executeUpdate(sql, getParameters());
+          }
+        }
         if (DbDataSource.DUMP_SQL) {
           System.out.println("temporary:fill:" + (System.currentTimeMillis() - timer) + "ms");
           System.out.println("##############");
@@ -153,5 +178,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     } finally {
       statement.close();
     }
+  }
+
+  void setParameters(List<Object> queryParameters) {
+    parameters.clear();
+    parameters.addAll(queryParameters);
   }
 }

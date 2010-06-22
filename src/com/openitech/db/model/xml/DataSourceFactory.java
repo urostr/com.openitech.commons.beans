@@ -131,9 +131,12 @@ public class DataSourceFactory {
 
           ttParameter.setValue(tt.getTableName());
           ttParameter.setCheckTableSql(getReplacedSql(tt.getCheckTableSql()));
-          ttParameter.setCreateTableSqls(tt.getCreateTableSqls().getQuery().toArray(new String[]{}));
+          ttParameter.setCreateTableSqls(getReplacedSqls(tt.getCreateTableSqls().getQuery().toArray(new String[]{})));
           ttParameter.setEmptyTableSql(getReplacedSql(tt.getEmptyTableSql()));
           ttParameter.setFillTableSql(getReplacedSql(tt.getFillTableSql()));
+          if (tt.getCleanTableSqls()!=null) {
+            ttParameter.setCleanTableSqls(getReplacedSqls(tt.getCleanTableSqls().getQuery().toArray(new String[]{})));
+          }
 
           if (tt.isFillOnceOnly() != null) {
             ttParameter.setFillOnceOnly(tt.isFillOnceOnly());
@@ -426,7 +429,19 @@ public class DataSourceFactory {
     sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
     sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
     sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+    sql = sql.replaceAll("<%TS%>", Long.toString(System.currentTimeMillis()));
 
     return sql;
+  }
+
+  public static String[] getReplacedSqls(String[] sqls) {
+    for (int i=0; i<sqls.length; i++) {
+      sqls[i] = sqls[i].replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+      sqls[i] = sqls[i].replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+      sqls[i] = sqls[i].replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+      sqls[i] = sqls[i].replaceAll("<%TS%>", Long.toString(System.currentTimeMillis()));
+    }
+
+    return sqls;
   }
 }
