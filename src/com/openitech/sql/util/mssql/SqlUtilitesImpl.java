@@ -967,8 +967,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
     }
     for (Field f : searchFields) {
-      if (!(Event.EVENT_SOURCE.equals(f) ||
-              Event.EVENT_DATE.equals(f))) {
+      if (!(Event.EVENT_SOURCE.equals(f)
+              || Event.EVENT_DATE.equals(f))) {
         valuesSet++;
 
         final String ev_alias = "[ev_" + f.getName() + "]";
@@ -1001,6 +1001,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         boolean first = true;
         for (FieldValue fv : values) {
           int tipPolja = fv.getValueType().getTypeIndex();
+          String value = null;
           if (first) {
             first = false;
           } else {
@@ -1009,6 +1010,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           switch (tipPolja) {
             case 1:
               //Integer
+              value = val_alias+".IntValue";
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
@@ -1016,6 +1018,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 2:
               //Real
+              value = val_alias+".RealValue";
               sb.append(val_alias).append(".RealValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
@@ -1023,6 +1026,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 3:
               //String
+              value = val_alias+".StringValue";
               sb.append(val_alias).append(".StringValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
@@ -1033,6 +1037,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             case 9:
             case 10:
               //Date
+              value = val_alias+".DateValue";
               sb.append(val_alias).append(".DateValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
@@ -1040,6 +1045,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 6:
               //Clob
+              value = val_alias+".ClobValue";
               sb.append(val_alias).append(".ClobValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
@@ -1047,10 +1053,34 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 7:
               //Boolean
+              value = val_alias+".IntValue";
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
               }
+          }
+          if (resultFields.contains(f)
+                  && (f.getModel().getQuery() != null)) {
+            if (f.getModel().getQuery().getSelect() != null) {
+              for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
+                sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+                sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+                sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+                sql = sql.replaceAll(f.getModel().getReplace(), value);
+
+                sbresult.append(",\n").append(sql);
+              }
+            }
+            if (f.getModel().getQuery().getJoin() != null) {
+              for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
+                sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+                sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+                sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+                sql = sql.replaceAll(f.getModel().getReplace(), value);
+
+                sb.append("\nLEFT OUTER JOIN ").append(sql);
+              }
+            }
           }
           DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
           parameter.setType(fv.getType());
@@ -1061,8 +1091,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sb.append(")");
 //        }
         sb.append(") ");
-      } else if (Event.EVENT_SOURCE.equals(f) ||
-              Event.EVENT_DATE.equals(f)) {
+      } else if (Event.EVENT_SOURCE.equals(f)
+              || Event.EVENT_DATE.equals(f)) {
         valuesSet++;
       }
     }
@@ -1089,16 +1119,20 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
 
         int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
+        String value = null;
         switch (tipPolja) {
           case 1:
+            value = val_alias+".IntValue";
             sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 2:
             //Real
+            value = val_alias+".RealValue";
             sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 3:
             //String
+            value = val_alias+".StringValue";
             sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 4:
@@ -1106,15 +1140,41 @@ public class SqlUtilitesImpl extends SqlUtilities {
           case 9:
           case 10:
             //Date
+            value = val_alias+".DateValue";
             sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 6:
             //Clob
+            value = val_alias+".ClobValue";
             sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 7:
             //Boolean
+            value = val_alias+".IntValue";
             sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
+        }
+        if ((f.getModel().getQuery() != null)
+                && (f.getModel().getQuery() != null)) {
+          if (f.getModel().getQuery().getSelect() != null) {
+            for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
+              sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+              sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+              sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+              sql = sql.replaceAll(f.getModel().getReplace(), value);
+
+              sbresult.append(",\n").append(sql);
+            }
+          }
+          if (f.getModel().getQuery().getJoin() != null) {
+            for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
+              sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+              sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+              sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+              sql = sql.replaceAll(f.getModel().getReplace(), value);
+
+              sb.append("\nLEFT OUTER JOIN ").append(sql);
+            }
+          }
         }
       }
     }

@@ -39,6 +39,7 @@ public class DbNaslovDataModel {
   private PreparedStatement findPT_MID = null;
   private PreparedStatement findNA_MID = null;
   private PreparedStatement selectHsMid = null;
+  private boolean initDataSources = false;
   private static String dialect = null;
 
   private static String getDialect() {
@@ -167,20 +168,24 @@ public class DbNaslovDataModel {
 
       result = true;
     } catch (NullPointerException ex) {
-      if (dialect!=null && dialect.length() > 0) {
+      if (dialect != null && dialect.length() > 0) {
         throw (SQLException) (new SQLException("Napaka pri inicializaciji podatkovnega modela").initCause(ex));
       }
     }
+
+    initDataSources = result;
 
     return result;
   }
 
   public void disableFilters(boolean disable) {
-    dsHisneStevilkeFilter.setDisabled(disable);
-    dsUliceFilter.setDisabled(disable);
-    dsNaseljaFilter.setDisabled(disable);
-    dsPosteFilter.setDisabled(disable);
-    dsPostneStevilkeFilter.setDisabled(disable);
+    if (initDataSources) {
+      dsHisneStevilkeFilter.setDisabled(disable);
+      dsUliceFilter.setDisabled(disable);
+      dsNaseljaFilter.setDisabled(disable);
+      dsPosteFilter.setDisabled(disable);
+      dsPostneStevilkeFilter.setDisabled(disable);
+    }
   }
 
   public Naslov getNaslov(int hs_mid) {
@@ -207,7 +212,7 @@ public class DbNaslovDataModel {
           result.naseljeMID = new FieldValue("na_mid", java.sql.Types.INTEGER, rsMid.getInt("na_mid"));
           result.naselje = new FieldValue("na_uime", java.sql.Types.VARCHAR, rsMid.getString("na_uime"));
           result.hisnaStevilka = new FieldValue("hs", java.sql.Types.INTEGER, rsMid.getInt("hs"));
-          result.hisnaStevilkaDodatek = new FieldValue("hd", java.sql.Types.VARCHAR, rsMid.getString("hd")==null?null:rsMid.getString("hd").trim());
+          result.hisnaStevilkaDodatek = new FieldValue("hd", java.sql.Types.VARCHAR, rsMid.getString("hd") == null ? null : rsMid.getString("hd").trim());
         }
       } finally {
         rsMid.close();

@@ -5,11 +5,7 @@
  */
 package com.openitech.db.components;
 
-import com.openitech.db.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel.Naslov;
-import com.openitech.db.filters.DataSourceFilters;
-import com.openitech.db.filters.DataSourceFilters.IntegerSeekType;
-import com.openitech.db.filters.DataSourceFilters.SeekType;
 import com.openitech.db.filters.FilterDocumentCaretListener;
 import com.openitech.db.filters.FilterDocumentListener;
 import com.openitech.db.filters.Scheduler;
@@ -20,8 +16,6 @@ import com.openitech.sql.FieldValue;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
