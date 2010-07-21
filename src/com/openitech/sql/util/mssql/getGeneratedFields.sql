@@ -88,4 +88,5 @@ WHERE
     AND (1=? OR SifrantiPolja.IdSifre= ?)
     AND (1=? OR SifrantiPolja.Hidden = 0)
 ORDER BY
-    CountTabNames.MinZapSt, SifrantiPolja.ZapSt, SifrantiPolja.[Id]
+    -- CountTabNames.MinZapSt,
+ SifrantiPolja.ZapSt, SifrantiPolja.[Id]

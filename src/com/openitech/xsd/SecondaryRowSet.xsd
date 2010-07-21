@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xml.netbeans.org/schema/SecondaryRowSet"
+            xmlns:tns="http://xml.netbeans.org/schema/SecondaryRowSet"
+            elementFormDefault="qualified">
+    <xsd:element name="SecondaryRowSet">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="NumberOfRows" type="xsd:int"/>
+                <xsd:element name="Row" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Id" type="xsd:int"></xsd:element>
+                        <xsd:element name="EventId" type="xsd:int"></xsd:element>
+                        <xsd:element name="IdSifranta" type="xsd:int"></xsd:element>
+                        <xsd:element name="IdSifre" type="xsd:string"></xsd:element>
+                        <xsd:element name="IdEventSource" type="xsd:int"></xsd:element>
+                        <xsd:element name="Datum" type="xsd:long"></xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
+
+
+

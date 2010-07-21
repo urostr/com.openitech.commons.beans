@@ -11,40 +11,42 @@ import java.util.List;
  */
 public class Field {
 
-  String name;
-  int type;
-  int fieldIndex;
+    int idPolja;
+    String name;
+    int type;
+    int fieldIndex;
   protected FieldModel model = new FieldModel();
 
-  /**
-   *
-   * @param name fieldName
-   * @param type fieldType java.sql.Type
-   */
-  public Field(String name, int type) {
-    this(name, type, 1);
-  }
+    /**
+     *
+     * @param name fieldName
+     * @param type fieldType java.sql.Type
+     */
+    public Field(String name, int type) {
+        this(name, type, 1);
+    }
 
   /**
    *
    * @param name fieldName
    * @param type fieldType java.sql.Type
    */
-  public Field(String name, int type, int fieldIndex) {
-    super();
-    this.name = name;
-    this.type = type;
-    this.fieldIndex = fieldIndex;
-  }
+    public Field(String name, int type, int fieldIndex) {
+       this(-1, name, type, fieldIndex);
+    }
 
-  /**
-   *
-   * @param name fieldName
-   * @param type fieldType java.sql.Type
-   */
-  public Field(Field field) {
-    this(field.name, field.type, field.fieldIndex);
-  }
+    /**
+     *
+     * @param name fieldName
+     * @param type fieldType java.sql.Type
+     */
+    public Field(int idPolja, String name, int type, int fieldIndex) {
+        super();
+        this.idPolja = idPolja;
+        this.name = name;
+        this.type = type;
+        this.fieldIndex = fieldIndex;
+    }
 
   /**
    * Get the value of model
@@ -56,74 +58,83 @@ public class Field {
   }
 
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == null) {
-      return false;
+ 
+    /**
+     *
+     * @param name fieldName
+     * @param type fieldType java.sql.Type
+     */
+    public Field(Field field) {
+        this(field.idPolja, field.name, field.type, field.fieldIndex);
     }
-    if (!(obj instanceof Field)) {
-      return false;
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Field)) {
+            return false;
+        }
+        final Field other = (Field) obj;
+        if (this.fieldIndex != other.fieldIndex) {
+            return false;
+        }
+        if ((this.name == null) ? (other.name != null) : !this.name.equalsIgnoreCase(other.name)) {
+            return false;
+        }
+        return true;
     }
-    final Field other = (Field) obj;
-    if (this.fieldIndex != other.fieldIndex) {
-      return false;
+
+    /**
+     *
+     * @return field name
+     */
+    public String getName() {
+        return name;
     }
-    if ((this.name == null) ? (other.name != null) : !this.name.equalsIgnoreCase(other.name)) {
-      return false;
+
+    /**
+     *
+     * @return field type
+     */
+    public int getType() {
+        return type;
     }
-    return true;
-  }
 
-  /**
-   *
-   * @return field name
-   */
-  public String getName() {
-    return name;
-  }
+    /**
+     * Get the value of fieldIndex
+     *
+     * @return the value of fieldIndex
+     */
+    public int getFieldIndex() {
+        return fieldIndex;
+    }
 
-  /**
-   *
-   * @return field type
-   */
-  public int getType() {
-    return type;
-  }
+    public int getIdPolja() {
+        return idPolja;
+    }
 
-  /**
-   * Get the value of fieldIndex
-   *
-   * @return the value of fieldIndex
-   */
-  public int getFieldIndex() {
-    return fieldIndex;
-  }
+    public void setIdPolja(int idPolja) {
+        this.idPolja = idPolja;
+    }
 
-  @Override
-  public int hashCode() {
-    int hash = 7;
-    hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0) + fieldIndex;
-    return hash;
-  }
-  protected PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0) + fieldIndex;
+        return hash;
+    }
+    protected PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
-  /**
-   * Add PropertyChangeListener.
-   *
-   * @param listener
-   */
-  public void addPropertyChangeListener(PropertyChangeListener listener) {
-    propertyChangeSupport.addPropertyChangeListener(listener);
-  }
-
-  /**
-   * Remove PropertyChangeListener.
-   *
-   * @param listener
-   */
-  public void removePropertyChangeListener(PropertyChangeListener listener) {
-    propertyChangeSupport.removePropertyChangeListener(listener);
-  }
+    /**
+     * Add PropertyChangeListener.
+     *
+     * @param listener
+     */
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        propertyChangeSupport.addPropertyChangeListener(listener);
+    }
 
   @Override
   public String toString() {

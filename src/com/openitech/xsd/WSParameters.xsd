@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="windows-1250"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xml.netbeans.org/schema/WSParameters"
+            xmlns:tns="http://xml.netbeans.org/schema/WSParameters"
+            elementFormDefault="qualified">
+    <xsd:element name="WSParameters">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="Url" type="xsd:string"></xsd:element>
+
+                <xsd:element name="Parameter" maxOccurs="unbounded" minOccurs="0">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="value" type="xsd:anyType"></xsd:element>
+                        </xsd:sequence>
+                        <xsd:attribute name="name" type="xsd:string"/>
+                        <xsd:attribute name="type" type="xsd:int"/>
+                    </xsd:complexType>
+                </xsd:element>
+                
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

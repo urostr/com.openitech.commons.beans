@@ -45,6 +45,8 @@ public abstract class SqlUtilities implements UpdateEvent {
   public static final String RPP_DB = "[RPP]";
   public static final String RPE_DB = "[RPE]";
 
+  private static Map<Class, SqlUtilities> instances = new HashMap<Class, SqlUtilities>();
+
   protected SqlUtilities() {
   }
 
@@ -79,6 +81,30 @@ public abstract class SqlUtilities implements UpdateEvent {
       }
     }
     return instance;
+  }
+
+  public static SqlUtilities getInstance(Class clazz) {
+    if (!instances.containsKey(clazz)) {
+      Class implementation = clazz;
+      SqlUtilities instance = null;
+      if (implementation != null) {
+        try {
+         instance = (SqlUtilities) implementation.newInstance();
+          try {
+            instance.autocommit = ConnectionManager.getInstance().getConnection().getAutoCommit();
+          } catch (SQLException ex) {
+            //ignore it
+            instance.autocommit = true;
+          }
+        } catch (InstantiationException ex) {
+          Logger.getLogger(SqlUtilities.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+          Logger.getLogger(SqlUtilities.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        instances.put(clazz, instance);
+      }
+    }
+    return instances.get(clazz);
   }
 
   public int executeUpdate(java.sql.PreparedStatement statement,

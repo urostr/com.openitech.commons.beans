@@ -3,7 +3,6 @@ package com.openitech.sql;
 import com.openitech.util.Equals;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 
 public class FieldValue extends Field {
 
@@ -24,7 +23,11 @@ public class FieldValue extends Field {
   }
 
   public FieldValue(String name, int type, int fieldValueIndex, Object value) {
-    super(name, type, fieldValueIndex);
+    this(-1, name, type, fieldValueIndex, value);
+  }
+
+  public FieldValue(int idPolja, String name, int type, int fieldValueIndex, Object value) {
+    super(idPolja, name, type, fieldValueIndex);
     this.value = value;
   }
   private Object value;

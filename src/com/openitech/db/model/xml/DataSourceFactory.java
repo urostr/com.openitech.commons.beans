@@ -29,6 +29,7 @@ import com.openitech.sql.FieldValueProxy;
 import com.openitech.sql.util.SqlUtilities;
 import groovy.lang.GroovyClassLoader;
 import java.awt.Component;
+import java.io.StringReader;
 import java.lang.reflect.Constructor;
 import java.sql.Clob;
 import java.sql.SQLException;
@@ -72,6 +73,16 @@ public class DataSourceFactory {
   public void configure(String opis, Clob resource) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
     com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(resource.getCharacterStream());
+    try {
+      configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), workareaXML);
+    } catch (ClassNotFoundException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+
+  public void configure(String opis, String xml) throws SQLException, JAXBException {
+    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
+    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(new StringReader(xml));
     try {
       configure(this, opis, new com.openitech.db.model.xml.DataSourceConfig(dbDataModel), workareaXML);
     } catch (ClassNotFoundException ex) {

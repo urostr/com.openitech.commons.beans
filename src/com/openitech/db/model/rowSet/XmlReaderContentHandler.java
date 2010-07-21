@@ -967,9 +967,9 @@ public class XmlReaderContentHandler extends DefaultHandler {
         break;
       case DatasourceTag:
         if (nullValue) {
-          rs.setDataSourceName(null);
+         // rs.setDataSourceName(null);
         } else {
-          rs.setDataSourceName(s);
+         // rs.setDataSourceName(s);
         }
         break;
       case EscapeProcessingTag:

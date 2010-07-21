@@ -4397,7 +4397,7 @@ public class WebDataSource implements DbDataSourceImpl {
     return crs;
   }
 
-  private WebRowSet openSelectResultSet() throws SQLException {
+  private WebRowSet openSelectResultSet() throws SQLException {     
     if (currentResultSet == null) {
       createCurrentResultSet();
     } else {
