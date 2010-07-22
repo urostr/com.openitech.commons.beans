@@ -1,10 +1,80 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 <schemas xmlns='http://xml.netbeans.org/schema/JAXBWizConfig' destdir='build/generated-sources/jaxb' projectName='db_commons' version='1.0'>
+	<schema type='-xmlschema' package='com.openitech.db.model.xml' name='WEBROWSET'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/WEBROWSET/java.sun.com/xml/ns/jdbc/webrowset.xsd' origLocation='http://java.sun.com/xml/ns/jdbc/webrowset.xsd' origLocationType='url'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml' name='SECONDARY_ROWSET'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/SECONDARY_ROWSET/SecondaryRowSet.xsd' origLocation='src/com/openitech/xsd/SecondaryRowSet.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml' name='CREATE_SECODNARY_DATASOURCE'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/CREATE_SECODNARY_DATASOURCE/CreateSecondaryDataSource.xsd' origLocation='src/com/openitech/xsd/CreateSecondaryDataSource.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.wrs' name='WS_PARAMETERS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/WS_PARAMETERS/WSParameters.xsd' origLocation='src/com/openitech/xsd/WSParameters.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml' name='SECODNARY_PARAMETERS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/SECODNARY_PARAMETERS/SecondaryParameters.xsd' origLocation='src/com/openitech/xsd/SecondaryParameters.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.wrs' name='DB_WEBROWSET'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/DB_WEBROWSET/DbWebRowSet.xsd' origLocation='src/com/openitech/xsd/DbWebRowSet.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.sql.events.xml' name='EVENT'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/EVENT/Event.xsd' origLocation='src/com/openitech/xsd/Event.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
 	<schema type='-xmlschema' package='com.openitech.db.model.xml.config' name='DATASOURCE_CONFIG'>
 		<xjc-options>
 		</xjc-options>
 		<schema-sources>
-			<schema-source location='xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd' origLocation='src/com/openitech/db/model/xml/DataSource.xsd'/>
+			<schema-source location='xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd' origLocation='src/com/openitech/xsd/DataSource.xsd'/>
 		</schema-sources>
 		<bindings>
 		</bindings>

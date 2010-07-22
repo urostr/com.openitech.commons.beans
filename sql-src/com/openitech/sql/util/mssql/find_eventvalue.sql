@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM <%ChangeLog%>.[dbo].[EventValues] WHERE [EventId]=? AND [IdPolja]=? AND [FieldValueIndex]=?

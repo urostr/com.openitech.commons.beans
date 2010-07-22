@@ -1,0 +1,20 @@
+INSERT
+INTO
+    <%ChangeLog%>.[dbo].[ChangeLog] WITH (ROWLOCK)
+    (
+        [Application],
+        [Database],
+        [Table],
+        [SessionUser],
+        [Operation],
+        [OperationDate]
+    )
+    VALUES
+    (
+        ?,
+        ?,
+        ?,
+        SYSTEM_USER,
+        ?,
+        GETDATE()
+    )

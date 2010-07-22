@@ -12,10 +12,11 @@
             <minimum-ant-version>1.6.5</minimum-ant-version>
             <source-roots>
                 <root id="src.dir"/>
+                <root id="src.sql-src.dir" name="SQL Source Packages"/>
+                <root id="src.ws-src.dir" name="Web Source Packages"/>
             </source-roots>
             <test-roots>
                 <root id="test.src.dir"/>
-                <root id="test.jozart.dir" name="Test (Jozart)"/>
             </test-roots>
         </data>
     </configuration>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="windows-1250"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xml.netbeans.org/schema/CreateSecondaryDataSource"
+            xmlns:tns="http://xml.netbeans.org/schema/CreateSecondaryDataSource"
+            elementFormDefault="qualified">
+    <xsd:element name="SecondaryDataSources">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="SecondaryDataSource" maxOccurs="unbounded" minOccurs="0">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="ImePolja" type="xsd:string"></xsd:element>
+                            <xsd:element name="SifrantChild" type="xsd:int"></xsd:element>
+                            <xsd:element name="VecVrednosti" type="xsd:boolean"></xsd:element>
+                            <xsd:element name="SecondarySourceXML" type="xsd:string"></xsd:element>
+                            <xsd:element name="EventQuery">
+                                <xsd:complexType>
+                                    <xsd:sequence>
+                                        <xsd:element name="IdSifranta" type="xsd:int"></xsd:element>
+                                        <xsd:element name="NamedParameters">
+                                            <xsd:complexType>
+                                                <xsd:sequence>
+
+                                                    <xsd:element name="Field" maxOccurs="unbounded" minOccurs="0">
+                                                        <xsd:complexType>
+                                                            <xsd:sequence>
+                                                                <xsd:element name="IdPolja" type="xsd:int"></xsd:element>
+                                                                <xsd:element name="ImePolja" type="xsd:string"></xsd:element>
+                                                                <xsd:element name="TipPolja" type="xsd:int"></xsd:element>
+                                                                <xsd:element name="FieldValueIndex" type="xsd:int"></xsd:element>
+                                                            </xsd:sequence>
+                                                        </xsd:complexType>
+                                                    </xsd:element>
+                                                </xsd:sequence>
+                                            </xsd:complexType>
+                                        </xsd:element>
+
+                                    </xsd:sequence>
+                                </xsd:complexType>
+                            </xsd:element>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
+

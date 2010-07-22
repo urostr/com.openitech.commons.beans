@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="windows-1250"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://xml.netbeans.org/schema/Secondary"
+    xmlns:tns="http://xml.netbeans.org/schema/Secondary"
+    elementFormDefault="qualified">
+    <xsd:element name="SecondaryParameters">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="idSifranta" type="xsd:int"></xsd:element>
+                <xsd:element name="idSifre" type="xsd:string" minOccurs="0"></xsd:element>
+                <xsd:element name="parameter" maxOccurs="unbounded" minOccurs="0">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="idPolja" type="xsd:int"/>
+                            <xsd:element name="type" type="xsd:int"></xsd:element>
+                            <xsd:element name="fieldValueIndex" type="xsd:int"/>
+                            <xsd:element name="value" type="xsd:anyType"/>
+
+
+                        </xsd:sequence>
+                        
+                    </xsd:complexType>
+                </xsd:element>
+                
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
+
+
