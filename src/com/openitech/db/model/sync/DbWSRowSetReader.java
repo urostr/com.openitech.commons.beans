@@ -13,7 +13,7 @@ import javax.sql.*;
 import javax.naming.*;
 import java.io.*;
 
-import com.openiteh.xml.wrs.WSParameters;
+import com.openitech.xml.wrs.WSParameters;
 import com.sun.rowset.*;
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;

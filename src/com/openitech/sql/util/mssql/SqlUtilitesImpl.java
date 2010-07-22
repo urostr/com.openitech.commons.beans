@@ -1099,6 +1099,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
     for (Field f : resultFields) {
       if (!searchFields.contains(f)) {
         String fieldValueIndex = f.getFieldIndex() > 1 ? Integer.toString(f.getFieldIndex()) : "";
+        if (f.getName().endsWith(fieldValueIndex)) {
+          fieldValueIndex = "";
+        }
         final String ev_alias = "[ev_" + f.getName() + fieldValueIndex + "]";
         final String vp_alias = "[vp_" + f.getName() + fieldValueIndex + "]";
         final String val_alias = "[val_" + f.getName() + fieldValueIndex + "]";
