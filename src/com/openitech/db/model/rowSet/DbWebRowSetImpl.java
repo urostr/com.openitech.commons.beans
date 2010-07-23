@@ -6,6 +6,8 @@
  */
 package com.openitech.db.model.rowSet;
 
+import com.openitech.db.model.rowSet.xml.DbWebRowSetXmlReader;
+import com.openitech.db.model.rowSet.xml.DbWebRowSetXmlWriter;
 import com.openitech.db.model.DbClobImpl;
 import com.openitech.db.model.sync.DbEventSyncProvider;
 import com.openitech.xml.SecondaryRowSet;
