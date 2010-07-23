@@ -9,7 +9,7 @@
 
 package com.openitech.ref.events;
 
-import com.openitech.db.model.concurrent.ConcurrentEvent;
+import com.openitech.events.concurrent.ConcurrentEvent;
 import javax.swing.event.ListDataListener;
 
 /**

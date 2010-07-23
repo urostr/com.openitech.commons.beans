@@ -4,10 +4,10 @@
  */
 package com.openitech.sql.properties.mssql;
 
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.spring.beans.factory.config.AbstractPropertyRetriever;
 import com.openitech.spring.beans.factory.config.PropertyType;
-import com.openitech.sql.ValueType;
+import com.openitech.value.fields.ValueType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,10 +28,10 @@ public final class SqlPropertyRetrieverImpl extends AbstractPropertyRetriever {
     Object result = null;
     try {
       if (findProperty == null) {
-        findProperty = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(this.getClass(), "find_property.sql", "cp1250"));
+        findProperty = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(this.getClass(), "find_property.sql", "cp1250"));
       }
       if (getProperty == null) {
-        getProperty = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(this.getClass(), "get_property.sql", "cp1250"));
+        getProperty = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(this.getClass(), "get_property.sql", "cp1250"));
       }
 
       int param = 1;

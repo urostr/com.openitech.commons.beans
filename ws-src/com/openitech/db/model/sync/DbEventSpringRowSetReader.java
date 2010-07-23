@@ -6,8 +6,8 @@
  */
 package com.openitech.db.model.sync;
 
-import com.openitech.db.ConnectionManager;
-import com.openitech.db.model.rowSet.DbWebRowSetImpl;
+import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.model.web.DbWebRowSetImpl;
 import java.sql.*;
 import javax.sql.*;
 import javax.naming.*;

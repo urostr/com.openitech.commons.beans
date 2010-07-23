@@ -8,11 +8,11 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
-import com.openitech.autocomplete.AutoCompleteDecorator;
-import com.openitech.autocomplete.AutoCompleteDocument;
-import com.openitech.autocomplete.AutoCompleteTextComponent;
-import com.openitech.components.WindowsActions;
-import com.openitech.db.FieldObserver;
+import com.openitech.swing.autocomplete.AutoCompleteDecorator;
+import com.openitech.swing.autocomplete.AutoCompleteDocument;
+import com.openitech.swing.autocomplete.AutoCompleteTextComponent;
+import com.openitech.swing.WindowsActions;
+import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbComboBoxModel;

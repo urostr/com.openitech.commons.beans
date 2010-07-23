@@ -4,9 +4,9 @@
  */
 package com.openitech.ws.util;
 
-import com.openitech.db.model.rowSet.DbWebRowSetImpl;
-import com.openitech.sql.Field;
-import com.openitech.sql.events.ActivityEvent;
+import com.openitech.db.model.web.DbWebRowSetImpl;
+import com.openitech.value.fields.Field;
+import com.openitech.value.events.ActivityEvent;
 import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.Set;

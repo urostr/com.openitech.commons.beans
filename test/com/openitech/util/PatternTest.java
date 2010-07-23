@@ -31,7 +31,7 @@ public class PatternTest extends TestCase {
   public void testSetName() {
     DbDataSource dsNaselja = new DbDataSource();
     
-    String selectSql = com.openitech.util.ReadInputStream.getResourceAsString(com.openitech.db.components.JPIzbiraNaslova.class, "sql/mssql/sifrant_ns.sql", "cp1250")+"ORDER BY na_ime";
+    String selectSql = com.openitech.io.ReadInputStream.getResourceAsString(com.openitech.db.components.JPIzbiraNaslova.class, "sql/mssql/sifrant_ns.sql", "cp1250")+"ORDER BY na_ime";
     String match = selectSql.toLowerCase().replaceAll("[\\r|\\n]"," ");
     
     Pattern namePattern = Pattern.compile(".*from\\W*(\\w*)\\W.*");

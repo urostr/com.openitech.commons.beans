@@ -8,8 +8,8 @@
 
 package com.openitech.spring;
 
-import com.openitech.db.AbstractConnection;
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.AbstractSQLConnection;
+import com.openitech.db.connection.ConnectionManager;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  *
  * @author uros
  */
-public class DbConnection extends AbstractConnection {
+public class DbConnection extends AbstractSQLConnection {
   static {
     ConnectionManager.registerManagedConnection(DbConnection.class);
   }

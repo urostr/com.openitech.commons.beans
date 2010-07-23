@@ -1,10 +1,10 @@
 package com.openitech.db.components;
 
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DbDataSource;
-import com.openitech.sql.FieldValue;
-import com.openitech.util.ReadInputStream;
+import com.openitech.value.fields.FieldValue;
+import com.openitech.io.ReadInputStream;
 import com.sun.rowset.CachedRowSetImpl;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

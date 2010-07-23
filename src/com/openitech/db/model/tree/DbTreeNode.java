@@ -1,6 +1,6 @@
 package com.openitech.db.model.tree;
 
-import com.openitech.CaseInsensitiveString;
+import com.openitech.text.CaseInsensitiveString;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

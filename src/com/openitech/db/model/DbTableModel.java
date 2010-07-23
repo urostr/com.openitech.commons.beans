@@ -11,7 +11,7 @@ import com.openitech.Settings;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
-import com.openitech.formats.FormatFactory;
+import com.openitech.text.FormatFactory;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.ref.WeakObjectReference;
 import com.openitech.ref.events.ListDataWeakListener;

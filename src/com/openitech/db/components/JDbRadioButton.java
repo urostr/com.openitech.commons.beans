@@ -16,7 +16,7 @@ package com.openitech.db.components;
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 import com.openitech.Settings;
-import com.openitech.db.FieldObserver;
+import com.openitech.db.model.FieldObserver;
 import com.openitech.db.components.Validator;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;

@@ -4,7 +4,7 @@
  */
 package com.openitech.db.proxy;
 
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.ConnectionManager;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;

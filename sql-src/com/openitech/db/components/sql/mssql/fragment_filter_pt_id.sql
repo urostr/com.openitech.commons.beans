@@ -1,0 +1,1 @@
+CAST(pt_id as varchar) like (?+'%')

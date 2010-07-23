@@ -9,7 +9,7 @@
 package com.openitech.auth;
 
 import com.openitech.util.Equals;
-import com.openitech.util.PropertyChanges;
+import com.openitech.events.PropertyChanges;
 import java.awt.EventQueue;
 import java.io.IOException;
 import java.util.Collections;
@@ -103,10 +103,10 @@ public class LoginContextManager extends PropertyChanges {
 
   public void logon(Object source) throws LoginException {
     try {
-      com.openitech.db.DbConnection dbConnection = com.openitech.db.ConnectionManager.getInstance();
+      com.openitech.db.connection.DbConnection dbConnection = com.openitech.db.connection.ConnectionManager.getInstance();
 
-      name = name == null ? dbConnection.getProperty(com.openitech.db.DbConnection.DB_USER, null) : name;
-      String pwd = dbConnection.getProperty(com.openitech.db.DbConnection.DB_PASS, null);
+      name = name == null ? dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_USER, null) : name;
+      String pwd = dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_PASS, null);
       if ((password == null) && (pwd != null)) {
         password = pwd.toCharArray();
       }
@@ -133,10 +133,10 @@ public class LoginContextManager extends PropertyChanges {
   public void logon(Component source, boolean autoLogin) throws LoginException {
     if (autoLogin) {
       try {
-        com.openitech.db.DbConnection dbConnection = com.openitech.db.ConnectionManager.getInstance();
+        com.openitech.db.connection.DbConnection dbConnection = com.openitech.db.connection.ConnectionManager.getInstance();
 
-        name = name == null ? dbConnection.getProperty(com.openitech.db.DbConnection.DB_USER, null) : name;
-        String pwd = dbConnection.getProperty(com.openitech.db.DbConnection.DB_PASS, null);
+        name = name == null ? dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_USER, null) : name;
+        String pwd = dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_PASS, null);
         if ((password == null) && (pwd != null)) {
           password = pwd.toCharArray();
         }

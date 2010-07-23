@@ -10,7 +10,7 @@ package com.openitech.db.model.tree;
 
 import com.openitech.db.model.*;
 import com.openitech.Settings;
-import com.openitech.db.filters.Scheduler;
+import com.openitech.db.filters.DataSourceFilterScheduler;
 import java.awt.EventQueue;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -114,7 +114,7 @@ public class SequentialTreeTableModel extends DbTableModel implements TreeTableM
   }
 
 
-  private class ScheduleUpdateRoot extends Scheduler implements ListDataListener {
+  private class ScheduleUpdateRoot extends DataSourceFilterScheduler implements ListDataListener {
     private Runnable updateRoot = new Runnable() {
 
       @Override

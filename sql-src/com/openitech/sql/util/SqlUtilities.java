@@ -4,17 +4,17 @@
  */
 package com.openitech.sql.util;
 
-import com.openitech.sql.events.UpdateEvent;
-import com.openitech.sql.FieldValue;
-import com.openitech.sql.Field;
-import com.openitech.db.ConnectionManager;
+import com.openitech.value.events.UpdateEvent;
+import com.openitech.value.fields.FieldValue;
+import com.openitech.value.fields.Field;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
-import com.openitech.sql.ValueType;
-import com.openitech.sql.events.ActivityEvent;
-import com.openitech.sql.events.Event;
-import com.openitech.sql.events.EventQuery;
+import com.openitech.value.fields.ValueType;
+import com.openitech.value.events.ActivityEvent;
+import com.openitech.value.events.Event;
+import com.openitech.value.events.EventQuery;
 import com.openitech.util.Equals;
 import java.sql.Connection;
 import java.sql.ResultSetMetaData;

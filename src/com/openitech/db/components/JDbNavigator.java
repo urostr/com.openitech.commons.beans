@@ -63,15 +63,15 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     java.awt.GridBagConstraints gridBagConstraints;
 
     jpInternal = new javax.swing.JPanel();
-    jbFirst = new com.openitech.components.JMnemonicButton();
-    jbPrev = new com.openitech.components.JMnemonicButton();
-    jbNext = new com.openitech.components.JMnemonicButton();
-    jbLast = new com.openitech.components.JMnemonicButton();
-    jbAdd = new com.openitech.components.JMnemonicButton();
-    jbDelete = new com.openitech.components.JMnemonicButton();
-    jbConfirm = new com.openitech.components.JMnemonicButton();
-    jbCancel = new com.openitech.components.JMnemonicButton();
-    jbReload = new com.openitech.components.JMnemonicButton();
+    jbFirst = new com.openitech.swing.JMnemonicButton();
+    jbPrev = new com.openitech.swing.JMnemonicButton();
+    jbNext = new com.openitech.swing.JMnemonicButton();
+    jbLast = new com.openitech.swing.JMnemonicButton();
+    jbAdd = new com.openitech.swing.JMnemonicButton();
+    jbDelete = new com.openitech.swing.JMnemonicButton();
+    jbConfirm = new com.openitech.swing.JMnemonicButton();
+    jbCancel = new com.openitech.swing.JMnemonicButton();
+    jbReload = new com.openitech.swing.JMnemonicButton();
 
     setMinimumSize(new java.awt.Dimension(200, 32));
     setLayout(new java.awt.GridBagLayout());
@@ -481,15 +481,15 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     setDataSource(getDataSource());
   }
   // Variables declaration - do not modify//GEN-BEGIN:variables
-  public com.openitech.components.JMnemonicButton jbAdd;
-  public com.openitech.components.JMnemonicButton jbCancel;
-  public com.openitech.components.JMnemonicButton jbConfirm;
-  public com.openitech.components.JMnemonicButton jbDelete;
-  public com.openitech.components.JMnemonicButton jbFirst;
-  public com.openitech.components.JMnemonicButton jbLast;
-  public com.openitech.components.JMnemonicButton jbNext;
-  public com.openitech.components.JMnemonicButton jbPrev;
-  public com.openitech.components.JMnemonicButton jbReload;
+  public com.openitech.swing.JMnemonicButton jbAdd;
+  public com.openitech.swing.JMnemonicButton jbCancel;
+  public com.openitech.swing.JMnemonicButton jbConfirm;
+  public com.openitech.swing.JMnemonicButton jbDelete;
+  public com.openitech.swing.JMnemonicButton jbFirst;
+  public com.openitech.swing.JMnemonicButton jbLast;
+  public com.openitech.swing.JMnemonicButton jbNext;
+  public com.openitech.swing.JMnemonicButton jbPrev;
+  public com.openitech.swing.JMnemonicButton jbReload;
   private javax.swing.JPanel jpInternal;
   // End of variables declaration//GEN-END:variables
 

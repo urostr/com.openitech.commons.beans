@@ -7,20 +7,20 @@
  */
 package com.openitech.db.model.sql;
 
-import com.openitech.CollectionKey;
-import com.openitech.NamedValue;
+import com.openitech.value.CollectionKey;
+import com.openitech.value.NamedValue;
 import com.openitech.db.model.*;
 import com.openitech.Settings;
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
-import com.openitech.db.model.concurrent.DataSourceEvent;
+import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.proxy.ResultSetProxy;
-import com.openitech.formats.FormatFactory;
+import com.openitech.text.FormatFactory;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
-import com.openitech.util.OwnerFrame;
+import com.openitech.awt.OwnerFrame;
 import com.sun.rowset.CachedRowSetImpl;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -6625,7 +6625,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public String getDelimiterLeft() {
     ConnectionManager cm = ConnectionManager.getInstance();
     if ((this.delimiterLeft == null) && (cm != null) && (cm.getTxConnection() != null)) {
-      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_LEFT, "");
+      return cm.getProperty(com.openitech.db.connection.DbConnection.DB_DELIMITER_LEFT, "");
     } else {
       return this.delimiterLeft;
     }
@@ -6652,7 +6652,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public String getDelimiterRight() {
     ConnectionManager cm = ConnectionManager.getInstance();
     if ((this.delimiterLeft == null) && (cm != null) && (cm.getTxConnection() != null)) {
-      return cm.getProperty(com.openitech.db.DbConnection.DB_DELIMITER_RIGHT, "");
+      return cm.getProperty(com.openitech.db.connection.DbConnection.DB_DELIMITER_RIGHT, "");
     } else {
       return this.delimiterRight;
     }

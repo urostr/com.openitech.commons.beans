@@ -8,18 +8,18 @@
 package com.openitech.db.model;
 
 import com.openitech.Settings;
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.events.StoreUpdatesListener;
-import com.openitech.db.model.concurrent.ConcurrentEvent;
-import com.openitech.db.model.concurrent.DataSourceActiveRowChangeEvent;
-import com.openitech.db.model.concurrent.DataSourceEvent;
-import com.openitech.db.model.concurrent.DataSourceListDataEvent;
+import com.openitech.events.concurrent.ConcurrentEvent;
+import com.openitech.events.concurrent.DataSourceActiveRowChangeEvent;
+import com.openitech.events.concurrent.DataSourceEvent;
+import com.openitech.events.concurrent.DataSourceListDataEvent;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.ref.WeakListenerList;
-import com.openitech.util.OwnerFrame;
+import com.openitech.awt.OwnerFrame;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -3221,8 +3221,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public boolean reload(boolean queued) {
     if (queued) {
-      com.openitech.db.model.concurrent.RefreshDataSource.timestamp(this);
-      com.openitech.db.model.concurrent.DataSourceEvent.submit(new com.openitech.db.model.concurrent.RefreshDataSource(this, true));
+      com.openitech.events.concurrent.RefreshDataSource.timestamp(this);
+      com.openitech.events.concurrent.DataSourceEvent.submit(new com.openitech.events.concurrent.RefreshDataSource(this, true));
       return true;
     } else {
       return reload();
@@ -5042,11 +5042,11 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
     public void reloadDataSources() {
       for (DbDataSource dataSource : dataSources) {
-        com.openitech.db.model.concurrent.RefreshDataSource.timestamp(dataSource);
+        com.openitech.events.concurrent.RefreshDataSource.timestamp(dataSource);
 
 //        dataSource.lock();
 //        try {
-        com.openitech.db.model.concurrent.DataSourceEvent.submit(new com.openitech.db.model.concurrent.RefreshDataSource(dataSource, true));
+        com.openitech.events.concurrent.DataSourceEvent.submit(new com.openitech.events.concurrent.RefreshDataSource(dataSource, true));
 //        } finally {
 //          dataSource.unlock();
 //        }

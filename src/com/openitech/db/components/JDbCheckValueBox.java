@@ -10,7 +10,7 @@ package com.openitech.db.components;
 
 import javax.swing.DefaultButtonModel;
 import com.openitech.Settings;
-import com.openitech.db.FieldObserver;
+import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;

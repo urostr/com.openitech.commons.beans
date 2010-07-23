@@ -17,9 +17,9 @@ package com.openitech.db.components;
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 import com.openitech.Settings;
-import com.openitech.components.WindowsActions;
-import com.openitech.db.FieldObserver;
-import com.openitech.components.style.JTextPaneStyleFormatter;
+import com.openitech.swing.WindowsActions;
+import com.openitech.db.model.FieldObserver;
+import com.openitech.swing.style.JTextPaneStyleFormatter;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;

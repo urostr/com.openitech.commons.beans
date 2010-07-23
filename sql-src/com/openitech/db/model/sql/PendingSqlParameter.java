@@ -4,12 +4,12 @@
  */
 package com.openitech.db.model.sql;
 
-import com.openitech.CollectionKey;
-import com.openitech.NamedValue;
-import com.openitech.db.ConnectionManager;
+import com.openitech.value.CollectionKey;
+import com.openitech.value.NamedValue;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.ref.events.PropertyChangeWeakListener;
-import com.openitech.sql.FieldValue;
+import com.openitech.value.fields.FieldValue;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.PreparedStatement;

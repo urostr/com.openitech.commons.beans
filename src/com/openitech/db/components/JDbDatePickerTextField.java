@@ -9,7 +9,7 @@
 
 package com.openitech.db.components;
 
-import com.openitech.formats.FormatFactory;
+import com.openitech.text.FormatFactory;
 import java.util.Calendar;
 
 

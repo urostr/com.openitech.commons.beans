@@ -9,13 +9,13 @@ package com.openitech.db.components;
 
 import junit.framework.*;
 import com.openitech.auth.LoginContextManager;
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.filters.DataSourceFilters.IntegerSeekType;
 import com.openitech.db.filters.DataSourceFilters.SeekType;
 import com.openitech.db.filters.FilterDocumentCaretListener;
 import com.openitech.db.filters.FilterDocumentListener;
-import com.openitech.db.filters.Scheduler;
+import com.openitech.db.filters.DataSourceFilterScheduler;
 import com.openitech.db.model.DbDataSource;
 import java.sql.SQLException;
 import java.util.logging.Level;

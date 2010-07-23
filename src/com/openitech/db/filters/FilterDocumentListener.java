@@ -1,7 +1,7 @@
 package com.openitech.db.filters;
 
-import com.openitech.db.filters.Scheduler.SeekValueUpdateRunnable;
-import com.openitech.formats.FormatFactory;
+import com.openitech.db.filters.DataSourceFilterScheduler.SeekValueUpdateRunnable;
+import com.openitech.text.FormatFactory;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -10,13 +10,13 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-public class FilterDocumentListener extends Scheduler implements DocumentListener {
+public class FilterDocumentListener extends DataSourceFilterScheduler implements DocumentListener {
 
     protected DataSourceFilters filter;
     protected DataSourceFilters.AbstractSeekType<? extends Object> seek_type;
 
     public FilterDocumentListener(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<? extends Object> seek_type) {
-        this(filter, seek_type, Scheduler.DELAY);
+        this(filter, seek_type, DataSourceFilterScheduler.DELAY);
     }
 
     public FilterDocumentListener(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<? extends Object> seek_type, long delay) {

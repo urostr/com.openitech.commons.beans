@@ -10,7 +10,7 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
-import com.openitech.components.JMnemonicButton;
+import com.openitech.swing.JMnemonicButton;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;

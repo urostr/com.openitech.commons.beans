@@ -1,19 +1,19 @@
 package com.openitech.db.filters;
 
-import com.openitech.db.filters.Scheduler.SeekValueUpdateRunnable;
+import com.openitech.db.filters.DataSourceFilterScheduler.SeekValueUpdateRunnable;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 
-public class FilterDocumentCaretListener extends Scheduler implements CaretListener {
+public class FilterDocumentCaretListener extends DataSourceFilterScheduler implements CaretListener {
   protected Document document;
   protected DataSourceFilters filter;
   protected DataSourceFilters.SeekType seek_type;
 
   public FilterDocumentCaretListener(Document document, DataSourceFilters filter, DataSourceFilters.SeekType seek_type) {
-    this(document, filter, seek_type, Scheduler.DELAY);
+    this(document, filter, seek_type, DataSourceFilterScheduler.DELAY);
   }
   
   public FilterDocumentCaretListener(Document document, DataSourceFilters filter, DataSourceFilters.SeekType seek_type, long delay) {

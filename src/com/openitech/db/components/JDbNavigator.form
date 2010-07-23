@@ -35,7 +35,7 @@
         <Property name="rows" type="int" value="1"/>
       </Layout>
       <SubComponents>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbFirst">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbFirst">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/2leftarrow.png"/>
@@ -57,7 +57,7 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbPrev">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbPrev">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/1leftarrow.png"/>
@@ -79,7 +79,7 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbNext">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbNext">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/1rightarrow.png"/>
@@ -101,7 +101,7 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbLast">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbLast">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/2rightarrow.png"/>
@@ -123,7 +123,7 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbAdd">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbAdd">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/edit_add.png"/>
@@ -142,7 +142,7 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbDelete">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbDelete">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/edit_remove.png"/>
@@ -161,7 +161,7 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbConfirm">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbConfirm">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/button_ok.png"/>
@@ -180,7 +180,7 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbCancel">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbCancel">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/button_cancel1.png"/>
@@ -199,7 +199,7 @@
             <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
           </AuxValues>
         </Component>
-        <Component class="com.openitech.components.JMnemonicButton" name="jbReload">
+        <Component class="com.openitech.swing.JMnemonicButton" name="jbReload">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/openitech/icons/reload_k.png"/>

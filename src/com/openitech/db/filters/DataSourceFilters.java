@@ -1,8 +1,9 @@
 package com.openitech.db.filters;
 
-import com.openitech.db.ConnectionManager;
+import com.openitech.value.ValuesList;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.*;
-import com.openitech.formats.FormatFactory;
+import com.openitech.text.FormatFactory;
 import com.openitech.util.Equals;
 import com.openitech.util.TelefonskeStevilke;
 import com.openitech.util.TelefonskeStevilke.Telefon;

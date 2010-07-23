@@ -11,7 +11,7 @@ package com.openitech.db.components;
 
 import com.openitech.Settings;
 import com.openitech.crypto.Encoder;
-import com.openitech.db.FieldObserver;
+import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;

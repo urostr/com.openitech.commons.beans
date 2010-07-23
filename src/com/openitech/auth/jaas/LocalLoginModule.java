@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import com.openitech.db.DbAuthService;
+import com.openitech.db.connection.DbAuthService;
 import com.openitech.auth.jaas.callback.LocalAbortCallback;
 import com.openitech.auth.jaas.callback.LocalCommitCallback;
 import com.openitech.auth.jaas.callback.LocalLogoutCallback;

@@ -4,7 +4,7 @@
  */
 package com.openitech.db.model;
 
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.ConnectionManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,7 @@ public class DbSifrantModelTest extends TestCase {
   public DbSifrantModelTest(String testName) {
     super(testName);
     DbConnection.register();
-    com.openitech.db.DbConnection dbConnection = ConnectionManager.getInstance();
+    com.openitech.db.connection.DbConnection dbConnection = ConnectionManager.getInstance();
     connection = dbConnection.getConnection();
   }
 

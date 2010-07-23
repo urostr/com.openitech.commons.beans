@@ -5,7 +5,7 @@
 package com.openitech.sql.properties;
 
 import com.openitech.spring.beans.factory.config.AbstractPropertyRetriever;
-import com.openitech.db.ConnectionManager;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.spring.beans.factory.config.PropertyType;
 import java.util.HashMap;
 import java.util.Map;

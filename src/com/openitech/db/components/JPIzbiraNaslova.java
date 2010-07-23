@@ -8,11 +8,11 @@ package com.openitech.db.components;
 import com.openitech.db.components.DbNaslovDataModel.Naslov;
 import com.openitech.db.filters.FilterDocumentCaretListener;
 import com.openitech.db.filters.FilterDocumentListener;
-import com.openitech.db.filters.Scheduler;
+import com.openitech.db.filters.DataSourceFilterScheduler;
 import com.openitech.db.model.DbComboBoxModel.DbComboBoxEntry;
 import com.openitech.db.model.DbDataSource;
-import com.openitech.db.model.concurrent.DataSourceEvent;
-import com.openitech.sql.FieldValue;
+import com.openitech.events.concurrent.DataSourceEvent;
+import com.openitech.value.fields.FieldValue;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -578,7 +578,7 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     final static Pattern pattern = Pattern.compile("(^(\\d*)(\\s*)(.*)$)");
 
     public HisnaFilterDocumentListener(DbNaslovDataModel.DsFilterRPE filter) {
-      super(filter, null, Scheduler.DELAY);
+      super(filter, null, DataSourceFilterScheduler.DELAY);
     }
 
     public HisnaFilterDocumentListener(DbNaslovDataModel.DsFilterRPE filter, long delay) {

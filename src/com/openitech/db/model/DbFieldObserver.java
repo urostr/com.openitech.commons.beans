@@ -12,7 +12,7 @@ import com.openitech.Settings;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
-import com.openitech.formats.FormatFactory;
+import com.openitech.text.FormatFactory;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.util.Equals;
 import java.io.BufferedInputStream;
@@ -32,7 +32,7 @@ import javax.swing.SwingUtilities;
  *
  * @author uros
  */
-public class DbFieldObserver implements com.openitech.db.FieldObserver, java.io.Serializable {
+public class DbFieldObserver implements com.openitech.db.model.FieldObserver, java.io.Serializable {
 
   private transient DbDataSource dataSource = null;
   private String columnName = null;

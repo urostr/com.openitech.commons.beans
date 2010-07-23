@@ -4,9 +4,9 @@
  */
 package com.openitech.db.model.sql;
 
-import com.openitech.CaseInsensitiveString;
-import com.openitech.CollectionKey;
-import com.openitech.db.ConnectionManager;
+import com.openitech.text.CaseInsensitiveString;
+import com.openitech.value.CollectionKey;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.ref.SoftHashMap;
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.Serializable;

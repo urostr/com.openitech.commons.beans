@@ -6,7 +6,7 @@ package com.openitech.spring.beans.factory.config;
 
 import com.openitech.sql.properties.*;
 import com.openitech.spring.beans.factory.config.PropertyType;
-import com.openitech.util.ReadInputStream;
+import com.openitech.io.ReadInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;

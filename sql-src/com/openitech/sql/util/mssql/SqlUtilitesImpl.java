@@ -4,20 +4,20 @@
  */
 package com.openitech.sql.util.mssql;
 
-import com.openitech.CaseInsensitiveString;
-import com.openitech.db.ConnectionManager;
+import com.openitech.text.CaseInsensitiveString;
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.db.model.sql.SQLDataSource;
-import com.openitech.sql.Field;
-import com.openitech.sql.events.Event;
-import com.openitech.sql.events.EventQuery;
+import com.openitech.value.fields.Field;
+import com.openitech.value.events.Event;
+import com.openitech.value.events.EventQuery;
 import com.openitech.sql.util.SqlUtilities;
-import com.openitech.sql.FieldValue;
-import com.openitech.sql.ValueType;
-import com.openitech.sql.events.ActivityEvent;
-import com.openitech.util.ReadInputStream;
+import com.openitech.value.fields.FieldValue;
+import com.openitech.value.fields.ValueType;
+import com.openitech.value.events.ActivityEvent;
+import com.openitech.io.ReadInputStream;
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
@@ -96,14 +96,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
   protected void logChanges(String application, String database, String tableName, Operation operation, List<FieldValue> newValues, List<FieldValue> oldValues) throws SQLException {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (logChanges == null) {
-      logChanges = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_change_log.sql", "cp1250"));
+      logChanges = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_change_log.sql", "cp1250"));
     }
     if (logValues == null) {
-      logValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
+      logValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
     }
 
     if (logChangedValues == null) {
-      logChangedValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_changed_values.sql", "cp1250"));
+      logChangedValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_changed_values.sql", "cp1250"));
     }
 
     FieldValue[] fieldValues = new FieldValue[]{
@@ -142,26 +142,26 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public Long storeEvent(Event event) throws SQLException {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertEvents == null) {
-      insertEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
+      insertEvents = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
 //      insertEvents.setQueryTimeout(15);
     }
     if (updateEvents == null) {
-      updateEvents = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEvents.sql", "cp1250"));
+      updateEvents = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateEvents.sql", "cp1250"));
 //      updateEvents.setQueryTimeout(15);
     }
     if (findEventValue == null) {
-      findEventValue = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_eventvalue.sql", "cp1250"));
+      findEventValue = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventvalue.sql", "cp1250"));
     }
     if (insertEventValues == null) {
-      insertEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertEventValues.sql", "cp1250"));
+      insertEventValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEventValues.sql", "cp1250"));
 //      insertEventValues.setQueryTimeout(15);
     }
     if (updateEventValues == null) {
-      updateEventValues = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "updateEventValue.sql", "cp1250"));
+      updateEventValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateEventValue.sql", "cp1250"));
 //      updateEventValues.setQueryTimeout(15);
     }
     if (get_field == null) {
-      get_field = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
+      get_field = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
     }
     int param;
     boolean success = true;
@@ -297,7 +297,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public Long storeValue(ValueType fieldType, final Object value) throws SQLException {
     if (logValues == null) {
-      logValues = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
+      logValues = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
       logValues.setQueryTimeout(15);
     }
 
@@ -317,7 +317,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           if (find_intvalue == null) {
-            find_intvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_intvalue.sql", "cp1250"));
+            find_intvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_intvalue.sql", "cp1250"));
           }
 
           find_intvalue.setObject(1, value, java.sql.Types.BIGINT);
@@ -338,7 +338,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           if (find_realvalue == null) {
-            find_realvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_realvalue.sql", "cp1250"));
+            find_realvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_realvalue.sql", "cp1250"));
           }
 
           find_realvalue.setObject(1, value, java.sql.Types.REAL);
@@ -359,7 +359,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           if (find_stringvalue == null) {
-            find_stringvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_stringvalue.sql", "cp1250"));
+            find_stringvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_stringvalue.sql", "cp1250"));
           }
 
           find_stringvalue.setObject(1, value, java.sql.Types.VARCHAR);
@@ -383,7 +383,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
           if (find_datevalue == null) {
-            find_datevalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_datevalue.sql", "cp1250"));
+            find_datevalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_datevalue.sql", "cp1250"));
           }
 
           find_datevalue.setObject(1, value, java.sql.Types.TIMESTAMP);
@@ -451,8 +451,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     dsSifrant.setParameters(params);
-    dsSifrant.setCountSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant_c.sql", "cp1250"));
-    dsSifrant.setSelectSql(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sifrant.sql", "cp1250"));
+    dsSifrant.setCountSql(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "sifrant_c.sql", "cp1250"));
+    dsSifrant.setSelectSql(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "sifrant.sql", "cp1250"));
     dsSifrant.setQueuedDelay(0);
 
     return dsSifrant;
@@ -468,7 +468,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (address.getHsMID() == null || address.getHsMID().getValue() == null) {
       param = 1;
       if (findHsNeznanaId == null) {
-        findHsNeznanaId = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "findHsNeznanaId.sql", "cp1250"));
+        findHsNeznanaId = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findHsNeznanaId.sql", "cp1250"));
       }
 
 //      findHsNeznanaId.clearParameters();
@@ -499,7 +499,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         }
       } else {
         if (insertNeznaniNaslov == null) {
-          insertNeznaniNaslov = connection.prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "insertNeznaniNaslov.sql", "cp1250"));
+          insertNeznaniNaslov = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertNeznaniNaslov.sql", "cp1250"));
         }
         boolean commit = false;
         boolean isTransaction = isTransaction();
@@ -565,7 +565,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   public Event findEvent(Long eventId) throws SQLException {
     if (findEventById == null) {
-      findEventById = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "find_event_by_id.sql", "cp1250"));
+      findEventById = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_event_by_id.sql", "cp1250"));
     }
     ResultSet rs = executeQuery(findEventById, new FieldValue("ID", java.sql.Types.BIGINT, eventId));
     try {
@@ -1189,11 +1189,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   private static String getFindEventSQL() {
-    return com.openitech.util.ReadInputStream.getResourceAsString(SqlUtilitesImpl.class, "find_event_by_values.sql", "cp1250");
+    return com.openitech.io.ReadInputStream.getResourceAsString(SqlUtilitesImpl.class, "find_event_by_values.sql", "cp1250");
   }
 
   private static String getCheckVecVrednostiEventSQL() {
-    return com.openitech.util.ReadInputStream.getResourceAsString(SqlUtilitesImpl.class, "event_vecVrednosti.sql", "cp1250");
+    return com.openitech.io.ReadInputStream.getResourceAsString(SqlUtilitesImpl.class, "event_vecVrednosti.sql", "cp1250");
   }
 
   @Override

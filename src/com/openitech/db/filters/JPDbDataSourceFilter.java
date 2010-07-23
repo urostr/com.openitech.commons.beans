@@ -12,7 +12,7 @@ package com.openitech.db.filters;
 
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 import com.openitech.db.model.DbComboBoxModel;
-import com.openitech.formats.FormatFactory;
+import com.openitech.text.FormatFactory;
 import com.openitech.util.Equals;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
@@ -236,7 +236,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     if ((!updating) && (jcbSifrant != null)) {
       updating = true;
       try {
-        final String text = com.openitech.util.Document.getText(doc);
+        final String text = com.openitech.text.Document.getText(doc);
         if (text.isEmpty()) {
           if (jcbSifrant.getModel().getSize()>0) {
             jcbSifrant.setSelectedIndex(0);

@@ -4,8 +4,8 @@
  */
 package com.openitech.db.spring;
 
-import com.openitech.db.ConnectionManager;
-import com.openitech.db.DbConnection;
+import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.connection.DbConnection;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;

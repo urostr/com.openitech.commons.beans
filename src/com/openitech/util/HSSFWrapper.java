@@ -4,7 +4,8 @@
  */
 package com.openitech.util;
 
-import com.openitech.components.JWProgressMonitor;
+import com.openitech.awt.Desktop;
+import com.openitech.swing.JWProgressMonitor;
 import com.openitech.db.model.DbTableModel;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

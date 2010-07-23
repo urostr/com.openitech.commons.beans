@@ -9,7 +9,7 @@
 
 package com.openitech.db.events;
 
-import com.openitech.db.model.concurrent.ConcurrentEvent;
+import com.openitech.events.concurrent.ConcurrentEvent;
 
 /**
  *

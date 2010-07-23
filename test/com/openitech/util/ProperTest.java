@@ -7,6 +7,7 @@
 
 package com.openitech.util;
 
+import com.openitech.text.Proper;
 import junit.framework.*;
 
 /**

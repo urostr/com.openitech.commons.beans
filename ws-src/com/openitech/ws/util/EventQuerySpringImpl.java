@@ -6,8 +6,8 @@
 package com.openitech.ws.util;
 
 import com.openitech.db.model.DbDataSource.SqlParameter;
-import com.openitech.sql.Field;
-import com.openitech.sql.events.EventQuery;
+import com.openitech.value.fields.Field;
+import com.openitech.value.events.EventQuery;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

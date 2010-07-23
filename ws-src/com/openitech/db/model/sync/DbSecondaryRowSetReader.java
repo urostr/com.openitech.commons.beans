@@ -15,8 +15,8 @@ import javax.naming.*;
 import java.io.*;
 
 import com.openitech.db.model.sql.SQLDataSource;
-import com.openitech.sql.Field;
-import com.openitech.sql.events.EventQuery;
+import com.openitech.value.fields.Field;
+import com.openitech.value.events.EventQuery;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.sql.util.mssql.SqlUtilitesImpl;
 import com.sun.rowset.*;
@@ -762,6 +762,6 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
   }
 
   private String getQuery(String fileName){
-    return com.openitech.util.ReadInputStream.getResourceAsString(getClass(), "sql/"+fileName+".sql", "cp1250");
+    return com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "sql/"+fileName+".sql", "cp1250");
   }
 }

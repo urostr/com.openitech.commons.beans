@@ -9,8 +9,8 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
-import com.openitech.autocomplete.AutoCompleteDocument;
-import com.openitech.db.FieldObserver;
+import com.openitech.swing.autocomplete.AutoCompleteDocument;
+import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbComboBoxModel;
@@ -71,7 +71,7 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addActionListener(actionWeakListener);
     if (decorate) {
-      com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
+      com.openitech.swing.autocomplete.AutoCompleteDecorator.decorate(this);
 
       document = ((JTextComponent) getEditor().getEditorComponent()).getDocument();
       if (document instanceof AutoCompleteDocument) {
@@ -243,7 +243,7 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     try {
       super.setModel(aModel);
       if (aModel instanceof DbComboBoxModel) {
-        com.openitech.autocomplete.AutoCompleteDecorator.decorate(this);
+        com.openitech.swing.autocomplete.AutoCompleteDecorator.decorate(this);
       }
     } finally {
       if (actionWeakListener != null) {
