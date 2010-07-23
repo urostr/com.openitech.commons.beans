@@ -47,4 +47,8 @@ public class DataSourceFiltersSeek<T extends AbstractSeekType> {
   public void setSeek(T seek) {
     this.seek = seek;
   }
+
+  public interface Reader {
+    public DataSourceFiltersSeek getDataSourceFilterSeek(String name);
+  }
 }

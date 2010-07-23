@@ -28,6 +28,27 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   private static final String EMPTY = " 0=1 ";
 
+  public interface Reader {
+    public DataSourceFilters getDataSourceFilter(String name);
+  }
+
+  public AbstractSeekType getSeekType(String name) {
+    AbstractSeekType result = null;
+    try {
+      java.lang.reflect.Field field = this.getClass().getField(name);
+      result = (AbstractSeekType) field.get(this);
+    } catch (IllegalArgumentException ex) {
+      Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IllegalAccessException ex) {
+      Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (NoSuchFieldException ex) {
+      Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (SecurityException ex) {
+      Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return result;
+  }
+
   public abstract static class AbstractSeekType<E> {
 
     /**
