@@ -28,6 +28,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   private static final String EMPTY = " 0=1 ";
 
+  //Uporabljamo za locevanje med web in sql dostopi
   public interface Reader {
     public DataSourceFilters getDataSourceFilter(String name);
   }
