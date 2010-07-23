@@ -6,8 +6,6 @@
  */
 package com.openitech.db.model.sync;
 
-import com.openitech.db.model.rowSet.*;
-import com.openitech.db.model.sync.SyncResolverImpl;
 import java.sql.*;
 import java.util.logging.Level;
 import javax.sql.*;
@@ -15,7 +13,6 @@ import java.util.*;
 import java.io.*;
 
 import com.sun.rowset.*;
-import com.sun.rowset.internal.CachedRowSetReader;
 
 import java.text.MessageFormat;
 import java.util.logging.Logger;

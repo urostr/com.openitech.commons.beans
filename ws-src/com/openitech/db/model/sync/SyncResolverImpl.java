@@ -7,7 +7,6 @@
 
 package com.openitech.db.model.sync;
 
-import com.openitech.db.model.rowSet.*;
 import java.sql.*;
 import javax.sql.*;
 import java.util.*;
