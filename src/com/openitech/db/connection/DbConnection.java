@@ -43,6 +43,7 @@ public interface DbConnection {
   String DB_CREATE_SECONDARYS_WS = "ws.createsecondarys";
   String DB_FIND_PP_WS = "ws.findPP";
   String DB_FIND_PONUDBA_WS= "ws.findPonudba";
+  String DB_GENERATEDFIELDS_WS= "ws.generatedFields";
   
   String DB_CONNECT_PREFIX="db.connect.";
   int DB_CONNECT_PREFIX_LENGTH=DB_CONNECT_PREFIX.length();

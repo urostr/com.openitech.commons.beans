@@ -6,13 +6,9 @@
  */
 package com.openitech.db.model.web;
 
-import com.openitech.db.model.web.DbWebRowSetXmlReader;
-import com.openitech.db.model.web.DbWebRowSetXmlWriter;
 import com.openitech.db.model.DbClobImpl;
 import com.openitech.db.model.sync.DbChachedRowSetImpl;
 import com.openitech.db.model.sync.DbEventSyncProvider;
-import com.openitech.xml.SecondaryRowSet;
-import com.openitech.xml.SecondaryRowSet.Row;
 import com.sun.rowset.JdbcRowSetResourceBundle;
 import java.sql.*;
 import java.io.*;
@@ -23,8 +19,6 @@ import java.util.*;
 import javax.sql.RowSetMetaData;
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
 
 /**
  * The standard implementation of the <code>WebRowSet</code> interface. See the interface
@@ -240,65 +234,6 @@ public class DbWebRowSetImpl extends DbChachedRowSetImpl implements WebRowSet {
             next();
 
             setOriginalRow();
-        }
-        first();
-    }
-
-    public void readXml(SecondaryRowSet webRowSet) throws SQLException {
-        StringWriter stringWriter = new StringWriter();
-        try {
-            JAXBContext jaxbContext = JAXBContext.newInstance("com.openitech.xml");
-            Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.marshal(webRowSet, stringWriter);
-
-        } catch (Exception ex) {
-        }
-        System.out.println(stringWriter.toString());
-
-        int columnCount = 6;
-        RowSetMetaData md = new RowSetMetaDataImpl();
-        md.setColumnCount(columnCount);
-        int colIndex = 1;
-
-        md.setColumnName(colIndex, "Id");
-        md.setColumnType(colIndex++, java.sql.Types.INTEGER);
-        md.setColumnName(colIndex, "EventId");
-        md.setColumnType(colIndex++, java.sql.Types.INTEGER);
-        md.setColumnName(colIndex, "IdSifranta");
-        md.setColumnType(colIndex++, java.sql.Types.INTEGER);
-        md.setColumnName(colIndex, "IdSifre");
-        md.setColumnType(colIndex++, java.sql.Types.VARCHAR);
-        md.setColumnName(colIndex, "IdEventSource");
-        md.setColumnType(colIndex++, java.sql.Types.INTEGER);
-        md.setColumnName(colIndex, "Datum");
-        md.setColumnType(colIndex++, java.sql.Types.TIMESTAMP);
-
-
-        setMetaData(md);
-        for (Row row : webRowSet.getRow()) {
-            colIndex = 1;
-
-            if (row != null) {
-                if (row.getId() != -1) {
-                    moveToInsertRow();
-                    updateInt(colIndex++, row.getId());
-
-                } else {
-                    continue;
-                }
-
-                updateInt(colIndex++, row.getEventId());
-                updateInt(colIndex++, row.getIdSifranta());
-                updateString(colIndex++, row.getIdSifre());
-                updateInt(colIndex++, row.getIdEventSource());
-                updateTimestamp(colIndex++, new Timestamp(row.getDatum()));
-
-                insertRow();
-                moveToCurrentRow();
-                next();
-            }
         }
         first();
     }
