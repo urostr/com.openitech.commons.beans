@@ -32,6 +32,9 @@
               <xsd:element name="CanAddRows" type="xsd:boolean" minOccurs="0"></xsd:element>
               <xsd:element name="CanDeleteRows" type="xsd:boolean" minOccurs="0"></xsd:element>
               <xsd:element name="QueuedDelay" type="xsd:long" minOccurs="0"></xsd:element>
+              <xsd:element name="useLimitParameter" type="xsd:boolean" minOccurs="0"></xsd:element>
+              <xsd:element name="suspend" type="xsd:boolean" minOccurs="0"></xsd:element>
+              <xsd:element name="loadData" type="xsd:boolean" minOccurs="0"></xsd:element>
               <xsd:element name="resumeAfterCreation" type="xsd:boolean" minOccurs="0"></xsd:element>
               <xsd:element name="ClassName" type="xsd:string" minOccurs="0"></xsd:element>
               <xsd:element name="ProviderClassName" type="xsd:string" minOccurs="0"></xsd:element>

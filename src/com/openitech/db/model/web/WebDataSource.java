@@ -17,14 +17,11 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.events.concurrent.DataSourceEvent;
-import com.openitech.db.model.sync.DbChachedRowSetImpl;
 import com.openitech.db.proxy.ResultSetProxy;
 import com.openitech.text.FormatFactory;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
 import com.openitech.awt.OwnerFrame;
-import com.sun.rowset.CachedRowSetImpl;
-import com.sun.rowset.WebRowSetImpl;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.io.InputStream;
@@ -39,7 +36,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
 import java.sql.NClob;
-import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
@@ -111,6 +107,7 @@ public class WebDataSource implements DbDataSourceImpl {
   private boolean refreshPending = false;
   DbDataSource owner;
   private boolean readOnly = false;
+  private boolean fireEvents = true;
 
   /** Creates a new instance of DbDataSource */
   public WebDataSource(DbDataSource owner) {
@@ -3975,6 +3972,11 @@ public class WebDataSource implements DbDataSourceImpl {
 
       return newCount + (inserting ? 1 : 0);
     }
+  }
+
+  @Override
+  public boolean fireEvents() {
+    return fireEvents;
   }
 
   private class CurrentResultSet {

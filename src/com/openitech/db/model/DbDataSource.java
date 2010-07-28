@@ -49,6 +49,7 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -3116,6 +3117,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   }
 
   public boolean lock(boolean fatal, boolean force) {
+    fatal =true;
+    force = false;
     long begin = System.currentTimeMillis();
     boolean result = false;
     try {
@@ -3151,7 +3154,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   @Override
   public void unlock() {
     available.unlock();
-    if(false){//if (DUMP_SQL) {
+    if (false) {//if (DUMP_SQL) {
       StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
       System.out.println(getName() + ":unlocking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
       System.out.println(getName() + ":unlocking:[" + Thread.currentThread().getName() + "]:" + available.getHoldCount());
@@ -3169,7 +3172,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public boolean isSortable() {
     boolean result = false;
 
-    for (Object parameter:parameters) {
+    for (Object parameter : parameters) {
       result = (parameter instanceof DbSortable);
       if (result) {
         break;
@@ -3182,7 +3185,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public DbSortable getSortable() {
     DbSortable result = null;
 
-    for (Object parameter:parameters) {
+    for (Object parameter : parameters) {
       if (parameter instanceof DbSortable) {
         result = (DbSortable) parameter;
         break;
@@ -3452,13 +3455,17 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public void setCanAddRows(boolean canAddRows) {
     boolean oldValue = this.canAddRows;
     this.canAddRows = canAddRows;
-    firePropertyChange("canAddRows", oldValue, canAddRows);
+    if (implementation.fireEvents()) {
+      firePropertyChange("canAddRows", oldValue, canAddRows);
+    }
   }
 
   public void setCanDeleteRows(boolean canDeleteRows) {
     boolean oldValue = this.canDeleteRows;
     this.canDeleteRows = canDeleteRows;
-    firePropertyChange("canDeleteRows", oldValue, canDeleteRows);
+    if (implementation.fireEvents()) {
+      firePropertyChange("canDeleteRows", oldValue, canDeleteRows);
+    }
   }
 
   /**
@@ -5023,16 +5030,10 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     protected String alias = "";
     protected String operator = "";
     private java.util.List<DbDataSource> dataSources = new ArrayList<DbDataSource>();
-    private final PropertyChangeListener queryChangeListener = new PropertyChangeListener() {
-
-      public void propertyChange(PropertyChangeEvent evt) {
-        reloadDataSources();
-      }
-    };
+    private PropertyChangeListener queryChangeListener;
 
     public SubstSqlParameter() {
       super(Types.SUBST_FIRST, "");
-      addPropertyChangeListener("query", queryChangeListener);
     }
 
     public SubstSqlParameter(String replace) {
@@ -5054,14 +5055,27 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     }
 
     public void addDataSource(DbDataSource... dataSources) {
-      for (DbDataSource dataSource : dataSources) {
-        this.dataSources.add(dataSource);
+      this.dataSources.addAll(Arrays.asList(dataSources));
+
+      if ((this.dataSources.size() > 0) && (queryChangeListener == null)) {
+        addPropertyChangeListener("query", queryChangeListener = new PropertyChangeListener() {
+
+          @Override
+          public void propertyChange(PropertyChangeEvent evt) {
+            reloadDataSources();
+          }
+        });
       }
     }
 
     public void removeDataSource(DbDataSource... dataSources) {
       for (DbDataSource dataSource : dataSources) {
         this.dataSources.remove(dataSource);
+      }
+
+      if (this.dataSources.isEmpty() && (queryChangeListener != null)) {
+        removePropertyChangeListener("query", queryChangeListener);
+        queryChangeListener = null;
       }
     }
 
@@ -5147,6 +5161,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
       this.e = e;
     }
 
+    @Override
     public void run() {
       java.util.List listeners = owner.activeRowChangeListeners.elementsList();
       int count = listeners.size();
@@ -5166,6 +5181,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
       this.e = e;
     }
 
+    @Override
     public void run() {
       java.util.List listeners = owner.activeRowChangeListeners.elementsList();
       int count = listeners.size();
@@ -5185,6 +5201,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
       this.e = e;
     }
 
+    @Override
     public void run() {
       java.util.List listeners = owner.listDataListeners.elementsList();
       int count = listeners.size();
@@ -5204,6 +5221,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
       this.e = e;
     }
 
+    @Override
     public void run() {
       java.util.List listeners = owner.listDataListeners.elementsList();
       int count = listeners.size();
@@ -5223,6 +5241,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
       this.e = e;
     }
 
+    @Override
     public void run() {
       java.util.List listeners = owner.listDataListeners.elementsList();
       int count = listeners.size();
@@ -5247,6 +5266,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
       this.newValue = newValue;
     }
 
+    @Override
     public void run() {
       owner.changeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }
@@ -5450,6 +5470,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     this.seekUpdatedRow = seekUpdatedRow;
   }
 
+  @Override
   public DbDataSource getDataSource() {
     return this;
   }

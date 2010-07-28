@@ -5,16 +5,13 @@
 package com.openitech.db.model.factory;
 
 import com.openitech.db.model.DataSourceObserver;
-import com.openitech.db.model.FieldObserver;
 import com.openitech.db.filters.ActiveFiltersReader;
 import com.openitech.db.filters.DataSourceFilters;
-import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.filters.DataSourceLimit;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
-import com.openitech.db.model.DbTableModel;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.PendingSqlParameter;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
@@ -24,118 +21,67 @@ import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.db.model.xml.config.Workarea.DataModel.TableColumns.TableColumnDefinition;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Parameters;
-import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValueProxy;
-import com.openitech.sql.util.SqlUtilities;
 import groovy.lang.GroovyClassLoader;
-import java.awt.Component;
-import java.io.StringReader;
 import java.lang.reflect.Constructor;
-import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JMenu;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 /**
  *
  * @author uros
  */
-public class DataSourceFactory {
-
-  private final DbDataModel dbDataModel;
+public class DataSourceFactory extends AbstractDataSourceFactory{
 
   public DataSourceFactory(DbDataModel dbDataModel) {
-    this.dbDataModel = dbDataModel;
+    super(dbDataModel);
   }
 
-  /**
-   * Get the value of dbDataModel
-   *
-   * @return the value of dbDataModel
-   */
-  public DbDataModel getDbDataModel() {
-    return dbDataModel;
-  }
 
-  public void configure(String opis, Class clazz, String resourceName) throws SQLException, JAXBException {
-    configure(this, opis, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel), clazz, resourceName);
-  }
-
-  public void configure(String opis, Clob resource) throws SQLException, JAXBException {
-    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
-    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(resource.getCharacterStream());
-    try {
-      configure(this, opis, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel), workareaXML);
-    } catch (ClassNotFoundException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-    }
-  }
-
-  public void configure(String opis, String xml) throws SQLException, JAXBException {
-    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
-    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(new StringReader(xml));
-    try {
-      configure(this, opis, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel), workareaXML);
-    } catch (ClassNotFoundException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-    }
-  }
-
-  public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.factory.DataSourceConfig config, Class clazz, String resourceName) throws SQLException, JAXBException {
-    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
-    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(clazz.getResourceAsStream(resourceName));
-    try {
-      configure(waConfig, opis, config, workareaXML);
-    } catch (ClassNotFoundException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-    }
-  }
-
-  public static void configure(final DataSourceFactory waConfig, final String opis, com.openitech.db.model.factory.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea workareaXML) throws SQLException, ClassNotFoundException {
-    waConfig.opis = opis;
+  @Override
+  public void configure(final AbstractDataSourceFactory factory, final String opis, com.openitech.db.model.factory.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea dataSourceXML) throws SQLException, ClassNotFoundException {
+    factory.opis = opis;
 
 
-    String className = workareaXML.getDataSource().getClassName();
-    String provider = workareaXML.getDataSource().getProviderClassName();
+    String className = dataSourceXML.getDataSource().getClassName();
+    String provider = dataSourceXML.getDataSource().getProviderClassName();
 
-    final DbDataSource dsWorkAreaEvents = className == null ? new DbDataSource() : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
+    final DbDataSource dataSource = className == null ? new DbDataSource() : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
     if (provider != null) {
-      dsWorkAreaEvents.setProvider(provider);
+      dataSource.setProvider(provider);
     }
 
-    dsWorkAreaEvents.lock();
+    dataSource.lock();
     try {
-      dsWorkAreaEvents.setQueuedDelay(0);
+      dataSource.setQueuedDelay(0);
 
-      Boolean canAddRows = workareaXML.getDataSource().isCanAddRows();
-      Boolean canDeleteRows = workareaXML.getDataSource().isCanDeleteRows();
-      dsWorkAreaEvents.setCanAddRows(canAddRows == null ? false : canAddRows);
-      dsWorkAreaEvents.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
+      Boolean canAddRows = dataSourceXML.getDataSource().isCanAddRows();
+      Boolean canDeleteRows = dataSourceXML.getDataSource().isCanDeleteRows();
+      dataSource.setCanAddRows(canAddRows == null ? false : canAddRows);
+      dataSource.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
 
 
       java.util.List parameters = new java.util.ArrayList();
-      final DataSourceLimit dataSourceLimit = new DataSourceLimit("<%DATA_SOURCE_LIMIT%>");
+      Boolean useLimitParameter = dataSourceXML.getDataSource().isUseLimitParameter();
+      DataSourceLimit dataSourceLimit = null;
+      if (useLimitParameter == null || useLimitParameter.booleanValue()) {
+        dataSourceLimit = new DataSourceLimit("<%DATA_SOURCE_LIMIT%>");
 
-      dataSourceLimit.setValue(" TOP 0 ");
+        dataSourceLimit.setValue(" TOP 0 ");
 
-      parameters.add(dataSourceLimit);
+        parameters.add(dataSourceLimit);
 
-      dataSourceLimit.addDataSource(dsWorkAreaEvents);
+        dataSourceLimit.addDataSource(dataSource);
+      }
 //                  dsNaslovPendingSql.setImmediateSQL(ReadInputStream.getResourceAsString(getClass(), "sql/PP.Immediate.sql", "cp1250"));
 //        dsNaslovPendingSql.setPendingSQL(ReadInputStream.getResourceAsString(getClass(), "sql/PP.Pending.sql", "cp1250"),
 //                "Ulica", "HisnaStevilka", "PostnaStevilka", "Posta", "Naselje", "TipNaslova_Opis", "PPIzvori_Izvor");
 //        dsNaslovPendingSql.setDeferredSQL(ReadInputStream.getResourceAsString(getClass(), "sql/PP.Deferred.sql", "cp1250"), "PPId");
 //        dsPoslovniPartnerjiFilter.setOperator("AND");
-      for (Parameters parameter : workareaXML.getDataSource().getParameters()) {
+      for (Parameters parameter : dataSourceXML.getDataSource().getParameters()) {
         if (parameter.getTemporaryTable() != null) {
           TemporaryTable tt = parameter.getTemporaryTable();
           TemporarySubselectSqlParameter ttParameter = new TemporarySubselectSqlParameter(tt.getReplace());
@@ -145,7 +91,7 @@ public class DataSourceFactory {
           ttParameter.setCreateTableSqls(getReplacedSqls(tt.getCreateTableSqls().getQuery().toArray(new String[]{})));
           ttParameter.setEmptyTableSql(getReplacedSql(tt.getEmptyTableSql()));
           ttParameter.setFillTableSql(getReplacedSql(tt.getFillTableSql()));
-          if (tt.getCleanTableSqls()!=null) {
+          if (tt.getCleanTableSqls() != null) {
             ttParameter.setCleanTableSqls(getReplacedSqls(tt.getCleanTableSqls().getQuery().toArray(new String[]{})));
           }
 
@@ -172,7 +118,7 @@ public class DataSourceFactory {
             DataSourceFilter dsf = parameter.getDataSourceFilter();
             if (dsf.getFactory().getGroovy() != null) {
               GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-              Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + waConfig.getOpis() + "_" + System.currentTimeMillis());
+              Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + factory.getOpis() + "_" + System.currentTimeMillis());
               Constructor constructor = gcls.getConstructor(String.class, com.openitech.db.model.factory.DataSourceConfig.class);
               newInstance = constructor.newInstance(dsf.getReplace(), config);
             } else if (dsf.getFactory().getClassName() != null) {
@@ -184,10 +130,10 @@ public class DataSourceFactory {
 
             if (newInstance != null) {
               if (newInstance instanceof java.awt.Component) {
-                waConfig.filterPanel = (java.awt.Component) newInstance;
+                factory.filterPanel = (java.awt.Component) newInstance;
               }
               if (newInstance instanceof DataSourceObserver) {
-                ((DataSourceObserver) newInstance).setDataSource(dsWorkAreaEvents);
+                ((DataSourceObserver) newInstance).setDataSource(dataSource);
               }
               if (newInstance instanceof ActiveFiltersReader) {
                 DataSourceFilters filter = ((ActiveFiltersReader) newInstance).getActiveFilter();
@@ -206,28 +152,28 @@ public class DataSourceFactory {
           } catch (Exception ex) {
             Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
           }
-        } else if ((parameter.getDataSourceParametersFactory() != null) ||
-                (parameter.getDataSourceFilterFactory() != null)) {
+        } else if ((parameter.getDataSourceParametersFactory() != null)
+                || (parameter.getDataSourceFilterFactory() != null)) {
           try {
             Object newInstance = null;
             DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
             if (dsf.getFactory().getGroovy() != null) {
               GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-              Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + waConfig.getOpis() + "_" + System.currentTimeMillis());
+              Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + factory.getOpis() + "_" + System.currentTimeMillis());
               Constructor constructor = gcls.getConstructor(DbDataSource.class, com.openitech.db.model.factory.DataSourceConfig.class);
-              newInstance = constructor.newInstance(dsWorkAreaEvents, config);
+              newInstance = constructor.newInstance(dataSource, config);
             } else if (dsf.getFactory().getClassName() != null) {
               @SuppressWarnings("static-access")
               Class jcls = DataSourceFactory.class.forName(dsf.getFactory().getClassName());
               Constructor constructor = jcls.getConstructor(DbDataSource.class, com.openitech.db.model.factory.DataSourceConfig.class);
-              newInstance = constructor.newInstance(dsWorkAreaEvents, config);
+              newInstance = constructor.newInstance(dataSource, config);
             }
 
             if (newInstance != null) {
               if (newInstance instanceof AbstractDataSourceParametersFactory) {
                 AbstractDataSourceParametersFactory instance = (AbstractDataSourceParametersFactory) newInstance;
-                waConfig.filterPanel = instance.getFilterPanel();
-                waConfig.viewMenuItems.addAll(instance.getViewMenuItems());
+                factory.filterPanel = instance.getFilterPanel();
+                factory.viewMenuItems.addAll(instance.getViewMenuItems());
 
                 parameters.addAll(instance.getParameters());
               }
@@ -238,46 +184,57 @@ public class DataSourceFactory {
         }
       }
 
-      dsWorkAreaEvents.setParameters(parameters);
+      dataSource.setParameters(parameters);
 
-      if (workareaXML.getDataSource().getCOUNTSQL() != null) {
-        dsWorkAreaEvents.setCountSql(getReplacedSql(workareaXML.getDataSource().getCOUNTSQL()));
+      if (dataSourceXML.getDataSource().getCOUNTSQL() != null) {
+        dataSource.setCountSql(getReplacedSql(dataSourceXML.getDataSource().getCOUNTSQL()));
       }
-      dsWorkAreaEvents.setSelectSql(getReplacedSql(workareaXML.getDataSource().getSQL()));
-      dsWorkAreaEvents.setName("DS:WORKAREA:" + waConfig.getOpis());
+      dataSource.setSelectSql(getReplacedSql(dataSourceXML.getDataSource().getSQL()));
+      dataSource.setName("DS:FACTORY:" + factory.getOpis());
 
-      List<String> eventColumns = workareaXML.getDataSource().getEventColumns();
+      List<String> eventColumns = dataSourceXML.getDataSource().getEventColumns();
 
       if (eventColumns.size() > 0) {
-        dsWorkAreaEvents.setQueuedDelay(0);
-        dataSourceLimit.reloadDataSources();
-
+        dataSource.setQueuedDelay(0);
+        if (dataSourceLimit != null) {
+          dataSourceLimit.reloadDataSources();
+        }
         for (String imePolja : eventColumns) {
-          int tipPolja = dsWorkAreaEvents.getType(imePolja);
+          int tipPolja = dataSource.getType(imePolja);
 
           DbFieldObserver fieldObserver = new DbFieldObserver();
           fieldObserver.setColumnName(imePolja);
-          fieldObserver.setDataSource(dsWorkAreaEvents);
-          waConfig.dataEntryValues.add(new FieldValueProxy(imePolja, tipPolja, fieldObserver));
+          fieldObserver.setDataSource(dataSource);
+          factory.dataEntryValues.add(new FieldValueProxy(imePolja, tipPolja, fieldObserver));
         }
 
 
 
       }
+      Boolean suspend = dataSourceXML.getDataSource().isSuspend();
+      if (suspend == null || suspend.booleanValue()) {
+        DataSourceEvent.suspend(dataSource);
+      }
 
-      DataSourceEvent.suspend(dsWorkAreaEvents);
-      DataSourceLimit.Limit.LALL.setSelected();
-      dataSourceLimit.setValue(DataSourceLimit.Limit.LALL.getValue());
+      Boolean loadData = dataSourceXML.getDataSource().isLoadData();
+      if (loadData == null || loadData.booleanValue()) {
+        DataSourceLimit.Limit.LALL.setSelected();
+        if (dataSourceLimit != null) {
+          dataSourceLimit.setValue(DataSourceLimit.Limit.LALL.getValue());
+        }
 
-      Long delay = workareaXML.getDataSource().getQueuedDelay();
-      dsWorkAreaEvents.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
+        Long delay = dataSourceXML.getDataSource().getQueuedDelay();
+        dataSource.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
 
-      dataSourceLimit.reloadDataSources();
+        if (dataSourceLimit != null) {
+          dataSourceLimit.reloadDataSources();
+        }
+      }
 
-      waConfig.dataSource = dsWorkAreaEvents;
+      factory.dataSource = dataSource;
       com.openitech.db.model.DbTableModel tableModel = new com.openitech.db.model.DbTableModel();
 
-      List<TableColumnDefinition> tableColumnDefinitions = workareaXML.getDataModel().getTableColumns().getTableColumnDefinition();
+      List<TableColumnDefinition> tableColumnDefinitions = dataSourceXML.getDataModel().getTableColumns().getTableColumnDefinition();
       List<String[]> tableColumns = new ArrayList<String[]>();
       for (TableColumnDefinition tableColumnDefinition : tableColumnDefinitions) {
         tableColumns.add(tableColumnDefinition.getTableColumnEntry().toArray(new String[tableColumnDefinition.getTableColumnEntry().size()]));
@@ -285,21 +242,21 @@ public class DataSourceFactory {
 
       tableModel.setColumns(tableColumns.toArray(new String[tableColumns.size()][]));
 
-      if (workareaXML.getDataModel().getSeparator() != null) {
-        tableModel.setSeparator(workareaXML.getDataModel().getSeparator());
+      if (dataSourceXML.getDataModel().getSeparator() != null) {
+        tableModel.setSeparator(dataSourceXML.getDataModel().getSeparator());
       }
 
-      tableModel.setDataSource(dsWorkAreaEvents);
-      waConfig.tableModel = tableModel;
+      tableModel.setDataSource(dataSource);
+      factory.tableModel = tableModel;
 
 
-      if (workareaXML.getInformation() != null) {
-        for (com.openitech.db.model.xml.config.Workarea.Information.Panels panel : workareaXML.getInformation().getPanels()) {
+      if (dataSourceXML.getInformation() != null) {
+        for (com.openitech.db.model.xml.config.Workarea.Information.Panels panel : dataSourceXML.getInformation().getPanels()) {
           try {
             Object newInstance = null;
             if (panel.getGroovy() != null) {
               GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-              Class gcls = gcl.parseClass(panel.getGroovy(), "wa" + waConfig.getOpis() + "_" + System.currentTimeMillis());
+              Class gcls = gcl.parseClass(panel.getGroovy(), "wa" + factory.getOpis() + "_" + System.currentTimeMillis());
               Constructor constructor = gcls.getConstructor(com.openitech.db.model.factory.DataSourceConfig.class);
               newInstance = constructor.newInstance(config);
             } else if (panel.getClassName() != null) {
@@ -309,12 +266,12 @@ public class DataSourceFactory {
               newInstance = constructor.newInstance(config);
             }
             if (newInstance instanceof java.awt.Component) {
-              waConfig.informationPanels.put(panel.getTitle(), (java.awt.Component) newInstance);
+              factory.informationPanels.put(panel.getTitle(), (java.awt.Component) newInstance);
             } else {
-              waConfig.linkedObjects.put(panel.getTitle(), newInstance);
+              factory.linkedObjects.put(panel.getTitle(), newInstance);
             }
             if (newInstance instanceof DataSourceObserver) {
-              ((DataSourceObserver) newInstance).setDataSource(dsWorkAreaEvents);
+              ((DataSourceObserver) newInstance).setDataSource(dataSource);
             }
           } catch (Exception ex) {
             Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
@@ -322,137 +279,13 @@ public class DataSourceFactory {
         }
       }
     } finally {
-      Boolean resume = workareaXML.getDataSource().isResumeAfterCreation();
+      Boolean resume = dataSourceXML.getDataSource().isResumeAfterCreation();
 
-      if (resume!=null && resume && dsWorkAreaEvents.isSuspended()) {
-        DataSourceEvent.resume(dsWorkAreaEvents);
+      if (resume != null && resume && dataSource.isSuspended()) {
+        DataSourceEvent.resume(dataSource);
       }
-      dsWorkAreaEvents.unlock();
+      dataSource.unlock();
     }
   }
-  private DbDataSource dataSource;
-
-  /**
-   * Get the value of dataSource
-   *
-   * @return the value of dataSource
-   */
-  public DbDataSource getDataSource() {
-    return dataSource;
-  }
-  private DbTableModel tableModel;
-
-  /**
-   * Get the value of tableModel
-   *
-   * @return the value of tableModel
-   */
-  public DbTableModel getTableModel() {
-    return tableModel;
-  }
-  private List<FieldObserver> fieldObservers = new ArrayList<FieldObserver>();
-  protected Set<Field> dataEntryValues = new java.util.HashSet<com.openitech.value.fields.Field>();
-  protected String opis;
-
-  /**
-   * Get the value of opis
-   *
-   * @return the value of opis
-   */
-  public String getOpis() {
-    return opis;
-  }
-
-  /**
-   * Get the value of dataEntryValues
-   *
-   * @return the value of dataEntryValues
-   */
-  public Set<Field> getDataEntryValues() {
-    return dataEntryValues;
-  }
-  protected boolean taskList;
-
-  /**
-   * Get the value of taskList
-   *
-   * @return the value of taskList
-   */
-  public boolean isTaskList() {
-    return taskList;
-  }
-  private Component filterPanel;
-
-  /**
-   * Get the value of filterPanel
-   *
-   * @return the value of filterPanel
-   */
-  public Component getFilterPanel() {
-    return filterPanel;
-  }
-
-  /**
-   * Set the value of filterPanel
-   *
-   * @param filterPanel new value of filterPanel
-   */
-  public void setFilterPanel(Component filterPanel) {
-    this.filterPanel = filterPanel;
-  }
-  private Map<String, Component> informationPanels = new LinkedHashMap<String, Component>();
-
-  /**
-   * Get the value of informationPanels
-   *
-   * @return the value of informationPanels
-   */
-  public Map<String, Component> getInformationPanels() {
-    return informationPanels;
-  }
-  private Map<String, Object> linkedObjects = new LinkedHashMap<String, Object>();
-
-  /**
-   * Get the value of informationPanels
-   *
-   * @return the value of informationPanels
-   */
-  public Map<String, Object> getLinkedObjects() {
-    return linkedObjects;
-  }
-  protected DataSourceFiltersMap filtersMap;
-
-  public DataSourceFiltersMap getFiltersMap() {
-    return filtersMap;
-  }
-  protected List<JMenu> viewMenuItems = new ArrayList<JMenu>();
-
-  /**
-   * Get the value of viewMenuItems
-   *
-   * @return the value of viewMenuItems
-   */
-  public List<JMenu> getViewMenuItems() {
-    return viewMenuItems;
-  }
-
-  public static String getReplacedSql(String sql) {
-    sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-    sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-    sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-    sql = sql.replaceAll("<%TS%>", Long.toString(System.currentTimeMillis()));
-
-    return sql;
-  }
-
-  public static String[] getReplacedSqls(String[] sqls) {
-    for (int i=0; i<sqls.length; i++) {
-      sqls[i] = sqls[i].replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-      sqls[i] = sqls[i].replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-      sqls[i] = sqls[i].replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-      sqls[i] = sqls[i].replaceAll("<%TS%>", Long.toString(System.currentTimeMillis()));
-    }
-
-    return sqls;
-  }
+  
 }

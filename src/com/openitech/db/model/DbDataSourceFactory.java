@@ -190,5 +190,7 @@ public class DbDataSourceFactory {
     public void filterChanged() throws SQLException;
 
     public void setProvider(String providerClassName);
+
+    public boolean fireEvents();
   }
 }
