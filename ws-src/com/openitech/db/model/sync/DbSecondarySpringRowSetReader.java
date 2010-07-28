@@ -9,6 +9,8 @@ package com.openitech.db.model.sync;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.db.model.web.DbWebRowSetImpl;
+import com.openitech.value.events.ActivityEventPolja;
+import com.openitech.value.events.CustomSecondaryEvent;
 import java.sql.*;
 import javax.sql.*;
 import javax.naming.*;
@@ -17,7 +19,7 @@ import java.io.*;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.EventQuery;
 import com.openitech.xml.SecondaryParameters;
-import com.openitech.xml.SecondaryRowSet;
+
 import com.sun.rowset.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -134,30 +136,35 @@ public class DbSecondarySpringRowSetReader implements RowSetReader, Serializable
         }
         try {
             WebRowSet wrs = (WebRowSet) caller;
-           
+
 
             writerCalls = 0;
 
-           
-            
+
+
 
             EventQuery eq = null;
+            CustomSecondaryEvent cse = null;
             for (Object value : caller.getParams()) {
-                eq = ((EventQuery) value);
-
+                if (value instanceof EventQuery) {
+                    eq = ((EventQuery) value);
+                } else if (value instanceof CustomSecondaryEvent) {
+                    cse = ((CustomSecondaryEvent) value);
+                }
             }
 
 
 
 
-            
+
             SecondaryParameters parameters = new SecondaryParameters();
+            SecondaryParameters.Parameter parameter = null;
             parameters.setIdSifranta(eq.getSifrant());
             int steviloParametrov = 0;
             List<SqlParameter> param = new ArrayList<SqlParameter>();
             for (Map.Entry entry : eq.getNamedParameters().entrySet()) {
                 param.add((SqlParameter) entry.getValue());
-                SecondaryParameters.Parameter parameter = new SecondaryParameters.Parameter();
+                parameter = new SecondaryParameters.Parameter();
                 Field field = (Field) entry.getKey();
                 parameter.setIdPolja(field.getIdPolja());
                 parameter.setType(field.getType());
@@ -166,9 +173,27 @@ public class DbSecondarySpringRowSetReader implements RowSetReader, Serializable
                 parameters.getParameter().add(parameter);
                 steviloParametrov++;
             }
+            if (cse != null) {
+                SecondaryParameters.SecondarySourceParameter secondarySourceParameter = new SecondaryParameters.SecondarySourceParameter();
+                secondarySourceParameter.setSifrantiPoljaId(cse.getSifrantiPoljaId());
+                SecondaryParameters.SecondarySourceParameter.ActivityEventsPolja activityEventsPolja = new SecondaryParameters.SecondarySourceParameter.ActivityEventsPolja();
+                ActivityEventPolja activityEventPolja = cse.getActivityEventPolja();
+                if (activityEventPolja != null) {
+                    activityEventsPolja.setActivityId(activityEventPolja.getActivityId());
+                    activityEventsPolja.setActivityIdSifranta(activityEventPolja.getActivityIdSifranta());
+                    activityEventsPolja.setActivityIdSifre(activityEventPolja.getActivityIdSifre());
+                    activityEventsPolja.setIdSifranta(activityEventPolja.getIdSifranta());
+                    activityEventsPolja.setIdSifre(activityEventPolja.getIdSifre());
+                    activityEventsPolja.setIdPolja(activityEventPolja.getIdPolja());
+                    activityEventsPolja.setFieldValueIndex(activityEventPolja.getFieldValueIndex());
+                    secondarySourceParameter.setActivityEventsPolja(activityEventsPolja);
+                }
+                parameters.setSecondarySourceParameter(secondarySourceParameter);
+                steviloParametrov++;
+            }
 
 
-            SecondaryRowSet rowSet = webResource.accept(MediaType.APPLICATION_XML_TYPE).post(SecondaryRowSet.class, parameters);
+            com.openitech.xml.wrs.WebRowSet rowSet = webResource.accept(MediaType.APPLICATION_XML_TYPE).post(com.openitech.xml.wrs.WebRowSet.class, parameters);
 
             if (wrs instanceof DbWebRowSetImpl) {
                 ((DbWebRowSetImpl) wrs).readXml(rowSet);

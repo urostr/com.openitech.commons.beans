@@ -4,7 +4,9 @@
  */
 package com.openitech.ws.util;
 
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.web.DbWebRowSetImpl;
+import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.ActivityEvent;
 import java.io.StringWriter;
@@ -38,7 +40,7 @@ public class UtilitiesWS {
             client = new com.sun.jersey.api.client.Client();
 
         }
-        webResource = client.resource("http://localhost:8081/DogodkiWA/resources/generatedfields");
+        webResource = client.resource(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_GENERATEDFIELDS_WS));
         webResource = webResource.queryParam("idsifranta", Integer.toString(idSifranta));
         if (idSifre != null) {
             webResource = webResource.queryParam("idsifre", idSifre);
@@ -49,7 +51,7 @@ public class UtilitiesWS {
         }
 
         Logger.getAnonymousLogger().info("getGeneratedFields:idsifranta=" + idSifranta + " idSifre=" + idSifre + " visibleOnly=" + visibleOnly + " activityEvent=" + (activityEvent != null ? activityEvent.toString() : "null"));
-        
+
 
         com.openitech.xml.wrs.WebRowSet rowSet = webResource.accept(MediaType.APPLICATION_XML_TYPE).get(com.openitech.xml.wrs.WebRowSet.class);
         Logger.getAnonymousLogger().info("Received getGeneratedFields");
@@ -60,9 +62,7 @@ public class UtilitiesWS {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.FALSE);
-            marshaller.setProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION, null);
-            marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, null);
+
             marshaller.marshal(rowSet, stringWriter);
 
         } catch (Exception ex) {
@@ -71,8 +71,26 @@ public class UtilitiesWS {
 
         DbWebRowSetImpl wrs = new DbWebRowSetImpl();
         wrs.readXml(rowSet);
+        CachedRowSet generatedFields = SqlUtilities.getInstance().getGeneratedFields(idSifranta, idSifre, visibleOnly, activityEvent);
 
+        wrs.beforeFirst();
+        generatedFields.beforeFirst();
+        while (wrs.next()) {
+            int id1 = wrs.getInt("Id");
+            generatedFields.beforeFirst();
+            boolean found = false;
+            while (generatedFields.next()) {
+                int id2 = generatedFields.getInt("Id");
+                if (id1 == id2) {
+                    found = true;
 
+                }
+            }
+            if (!found) {
+                System.err.println("Generated field ne dela dobro!");
+            }
+        }
+        wrs.beforeFirst();
         return wrs;
     }
 

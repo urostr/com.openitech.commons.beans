@@ -123,7 +123,6 @@ public class DbWSRowSetReader implements RowSetReader, Serializable {
     public void readData(RowSetInternal caller) throws SQLException {
         if (client == null) {
             client = new com.sun.jersey.api.client.Client();
-            webResource = client.resource(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_SECONDARY_WS));
         }
         try {
             WebRowSet wrs = (WebRowSet) caller;
@@ -135,10 +134,13 @@ public class DbWSRowSetReader implements RowSetReader, Serializable {
             for (Object value : caller.getParams()) {
                 wsParameters = ((WSParameters) value);
             }
+            webResource = client.resource(wsParameters.getUrl());
             com.openitech.xml.wrs.WebRowSet rowSet = webResource.accept(MediaType.APPLICATION_XML_TYPE).post(com.openitech.xml.wrs.WebRowSet.class, wsParameters);
 
             if (wrs instanceof DbWebRowSetImpl) {
                 ((DbWebRowSetImpl) wrs).readXml(rowSet);
+            }else{
+                throw new UnsupportedOperationException("Cant read row set!");
             }
 
 
