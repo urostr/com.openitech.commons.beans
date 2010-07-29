@@ -59,6 +59,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement find_realvalue;
   PreparedStatement find_stringvalue;
   PreparedStatement get_field;
+  PreparedStatement get_fields;
   PreparedStatement insertNeznaniNaslov;
   PreparedStatement findHsNeznanaId;
 
@@ -875,6 +876,28 @@ public class SqlUtilitesImpl extends SqlUtilities {
       sb.append("0");
     }
     return sb.toString();
+  }
+
+  @Override
+  public Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException {
+    if (get_fields == null) {
+      get_fields = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_fields.sql", "cp1250"));
+    }
+
+    Map<CaseInsensitiveString, Field> result = new HashMap<CaseInsensitiveString, Field>();
+    ResultSet fields = get_fields.executeQuery();
+    try {
+      while (fields.next()) {
+        CaseInsensitiveString key = new CaseInsensitiveString(fields.getString("ImePolja"));
+        Field field = new Field(fields.getInt("Id"), key.toString(), ValueType.getType(fields.getInt("TipPolja")).getSqlType(), -1);
+
+        result.put(key, field);
+      }
+    } finally {
+      fields.close();
+    }
+
+    return result;
   }
 
   private static class NamedFieldIds {

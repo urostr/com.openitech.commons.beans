@@ -11,6 +11,7 @@ import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.text.CaseInsensitiveString;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.events.Event;
@@ -471,6 +472,8 @@ public abstract class SqlUtilities implements UpdateEvent {
     }
     return storeEvent(newValues);
   }
+
+  public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
   public abstract FieldValue getNextIdentity(Field field) throws SQLException;
 
