@@ -25,8 +25,8 @@ public class SpringDataSourceFactory extends AbstractDataSourceFactory {
     factory.opis = opis;
 
 
-    String className = dataSourceXML.getDataSource().getClassName();
-    String provider = dataSourceXML.getDataSource().getProviderClassName();
+    String className = dataSourceXML.getDataSource().getCreationParameters().getClassName();
+    String provider = dataSourceXML.getDataSource().getCreationParameters().getProviderClassName();
 
     final DbDataSource dataSource = className == null ? new DbDataSource("", "", SpringDataSource.class) : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
     if (provider != null) {

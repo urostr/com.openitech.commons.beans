@@ -34,20 +34,19 @@ import java.util.logging.Logger;
  *
  * @author uros
  */
-public class DataSourceFactory extends AbstractDataSourceFactory{
+public class DataSourceFactory extends AbstractDataSourceFactory {
 
   public DataSourceFactory(DbDataModel dbDataModel) {
     super(dbDataModel);
   }
-
 
   @Override
   public void configure(final AbstractDataSourceFactory factory, final String opis, com.openitech.db.model.factory.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea dataSourceXML) throws SQLException, ClassNotFoundException {
     factory.opis = opis;
 
 
-    String className = dataSourceXML.getDataSource().getClassName();
-    String provider = dataSourceXML.getDataSource().getProviderClassName();
+    String className = dataSourceXML.getDataSource().getCreationParameters().getClassName();
+    String provider = dataSourceXML.getDataSource().getCreationParameters().getProviderClassName();
 
     final DbDataSource dataSource = className == null ? new DbDataSource() : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
     if (provider != null) {
@@ -58,14 +57,14 @@ public class DataSourceFactory extends AbstractDataSourceFactory{
     try {
       dataSource.setQueuedDelay(0);
 
-      Boolean canAddRows = dataSourceXML.getDataSource().isCanAddRows();
-      Boolean canDeleteRows = dataSourceXML.getDataSource().isCanDeleteRows();
+      Boolean canAddRows = dataSourceXML.getDataSource().getCreationParameters().isCanAddRows();
+      Boolean canDeleteRows = dataSourceXML.getDataSource().getCreationParameters().isCanDeleteRows();
       dataSource.setCanAddRows(canAddRows == null ? false : canAddRows);
       dataSource.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
 
 
       java.util.List parameters = new java.util.ArrayList();
-      Boolean useLimitParameter = dataSourceXML.getDataSource().isUseLimitParameter();
+      Boolean useLimitParameter = dataSourceXML.getDataSource().getCreationParameters().isUseLimitParameter();
       DataSourceLimit dataSourceLimit = null;
       if (useLimitParameter == null || useLimitParameter.booleanValue()) {
         dataSourceLimit = new DataSourceLimit("<%DATA_SOURCE_LIMIT%>");
@@ -211,24 +210,21 @@ public class DataSourceFactory extends AbstractDataSourceFactory{
 
 
       }
-      Boolean suspend = dataSourceXML.getDataSource().isSuspend();
+      Boolean suspend = dataSourceXML.getDataSource().getCreationParameters().isSuspend();
       if (suspend == null || suspend.booleanValue()) {
         DataSourceEvent.suspend(dataSource);
       }
 
-      Boolean loadData = dataSourceXML.getDataSource().isLoadData();
-      if (loadData == null || loadData.booleanValue()) {
+      if (dataSourceLimit != null) {
         DataSourceLimit.Limit.LALL.setSelected();
-        if (dataSourceLimit != null) {
-          dataSourceLimit.setValue(DataSourceLimit.Limit.LALL.getValue());
-        }
+        dataSourceLimit.setValue(DataSourceLimit.Limit.LALL.getValue());
+      }
 
-        Long delay = dataSourceXML.getDataSource().getQueuedDelay();
-        dataSource.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
+      Long delay = dataSourceXML.getDataSource().getCreationParameters().getQueuedDelay();
+      dataSource.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
 
-        if (dataSourceLimit != null) {
-          dataSourceLimit.reloadDataSources();
-        }
+      if (dataSourceLimit != null) {
+        dataSourceLimit.reloadDataSources();
       }
 
       factory.dataSource = dataSource;
@@ -279,7 +275,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory{
         }
       }
     } finally {
-      Boolean resume = dataSourceXML.getDataSource().isResumeAfterCreation();
+      Boolean resume = dataSourceXML.getDataSource().getCreationParameters().isResumeAfterCreation();
 
       if (resume != null && resume && dataSource.isSuspended()) {
         DataSourceEvent.resume(dataSource);
@@ -287,5 +283,4 @@ public class DataSourceFactory extends AbstractDataSourceFactory{
       dataSource.unlock();
     }
   }
-  
 }
