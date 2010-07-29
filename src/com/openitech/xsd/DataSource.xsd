@@ -25,20 +25,26 @@
                     </xsd:element>
                     <xsd:element name="DataSourceParametersFactory" type="tns:DataSourceParametersFactory"></xsd:element>
                     <xsd:element name="SubQuery" type="tns:SubQuery"></xsd:element>
-                      <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
+                    <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
                   </xsd:choice>
                 </xsd:complexType>
               </xsd:element>
-              <xsd:element name="CanAddRows" type="xsd:boolean" minOccurs="0"></xsd:element>
-              <xsd:element name="CanDeleteRows" type="xsd:boolean" minOccurs="0"></xsd:element>
-              <xsd:element name="QueuedDelay" type="xsd:long" minOccurs="0"></xsd:element>
-              <xsd:element name="useLimitParameter" type="xsd:boolean" minOccurs="0"></xsd:element>
-              <xsd:element name="suspend" type="xsd:boolean" minOccurs="0"></xsd:element>
-              <xsd:element name="loadData" type="xsd:boolean" minOccurs="0"></xsd:element>
-              <xsd:element name="resumeAfterCreation" type="xsd:boolean" minOccurs="0"></xsd:element>
-              <xsd:element name="ClassName" type="xsd:string" minOccurs="0"></xsd:element>
-              <xsd:element name="ProviderClassName" type="xsd:string" minOccurs="0"></xsd:element>
-              </xsd:sequence>
+              <xsd:element name="CreationParameters" minOccurs="0" maxOccurs="1">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="CanAddRows" type="xsd:boolean" minOccurs="0"></xsd:element>
+                    <xsd:element name="CanDeleteRows" type="xsd:boolean" minOccurs="0"></xsd:element>
+                    <xsd:element name="QueuedDelay" type="xsd:long" minOccurs="0"></xsd:element>
+                    <xsd:element name="UseLimitParameter" type="xsd:boolean" minOccurs="0"></xsd:element>
+                    <xsd:element name="Suspend" type="xsd:boolean" minOccurs="0"></xsd:element>
+                    <xsd:element name="LoadData" type="xsd:boolean" minOccurs="0"></xsd:element>
+                    <xsd:element name="ResumeAfterCreation" type="xsd:boolean" minOccurs="0"></xsd:element>
+                    <xsd:element name="ClassName" type="xsd:string" minOccurs="0"></xsd:element>
+                    <xsd:element name="ProviderClassName" type="xsd:string" minOccurs="0"></xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
         <xsd:element name="DataModel">
@@ -122,55 +128,55 @@
       <xsd:element name="ClassName" type="xsd:string"></xsd:element>
     </xsd:choice>
   </xsd:complexType>
-    <xsd:complexType name="TemporaryTable">
-        <xsd:all>
-            <xsd:element name="Operator" type="xsd:string" minOccurs="0"></xsd:element>
-            <xsd:element name="Replace" type="xsd:string"></xsd:element>
-            <xsd:element name="CreateTableSqls">
-                <xsd:complexType>
-                    <xsd:sequence>
-                        <xsd:element name="Query" maxOccurs="unbounded">
-                            <xsd:simpleType>
-                                <xsd:restriction base="xsd:string"/>
-                            </xsd:simpleType>
-                        </xsd:element>
-                    </xsd:sequence>
-                </xsd:complexType>
+  <xsd:complexType name="TemporaryTable">
+    <xsd:all>
+      <xsd:element name="Operator" type="xsd:string" minOccurs="0"></xsd:element>
+      <xsd:element name="Replace" type="xsd:string"></xsd:element>
+      <xsd:element name="CreateTableSqls">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Query" maxOccurs="unbounded">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string"/>
+              </xsd:simpleType>
             </xsd:element>
-            <xsd:element name="FillTableSql">
-                <xsd:simpleType>
-                    <xsd:restriction base="xsd:string"/>
-                </xsd:simpleType>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="FillTableSql">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string"/>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="CleanTableSqls" minOccurs="0">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Query" maxOccurs="unbounded">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string"/>
+              </xsd:simpleType>
             </xsd:element>
-            <xsd:element name="CleanTableSqls" minOccurs="0">
-                <xsd:complexType>
-                    <xsd:sequence>
-                        <xsd:element name="Query" maxOccurs="unbounded">
-                            <xsd:simpleType>
-                                <xsd:restriction base="xsd:string"/>
-                            </xsd:simpleType>
-                        </xsd:element>
-                    </xsd:sequence>
-                </xsd:complexType>
-            </xsd:element>
-            <xsd:element name="EmptyTableSql">
-                <xsd:simpleType>
-                    <xsd:restriction base="xsd:string"/>
-                </xsd:simpleType>
-            </xsd:element>
-            <xsd:element name="CheckTableSql">
-                <xsd:simpleType>
-                    <xsd:restriction base="xsd:string"/>
-                </xsd:simpleType>
-            </xsd:element>
-            <xsd:element name="TableName">
-                <xsd:simpleType>
-                    <xsd:restriction base="xsd:string"/>
-                </xsd:simpleType>
-            </xsd:element>
-        </xsd:all>
-        <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
-    </xsd:complexType>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="EmptyTableSql">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string"/>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="CheckTableSql">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string"/>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="TableName">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string"/>
+        </xsd:simpleType>
+      </xsd:element>
+    </xsd:all>
+    <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
+  </xsd:complexType>
 </xsd:schema>
 
 
