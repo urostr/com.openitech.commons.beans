@@ -180,7 +180,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
   }
 
-  void setParameters(List<Object> queryParameters) {
+  public void setParameters(List<Object> queryParameters) {
     parameters.clear();
     parameters.addAll(queryParameters);
   }

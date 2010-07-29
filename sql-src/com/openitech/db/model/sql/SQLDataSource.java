@@ -97,6 +97,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   private transient PreparedStatement countStatement;
   private transient Map<String, PreparedStatement> cachedStatements = new SoftHashMap<String, PreparedStatement>();
   private transient SQLCache sqlCache;
+  private boolean fireEvents = true;
   /**
    * Holds value of property uniqueID.
    */
@@ -4204,6 +4205,11 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public void setProvider(String providerClassName) {
     throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public boolean fireEvents() {
+    return fireEvents;
   }
 
   private class CurrentResultSet {
