@@ -12,6 +12,7 @@ import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
+import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.PendingSqlParameter;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
@@ -44,10 +45,13 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   public void configure(final AbstractDataSourceFactory factory, final String opis, com.openitech.db.model.factory.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea dataSourceXML) throws SQLException, ClassNotFoundException {
     factory.opis = opis;
 
-
-    String className = dataSourceXML.getDataSource().getCreationParameters().getClassName();
-    String provider = dataSourceXML.getDataSource().getCreationParameters().getProviderClassName();
-
+    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
+    String className = null;
+    String provider = null;
+    if (creationParameters != null) {
+      className = creationParameters.getClassName();
+      provider = creationParameters.getProviderClassName();
+    }
     final DbDataSource dataSource = className == null ? new DbDataSource() : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
     if (provider != null) {
       dataSource.setProvider(provider);
@@ -57,14 +61,21 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     try {
       dataSource.setQueuedDelay(0);
 
-      Boolean canAddRows = dataSourceXML.getDataSource().getCreationParameters().isCanAddRows();
-      Boolean canDeleteRows = dataSourceXML.getDataSource().getCreationParameters().isCanDeleteRows();
+      Boolean canAddRows = null;
+      Boolean canDeleteRows = null;
+      if (creationParameters != null) {
+        canAddRows = creationParameters.isCanAddRows();
+        canDeleteRows = creationParameters.isCanDeleteRows();
+      }
       dataSource.setCanAddRows(canAddRows == null ? false : canAddRows);
       dataSource.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
 
 
       java.util.List parameters = new java.util.ArrayList();
-      Boolean useLimitParameter = dataSourceXML.getDataSource().getCreationParameters().isUseLimitParameter();
+      Boolean useLimitParameter = null;
+      if (creationParameters != null) {
+        useLimitParameter = creationParameters.isUseLimitParameter();
+      }
       DataSourceLimit dataSourceLimit = null;
       if (useLimitParameter == null || useLimitParameter.booleanValue()) {
         dataSourceLimit = new DataSourceLimit("<%DATA_SOURCE_LIMIT%>");
@@ -210,7 +221,10 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
 
       }
-      Boolean suspend = dataSourceXML.getDataSource().getCreationParameters().isSuspend();
+      Boolean suspend = null;
+      if (creationParameters != null) {
+        suspend = creationParameters.isSuspend();
+      }
       if (suspend == null || suspend.booleanValue()) {
         DataSourceEvent.suspend(dataSource);
       }
@@ -220,7 +234,10 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         dataSourceLimit.setValue(DataSourceLimit.Limit.LALL.getValue());
       }
 
-      Long delay = dataSourceXML.getDataSource().getCreationParameters().getQueuedDelay();
+      Long delay = null;
+      if (creationParameters != null) {
+        delay = creationParameters.getQueuedDelay();
+      }
       dataSource.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
 
       if (dataSourceLimit != null) {
@@ -275,12 +292,15 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         }
       }
     } finally {
-      Boolean resume = dataSourceXML.getDataSource().getCreationParameters().isResumeAfterCreation();
-
+      Boolean resume = null;
+      if (creationParameters != null) {
+        resume = creationParameters.isResumeAfterCreation();
+      }
       if (resume != null && resume && dataSource.isSuspended()) {
         DataSourceEvent.resume(dataSource);
       }
       dataSource.unlock();
     }
+
   }
 }
