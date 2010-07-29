@@ -51,6 +51,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (creationParameters != null) {
       className = creationParameters.getClassName();
       provider = creationParameters.getProviderClassName();
+    } else {
+      className = dataSourceXML.getDataSource().getClassName();
+      provider = dataSourceXML.getDataSource().getProviderClassName();
     }
     final DbDataSource dataSource = className == null ? new DbDataSource() : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
     if (provider != null) {
@@ -66,7 +69,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if (creationParameters != null) {
         canAddRows = creationParameters.isCanAddRows();
         canDeleteRows = creationParameters.isCanDeleteRows();
+      } else {
+        canAddRows = dataSourceXML.getDataSource().isCanAddRows();
+        canDeleteRows = dataSourceXML.getDataSource().isCanDeleteRows();
       }
+      
       dataSource.setCanAddRows(canAddRows == null ? false : canAddRows);
       dataSource.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
 
@@ -237,6 +244,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       Long delay = null;
       if (creationParameters != null) {
         delay = creationParameters.getQueuedDelay();
+      } else {
+        delay = dataSourceXML.getDataSource().getQueuedDelay();
       }
       dataSource.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
 
@@ -295,6 +304,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       Boolean resume = null;
       if (creationParameters != null) {
         resume = creationParameters.isResumeAfterCreation();
+      } else {
+        resume = dataSourceXML.getDataSource().isResumeAfterCreation();
       }
       if (resume != null && resume && dataSource.isSuspended()) {
         DataSourceEvent.resume(dataSource);

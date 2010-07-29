@@ -29,6 +29,12 @@
                   </xsd:choice>
                 </xsd:complexType>
               </xsd:element>
+              <xsd:element name="CanAddRows" type="xsd:boolean" minOccurs="0"></xsd:element>
+              <xsd:element name="CanDeleteRows" type="xsd:boolean" minOccurs="0"></xsd:element>
+              <xsd:element name="QueuedDelay" type="xsd:long" minOccurs="0"></xsd:element>
+              <xsd:element name="resumeAfterCreation" type="xsd:boolean" minOccurs="0"></xsd:element>
+              <xsd:element name="ClassName" type="xsd:string" minOccurs="0"></xsd:element>
+              <xsd:element name="ProviderClassName" type="xsd:string" minOccurs="0"></xsd:element>
               <xsd:element name="CreationParameters" minOccurs="0" maxOccurs="1">
                 <xsd:complexType>
                   <xsd:sequence>
@@ -178,23 +184,3 @@
     <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
   </xsd:complexType>
 </xsd:schema>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
