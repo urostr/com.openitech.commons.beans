@@ -832,7 +832,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public T newInstance(String replace);
   }
 
-  public final static class SifrantSeekType extends AbstractSeekType<String> implements ValuesList {
+  public static class SifrantSeekType extends AbstractSeekType<String> implements ValuesList {
 
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private FutureTask<DbComboBoxModel> model;
