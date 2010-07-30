@@ -21,10 +21,7 @@ public class SpringDataSourceFactory extends AbstractDataSourceFactory {
   }
 
   @Override
-  public void configure(final AbstractDataSourceFactory factory, final String opis, com.openitech.db.model.factory.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea dataSourceXML) throws SQLException, ClassNotFoundException {
-    factory.opis = opis;
-
-
+  public void configure() throws SQLException, ClassNotFoundException {
     CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
     String className = null;
     String provider = null;
@@ -32,7 +29,7 @@ public class SpringDataSourceFactory extends AbstractDataSourceFactory {
       className = creationParameters.getClassName();
       provider = creationParameters.getProviderClassName();
     }
-    final DbDataSource dataSource = className == null ? new DbDataSource("", "", SpringDataSource.class) : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
+    this.dataSource = className == null ? new DbDataSource("", "", SpringDataSource.class) : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
     if (provider != null) {
       dataSource.setProvider(provider);
     }
@@ -44,10 +41,7 @@ public class SpringDataSourceFactory extends AbstractDataSourceFactory {
         dataSource.setCountSql(getReplacedSql(dataSourceXML.getDataSource().getCOUNTSQL()));
       }
       dataSource.setSelectSql(getReplacedSql(dataSourceXML.getDataSource().getSQL()));
-      dataSource.setName("DS:FACTORY:" + factory.getOpis());
-
-
-      factory.dataSource = dataSource;
+      dataSource.setName("DS:FACTORY:" + this.getOpis());
 
     } finally {
       dataSource.unlock();

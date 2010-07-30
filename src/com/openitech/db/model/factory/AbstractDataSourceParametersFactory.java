@@ -7,8 +7,10 @@ package com.openitech.db.model.factory;
 import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.swing.framework.context.AssociatedFilter;
 import com.openitech.swing.framework.context.AssociatedTasks;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JMenu;
@@ -45,6 +47,11 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
   }
 
   /**
+   * Configures the data source parameters factory
+   */
+  public abstract void configure() throws SQLException;
+
+  /**
    * Get the value of parameters
    *
    * @return the value of parameters
@@ -61,5 +68,37 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
    */
   public List<JMenu> getViewMenuItems() {
     return viewMenuItems;
+  }
+
+  protected DataSourceFiltersMap filtersMap = new DataSourceFiltersMap();
+
+  /**
+   * Get the value of filtersMap
+   *
+   * @return the value of filtersMap
+   */
+  @Override
+  public DataSourceFiltersMap getFiltersMap() {
+    return filtersMap;
+  }
+
+  protected DataSourceParametersFactory dataSourceParametersFactory;
+
+  /**
+   * Get the value of dataSourceParametersFactory
+   *
+   * @return the value of dataSourceParametersFactory
+   */
+  public DataSourceParametersFactory getDataSourceParametersFactory() {
+    return dataSourceParametersFactory;
+  }
+
+  /**
+   * Set the value of dataSourceParametersFactory
+   *
+   * @param dataSourceParametersFactory new value of dataSourceParametersFactory
+   */
+  public void setDataSourceParametersFactory(DataSourceParametersFactory dataSourceParametersFactory) {
+    this.dataSourceParametersFactory = dataSourceParametersFactory;
   }
 }

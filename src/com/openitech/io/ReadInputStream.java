@@ -90,10 +90,7 @@ public class ReadInputStream {
       for (String sql : sqls) {
         sql = sql.trim();
         if (sql.trim().length() > 0 && !sql.startsWith("--")) {
-          sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-          sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-          sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-          result.add(sql);
+          result.add(getReplacedSql(sql));
         }
       }
       return result.toArray(new String[result.size()]);
@@ -102,4 +99,20 @@ public class ReadInputStream {
       return null;
     }
   }
-}
+
+  public static String getReplacedSql(String sql) {
+    sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+    sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+    sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+    sql = sql.replaceAll("<%TS%>", Long.toString(System.currentTimeMillis()));
+
+    return sql;
+  }
+
+  public static String[] getReplacedSqls(String... sqls) {
+    for (int i = 0; i < sqls.length; i++) {
+      sqls[i] = getReplacedSql(sqls[i]);
+    }
+
+    return sqls;
+  }}

@@ -9,6 +9,7 @@ import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbTableModel;
+import com.openitech.io.ReadInputStream;
 import com.openitech.value.fields.Field;
 import com.openitech.sql.util.SqlUtilities;
 import java.awt.Component;
@@ -34,6 +35,8 @@ import javax.xml.bind.Unmarshaller;
 public abstract class AbstractDataSourceFactory {
 
   protected final DbDataModel dbDataModel;
+  protected com.openitech.db.model.factory.DataSourceConfig config;
+  protected com.openitech.db.model.xml.config.Workarea dataSourceXML;
 
   public AbstractDataSourceFactory(DbDataModel dbDataModel) {
     this.dbDataModel = dbDataModel;
@@ -76,7 +79,7 @@ public abstract class AbstractDataSourceFactory {
     }
   }
 
-  public void configure(final AbstractDataSourceFactory waConfig, final String opis, com.openitech.db.model.factory.DataSourceConfig config, Class clazz, String resourceName) throws SQLException, JAXBException {
+  protected void configure(final AbstractDataSourceFactory waConfig, final String opis, com.openitech.db.model.factory.DataSourceConfig config, Class clazz, String resourceName) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
     com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(clazz.getResourceAsStream(resourceName));
     try {
@@ -86,8 +89,15 @@ public abstract class AbstractDataSourceFactory {
     }
   }
 
-  public abstract void configure(final AbstractDataSourceFactory factory, final String opis, com.openitech.db.model.factory.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea dataSourceXML) throws SQLException, ClassNotFoundException;
+  protected void configure(final AbstractDataSourceFactory factory, final String opis, com.openitech.db.model.factory.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea dataSourceXML) throws SQLException, ClassNotFoundException {
+    factory.opis = opis;
+    factory.config = config;
+    factory.dataSourceXML = dataSourceXML;
+    
+    factory.configure();
+  };
 
+  public abstract void configure() throws SQLException, ClassNotFoundException;
 //   
   protected DbDataSource dataSource;
 
@@ -195,23 +205,11 @@ public abstract class AbstractDataSourceFactory {
     return viewMenuItems;
   }
 
-  public static String getReplacedSql(String sql) {
-    sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-    sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-    sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-    sql = sql.replaceAll("<%TS%>", Long.toString(System.currentTimeMillis()));
-
-    return sql;
+  protected String getReplacedSql(String sql) {
+    return ReadInputStream.getReplacedSql(sql);
   }
 
-  public static String[] getReplacedSqls(String[] sqls) {
-    for (int i = 0; i < sqls.length; i++) {
-      sqls[i] = sqls[i].replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-      sqls[i] = sqls[i].replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-      sqls[i] = sqls[i].replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-      sqls[i] = sqls[i].replaceAll("<%TS%>", Long.toString(System.currentTimeMillis()));
-    }
-
-    return sqls;
+  protected String[] getReplacedSqls(String[] sqls) {
+    return ReadInputStream.getReplacedSqls(sqls);
   }
 }
