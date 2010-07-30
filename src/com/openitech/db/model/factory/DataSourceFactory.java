@@ -16,6 +16,7 @@ import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.PendingSqlParameter;
+import com.openitech.db.model.sql.SQLOrderByParameter;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.db.model.xml.config.DataSourceFilter;
 import com.openitech.db.model.xml.config.DataSourceParametersFactory;
@@ -119,12 +120,12 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           if (dsf.getFactory().getGroovy() != null) {
             GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
             Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + this.getOpis() + "_" + System.currentTimeMillis());
-            Constructor constructor = gcls.getConstructor(DbDataSource.class, com.openitech.db.model.factory.DataSourceConfig.class);
+            Constructor constructor = gcls.getConstructor(DbDataSource.class, config.getClass());
             newInstance = constructor.newInstance(dataSource, config);
           } else if (dsf.getFactory().getClassName() != null) {
             @SuppressWarnings(value = "static-access")
             Class jcls = DataSourceFactory.class.forName(dsf.getFactory().getClassName());
-            Constructor constructor = jcls.getConstructor(DbDataSource.class, com.openitech.db.model.factory.DataSourceConfig.class);
+            Constructor constructor = jcls.getConstructor(DbDataSource.class, config.getClass());
             newInstance = constructor.newInstance(dataSource, config);
           }
           if (newInstance != null) {
@@ -142,13 +143,14 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         }
       }
     }
+    parameters.add(new SQLOrderByParameter("<%DB_ROW_SORTER%>", dataSource));
     return parameters;
   }
 
   protected void limitDataSource() {
     if (dataSourceLimit != null) {
-      DataSourceLimit.Limit.LALL.setSelected();
-      dataSourceLimit.setValue(DataSourceLimit.Limit.LALL.getValue());
+      getLimit().setSelected();
+      dataSourceLimit.setValue(getLimit().getValue());
     }
   }
 
@@ -246,12 +248,12 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         if (panel.getGroovy() != null) {
           GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
           Class gcls = gcl.parseClass(panel.getGroovy(), "wa" + this.getOpis() + "_" + System.currentTimeMillis());
-          Constructor constructor = gcls.getConstructor(com.openitech.db.model.factory.DataSourceConfig.class);
+          Constructor constructor = gcls.getConstructor(config.getClass());
           newInstance = constructor.newInstance(config);
         } else if (panel.getClassName() != null) {
           @SuppressWarnings(value = "static-access")
           Class jcls = DataSourceFactory.class.forName(panel.getClassName());
-          Constructor constructor = jcls.getConstructor(com.openitech.db.model.factory.DataSourceConfig.class);
+          Constructor constructor = jcls.getConstructor(config.getClass());
           newInstance = constructor.newInstance(config);
         }
         if (newInstance instanceof java.awt.Component) {
@@ -333,12 +335,12 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (dsf.getFactory().getGroovy() != null) {
       GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
       Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + (dsf.getName() == null ? "" : dsf.getName()) + "_" + System.currentTimeMillis());
-      Constructor constructor = gcls.getConstructor(String.class, com.openitech.db.model.factory.DataSourceConfig.class);
+      Constructor constructor = gcls.getConstructor(String.class, config.getClass());
       newInstance = constructor.newInstance(dsf.getReplace(), config);
     } else if (dsf.getFactory().getClassName() != null) {
       @SuppressWarnings(value = "static-access")
       Class jcls = DataSourceFactory.class.forName(dsf.getFactory().getClassName());
-      Constructor constructor = jcls.getConstructor(String.class, com.openitech.db.model.factory.DataSourceConfig.class);
+      Constructor constructor = jcls.getConstructor(String.class, config.getClass());
       newInstance = constructor.newInstance(dsf.getReplace(), config);
     }
     if (newInstance != null) {

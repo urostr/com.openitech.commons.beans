@@ -4,6 +4,7 @@
  */
 package com.openitech.db.model.factory;
 
+import com.openitech.db.filters.DataSourceLimit;
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.model.DbDataModel;
@@ -11,7 +12,6 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.io.ReadInputStream;
 import com.openitech.value.fields.Field;
-import com.openitech.sql.util.SqlUtilities;
 import java.awt.Component;
 import java.io.StringReader;
 import java.sql.Clob;
@@ -60,10 +60,14 @@ public abstract class AbstractDataSourceFactory {
   }
 
   public void configure(String opis, Clob resource) throws SQLException, JAXBException {
+    configure(opis, resource, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel));
+  }
+
+  public void configure(String opis, Clob resource, com.openitech.db.model.factory.DataSourceConfig config) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
     com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(resource.getCharacterStream());
     try {
-      configure(this, opis, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel), workareaXML);
+      configure(this, opis, config, workareaXML);
     } catch (ClassNotFoundException ex) {
       Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
     }
@@ -93,9 +97,11 @@ public abstract class AbstractDataSourceFactory {
     factory.opis = opis;
     factory.config = config;
     factory.dataSourceXML = dataSourceXML;
-    
+
     factory.configure();
-  };
+  }
+
+  ;
 
   public abstract void configure() throws SQLException, ClassNotFoundException;
 //   
@@ -122,6 +128,25 @@ public abstract class AbstractDataSourceFactory {
   protected List<FieldObserver> fieldObservers = new ArrayList<FieldObserver>();
   protected Set<Field> dataEntryValues = new java.util.HashSet<com.openitech.value.fields.Field>();
   protected String opis;
+  protected DataSourceLimit.Limit limit = DataSourceLimit.Limit.LALL;
+
+  /**
+   * Get the value of limit
+   *
+   * @return the value of limit
+   */
+  public DataSourceLimit.Limit getLimit() {
+    return limit;
+  }
+
+  /**
+   * Set the value of limit
+   *
+   * @param limit new value of limit
+   */
+  public void setLimit(DataSourceLimit.Limit limit) {
+    this.limit = limit;
+  }
 
   /**
    * Get the value of opis

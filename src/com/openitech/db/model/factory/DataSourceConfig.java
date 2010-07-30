@@ -18,22 +18,22 @@ import javax.swing.text.Document;
  *
  * @author uros
  */
-public class DataSourceConfig {
+public class DataSourceConfig<T extends DbDataModel> {
   private final static java.util.Map<CaseInsensitiveString, Document> documents = Collections.synchronizedMap(new java.util.HashMap<CaseInsensitiveString, Document>());
 
-  public DataSourceConfig(DbDataModel dataModel) {
+  public DataSourceConfig(T dataModel) {
     this.dataModel = dataModel;
   }
 
 
-  private DbDataModel dataModel;
+  private T dataModel;
 
   /**
    * Get the value of dataModel
    *
    * @return the value of dataModel
    */
-  public DbDataModel getDataModel() {
+  public T getDataModel() {
     return dataModel;
   }
 
@@ -42,7 +42,7 @@ public class DataSourceConfig {
    *
    * @param dataModel new value of dataModel
    */
-  public void setDataModel(DbDataModel dataModel) {
+  public void setDataModel(T dataModel) {
     this.dataModel = dataModel;
   }
   
