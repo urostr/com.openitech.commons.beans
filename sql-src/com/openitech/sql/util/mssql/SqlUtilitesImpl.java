@@ -1022,6 +1022,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //        if (values != null) {
         sb.append(" AND (");
         boolean first = true;
+
+        StringBuilder join = new StringBuilder();
+
         for (FieldValue fv : values) {
           int tipPolja = fv.getValueType().getTypeIndex();
           String value = null;
@@ -1101,7 +1104,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
                 sql = sql.replaceAll(f.getModel().getReplace(), value);
 
-                sb.append("\nLEFT OUTER JOIN ").append(sql);
+                join.append("\nLEFT OUTER JOIN ").append(sql);
               }
             }
           }
@@ -1114,6 +1117,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sb.append(")");
 //        }
         sb.append(") ");
+        sb.append(join);
       } else if (Event.EVENT_SOURCE.equals(f)
               || Event.EVENT_DATE.equals(f)) {
         valuesSet++;
