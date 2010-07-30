@@ -5022,7 +5022,11 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public static class SubstSqlParameter extends SqlParameter<String> {
 
-    public static final String ALIAS = "<%table_alias%>";
+  public interface Reader {
+    public SubstSqlParameter getSubstSqlParameter(String name);
+  }
+
+  public static final String ALIAS = "<%table_alias%>";
     protected List<Object> parameters = new ArrayList<Object>();
     protected String replace = "";
     protected String alias = "";
