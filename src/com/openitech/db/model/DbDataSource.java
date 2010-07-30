@@ -3117,8 +3117,6 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   }
 
   public boolean lock(boolean fatal, boolean force) {
-    fatal =true;
-    force = false;
     long begin = System.currentTimeMillis();
     boolean result = false;
     try {
