@@ -288,10 +288,12 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   protected void createEventColumns() throws SQLException {
     List<String> eventColumns = dataSourceXML.getDataSource().getEventColumns();
     if (eventColumns.size() > 0) {
+      dataSource.setSafeMode(false);
       dataSource.setQueuedDelay(0);
-      if (dataSourceLimit != null) {
-        dataSourceLimit.reloadDataSources();
-      }
+      dataSource.filterChanged();
+      dataSource.loadData();
+      dataSource.setSafeMode(true);
+
       for (String imePolja : eventColumns) {
         int tipPolja = dataSource.getType(imePolja);
         DbFieldObserver fieldObserver = new DbFieldObserver();
