@@ -4,6 +4,7 @@
  */
 package com.openitech.db.model.sql;
 
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
@@ -146,6 +147,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     try {
       boolean fill = !isFillOnceOnly();
       long timer = System.currentTimeMillis();
+
+      String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER,"");
       
       try {
         if (checkTableSql != null) {
@@ -153,7 +156,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
       } catch (SQLException ex) {
         for (String sql : createTableSqls) {
-          statement.addBatch(sql.replaceAll("<%TS%>", Long.toString(System.currentTimeMillis())));
+          statement.addBatch(sql.replaceAll("<%TS%>", "_"+ DB_USER + Long.toString(System.currentTimeMillis())));
         }
         statement.executeBatch();
         fill = true;
