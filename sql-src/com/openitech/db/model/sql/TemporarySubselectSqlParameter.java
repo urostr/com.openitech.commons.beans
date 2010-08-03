@@ -12,12 +12,15 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  *
  * @author uros
  */
 public class TemporarySubselectSqlParameter extends SubstSqlParameter {
+
+  private static final Semaphore lock = new Semaphore(1);
 
   public TemporarySubselectSqlParameter(String replace) {
     super(replace);
@@ -148,29 +151,34 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       boolean fill = !isFillOnceOnly();
       long timer = System.currentTimeMillis();
 
-      String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER,"");
-      
+      String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
+
       try {
         if (checkTableSql != null) {
           statement.executeQuery(checkTableSql);
         }
       } catch (SQLException ex) {
-        for (String sql : createTableSqls) {
-          statement.addBatch(sql.replaceAll("<%TS%>", "_"+ DB_USER + Long.toString(System.currentTimeMillis())));
+        lock.acquireUninterruptibly();
+        try {
+          for (String sql : createTableSqls) {
+            statement.addBatch(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())));
+          }
+          statement.executeBatch();
+          fill = true;
+        } finally {
+          lock.release();
         }
-        statement.executeBatch();
-        fill = true;
       }
 
       if (fill) {
-        if (emptyTableSql.length()>0) {
+        if (emptyTableSql.length() > 0) {
           statement.executeUpdate(emptyTableSql);
         }
 
         SQLDataSource.executeUpdate(fillTableSql, getParameters());
-        if (cleanTableSqls!=null) {
+        if (cleanTableSqls != null) {
           for (String sql : cleanTableSqls) {
-             SQLDataSource.executeUpdate(sql, getParameters());
+            SQLDataSource.executeUpdate(sql, getParameters());
           }
         }
         if (DbDataSource.DUMP_SQL) {
