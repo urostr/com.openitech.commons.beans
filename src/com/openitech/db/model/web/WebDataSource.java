@@ -1499,7 +1499,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public boolean absolute(int row) throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();
@@ -1807,7 +1807,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public boolean relative(int rows) throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();
@@ -2481,7 +2481,7 @@ public class WebDataSource implements DbDataSourceImpl {
   }
 
   //TODO a se lahko spremeni metodo v askToSaveChanges()? Bolj logièno mi je
-  public boolean canUpdateRow() {
+  public boolean shouldUpdateRow() {
     return (JOptionPane.showOptionDialog(OwnerFrame.getInstance().getOwner(),
             "Ali naj shranim spremembe ?",
             "Preveri",
@@ -2731,7 +2731,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public boolean first() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();
@@ -3034,7 +3034,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public void beforeFirst() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();
@@ -3063,7 +3063,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public void afterLast() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();
@@ -3313,7 +3313,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public boolean last() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();
@@ -3344,7 +3344,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public void moveToCurrentRow() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();
@@ -3388,7 +3388,7 @@ public class WebDataSource implements DbDataSourceImpl {
     if (owner.isCanAddRows()) {
       if (loadData()) {
         if (rowUpdated()) {
-          if (canUpdateRow()) {
+          if (shouldUpdateRow()) {
             updateRow();
           } else {
             cancelRowUpdates();
@@ -3443,7 +3443,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public boolean next() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();
@@ -3479,7 +3479,7 @@ public class WebDataSource implements DbDataSourceImpl {
   public boolean previous() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (canUpdateRow()) {
+        if (shouldUpdateRow()) {
           updateRow();
         } else {
           cancelRowUpdates();

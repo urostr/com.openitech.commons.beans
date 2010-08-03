@@ -20,6 +20,7 @@ import com.openitech.events.concurrent.DataSourceListDataEvent;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.awt.OwnerFrame;
+import com.openitech.db.model.sql.SQLNotificationException;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -77,6 +78,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public static boolean DUMP_SQL = false;
   public final static String MOVE_TO_INSERT_ROW = "moveToInsertRow";
+  public final static String CAN_UPDATE_ROW = "canUpdateRow";
   public final static String UPDATE_ROW = "updateRow";
   public final static String ROW_INSERTED = "rowInserted";
   public final static String ROW_UPDATED = "rowUpdated";
@@ -2146,15 +2148,25 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     implementation.updateString(columnName, x);
   }
 
-  public boolean canUpdateRow() {
-    return (JOptionPane.showOptionDialog(OwnerFrame.getInstance().getOwner(),
-            "Ali naj shranim spremembe ?",
-            "Preveri",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            new Object[]{"Da", "Ne"},
-            "Ne") == JOptionPane.YES_OPTION);
+  public boolean canUpdateRow() throws SQLException {
+    boolean canUpdateRow = true;
+    try {
+      fireActionPerformed(new ActionEvent(this, 1, DbDataSource.CAN_UPDATE_ROW));
+    } catch (Exception err) {
+      if ((err instanceof SQLNotificationException)
+              || (err.getCause() instanceof SQLNotificationException)) {
+        if (err instanceof SQLNotificationException) {
+          throw (SQLNotificationException) err;
+        } else {
+          throw (SQLNotificationException) err.getCause();
+        }
+      } else {
+        Logger.getAnonymousLogger().log(Level.WARNING, "Can't update row", err);
+      }
+      canUpdateRow = false;
+    }
+
+    return canUpdateRow;
   }
 
   /**
@@ -2168,7 +2180,9 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
    */
   @Override
   public void updateRow() throws SQLException {
-    implementation.updateRow();
+    if (canUpdateRow()) {
+      implementation.updateRow();
+    }
   }
 
   /**
