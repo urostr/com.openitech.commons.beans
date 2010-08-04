@@ -1,5 +1,6 @@
 package com.openitech.value.fields;
 
+import com.openitech.text.CaseInsensitiveString;
 import com.openitech.util.Equals;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -81,7 +82,11 @@ public class FieldValue extends Field {
     return ValueType.getType(type, value);
   }
 
-  public static FieldValue createFieldValue(ResultSet source, Field field, String columnName) throws SQLException {
+  public static FieldValue createFieldValue(final ResultSet source, final String fieldName, final String columnName, final java.util.Map<CaseInsensitiveString, Field> fields) throws SQLException {
+      return createFieldValue(source, fields.get(CaseInsensitiveString.valueOf(fieldName)), columnName);
+  }
+  
+  public static FieldValue createFieldValue(final ResultSet source, final Field field, final String columnName) throws SQLException {
     FieldValue fieldValue = new FieldValue(field, source.getObject(columnName));
     if (source.wasNull()) {
       fieldValue.setValue(null);

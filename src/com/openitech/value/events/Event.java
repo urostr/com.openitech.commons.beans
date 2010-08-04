@@ -4,12 +4,18 @@
  */
 package com.openitech.value.events;
 
+import com.openitech.text.CaseInsensitiveString;
 import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValue;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -168,6 +174,25 @@ public class Event {
     getFieldValues(value).add(value);
   }
 
+  public void addValues(ResultSet rs, final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String... fields) throws SQLException {
+    for (String field : fields) {
+      addValue(FieldValue.createFieldValue(rs, field, field, fieldsMap));
+    }
+  }
+
+  public void addValues(ResultSet rs, final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String[][] fields) throws SQLException {
+    for (String[] field : fields) {
+      if (field.length > 0) {
+        final String fieldName = field[0];
+        final String columnName = field.length > 1 ? field[1] : fieldName;
+        FieldValue fv = FieldValue.createFieldValue(rs, fieldName, columnName, fieldsMap);
+
+
+        addValue(fv);
+      }
+    }
+  }
+
   public void removeAll(FieldValue value) {
     eventValues.remove(value);
   }
@@ -179,8 +204,6 @@ public class Event {
   public void setEventValues(Map<Field, List<FieldValue>> eventValues) {
     this.eventValues = eventValues;
   }
-
-  
 
   public List<FieldValue> getFieldValues() {
     List<FieldValue> result = new java.util.ArrayList<FieldValue>();
@@ -221,6 +244,14 @@ public class Event {
    */
   public void setPrimaryKey(Field... primaryKey) {
     this.primaryKey = primaryKey;
+  }
+
+  public void setPrimaryKey(final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String... primaryKeys) {
+    List<Field> fields = new ArrayList<Field>(primaryKeys.length);
+    for (String pk:primaryKeys) {
+      fields.add(fieldsMap.get(CaseInsensitiveString.valueOf(pk)));
+    }
+    this.primaryKey = fields.toArray(new Field[fields.size()]);
   }
 
   @Override
