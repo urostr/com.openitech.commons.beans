@@ -889,7 +889,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     try {
       while (fields.next()) {
         CaseInsensitiveString key = new CaseInsensitiveString(fields.getString("ImePolja"));
-        Field field = new Field(fields.getInt("Id"), key.toString(), ValueType.getType(fields.getInt("TipPolja")).getSqlType(), -1);
+        Field field = new Field(fields.getInt("Id"), key.toString(), ValueType.valueOf(fields.getInt("TipPolja")).getSqlType(), -1);
 
         result.put(key, field);
       }
