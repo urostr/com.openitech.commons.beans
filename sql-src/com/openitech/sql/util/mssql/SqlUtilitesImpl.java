@@ -27,8 +27,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -632,42 +635,234 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
+  private static class EventQueryKey {
+
+    public EventQueryKey(Event event) {
+      this.sifrant = event.getSifrant();
+      this.sifra = event.getSifra();
+      java.util.Set<Field> pk = new java.util.HashSet<Field>();
+      if (event.getPrimaryKey() != null) {
+        pk.addAll(Arrays.asList(event.getPrimaryKey()));
+      } else {
+        pk.addAll(event.getEventValues().keySet());
+        //primaryKey.add(Event.EVENT_DATE);
+        pk.add(Event.EVENT_SOURCE);
+      }
+      primaryKey = pk.toArray(new Field[pk.size()]);
+    }
+    private int sifrant;
+
+    /**
+     * Get the value of sifrant
+     *
+     * @return the value of sifrant
+     */
+    public int getSifrant() {
+      return sifrant;
+    }
+
+    /**
+     * Set the value of sifrant
+     *
+     * @param sifrant new value of sifrant
+     */
+    public void setSifrant(int sifrant) {
+      this.sifrant = sifrant;
+    }
+    private String sifra;
+
+    /**
+     * Get the value of sifra
+     *
+     * @return the value of sifra
+     */
+    public String getSifra() {
+      return sifra;
+    }
+
+    /**
+     * Set the value of sifra
+     *
+     * @param sifra new value of sifra
+     */
+    public void setSifra(String sifra) {
+      this.sifra = sifra;
+    }
+    private Field[] primaryKey;
+
+    /**
+     * Get the value of primaryKey
+     *
+     * @return the value of primaryKey
+     */
+    public Field[] getPrimaryKey() {
+      return primaryKey;
+    }
+
+    /**
+     * Set the value of primaryKey
+     *
+     * @param primaryKey new value of primaryKey
+     */
+    public void setPrimaryKey(Field... primaryKey) {
+      this.primaryKey = primaryKey;
+    }
+    private PreparedStatement query;
+
+    /**
+     * Get the value of query
+     *
+     * @return the value of query
+     */
+    public PreparedStatement getQuery() {
+      return query;
+    }
+
+    /**
+     * Set the value of query
+     *
+     * @param query new value of query
+     */
+    public void setQuery(PreparedStatement query) {
+      this.query = query;
+    }
+    private EventQuery eventQuery;
+
+    /**
+     * Get the value of eventQuery
+     *
+     * @return the value of eventQuery
+     */
+    public EventQuery getEventQuery() {
+      return eventQuery;
+    }
+
+    /**
+     * Set the value of eventQuery
+     *
+     * @param eventQuery new value of eventQuery
+     */
+    public void setEventQuery(EventQuery eventQuery) {
+      this.eventQuery = eventQuery;
+    }
+
+    public ResultSet executeQuery(Event event) throws SQLException {
+      List<FieldValue> parameters = new ArrayList<FieldValue>();
+      for (Field f : this.primaryKey) {
+        List<FieldValue> values;
+        if (event.getEventValues().containsKey(f)) {
+          values = event.getEventValues().get(f);
+        } else {
+          values = new java.util.ArrayList<FieldValue>();
+          values.add(new FieldValue(f));
+        }
+
+        parameters.addAll(values);
+      }
+      
+      return executeQuery(parameters);
+    }
+
+    public ResultSet executeQuery(List<FieldValue> fields) throws SQLException {
+      for (FieldValue field : fields) {
+        if (eventQuery.getNamedParameters().containsKey(field)) {
+          eventQuery.getNamedParameters().get(field).setValue(field.getValue());
+        }
+      }
+
+      return SQLDataSource.executeQuery(this.query, eventQuery.getParameters());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final EventQueryKey other = (EventQueryKey) obj;
+      if (this.sifrant != other.sifrant) {
+        return false;
+      }
+      if ((this.sifra == null) ? (other.sifra != null) : !this.sifra.equals(other.sifra)) {
+        return false;
+      }
+      if (!Arrays.deepEquals(this.primaryKey, other.primaryKey)) {
+        return false;
+      }
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 3;
+      hash = 97 * hash + this.sifrant;
+      hash = 97 * hash + (this.sifra != null ? this.sifra.hashCode() : 0);
+      hash = 97 * hash + Arrays.deepHashCode(this.primaryKey);
+      return hash;
+    }
+  }
+  private Map<EventQueryKey, EventQueryKey> findEventStatements = new HashMap<EventQueryKey, EventQueryKey>();
+
   @Override
   public Event findEvent(Event event) throws SQLException {
     if (event.getId() <= 0) {
-      java.util.Set<Field> primaryKey = new java.util.HashSet<Field>();
-      if (event.getPrimaryKey() != null) {
-        for (Field pk : event.getPrimaryKey()) {
-          primaryKey.add(pk);
-        }
+      EventQueryKey eqk = new EventQueryKey(event);
+      boolean seek = false;
+
+      if (findEventStatements.containsKey(eqk)) {
+        eqk = findEventStatements.get(eqk);
+        seek = true;
       } else {
-        primaryKey.addAll(event.getEventValues().keySet());
-        //primaryKey.add(Event.EVENT_DATE);
-        primaryKey.add(Event.EVENT_SOURCE);
-      }
-      java.util.List parameters = new java.util.ArrayList<Object>();
-      int valuesSet = prepareSearchParameters(parameters, new HashMap<Field, DbDataSource.SqlParameter<Object>>(), event, primaryKey, new java.util.HashSet<Field>(), event.getSifrant(), event.getSifra(), true, false);
+        java.util.Set<Field> primaryKey = new java.util.HashSet<Field>();
+        if (event.getPrimaryKey() != null) {
+          primaryKey.addAll(Arrays.asList(event.getPrimaryKey()));
+        } else {
+          primaryKey.addAll(event.getEventValues().keySet());
+          //primaryKey.add(Event.EVENT_DATE);
+          primaryKey.add(Event.EVENT_SOURCE);
+        }
 
-      //ce niso bile nastavljene vse vrednosti PK-ja potem ne iscemo 
-      boolean seek = true;
+        EventQuery eq = prepareEventQuery(event, primaryKey, new java.util.HashSet<Field>());
+        int valuesSet = eq.getValuesSet();
 
-      if (event.getPrimaryKey() != null) {
-        seek = valuesSet == primaryKey.size();
-      }
 
-      java.util.List parametersVecVrednosti = new java.util.ArrayList<Object>();
-      parametersVecVrednosti.add(event.getSifrant());
-      parametersVecVrednosti.add(event.getSifra());
+        if (event.getPrimaryKey() != null) {
+          //vedno iscemo po PK, cetudi se dogodek pojavlja v polju z vec vrednostmi
+          //ce niso bile nastavljene vse vrednosti PK-ja potem ne iscemo
+          seek = valuesSet == primaryKey.size();
+        } else {
+          java.util.List parametersVecVrednosti = new java.util.ArrayList<Object>();
+          parametersVecVrednosti.add(event.getSifrant());
+          parametersVecVrednosti.add(event.getSifra());
 
-      ResultSet rsVecVrednosti = SQLDataSource.executeQuery(getCheckVecVrednostiEventSQL(), parametersVecVrednosti, ConnectionManager.getInstance().getTxConnection());
-      if (rsVecVrednosti.next()) {
-        if (rsVecVrednosti.getInt(1) > 0) {
-          seek = false;
+          ResultSet rsVecVrednosti = SQLDataSource.executeQuery(getCheckVecVrednostiEventSQL(), parametersVecVrednosti, ConnectionManager.getInstance().getTxConnection());
+          if (rsVecVrednosti.next()) {
+            if (rsVecVrednosti.getInt(1) > 0) {
+              seek = false;
+            }
+          }
+        }
+
+        if (seek) {
+          String sql = SQLDataSource.substParameters(eq.getQuery(), eq.getParameters());
+          PreparedStatement statement = ConnectionManager.getInstance().getTxConnection().prepareStatement(sql,
+                  ResultSet.TYPE_SCROLL_INSENSITIVE,
+                  ResultSet.CONCUR_READ_ONLY,
+                  ResultSet.HOLD_CURSORS_OVER_COMMIT);
+
+          statement.setQueryTimeout(1800);
+
+          eqk.setEventQuery(eq);
+          eqk.setQuery(statement);
+
+          findEventStatements.put(eqk, eqk);
         }
       }
 
       if (seek) {
-        ResultSet rs = SQLDataSource.executeQuery(getFindEventSQL(), parameters, ConnectionManager.getInstance().getTxConnection());
+        ResultSet rs = eqk.executeQuery(event);
         try {
           if (rs.next()) {
             event.setId(rs.getLong("Id"));
@@ -1036,7 +1231,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           switch (tipPolja) {
             case 1:
               //Integer
-              value = val_alias+".IntValue";
+              value = val_alias + ".IntValue";
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName()).append("]");
@@ -1044,7 +1239,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 2:
               //Real
-              value = val_alias+".RealValue";
+              value = val_alias + ".RealValue";
               sb.append(val_alias).append(".RealValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName()).append("]");
@@ -1052,7 +1247,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 3:
               //String
-              value = val_alias+".StringValue";
+              value = val_alias + ".StringValue";
               sb.append(val_alias).append(".StringValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
@@ -1063,7 +1258,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             case 9:
             case 10:
               //Date
-              value = val_alias+".DateValue";
+              value = val_alias + ".DateValue";
               sb.append(val_alias).append(".DateValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName()).append("]");
@@ -1071,7 +1266,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 6:
               //Clob
-              value = val_alias+".ClobValue";
+              value = val_alias + ".ClobValue";
               sb.append(val_alias).append(".ClobValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName()).append("]");
@@ -1079,7 +1274,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
             case 7:
               //Boolean
-              value = val_alias+".IntValue";
+              value = val_alias + ".IntValue";
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
                 sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName()).append("]");
@@ -1152,17 +1347,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
         String value = null;
         switch (tipPolja) {
           case 1:
-            value = val_alias+".IntValue";
+            value = val_alias + ".IntValue";
             sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 2:
             //Real
-            value = val_alias+".RealValue";
+            value = val_alias + ".RealValue";
             sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 3:
             //String
-            value = val_alias+".StringValue";
+            value = val_alias + ".StringValue";
             sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 4:
@@ -1170,17 +1365,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
           case 9:
           case 10:
             //Date
-            value = val_alias+".DateValue";
+            value = val_alias + ".DateValue";
             sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 6:
             //Clob
-            value = val_alias+".ClobValue";
+            value = val_alias + ".ClobValue";
             sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName() + fieldValueIndex).append("]");
             break;
           case 7:
             //Boolean
-            value = val_alias+".IntValue";
+            value = val_alias + ".IntValue";
             sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
         }
         if ((f.getModel().getQuery() != null)
