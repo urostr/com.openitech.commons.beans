@@ -176,7 +176,7 @@ public class Event {
 
   public void addValues(ResultSet rs, final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String... fields) throws SQLException {
     for (String field : fields) {
-      addValue(FieldValue.createFieldValue(rs, field, field, fieldsMap));
+      addValue(FieldValue.createFieldValue(rs, field, 1, field, fieldsMap));
     }
   }
 
@@ -185,7 +185,7 @@ public class Event {
       if (field.length > 0) {
         final String fieldName = field[0];
         final String columnName = field.length > 1 ? field[1] : fieldName;
-        FieldValue fv = FieldValue.createFieldValue(rs, fieldName, columnName, fieldsMap);
+        FieldValue fv = FieldValue.createFieldValue(rs, fieldName, 1, columnName, fieldsMap);
 
 
         addValue(fv);

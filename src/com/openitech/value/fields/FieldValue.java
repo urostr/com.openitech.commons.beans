@@ -8,11 +8,11 @@ import java.sql.SQLException;
 public class FieldValue extends Field {
 
   public FieldValue(Field field) {
-    this(field.name, field.type, field.fieldIndex, null);
+    this(field.idPolja, field.name, field.type, field.fieldIndex, null);
   }
 
   public FieldValue(Field field, Object value) {
-    this(field.name, field.type, field.fieldIndex, value);
+    this(field.idPolja, field.name, field.type, field.fieldIndex, value);
   }
 
   public FieldValue(String name, int type) {
@@ -82,8 +82,9 @@ public class FieldValue extends Field {
     return ValueType.getType(type, value);
   }
 
-  public static FieldValue createFieldValue(final ResultSet source, final String fieldName, final String columnName, final java.util.Map<CaseInsensitiveString, Field> fields) throws SQLException {
-      return createFieldValue(source, fields.get(CaseInsensitiveString.valueOf(fieldName)), columnName);
+  public static FieldValue createFieldValue(final ResultSet source, final String fieldName, final int fieldValueIndex, final String columnName, final java.util.Map<CaseInsensitiveString, Field> fields) throws SQLException {
+    final Field field = fields.get(CaseInsensitiveString.valueOf(fieldName));
+      return createFieldValue(source, new Field(field.idPolja, field.name, field.type, fieldValueIndex), columnName);
   }
   
   public static FieldValue createFieldValue(final ResultSet source, final Field field, final String columnName) throws SQLException {
