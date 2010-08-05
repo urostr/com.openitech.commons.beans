@@ -16,6 +16,7 @@
                         </xsd:sequence>
                         <xsd:attribute name="name" type="xsd:string"/>
                         <xsd:attribute name="type" type="xsd:int"/>
+                        <xsd:attribute name="index" type="xsd:int"/>
                     </xsd:complexType>
                 </xsd:element>
                 

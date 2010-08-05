@@ -8,6 +8,7 @@ package com.openitech.db.model.sync;
 
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource.SqlParameter;
+import com.openitech.db.model.spring.Beans;
 import com.openitech.db.model.web.DbWebRowSetImpl;
 import com.openitech.value.events.ActivityEventPolja;
 import com.openitech.value.events.CustomSecondaryEvent;
@@ -18,7 +19,9 @@ import java.io.*;
 
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.EventQuery;
+import com.openitech.ws.util.UtilitiesWS;
 import com.openitech.xml.SecondaryParameters;
+import com.openitech.xml.ws.entry.Command;
 
 import com.sun.rowset.*;
 import java.util.ArrayList;
@@ -81,10 +84,7 @@ public class DbSecondarySpringRowSetReader implements RowSetReader, Serializable
     private int startPosition;
 //    private SQLCache sqlCache = new SQLCache();
     private JdbcRowSetResourceBundle resBundle;
-    private com.sun.jersey.api.client.WebResource webResource;
-    private com.sun.jersey.api.client.Client client;
-//    private static final String RESOURCE_URI = "http://localhost:8081/DogodkiWA/resources/secondary";
-
+    
     // private Connection connection;
     public DbSecondarySpringRowSetReader() {
         try {
@@ -130,10 +130,7 @@ public class DbSecondarySpringRowSetReader implements RowSetReader, Serializable
      */
     @Override
     public void readData(RowSetInternal caller) throws SQLException {
-        if (client == null) {
-            client = new com.sun.jersey.api.client.Client();
-            webResource = client.resource(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_SECONDARY_WS));
-        }
+       
         try {
             WebRowSet wrs = (WebRowSet) caller;
 
@@ -193,7 +190,7 @@ public class DbSecondarySpringRowSetReader implements RowSetReader, Serializable
             }
 
 
-            com.openitech.xml.wrs.WebRowSet rowSet = webResource.accept(MediaType.APPLICATION_XML_TYPE).post(com.openitech.xml.wrs.WebRowSet.class, parameters);
+            com.openitech.xml.wrs.WebRowSet rowSet = UtilitiesWS.getInstance().callWebServiceBean(Beans.SECONDARY_DATASOURCE, Command.ROWSET, parameters, com.openitech.xml.wrs.WebRowSet.class);
 
             if (wrs instanceof DbWebRowSetImpl) {
                 ((DbWebRowSetImpl) wrs).readXml(rowSet);

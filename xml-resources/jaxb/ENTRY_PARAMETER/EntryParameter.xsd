@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xml.netbeans.org/schema/EntryParameters"
+            xmlns:tns="http://xml.netbeans.org/schema/EntryParameters"
+            elementFormDefault="qualified">
+    <xsd:element name="Entry">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="BeanName" type="xsd:string"></xsd:element>
+                <xsd:element name="Command" type="tns:Command"></xsd:element>
+                <xsd:element name="JAXBXml" type="xsd:anyType"></xsd:element>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:simpleType name="Command">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="EXECUTE"/>
+            <xsd:enumeration value="ROWSET"/>
+            <xsd:enumeration value="ECHO"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+</xsd:schema>

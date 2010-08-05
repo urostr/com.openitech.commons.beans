@@ -38,12 +38,8 @@ public interface DbConnection {
   String DB_CASE_INSESITIVE = "db.case.insensitive";
   String DB_USE_WEBROWSET = "db.useWebRowSet";
   String DB_USE_SECONDARY_WEBROWSET = "db.useSecondaryWebRowSet";
-  String DB_PRIMARY_WS = "ws.primary";
-  String DB_SECONDARY_WS = "ws.secondary";
-  String DB_CREATE_SECONDARYS_WS = "ws.createsecondarys";
-  String DB_FIND_PP_WS = "ws.findPP";
-  String DB_FIND_PONUDBA_WS= "ws.findPonudba";
-  String DB_GENERATEDFIELDS_WS= "ws.generatedFields";
+  
+  String DB_ENTRY_SERVICE = "ws.entry";
   
   String DB_CONNECT_PREFIX="db.connect.";
   int DB_CONNECT_PREFIX_LENGTH=DB_CONNECT_PREFIX.length();
