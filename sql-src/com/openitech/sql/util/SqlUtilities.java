@@ -45,7 +45,6 @@ public abstract class SqlUtilities implements UpdateEvent {
   public static final String CHANGE_LOG_DB = "[ChangeLog]";
   public static final String RPP_DB = "[RPP]";
   public static final String RPE_DB = "[RPE]";
-
   private static Map<Class, SqlUtilities> instances = new HashMap<Class, SqlUtilities>();
 
   protected SqlUtilities() {
@@ -90,7 +89,7 @@ public abstract class SqlUtilities implements UpdateEvent {
       SqlUtilities instance = null;
       if (implementation != null) {
         try {
-         instance = (SqlUtilities) implementation.newInstance();
+          instance = (SqlUtilities) implementation.newInstance();
           try {
             instance.autocommit = ConnectionManager.getInstance().getConnection().getAutoCommit();
           } catch (SQLException ex) {
@@ -368,8 +367,18 @@ public abstract class SqlUtilities implements UpdateEvent {
   }
 
   public boolean endTransaction(boolean commit, boolean force) throws SQLException {
+    Connection connection = ConnectionManager.getInstance().getTxConnection();
+
     if (force) {
-      activeSavepoints.clear();
+      try {
+        while (!activeSavepoints.empty()) {
+          connection.releaseSavepoint(activeSavepoints.pop());
+        }
+      } catch (SQLException err) {
+        Logger.getLogger(SqlUtilities.class.getName()).log(Level.WARNING, err.getMessage(), err);
+      } finally {
+        activeSavepoints.clear();
+      }
     }
     return endTransaction(commit);
   }
@@ -388,9 +397,13 @@ public abstract class SqlUtilities implements UpdateEvent {
     if (!connection.getAutoCommit()) {
       if (commit) {
         if (savepoint != null) {
-          connection.releaseSavepoint(savepoint);
+          try {
+            connection.releaseSavepoint(savepoint);
+          } catch (SQLException err) {
+            Logger.getLogger(SqlUtilities.class.getName()).log(Level.WARNING, err.getMessage(), err);
+          }
         }
-        if (activeSavepoints.size() == 0) {
+        if (activeSavepoints.empty()) {
           connection.commit();
           if (DbDataSource.DUMP_SQL) {
             System.err.println("-- COMMIT TRANSACTION -- ");
