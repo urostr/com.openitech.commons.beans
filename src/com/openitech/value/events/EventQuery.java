@@ -36,6 +36,13 @@ public interface EventQuery {
    */
   public Map<Field, SqlParameter<Object>> getNamedParameters();
 
+  /**
+   * Get the value of valuesSet
+   *
+   * @return the value of valuesSet
+   */
+  public int getValuesSet();
+
   public int getSifrant();
 
   public String getSifra();

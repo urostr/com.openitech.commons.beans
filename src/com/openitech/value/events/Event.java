@@ -249,7 +249,7 @@ public class Event {
     List<Field> fields = new ArrayList<Field>(primaryKeys.length);
     for (String pk:primaryKeys) {
       final Field field = fieldsMap.get(CaseInsensitiveString.valueOf(pk));
-      fields.addAll(eventValues.get(new Field(field.getIdPolja(), field.getName(), field.getType(), 1)));
+      fields.add(new Field(field.getIdPolja(), field.getName(), field.getType(), 1));
     }
     this.primaryKey = fields.toArray(new Field[fields.size()]);
   }
