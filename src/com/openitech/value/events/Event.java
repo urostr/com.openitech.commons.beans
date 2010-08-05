@@ -217,7 +217,6 @@ public class Event {
 
   private List<FieldValue> getFieldValues(FieldValue value) {
     List<FieldValue> fieldValues;
-    Field key = new Field(value);
     if (eventValues.containsKey(value)) {
       fieldValues = eventValues.get(value);
     } else {
@@ -249,7 +248,8 @@ public class Event {
   public void setPrimaryKey(final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String... primaryKeys) {
     List<Field> fields = new ArrayList<Field>(primaryKeys.length);
     for (String pk:primaryKeys) {
-      fields.add(fieldsMap.get(CaseInsensitiveString.valueOf(pk)));
+      final Field field = fieldsMap.get(CaseInsensitiveString.valueOf(pk));
+      fields.addAll(eventValues.get(new Field(field.getIdPolja(), field.getName(), field.getType(), 1)));
     }
     this.primaryKey = fields.toArray(new Field[fields.size()]);
   }
