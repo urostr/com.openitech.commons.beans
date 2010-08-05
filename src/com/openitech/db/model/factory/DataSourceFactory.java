@@ -40,6 +40,8 @@ import org.codehaus.groovy.control.CompilationFailedException;
  * @author uros
  */
 public class DataSourceFactory extends AbstractDataSourceFactory {
+  private static final String DATA_SOURCE_LIMIT = "<%DATA_SOURCE_LIMIT%>";
+  private static final String DB_ROW_SORTER = "<%DB_ROW_SORTER%>";
   private DataSourceLimit dataSourceLimit;
 
   public DataSourceFactory(DbDataModel dbDataModel) {
@@ -85,7 +87,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   protected List createDataSourceParameters() {
     java.util.List parameters = new java.util.ArrayList();
-    parameters.add(dataSourceLimit);
+    if (dataSourceLimit!=null) {
+      parameters.add(dataSourceLimit);
+    }
     for (Parameters parameter : dataSourceXML.getDataSource().getParameters()) {
       if (parameter.getTemporaryTable() != null) {
         parameters.add(createTemporaryTable(parameter.getTemporaryTable()));
@@ -143,7 +147,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         }
       }
     }
-    parameters.add(new SQLOrderByParameter("<%DB_ROW_SORTER%>", dataSource));
+    parameters.add(new SQLOrderByParameter( DB_ROW_SORTER, dataSource));
     return parameters;
   }
 
@@ -219,9 +223,14 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (creationParameters != null) {
       useLimitParameter = creationParameters.isUseLimitParameter();
     }
+
+    if (dataSourceXML.getDataSource().getSQL().indexOf(DATA_SOURCE_LIMIT)==-1) {
+      useLimitParameter = Boolean.FALSE;
+    }
+
     DataSourceLimit dataSourceLimit = null;
     if (useLimitParameter == null || useLimitParameter.booleanValue()) {
-      dataSourceLimit = new DataSourceLimit("<%DATA_SOURCE_LIMIT%>");
+      dataSourceLimit = new DataSourceLimit(DATA_SOURCE_LIMIT);
       dataSourceLimit.setValue(" TOP 0 ");
       dataSourceLimit.addDataSource(dataSource);
     } //        dsNaslovPendingSql.setPendingSQL(ReadInputStream.getResourceAsString(getClass(), "sql/PP.Pending.sql", "cp1250"),
