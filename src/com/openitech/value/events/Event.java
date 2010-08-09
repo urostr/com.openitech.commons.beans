@@ -318,6 +318,7 @@ public class Event {
 
   public static enum Operation {
     UPDATE,
-    DELETE
+    DELETE,
+    IGNORE
   }
 }
