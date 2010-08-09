@@ -338,6 +338,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (tt.isFillOnceOnly() != null) {
       ttParameter.setFillOnceOnly(tt.isFillOnceOnly());
     }
+    ttParameter.setDisabled(tt.isDisabled());
     return ttParameter;
   }
 

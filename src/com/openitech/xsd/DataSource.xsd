@@ -186,6 +186,7 @@
       </xsd:element>
     </xsd:all>
     <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
+    <xsd:attribute name="Disabled" default="false" type="xsd:boolean"/>
   </xsd:complexType>
   <xsd:complexType name="DataModel">
     <xsd:all>
