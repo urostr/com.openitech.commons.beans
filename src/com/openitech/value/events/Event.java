@@ -254,6 +254,41 @@ public class Event {
     this.primaryKey = fields.toArray(new Field[fields.size()]);
   }
 
+  private Operation operation = Operation.UPDATE;
+
+  /**
+   * Get the value of operation
+   *
+   * @return the value of operation
+   */
+  public Operation getOperation() {
+    return operation;
+  }
+
+  /**
+   * Set the value of operation
+   *
+   * @param operation new value of operation
+   */
+  public void setOperation(Operation operation) {
+    this.operation = operation;
+  }
+  
+  private List<Event> children;
+
+  /**
+   * Get the value of children
+   *
+   * @return the value of children
+   */
+  public List<Event> getChildren() {
+    if (children==null) {
+       children = new ArrayList<Event>();
+    }
+    return children;
+  }
+
+
   @Override
   public boolean equals(Object obj) {
     if (obj == null) {
@@ -279,5 +314,10 @@ public class Event {
   @Override
   public String toString() {
     return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id;
+  }
+
+  public static enum Operation {
+    UPDATE,
+    DELETE
   }
 }
