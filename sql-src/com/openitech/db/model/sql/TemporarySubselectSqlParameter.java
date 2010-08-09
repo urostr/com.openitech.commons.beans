@@ -106,6 +106,25 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void setFillOnceOnly(boolean fillOnceOnly) {
     this.fillOnceOnly = fillOnceOnly;
   }
+  private boolean disabled = false;
+
+  /**
+   * Get the value of disabled
+   *
+   * @return the value of disabled
+   */
+  public boolean isDisabled() {
+    return disabled;
+  }
+
+  /**
+   * Set the value of disabled
+   *
+   * @param disabled new value of disabled
+   */
+  public void setDisabled(boolean disabled) {
+    this.disabled = disabled;
+  }
   private String emptyTableSql;
 
   /**
@@ -170,7 +189,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
       }
 
-      if (fill) {
+      if (fill&&!disabled) {
         if (emptyTableSql.length() > 0) {
           statement.executeUpdate(emptyTableSql);
         }
