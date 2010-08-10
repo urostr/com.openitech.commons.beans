@@ -59,6 +59,11 @@ public class EventQuerySpringImpl implements EventQuery{
         this.sifrant = sifrant;
     }
 
+  @Override
+  public int getValuesSet() {
+    return 0;
+  }
+
 
 
 }
