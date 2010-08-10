@@ -49,8 +49,10 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
     this.dataSource = dataSource;
     if (this.dataSource!=null) {
       this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
-      if (this.dataSource.isDataLoaded()||this.dataSource.loadData())
-        checkButton();
+      if (this.dataSource.canLock()) {
+        if (this.dataSource.isDataLoaded()||this.dataSource.loadData())
+          checkButton();
+      }
     }
   }
   

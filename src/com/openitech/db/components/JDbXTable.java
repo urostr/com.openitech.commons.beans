@@ -232,6 +232,12 @@ public class JDbXTable extends JXTable implements ListSelectionListener, DbNavig
       getDataSource().removeActiveRowChangeListener(l);
   }
 
+  @Override
+  public boolean canLock() {
+    return getDataSource().canLock();
+  }
+
+
   public boolean lock() {
     return getDataSource().lock();
   }

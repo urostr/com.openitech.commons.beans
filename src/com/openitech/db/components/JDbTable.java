@@ -456,6 +456,11 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   }
 
   @Override
+  public boolean canLock() {
+    return getDataSource().canLock();
+  }
+
+  @Override
   public boolean lock() {
     return getDataSource().lock();
   }

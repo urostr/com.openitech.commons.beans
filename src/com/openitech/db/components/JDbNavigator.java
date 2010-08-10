@@ -349,8 +349,10 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         if (this.dataSource != null) {
           this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
           this.dataSource.addPropertyChangeListener("model", propertyChangeWeakListener);
+          if (this.dataSource.canLock()) {
           if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
             checkButtons();
+          }
           }
         }
       }
