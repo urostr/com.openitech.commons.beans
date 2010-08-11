@@ -10,5 +10,5 @@ package com.openitech.value.events;
  * @author uros
  */
 public interface EventOperationReader {
-  public Event.Operation getEventOperation(Object key);
+  public Event.EventOperation getEventOperation(Object key);
 }

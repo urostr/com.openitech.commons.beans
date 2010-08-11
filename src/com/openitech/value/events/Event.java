@@ -254,14 +254,14 @@ public class Event {
     this.primaryKey = fields.toArray(new Field[fields.size()]);
   }
 
-  private Operation operation = Operation.UPDATE;
+  private EventOperation operation = EventOperation.UPDATE;
 
   /**
    * Get the value of operation
    *
    * @return the value of operation
    */
-  public Operation getOperation() {
+  public EventOperation getOperation() {
     return operation;
   }
 
@@ -270,7 +270,7 @@ public class Event {
    *
    * @param operation new value of operation
    */
-  public void setOperation(Operation operation) {
+  public void setOperation(EventOperation operation) {
     this.operation = operation;
   }
   
@@ -316,7 +316,7 @@ public class Event {
     return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id;
   }
 
-  public static enum Operation {
+  public static enum EventOperation {
     UPDATE,
     DELETE,
     IGNORE
