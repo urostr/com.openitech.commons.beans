@@ -479,12 +479,13 @@ public abstract class SqlUtilities implements UpdateEvent {
       if (!isTransaction) {
         beginTransaction();
       }
-      eventId = updateEvent(event, event);
       for (Event childEvent : event.getChildren()) {
         if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
           updateEvent(childEvent);
         }
       }
+      eventId = updateEvent(event, event);
+      commit = true;
     } finally {
       if (!isTransaction) {
         endTransaction(commit);
