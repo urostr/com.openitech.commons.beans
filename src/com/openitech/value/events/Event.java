@@ -248,8 +248,8 @@ public class Event {
   public void setPrimaryKey(final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String... primaryKeys) {
     List<Field> fields = new ArrayList<Field>(primaryKeys.length);
     for (String pk:primaryKeys) {
-      final Field field = fieldsMap.get(CaseInsensitiveString.valueOf(pk));
-      fields.add(new Field(field.getIdPolja(), field.getName(), field.getType(), 1));
+      final Field field = FieldValue.getField(pk, 1, fieldsMap);
+      fields.add(new Field(pk, field.getType(), field.getFieldIndex()));
     }
     this.primaryKey = fields.toArray(new Field[fields.size()]);
   }

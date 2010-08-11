@@ -1,9 +1,12 @@
 package com.openitech.value.fields;
 
+import com.openitech.text.CaseInsensitiveString;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -138,7 +141,33 @@ public class Field {
 
   @Override
   public String toString() {
-    return name + ":" + type + ":" + ValueType.getType(type);
+    return name + ":" + fieldIndex + ":" + type + ":" + ValueType.getType(type);
+  }
+
+
+  private final static Pattern indexed = Pattern.compile("(.*)(\\d+)$");
+
+  public static Field getField(String fieldName, int fieldValueIndex,  final java.util.Map<CaseInsensitiveString, Field> fields) {
+    Field field = fields.get(CaseInsensitiveString.valueOf(fieldName));
+    if (field==null) {
+      final Matcher matcher = indexed.matcher(fieldName);
+      if (matcher.find()) {
+        fieldName = matcher.group(1);
+        fieldValueIndex = Integer.parseInt(matcher.group(2));
+
+        field = fields.get(CaseInsensitiveString.valueOf(fieldName));
+      }
+    }
+    return new Field(field.getName(), field.getType(), fieldValueIndex);
+  }
+
+  public Field getNonIndexedField() {
+    final Matcher matcher = indexed.matcher(name);
+    if (matcher.find()) {
+      return new Field(matcher.group(1),type,Integer.parseInt(matcher.group(2)));
+    } else {
+      return new Field(this);
+    }
   }
 
   public static class FieldModel {
