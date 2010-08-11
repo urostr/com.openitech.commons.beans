@@ -232,21 +232,24 @@ public class SqlUtilitesImpl extends SqlUtilities {
             String fieldName = field.getName();
             int fieldValueIndex = field.getFieldIndex();
 
+            int field_id;
+            if (field.getIdPolja() < 0) {
+              if (fieldValueIndex > 1) {
+                Field nonIndexed = field.getNonIndexedField();
+                fieldName = nonIndexed.getName();
+              }
+              param = 1;
+              get_field.setString(param, fieldName);
 
-            if (fieldValueIndex > 1) {
-              int indexOfFieldValueIndex = field.getName().indexOf(Integer.toString(fieldValueIndex));
-              fieldName = fieldName.substring(0, indexOfFieldValueIndex);
+              ResultSet rs_field = get_field.executeQuery();
+              if (!rs_field.next()) {
+                throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
+              }
+
+              field_id = rs_field.getInt("Id");
+            } else {
+              field_id = field.getIdPolja();
             }
-            param = 1;
-            get_field.setString(param, fieldName);
-
-
-            ResultSet rs_field = get_field.executeQuery();
-            if (!rs_field.next()) {
-              throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
-            }
-
-            int field_id = rs_field.getInt("Id");
 
             param = 1;
             findEventValue.clearParameters();
