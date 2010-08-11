@@ -25,6 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -213,6 +214,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
         }
         updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
         updateEvents.setString(param++, event.getOpomba());
+        updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
+        updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
         updateEvents.setLong(param++, events_ID);
 
         success = success && updateEvents.executeUpdate() > 0;
@@ -759,7 +762,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
         parameters.addAll(values);
       }
-      
+
       return executeQuery(parameters);
     }
 

@@ -5,6 +5,10 @@ UPDATE
     [IdSifre]     = ?,
     [IdEventSource] = ?,
     [Datum]       = ?,
-    [Opomba]      = ?
+    [Opomba]      = ?,
+    [valid]       = ?,
+    [validTo]     = ?,
+    [ChangedBy]   = SESSION_USER,
+    [ChangedOn]   = GETDATE()
 WHERE
     [Id] = ?

@@ -472,7 +472,25 @@ public abstract class SqlUtilities implements UpdateEvent {
   public abstract Event findEvent(Event event) throws SQLException;
 
   public Long updateEvent(Event event) throws SQLException {
-    return updateEvent(event, event); //event vsebuje eventId oz. se dodaja
+    Long eventId = null;
+    boolean isTransaction = isTransaction();
+    boolean commit = false;
+    try {
+      if (!isTransaction) {
+        beginTransaction();
+      }
+      eventId = updateEvent(event, event);
+      for (Event childEvent : event.getChildren()) {
+        if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
+          updateEvent(childEvent);
+        }
+      }
+    } finally {
+      if (!isTransaction) {
+        endTransaction(commit);
+      }
+    }
+    return eventId; //event vsebuje eventId oz. se dodaja
   }
 
   @Override
@@ -481,6 +499,7 @@ public abstract class SqlUtilities implements UpdateEvent {
     if (find != null) {
       newValues.setId(find.getId());
       newValues.setEventSource(find.getEventSource());
+
 //      newValues.setDatum(find.getDatum());
     }
     return storeEvent(newValues);
