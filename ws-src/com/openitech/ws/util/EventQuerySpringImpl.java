@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public class EventQuerySpringImpl implements EventQuery{
     private int sifrant;
-    private String sifra;
+    private String[] sifra;
     private Map<Field, SqlParameter<Object>> namedParameters;
 
     @Override
@@ -43,7 +43,7 @@ public class EventQuerySpringImpl implements EventQuery{
     }
 
     @Override
-    public String getSifra() {
+    public String[] getSifra() {
         return this.sifra;
     }
 
@@ -51,7 +51,7 @@ public class EventQuerySpringImpl implements EventQuery{
         this.namedParameters = namedParameters;
     }
 
-    public void setSifra(String sifra) {
+    public void setSifra(String[] sifra) {
         this.sifra = sifra;
     }
 

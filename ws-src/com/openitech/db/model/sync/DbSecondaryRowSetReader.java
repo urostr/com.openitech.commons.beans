@@ -324,7 +324,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
     List<String> param = new ArrayList<String>();
     param.add(Integer.toString(eq.getSifrant()));
     if (eq.getSifra() != null) {
-      param.add(eq.getSifra());
+      param.add(eq.getSifra()[0]);
     }
     for (Map.Entry entry : eq.getNamedParameters().entrySet()) {
       Field field = (Field) entry.getKey();
