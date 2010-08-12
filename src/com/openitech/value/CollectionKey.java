@@ -26,7 +26,7 @@ public class CollectionKey<E> implements Collection<E> {
 
   public CollectionKey(Collection<E> values) {
     if (values != null) {
-      values.addAll(values);
+      this.values.addAll(values);
     }
 
     calculateHash();
