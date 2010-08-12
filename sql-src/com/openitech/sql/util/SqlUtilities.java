@@ -542,7 +542,11 @@ public abstract class SqlUtilities implements UpdateEvent {
     return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), event.getSifra(), false);
   }
 
-  public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean lastEntryOnly);
+  public EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean lastEntryOnly) {
+    return prepareEventQuery(parent, searchFields, resultFields, sifrant, sifra==null?null:new String[] {sifra}, lastEntryOnly);
+  }
+  
+  public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean lastEntryOnly);
 
   public static enum Operation {
 

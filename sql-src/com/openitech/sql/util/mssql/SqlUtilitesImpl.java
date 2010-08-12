@@ -1134,7 +1134,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean validOnly, boolean lastEntryOnly) {
+  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly) {
     StringBuilder sb = new StringBuilder(500);
     StringBuilder sbresult = new StringBuilder(500);
     DbDataSource.SubstSqlParameter sqlResultLimit = new DbDataSource.SubstSqlParameter("<%ev_result_limit%>");
@@ -1149,10 +1149,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (sifra == null) {
       sqlFindEventType.setValue("ev.[IdSifranta] = ?" + validFrom);
       parameters.add(sifrant);
-    } else {
+    } else if (sifra.length == 1) {
       sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?" + validFrom);
       parameters.add(sifrant);
-      parameters.add(sifra);
+      parameters.add(sifra[0]);
+    } else {
+      StringBuilder sbet = new StringBuilder();
+      parameters.add(sifrant);
+      for (String s : sifra) {
+        sbet.append(sbet.length() > 0 ? ", " : "").append("?");
+        parameters.add(s);
+      }
+      sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ").append(validFrom);
+      sqlFindEventType.setValue(sbet.toString());
     }
 
     DbDataSource.SubstSqlParameter sqlFindEventSource = new DbDataSource.SubstSqlParameter("<%ev_source_filter%>");
@@ -1183,9 +1192,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //    }
 
     int valuesSet = 0;
-    Map<NamedFieldIds, NamedFieldIds> fieldNames;
+    Map<NamedFieldIds, NamedFieldIds> fieldNames = new java.util.HashMap<NamedFieldIds, NamedFieldIds>();
     try {
-      fieldNames = getEventFields(sifrant, sifra);
+      if (sifra == null) {
+        fieldNames = getEventFields(sifrant, null);
+      } else {
+        for (String s : sifra) {
+          fieldNames.putAll(getEventFields(sifrant, s));
+        }
+      }
+
     } catch (SQLException ex) {
       fieldNames = new java.util.HashMap<NamedFieldIds, NamedFieldIds>();
       Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -1425,7 +1441,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean lastEntryOnly) {
+  public EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean lastEntryOnly) {
     EventQueryImpl result = new EventQueryImpl(parent);
 
     result.sifrant = sifrant;
@@ -1443,7 +1459,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     private Map<Field, DbDataSource.SqlParameter<Object>> namedParameters = new HashMap<Field, DbDataSource.SqlParameter<Object>>();
     private String query = getFindEventSQL();
     private int sifrant;
-    private String sifra;
+    private String[] sifra;
 
     public EventQueryImpl(Event parent) {
       this.parent = parent;
@@ -1464,7 +1480,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
      * @return the value of sifra
      */
     @Override
-    public String getSifra() {
+    public String[] getSifra() {
       return sifra;
     }
 
