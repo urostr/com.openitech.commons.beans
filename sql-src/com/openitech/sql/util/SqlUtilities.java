@@ -472,26 +472,7 @@ public abstract class SqlUtilities implements UpdateEvent {
   public abstract Event findEvent(Event event) throws SQLException;
 
   public Long updateEvent(Event event) throws SQLException {
-    Long eventId = null;
-    boolean isTransaction = isTransaction();
-    boolean commit = false;
-    try {
-      if (!isTransaction) {
-        beginTransaction();
-      }
-      for (Event childEvent : event.getChildren()) {
-        if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
-          updateEvent(childEvent);
-        }
-      }
-      eventId = updateEvent(event, event);
-      commit = true;
-    } finally {
-      if (!isTransaction) {
-        endTransaction(commit);
-      }
-    }
-    return eventId; //event vsebuje eventId oz. se dodaja
+    return updateEvent(event, event); //event vsebuje eventId oz. se dodaja
   }
 
   @Override
@@ -500,10 +481,24 @@ public abstract class SqlUtilities implements UpdateEvent {
     if (find != null) {
       newValues.setId(find.getId());
       newValues.setEventSource(find.getEventSource());
-
-//      newValues.setDatum(find.getDatum());
     }
-    return storeEvent(newValues);
+    boolean isTransaction = isTransaction();
+    boolean commit = false;
+    try {
+      if (!isTransaction) {
+        beginTransaction();
+      }
+      for (Event childEvent : newValues.getChildren()) {
+        if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
+          updateEvent(childEvent);
+        }
+      }
+      return storeEvent(newValues);
+    } finally {
+      if (!isTransaction) {
+        endTransaction(commit);
+      }
+    }
   }
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
@@ -543,9 +538,9 @@ public abstract class SqlUtilities implements UpdateEvent {
   }
 
   public EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean lastEntryOnly) {
-    return prepareEventQuery(parent, searchFields, resultFields, sifrant, sifra==null?null:new String[] {sifra}, lastEntryOnly);
+    return prepareEventQuery(parent, searchFields, resultFields, sifrant, sifra == null ? null : new String[]{sifra}, lastEntryOnly);
   }
-  
+
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean lastEntryOnly);
 
   public static enum Operation {
