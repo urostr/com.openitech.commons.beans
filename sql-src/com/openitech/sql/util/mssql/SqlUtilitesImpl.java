@@ -20,6 +20,7 @@ import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.UnsupportedEncodingException;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,8 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,6 +65,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement get_fields;
   PreparedStatement insertNeznaniNaslov;
   PreparedStatement findHsNeznanaId;
+  PreparedStatement insertEventsOpombe;
+  PreparedStatement findOpomba;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -195,7 +196,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           insertEvents.setInt(param++, event.getEventSource());
         }
         insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-        insertEvents.setString(param++, event.getOpomba());
+        //insertEvents.setString(param++, event.getOpomba());
         success = success && insertEvents.executeUpdate() > 0;
 
         events_ID = getLastIdentity();
@@ -213,13 +214,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
           updateEvents.setInt(param++, event.getEventSource());
         }
         updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-        updateEvents.setString(param++, event.getOpomba());
+       // updateEvents.setString(param++, event.getOpomba());
         updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
         updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
         updateEvents.setLong(param++, events_ID);
 
         success = success && updateEvents.executeUpdate() > 0;
       }
+
+      success = success && storeOpomba(events_ID, event.getOpomba());
 
       if (success) {
         Map<Field, List<FieldValue>> eventValues = event.getEventValues();
@@ -429,6 +432,59 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
     }
     return newValueId;
+  }
+
+  public boolean storeOpomba(Long eventId, String opomba) throws SQLException {
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+    if (insertEventsOpombe == null) {
+      insertEventsOpombe = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_EventsOpombe.sql", "cp1250"));
+    }
+    if (findOpomba == null) {
+      findOpomba = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_opomba.sql", "cp1250"));
+    }
+    int param = 1;
+    boolean success = true;
+    boolean saveOpomba = true;
+
+    param = 1;
+    findOpomba.clearParameters();
+    findOpomba.setLong(param++, eventId);
+    ResultSet rsFindOpomba = findOpomba.executeQuery();
+    if (rsFindOpomba.next()) {
+      Clob oldOpombaClob = rsFindOpomba.getClob("ClobValue");
+      if (oldOpombaClob != null) {
+        String oldOpomba = oldOpombaClob.getSubString(1L, (int) oldOpombaClob.length());
+        if (oldOpomba.equals(opomba)) {
+          //opomba se ni spemenila
+          saveOpomba = false;
+        } else {
+          //update event in opomba se je spremenila
+        }
+      }
+    }
+
+    if (saveOpomba) {
+      if (opomba == null) {
+        return true;
+      }
+      Long opombaId = storeValue(ValueType.ClobValue, opomba);
+      param = 1;
+      insertEventsOpombe.clearParameters();
+      if (eventId == null) {
+        return false;
+      } else {
+        insertEventsOpombe.setLong(param++, eventId.longValue());
+      }
+      if (opombaId == null) {
+        //null ni dovoljeno, zato bo vrgel sql napako
+        return false;
+      } else {
+        insertEventsOpombe.setLong(param++, opombaId.longValue());
+      }
+      success = success && insertEventsOpombe.executeUpdate() > 0;
+    }
+
+    return success;
   }
 
   @Override

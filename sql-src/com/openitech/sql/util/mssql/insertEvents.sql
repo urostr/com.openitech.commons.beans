@@ -7,7 +7,7 @@ INTO
         [IdSifre],
         [IdEventSource],
         [Datum], 
-        [Opomba], 
+        
         [SessionUser]
     ) 
     VALUES 
@@ -16,7 +16,7 @@ INTO
         ?, 
         ?,
         ?,
-        ?,
+        
         ?, 
         SYSTEM_USER
     )
