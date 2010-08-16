@@ -5,6 +5,7 @@
 package com.openitech.value.events;
 
 import com.openitech.text.CaseInsensitiveString;
+import com.openitech.util.Equals;
 import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValue;
 import java.sql.ResultSet;
@@ -266,13 +267,12 @@ public class Event {
 
   public void setPrimaryKey(final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String... primaryKeys) {
     List<Field> fields = new ArrayList<Field>(primaryKeys.length);
-    for (String pk:primaryKeys) {
+    for (String pk : primaryKeys) {
       final Field field = FieldValue.getField(pk, 1, fieldsMap);
       fields.add(new Field(pk, field.getType(), field.getFieldIndex()));
     }
     this.primaryKey = fields.toArray(new Field[fields.size()]);
   }
-
   private EventOperation operation = EventOperation.UPDATE;
 
   /**
@@ -292,7 +292,6 @@ public class Event {
   public void setOperation(EventOperation operation) {
     this.operation = operation;
   }
-  
   private List<Event> children;
 
   /**
@@ -301,12 +300,11 @@ public class Event {
    * @return the value of children
    */
   public List<Event> getChildren() {
-    if (children==null) {
-       children = new ArrayList<Event>();
+    if (children == null) {
+      children = new ArrayList<Event>();
     }
     return children;
   }
-
 
   @Override
   public boolean equals(Object obj) {
@@ -324,7 +322,8 @@ public class Event {
   }
 
   public boolean equalEventValues(Event other) {
-    return false;
+
+    return Equals.equals(getEventValues(), other.getEventValues());
   }
 
   @Override
@@ -340,6 +339,7 @@ public class Event {
   }
 
   public static enum EventOperation {
+
     UPDATE,
     DELETE,
     IGNORE
