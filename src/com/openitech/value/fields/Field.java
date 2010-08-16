@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  */
 public class Field {
 
-    int idPolja;
+    Integer idPolja;
     String name;
     int type;
     int fieldIndex;
@@ -35,7 +35,7 @@ public class Field {
    * @param type fieldType java.sql.Type
    */
     public Field(String name, int type, int fieldIndex) {
-       this(-1, name, type, fieldIndex);
+       this(null, name, type, fieldIndex);
     }
 
     /**
@@ -43,7 +43,7 @@ public class Field {
      * @param name fieldName
      * @param type fieldType java.sql.Type
      */
-    public Field(int idPolja, String name, int type, int fieldIndex) {
+    public Field(Integer idPolja, String name, int type, int fieldIndex) {
         super();
         this.idPolja = idPolja;
         this.name = name;

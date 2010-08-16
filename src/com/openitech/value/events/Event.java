@@ -44,14 +44,14 @@ public class Event {
     this.sifra = sifra;
     this.eventSource = eventSource;
   }
-  private long id = -1;
+  private Long id;
 
   /**
    * Get the value of id
    *
    * @return the value of id
    */
-  public long getId() {
+  public Long getId() {
     return id;
   }
 
@@ -60,7 +60,7 @@ public class Event {
    *
    * @param id new value of id
    */
-  public void setId(long id) {
+  public void setId(Long id) {
     this.id = id;
   }
   private final Event parent;
