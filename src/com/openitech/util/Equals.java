@@ -39,8 +39,12 @@ public class Equals {
       }
       else if (a instanceof java.util.Map && b instanceof java.util.Map) {
         return compareMap((java.util.Map) a,(java.util.Map) b);
-      }      else if (a instanceof java.util.List && b instanceof java.util.List) {
+      }
+      else if (a instanceof java.util.List && b instanceof java.util.List) {
         return compareList((java.util.List) a,(java.util.List) b);
+      }
+      else if (a instanceof java.util.Set && b instanceof java.util.Set) {
+        return compareSet((java.util.Set) a,(java.util.Set) b);
       }
       else if (a instanceof java.util.Collection && b instanceof java.util.Collection) {
         return compareCollection((java.util.Collection) a,(java.util.Collection) b);
@@ -57,7 +61,7 @@ public class Equals {
     if (a==null && b==null) {
       return true;
     } else if (a!=null && b!=null) {
-      if (compareCollection(a.keySet(), b.keySet())) {
+      if (compareSet(a.keySet(), b.keySet())) {
         boolean result = true;
         Iterator<java.util.Map.Entry> aiterator = a.entrySet().iterator();
         Iterator<java.util.Map.Entry> biterator = b.entrySet().iterator();
@@ -75,6 +79,38 @@ public class Equals {
       return false;
   }
   
+  private static boolean compareSet(java.util.Set a, java.util.Set b) {
+    if (a==null && b==null) {
+      return true;
+    } else if (a!=null && b!=null) {
+      if (a.size()==b.size()) {
+        if (a.containsAll(b)) {
+          return true;
+        } else {
+        boolean result = true;
+        Iterator aiterator = a.iterator();
+        
+
+        for (int i=0; i<a.size() && result; i++) {
+          final Object avalue = aiterator.next();
+
+          if (b.contains(avalue)) {
+            result = true;
+          } else {
+            Iterator biterator = b.iterator();
+            while (biterator.hasNext() && result) {
+              result = equals(avalue,biterator.next());
+            }
+          }
+        }
+
+        return result;
+        }
+      } else
+        return false;
+    } else
+      return false;
+  }
   private static boolean compareCollection(java.util.Collection a, java.util.Collection b) {
     if (a==null && b==null) {
       return true;
