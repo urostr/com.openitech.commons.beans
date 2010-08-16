@@ -37,8 +37,6 @@ public class Equals {
         return (a.toString()).equals(b.toString());
       } else if (a instanceof Number && b instanceof Boolean) {
         return ((Comparable) a).compareTo(((Boolean) b).booleanValue() ? 1 : 0) == 0;
-      } else if (a instanceof FieldValue && b instanceof FieldValue) {
-        return a.equals(b)&&equals(((FieldValue) a).getValue(), ((FieldValue) b).getValue());
       } else if (a instanceof java.util.Map && b instanceof java.util.Map) {
         return compareMap((java.util.Map) a, (java.util.Map) b);
       } else if (a instanceof java.util.List && b instanceof java.util.List) {

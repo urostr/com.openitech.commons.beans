@@ -14,8 +14,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -322,8 +324,41 @@ public class Event {
   }
 
   public boolean equalEventValues(Event other) {
+    Map<Field, List<FieldValue>> a = getEventValues();
+    Map<Field, List<FieldValue>> b = other.getEventValues();
+    if ((a.size() == b.size()) && a.keySet().containsAll(b.keySet())) {
+      boolean result = true;
+      Iterator<Entry<Field, List<FieldValue>>> aiterator = a.entrySet().iterator();
 
-    return Equals.equals(getEventValues(), other.getEventValues());
+      while (aiterator.hasNext() && result) {
+        java.util.Map.Entry<Field, List<FieldValue>> anext = aiterator.next();
+        result = compareList(anext.getValue(), b.get(anext.getKey()));
+      }
+      return result;
+    } else {
+      return false;
+
+    }
+  }
+
+  private boolean compareList(List<FieldValue> a, List<FieldValue> b) {
+    if (a == null && b == null) {
+      return true;
+    } else if (a != null && b != null) {
+      if (a.size() == b.size()) {
+        boolean result = true;
+        for (int i = 0; i < a.size() && result; i++) {
+          result = Equals.equals(a.get(i), b.get(i)) && Equals.equals(a.get(i).getValue(), b.get(i).getValue());
+        }
+
+        return result;
+      } else {
+        return false;
+
+      }
+    } else {
+      return false;
+    }
   }
 
   @Override
