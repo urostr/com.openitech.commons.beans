@@ -1295,15 +1295,24 @@ public class SqlUtilitesImpl extends SqlUtilities {
     sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : " DISTINCT TOP 100 PERCENT ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
     parameters.add(sqlResultFields);
+    DbDataSource.SubstSqlParameter sqlFindEventVersion = new DbDataSource.SubstSqlParameter("<%ev_version_filter%>");
+    parameters.add(sqlFindEventVersion);
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
     parameters.add(sqlFindEventType);
+    DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
+    parameters.add(sqlFindEventValid);
+
+    DbDataSource.SqlParameter<Object> versionId = namedParameters.containsKey(Field.VERSION)?namedParameters.get(Field.VERSION):new DbDataSource.SqlParameter<Object>();
+    namedParameters.put(Field.VERSION, versionId);
+    sqlFindEventVersion.addParameter(versionId);
+
 //    String validFrom = validOnly ? " AND GETDATE()>=ev.validFrom " : "" ;
-    String validFrom = validOnly ? " AND ev.valid = 1 " : "";
+    sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
     if (sifra == null) {
-      sqlFindEventType.setValue("ev.[IdSifranta] = ?" + validFrom);
+      sqlFindEventType.setValue("ev.[IdSifranta] = ?");
       parameters.add(sifrant);
     } else if (sifra.length == 1) {
-      sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?" + validFrom);
+      sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
       parameters.add(sifrant);
       parameters.add(sifra[0]);
     } else {
@@ -1313,7 +1322,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sbet.append(sbet.length() > 0 ? ", " : "").append("?");
         parameters.add(s);
       }
-      sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ").append(validFrom);
+      sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
       sqlFindEventType.setValue(sbet.toString());
     }
 
