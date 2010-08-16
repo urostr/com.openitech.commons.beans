@@ -145,7 +145,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  protected Long assignVersion(List<Long> events) throws SQLException {
+  protected Long assignEventVersion(List<Long> eventIds) throws SQLException {
     return null;
   }
 

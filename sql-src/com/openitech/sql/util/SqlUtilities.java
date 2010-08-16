@@ -484,11 +484,11 @@ public abstract class SqlUtilities implements UpdateEvent {
         beginTransaction();
       }
 
-      List<Long> events = new ArrayList<Long>();
-      Long eventId = updateEvent(newValues, oldValues, events);
+      List<Long> eventIds = new ArrayList<Long>();
+      Long eventId = updateEvent(newValues, oldValues, eventIds);
 
       if (newValues.isVersioned()) {
-        assignVersion(events);
+        assignEventVersion(eventIds);
       }
 
       return eventId;
@@ -499,29 +499,29 @@ public abstract class SqlUtilities implements UpdateEvent {
     }
   }
 
-  private Long updateEvent(Event newValues, Event oldValues, List<Long> events) throws SQLException {
+  private Long updateEvent(Event newValues, Event oldValues, List<Long> eventIds) throws SQLException {
     Event find = findEvent(oldValues);
     if (find != null) {
       newValues.setId(find.getId());
       newValues.setEventSource(find.getEventSource());
     }
-    if (events==null) {
-      events = new ArrayList<Long>();
+    if (eventIds==null) {
+      eventIds = new ArrayList<Long>();
     }
     
     for (Event childEvent : newValues.getChildren()) {
       if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
-        updateEvent(childEvent, childEvent, events);
+        updateEvent(childEvent, childEvent, eventIds);
       }
     }
     Long eventId = storeEvent(newValues, find);
 
-    events.add(eventId);
+    eventIds.add(eventId);
 
     return eventId;
   }
 
-  protected abstract Long assignVersion(List<Long> events) throws SQLException;
+  protected abstract Long assignEventVersion(List<Long> eventIds) throws SQLException;
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
