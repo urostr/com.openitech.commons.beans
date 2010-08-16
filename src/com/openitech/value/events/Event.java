@@ -168,6 +168,25 @@ public class Event {
   public void setEventSource(int eventSource) {
     this.eventSource = eventSource;
   }
+  protected boolean versioned = false;
+
+  /**
+   * Get the value of versioned
+   *
+   * @return the value of versioned
+   */
+  public boolean isVersioned() {
+    return versioned;
+  }
+
+  /**
+   * Set the value of versioned
+   *
+   * @param versioned new value of versioned
+   */
+  public void setVersioned(boolean versioned) {
+    this.versioned = versioned;
+  }
   java.util.Map<Field, java.util.List<FieldValue>> eventValues = new java.util.LinkedHashMap<Field, java.util.List<FieldValue>>();
 
   public void addValue(FieldValue value) {
@@ -302,6 +321,10 @@ public class Event {
       return false;
     }
     return true;
+  }
+
+  public boolean equalEventValues(Event other) {
+    return false;
   }
 
   @Override
