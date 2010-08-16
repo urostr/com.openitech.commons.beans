@@ -477,23 +477,21 @@ public abstract class SqlUtilities implements UpdateEvent {
 
   @Override
   public Long updateEvent(Event newValues, Event oldValues) throws SQLException {
-    Event find = findEvent(oldValues);
-    if (find != null) {
-      newValues.setId(find.getId());
-      newValues.setEventSource(find.getEventSource());
-    }
     boolean isTransaction = isTransaction();
     boolean commit = false;
     try {
       if (!isTransaction) {
         beginTransaction();
       }
-      for (Event childEvent : newValues.getChildren()) {
-        if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
-          updateEvent(childEvent);
-        }
+
+      List<Long> events = new ArrayList<Long>();
+      Long eventId = updateEvent(newValues, oldValues, events);
+
+      if (newValues.isVersioned()) {
+        assignVersion(events);
       }
-      return storeEvent(newValues);
+
+      return eventId;
     } finally {
       if (!isTransaction) {
         endTransaction(commit);
@@ -501,13 +499,41 @@ public abstract class SqlUtilities implements UpdateEvent {
     }
   }
 
+  private Long updateEvent(Event newValues, Event oldValues, List<Long> events) throws SQLException {
+    Event find = findEvent(oldValues);
+    if (find != null) {
+      newValues.setId(find.getId());
+      newValues.setEventSource(find.getEventSource());
+    }
+    if (events==null) {
+      events = new ArrayList<Long>();
+    }
+    
+    for (Event childEvent : newValues.getChildren()) {
+      if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
+        updateEvent(childEvent, childEvent, events);
+      }
+    }
+    Long eventId = storeEvent(newValues, find);
+
+    events.add(eventId);
+
+    return eventId;
+  }
+
+  protected abstract Long assignVersion(List<Long> events) throws SQLException;
+
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
   public abstract FieldValue getNextIdentity(Field field) throws SQLException;
 
   public abstract FieldValue getParrentIdentity(Field field) throws SQLException;
 
-  public abstract Long storeEvent(Event event) throws SQLException;
+  public Long storeEvent(Event event) throws SQLException {
+    return storeEvent(event, null);
+  }
+
+  public abstract Long storeEvent(Event event, Event oldEvent) throws SQLException;
 
   public CachedRowSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException {
     return getGeneratedFields(idSifranta, idSifre, false);

@@ -145,166 +145,180 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public Long storeEvent(Event event) throws SQLException {
-    final Connection connection = ConnectionManager.getInstance().getTxConnection();
-    if (insertEvents == null) {
-      insertEvents = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
+  protected Long assignVersion(List<Long> events) throws SQLException {
+    return null;
+  }
+
+  @Override
+  public Long storeEvent(Event event, Event oldEvent) throws SQLException {
+    if ((oldEvent != null) && oldEvent.equalEventValues(event)) {
+      return oldEvent.getId();
+    } else {
+      final Connection connection = ConnectionManager.getInstance().getTxConnection();
+      if (insertEvents == null) {
+        insertEvents = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEvents.sql", "cp1250"));
 //      insertEvents.setQueryTimeout(15);
-    }
-    if (updateEvents == null) {
-      updateEvents = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateEvents.sql", "cp1250"));
-//      updateEvents.setQueryTimeout(15);
-    }
-    if (findEventValue == null) {
-      findEventValue = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventvalue.sql", "cp1250"));
-    }
-    if (insertEventValues == null) {
-      insertEventValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEventValues.sql", "cp1250"));
-//      insertEventValues.setQueryTimeout(15);
-    }
-    if (updateEventValues == null) {
-      updateEventValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateEventValue.sql", "cp1250"));
-//      updateEventValues.setQueryTimeout(15);
-    }
-    if (get_field == null) {
-      get_field = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
-    }
-    int param;
-    boolean success = true;
-    boolean commit = false;
-    boolean isTransaction = isTransaction();
-    // <editor-fold defaultstate="collapsed" desc="Shrani">
-
-    long events_ID = 0;
-    try {
-      if (!isTransaction) {
-        beginTransaction();
       }
+      if (updateEvents == null) {
+        updateEvents = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateEvents.sql", "cp1250"));
+//      updateEvents.setQueryTimeout(15);
+      }
+      if (findEventValue == null) {
+        findEventValue = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventvalue.sql", "cp1250"));
+      }
+      if (insertEventValues == null) {
+        insertEventValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEventValues.sql", "cp1250"));
+//      insertEventValues.setQueryTimeout(15);
+      }
+      if (updateEventValues == null) {
+        updateEventValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateEventValue.sql", "cp1250"));
+//      updateEventValues.setQueryTimeout(15);
+      }
+      if (get_field == null) {
+        get_field = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
+      }
+      int param;
+      boolean success = true;
+      boolean commit = false;
+      boolean isTransaction = isTransaction();
+      // <editor-fold defaultstate="collapsed" desc="Shrani">
 
-      boolean insert = event.getId() == -1;
-
-      if (insert) {
-//        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
-        //insertaj event
-        param = 1;
-        insertEvents.clearParameters();
-        insertEvents.setInt(param++, event.getSifrant());
-        insertEvents.setString(param++, event.getSifra());
-        if (event.getEventSource() == Integer.MIN_VALUE) {
-          insertEvents.setNull(param++, java.sql.Types.INTEGER);
-        } else {
-          insertEvents.setInt(param++, event.getEventSource());
+      long events_ID = 0;
+      try {
+        if (!isTransaction) {
+          beginTransaction();
         }
-        insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-        //insertEvents.setString(param++, event.getOpomba());
-        success = success && insertEvents.executeUpdate() > 0;
 
-        events_ID = getLastIdentity();
-      } else {
-        events_ID = event.getId();
+        boolean insert = (event.getId() == -1) || event.isVersioned();
+
+        if (insert) {
+//        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
+
+          if (event.isVersioned()) {
+           //updataj stari event
+          }
+
+          //insertaj event
+          param = 1;
+          insertEvents.clearParameters();
+          insertEvents.setInt(param++, event.getSifrant());
+          insertEvents.setString(param++, event.getSifra());
+          if (event.getEventSource() == Integer.MIN_VALUE) {
+            insertEvents.setNull(param++, java.sql.Types.INTEGER);
+          } else {
+            insertEvents.setInt(param++, event.getEventSource());
+          }
+          insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+          //insertEvents.setString(param++, event.getOpomba());
+          success = success && insertEvents.executeUpdate() > 0;
+
+          events_ID = getLastIdentity();
+        } else {
+          events_ID = event.getId();
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
 
-        param = 1;
-        updateEvents.clearParameters();
-        updateEvents.setInt(param++, event.getSifrant());
-        updateEvents.setString(param++, event.getSifra());
-        if (event.getEventSource() == Integer.MIN_VALUE) {
-          updateEvents.setNull(param++, java.sql.Types.INTEGER);
-        } else {
-          updateEvents.setInt(param++, event.getEventSource());
+          param = 1;
+          updateEvents.clearParameters();
+          updateEvents.setInt(param++, event.getSifrant());
+          updateEvents.setString(param++, event.getSifra());
+          if (event.getEventSource() == Integer.MIN_VALUE) {
+            updateEvents.setNull(param++, java.sql.Types.INTEGER);
+          } else {
+            updateEvents.setInt(param++, event.getEventSource());
+          }
+          updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+          // updateEvents.setString(param++, event.getOpomba());
+          updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
+          updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
+          updateEvents.setLong(param++, events_ID);
+
+          success = success && updateEvents.executeUpdate() > 0;
         }
-        updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-       // updateEvents.setString(param++, event.getOpomba());
-        updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
-        updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
-        updateEvents.setLong(param++, events_ID);
 
-        success = success && updateEvents.executeUpdate() > 0;
-      }
+        success = success && storeOpomba(events_ID, event.getOpomba());
 
-      success = success && storeOpomba(events_ID, event.getOpomba());
+        if (success) {
+          Map<Field, List<FieldValue>> eventValues = event.getEventValues();
+          for (Field field : eventValues.keySet()) {
+            List<FieldValue> fieldValues = eventValues.get(field);
+            for (int i = 0; i < fieldValues.size(); i++) {
+              FieldValue value = fieldValues.get(i);
+              Long valueId = storeValue(value.getValueType(), value.getValue());
 
-      if (success) {
-        Map<Field, List<FieldValue>> eventValues = event.getEventValues();
-        for (Field field : eventValues.keySet()) {
-          List<FieldValue> fieldValues = eventValues.get(field);
-          for (int i = 0; i < fieldValues.size(); i++) {
-            FieldValue value = fieldValues.get(i);
-            Long valueId = storeValue(value.getValueType(), value.getValue());
+              String fieldName = field.getName();
+              int fieldValueIndex = field.getFieldIndex();
 
-            String fieldName = field.getName();
-            int fieldValueIndex = field.getFieldIndex();
+              int field_id;
+              if (field.getIdPolja() < 0) {
+                if (fieldValueIndex > 1) {
+                  Field nonIndexed = field.getNonIndexedField();
+                  fieldName = nonIndexed.getName();
+                }
+                param = 1;
+                get_field.setString(param, fieldName);
 
-            int field_id;
-            if (field.getIdPolja() < 0) {
-              if (fieldValueIndex > 1) {
-                Field nonIndexed = field.getNonIndexedField();
-                fieldName = nonIndexed.getName();
-              }
-              param = 1;
-              get_field.setString(param, fieldName);
+                ResultSet rs_field = get_field.executeQuery();
+                if (!rs_field.next()) {
+                  throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
+                }
 
-              ResultSet rs_field = get_field.executeQuery();
-              if (!rs_field.next()) {
-                throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
-              }
-
-              field_id = rs_field.getInt("Id");
-            } else {
-              field_id = field.getIdPolja();
-            }
-
-            param = 1;
-            findEventValue.clearParameters();
-            findEventValue.setLong(param++, events_ID);
-            findEventValue.setInt(param++, field_id);
-            findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
-
-            ResultSet rs = findEventValue.executeQuery();
-            rs.next();
-
-            if (rs.getInt(1) == 0) {
-              //insertaj event value
-              param = 1;
-              insertEventValues.clearParameters();
-              insertEventValues.setLong(param++, events_ID);
-              insertEventValues.setInt(param++, field_id);
-              insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-              if (valueId == null) {
-                insertEventValues.setNull(param++, java.sql.Types.BIGINT);
+                field_id = rs_field.getInt("Id");
               } else {
-                insertEventValues.setLong(param++, valueId);
+                field_id = field.getIdPolja();
               }
 
-              success = success && insertEventValues.executeUpdate() > 0;
-            } else {
-              //updataj event value
               param = 1;
-              updateEventValues.clearParameters();
-              if (valueId == null) {
-                updateEventValues.setNull(param++, java.sql.Types.BIGINT);
-              } else {
-                updateEventValues.setLong(param++, valueId);
-              }
-              updateEventValues.setLong(param++, events_ID);
-              updateEventValues.setInt(param++, field_id);
-              updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+              findEventValue.clearParameters();
+              findEventValue.setLong(param++, events_ID);
+              findEventValue.setInt(param++, field_id);
+              findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
 
-              success = success && updateEventValues.executeUpdate() > 0;
+              ResultSet rs = findEventValue.executeQuery();
+              rs.next();
+
+              if (rs.getInt(1) == 0) {
+                //insertaj event value
+                param = 1;
+                insertEventValues.clearParameters();
+                insertEventValues.setLong(param++, events_ID);
+                insertEventValues.setInt(param++, field_id);
+                insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                if (valueId == null) {
+                  insertEventValues.setNull(param++, java.sql.Types.BIGINT);
+                } else {
+                  insertEventValues.setLong(param++, valueId);
+                }
+
+                success = success && insertEventValues.executeUpdate() > 0;
+              } else {
+                //updataj event value
+                param = 1;
+                updateEventValues.clearParameters();
+                if (valueId == null) {
+                  updateEventValues.setNull(param++, java.sql.Types.BIGINT);
+                } else {
+                  updateEventValues.setLong(param++, valueId);
+                }
+                updateEventValues.setLong(param++, events_ID);
+                updateEventValues.setInt(param++, field_id);
+                updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+
+                success = success && updateEventValues.executeUpdate() > 0;
+              }
             }
           }
         }
+
+        commit = success;
+      } finally {
+        if (!isTransaction) {
+          endTransaction(commit);
+        }
+        event.setId(events_ID);
       }
 
-      commit = success;
-    } finally {
-      if (!isTransaction) {
-        endTransaction(commit);
-      }
-      event.setId(events_ID);
+      return event.getId();
     }
-
-    return event.getId();
   }
 
   @Override
