@@ -10,6 +10,7 @@
 package com.openitech.util;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 
 /**
  *
@@ -38,10 +39,33 @@ public class Equals {
       else if (a instanceof java.util.List && b instanceof java.util.List) {
         return compareList((java.util.List) a,(java.util.List) b);
       }
+      else if (a instanceof java.util.Collection && b instanceof java.util.Collection) {
+        return compareCollection((java.util.Collection) a,(java.util.Collection) b);
+      }
       else if (a instanceof Comparable && b instanceof Comparable)
         return ((Comparable) a).compareTo(b)==0;
       else 
         return a.equals(b);
+    } else
+      return false;
+  }
+
+  private static final boolean compareCollection(java.util.Collection a, java.util.Collection b) {
+    if (a==null && b==null) {
+      return true;
+    } else if (a!=null && b!=null) {
+      if (a.size()==b.size()) {
+        boolean result = true;
+        Iterator aiterator = a.iterator();
+        Iterator biterator = b.iterator();
+
+        for (int i=0; i<a.size() && result; i++) {
+          result = equals(aiterator.next(), biterator.next());
+        }
+
+        return result;
+      } else
+        return false;
     } else
       return false;
   }
