@@ -11,6 +11,7 @@ package com.openitech.util;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
+import java.util.Map.Entry;
 
 /**
  *
@@ -62,7 +63,9 @@ public class Equals {
         Iterator<java.util.Map.Entry> biterator = b.entrySet().iterator();
 
         for (int i=0; i<a.size() && result; i++) {
-          result = equals(aiterator.next().getValue(), biterator.next().getValue());
+          final Entry anext = aiterator.next();
+          final Entry bnext = biterator.next();
+          result = equals(anext.getKey(), bnext.getKey())&&equals(anext.getValue(), bnext.getValue());
         }
 
         return result;
