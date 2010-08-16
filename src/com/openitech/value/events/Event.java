@@ -13,12 +13,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  *
@@ -328,10 +325,10 @@ public class Event {
     Map<Field, List<FieldValue>> b = other.getEventValues();
     if ((a.size() == b.size()) && a.keySet().containsAll(b.keySet())) {
       boolean result = true;
-      Iterator<Entry<Field, List<FieldValue>>> aiterator = a.entrySet().iterator();
+      Iterator<Map.Entry<Field, List<FieldValue>>> aiterator = a.entrySet().iterator();
 
       while (aiterator.hasNext() && result) {
-        java.util.Map.Entry<Field, List<FieldValue>> anext = aiterator.next();
+        Map.Entry<Field, List<FieldValue>> anext = aiterator.next();
         result = compareList(anext.getValue(), b.get(anext.getKey()));
       }
       return result;
