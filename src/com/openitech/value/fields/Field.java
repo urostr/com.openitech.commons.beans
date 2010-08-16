@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
  */
 public class Field {
 
+  public static final Field VERSION = new Field("_SYS_EVENT_VERSION", java.sql.Types.INTEGER, Integer.MIN_VALUE);
+
     Integer idPolja;
     String name;
     int type;
