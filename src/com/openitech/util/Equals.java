@@ -36,7 +36,9 @@ public class Equals {
       else if (a instanceof Number && b instanceof Boolean) {
         return ((Comparable) a).compareTo(((Boolean) b).booleanValue()?1:0)==0;
       }
-      else if (a instanceof java.util.List && b instanceof java.util.List) {
+      else if (a instanceof java.util.Map && b instanceof java.util.Map) {
+        return compareMap((java.util.Map) a,(java.util.Map) b);
+      }      else if (a instanceof java.util.List && b instanceof java.util.List) {
         return compareList((java.util.List) a,(java.util.List) b);
       }
       else if (a instanceof java.util.Collection && b instanceof java.util.Collection) {
@@ -50,6 +52,26 @@ public class Equals {
       return false;
   }
 
+  private static boolean compareMap(java.util.Map a, java.util.Map b) {
+    if (a==null && b==null) {
+      return true;
+    } else if (a!=null && b!=null) {
+      if (compareCollection(a.keySet(), b.keySet())) {
+        boolean result = true;
+        Iterator<java.util.Map.Entry> aiterator = a.entrySet().iterator();
+        Iterator<java.util.Map.Entry> biterator = b.entrySet().iterator();
+
+        for (int i=0; i<a.size() && result; i++) {
+          result = equals(aiterator.next().getValue(), biterator.next().getValue());
+        }
+
+        return result;
+      } else
+        return false;
+    } else
+      return false;
+  }
+  
   private static boolean compareCollection(java.util.Collection a, java.util.Collection b) {
     if (a==null && b==null) {
       return true;
