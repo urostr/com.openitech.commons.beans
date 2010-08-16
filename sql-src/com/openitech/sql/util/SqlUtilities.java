@@ -512,6 +512,8 @@ public abstract class SqlUtilities implements UpdateEvent {
     for (Event childEvent : newValues.getChildren()) {
       if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
         updateEvent(childEvent, childEvent, eventIds);
+      } else {
+        addIngoredEventIds(childEvent, eventIds);
       }
     }
     Long eventId = storeEvent(newValues, find);
@@ -521,6 +523,15 @@ public abstract class SqlUtilities implements UpdateEvent {
     return eventId;
   }
 
+  private void addIngoredEventIds(Event newValues, List<Long> eventIds) {
+    if ((newValues.getId()!=null)&&(newValues.getId()>0)) {
+      eventIds.add(newValues.getId());
+      for (Event childEvent : newValues.getChildren()) {
+        addIngoredEventIds(childEvent, eventIds);
+      }
+    }
+  }
+  
   protected abstract Long assignEventVersion(List<Long> eventIds) throws SQLException;
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
@@ -568,6 +579,7 @@ public abstract class SqlUtilities implements UpdateEvent {
   }
 
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean lastEntryOnly);
+
 
   public static enum Operation {
 

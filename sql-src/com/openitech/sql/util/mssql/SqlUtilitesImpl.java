@@ -257,7 +257,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           beginTransaction();
         }
 
-        boolean insert = (event.getId() == -1) || event.isVersioned();
+        boolean insert = (event.getId() == null) || (event.getId() == -1) || event.isVersioned();
 
         if (insert) {
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
@@ -274,7 +274,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               updateEvents.setInt(param++, oldEvent.getEventSource());
             }
             updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
-            updateEvents.setBoolean(param++, true);
+            updateEvents.setBoolean(param++, false);
             updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
             updateEvents.setLong(param++, oldEvent.getId());
 
@@ -966,7 +966,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public Event findEvent(Event event) throws SQLException {
-    if (event.getId() <= 0) {
+    if ((event.getId() == null)||(event.getId() <= 0)) {
       EventQueryKey eqk = new EventQueryKey(event);
       boolean seek = false;
 
