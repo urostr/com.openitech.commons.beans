@@ -183,7 +183,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     CachedRowSet versions = new CachedRowSetImpl();
 
-    versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()), eventIds, connection));
+    versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString())
+                                                                   .replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())),
+                                                                    eventIds,
+                                                                    connection));
 
     if ((versions.size() == 1) && (versions.first())) {
       return versions.getLong(1);
