@@ -67,6 +67,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement findHsNeznanaId;
   PreparedStatement insertEventsOpombe;
   PreparedStatement findOpomba;
+  PreparedStatement insertVersion;
+  PreparedStatement insertEventVersion;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -147,8 +149,34 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   protected Long assignEventVersion(List<Long> eventIds) throws SQLException {
     //najprej dodaj verzijo (tabela Versions)
-    //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je
-    return null;
+    long versionId = storeVersion();
+    //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je    
+    for (Long eventId : eventIds) {
+      storeEventVersion(versionId, eventId);
+    }
+    return versionId;
+  }
+
+  private long storeVersion() throws SQLException{
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+    if (insertVersion == null) {
+      insertVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertVersion.sql", "cp1250"));
+    }
+    insertVersion.executeUpdate();
+    return  getLastIdentity();
+  }
+
+  private void storeEventVersion(long versionId, long eventId) throws SQLException{
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+    if (insertEventVersion == null) {
+      insertEventVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEventVersion.sql", "cp1250"));
+    }
+    int param = 1;
+    insertEventVersion.clearParameters();
+    insertEventVersion.setLong(param++, versionId);
+    insertEventVersion.setLong(param++, eventId);
+    insertEventVersion.executeUpdate();
+
   }
 
   @Override
