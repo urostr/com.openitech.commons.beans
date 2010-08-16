@@ -22,7 +22,7 @@ public class Equals {
   private Equals() {
   }
   
-  public static final boolean equals(Object a, Object b) {
+  public static boolean equals(Object a, Object b) {
     if (a==null && b==null)
       return true;
     else if (a!=null && b!=null) {
@@ -50,7 +50,7 @@ public class Equals {
       return false;
   }
 
-  private static final boolean compareCollection(java.util.Collection a, java.util.Collection b) {
+  private static boolean compareCollection(java.util.Collection a, java.util.Collection b) {
     if (a==null && b==null) {
       return true;
     } else if (a!=null && b!=null) {
@@ -70,7 +70,7 @@ public class Equals {
       return false;
   }
 
-  private static final boolean compareList(java.util.List a, java.util.List b) {
+  private static boolean compareList(java.util.List a, java.util.List b) {
     if (a==null && b==null) {
       return true;
     } else if (a!=null && b!=null) {
