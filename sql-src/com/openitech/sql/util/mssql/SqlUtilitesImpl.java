@@ -69,6 +69,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement findOpomba;
   PreparedStatement insertVersion;
   PreparedStatement insertEventVersion;
+  String getEventVersionSQL;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -148,25 +149,59 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   protected Long assignEventVersion(List<Long> eventIds) throws SQLException {
-    //najprej dodaj verzijo (tabela Versions)
-    long versionId = storeVersion();
-    //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je    
-    for (Long eventId : eventIds) {
-      storeEventVersion(versionId, eventId);
+    if (!eventIds.isEmpty()) {
+      //najprej dodaj verzijo (tabela Versions)
+      Long versionId = getVersion(eventIds);
+
+      if (versionId == null) {
+        versionId = storeVersion();
+        //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je
+        for (Long eventId : eventIds) {
+          storeEventVersion(versionId, eventId);
+        }
+      }
+      return versionId;
+    } else {
+      return null;
     }
-    return versionId;
   }
 
-  private long storeVersion() throws SQLException{
+  private Long getVersion(List<Long> eventIds) throws SQLException {
+
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+
+
+    if (getEventVersionSQL == null) {
+      getEventVersionSQL = com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getEventVersion.sql", "cp1250");
+    }
+
+    StringBuilder sb = new StringBuilder();
+
+    for (Long eventId : eventIds) {
+      sb.append(sb.length() > 0 ? ", " : "").append("?");
+    }
+
+    CachedRowSet versions = new CachedRowSetImpl();
+
+    versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()), eventIds, connection));
+
+    if ((versions.size() == 1) && (versions.first())) {
+      return versions.getLong(1);
+    } else {
+      return null;
+    }
+  }
+
+  private long storeVersion() throws SQLException {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertVersion == null) {
       insertVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertVersion.sql", "cp1250"));
     }
     insertVersion.executeUpdate();
-    return  getLastIdentity();
+    return getLastIdentity();
   }
 
-  private void storeEventVersion(long versionId, long eventId) throws SQLException{
+  private void storeEventVersion(long versionId, long eventId) throws SQLException {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertEventVersion == null) {
       insertEventVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEventVersion.sql", "cp1250"));
@@ -224,8 +259,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
         if (insert) {
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
 
-          if (event.isVersioned()&&(oldEvent != null)) {
-           //updataj stari event
+          if (event.isVersioned() && (oldEvent != null)) {
+            //updataj stari event
             param = 1;
             updateEvents.clearParameters();
             updateEvents.setInt(param++, oldEvent.getSifrant());
@@ -237,7 +272,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
             updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
             updateEvents.setBoolean(param++, true);
-            updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()) );
+            updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
             updateEvents.setLong(param++, oldEvent.getId());
 
             success = success && updateEvents.executeUpdate() > 0;
