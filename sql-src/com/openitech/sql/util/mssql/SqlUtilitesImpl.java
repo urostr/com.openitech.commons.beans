@@ -146,6 +146,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   protected Long assignEventVersion(List<Long> eventIds) throws SQLException {
+    //najprej dodaj verzijo (tabela Versions)
+    //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je
     return null;
   }
 
