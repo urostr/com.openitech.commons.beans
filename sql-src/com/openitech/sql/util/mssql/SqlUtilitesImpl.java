@@ -224,8 +224,23 @@ public class SqlUtilitesImpl extends SqlUtilities {
         if (insert) {
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
 
-          if (event.isVersioned()) {
+          if (event.isVersioned()&&(oldEvent != null)) {
            //updataj stari event
+            param = 1;
+            updateEvents.clearParameters();
+            updateEvents.setInt(param++, oldEvent.getSifrant());
+            updateEvents.setString(param++, oldEvent.getSifra());
+            if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
+              updateEvents.setNull(param++, java.sql.Types.INTEGER);
+            } else {
+              updateEvents.setInt(param++, oldEvent.getEventSource());
+            }
+            updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
+            updateEvents.setBoolean(param++, true);
+            updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()) );
+            updateEvents.setLong(param++, oldEvent.getId());
+
+            success = success && updateEvents.executeUpdate() > 0;
           }
 
           //insertaj event
