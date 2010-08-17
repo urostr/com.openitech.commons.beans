@@ -27,7 +27,7 @@ public class FieldValue extends Field {
     this(-1, name, type, fieldValueIndex, value);
   }
 
-  public FieldValue(int idPolja, String name, int type, int fieldValueIndex, Object value) {
+  public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, Object value) {
     super(idPolja, name, type, fieldValueIndex);
     this.value = value;
   }
