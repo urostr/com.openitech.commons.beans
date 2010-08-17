@@ -11,7 +11,7 @@ FROM (
             CAST(<%ev_version_filter%> as int) as VersionId
      FROM
         <%ChangeLog%>.[dbo].[Events] ev
-     WHERE ev.id in (select eventid from EventVersions where versionid = <%ev_version_filter%>) AND <%ev_type_filter%> <%ev_source_filter%> <%ev_date_filter%>)
+     WHERE ev.id in (select eventid from <%ChangeLog%>.[dbo].[EventVersions] where versionid = <%ev_version_filter%>) AND <%ev_type_filter%> <%ev_source_filter%> <%ev_date_filter%>)
     UNION ALL
     (SELECT ev.*,
            (null) as VersionId

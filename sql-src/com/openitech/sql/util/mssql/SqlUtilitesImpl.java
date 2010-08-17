@@ -1294,33 +1294,31 @@ public class SqlUtilitesImpl extends SqlUtilities {
     parameters.add(sqlResultLimit);
     sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : " DISTINCT TOP 100 PERCENT ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
-    parameters.add(sqlResultFields);
     DbDataSource.SubstSqlParameter sqlFindEventVersion = new DbDataSource.SubstSqlParameter("<%ev_version_filter%>");
-    parameters.add(sqlFindEventVersion);
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
-    parameters.add(sqlFindEventType);
     DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
-    parameters.add(sqlFindEventValid);
+
 
     DbDataSource.SqlParameter<Object> versionId = namedParameters.containsKey(Field.VERSION)?namedParameters.get(Field.VERSION):new DbDataSource.SqlParameter<Object>();
     namedParameters.put(Field.VERSION, versionId);
+    sqlFindEventVersion.setValue("?");
     sqlFindEventVersion.addParameter(versionId);
 
 //    String validFrom = validOnly ? " AND GETDATE()>=ev.validFrom " : "" ;
     sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
     if (sifra == null) {
       sqlFindEventType.setValue("ev.[IdSifranta] = ?");
-      parameters.add(sifrant);
+      sqlFindEventType.addParameter(sifrant);
     } else if (sifra.length == 1) {
       sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
-      parameters.add(sifrant);
-      parameters.add(sifra[0]);
+      sqlFindEventType.addParameter(sifrant);
+      sqlFindEventType.addParameter(sifra[0]);
     } else {
       StringBuilder sbet = new StringBuilder();
-      parameters.add(sifrant);
+      sqlFindEventType.addParameter(sifrant);
       for (String s : sifra) {
         sbet.append(sbet.length() > 0 ? ", " : "").append("?");
-        parameters.add(s);
+        sqlFindEventType.addParameter(s);
       }
       sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
       sqlFindEventType.setValue(sbet.toString());
@@ -1332,16 +1330,28 @@ public class SqlUtilitesImpl extends SqlUtilities {
       sqlFindEventSource.setValue("");
     } else {
       sqlFindEventSource.setValue(" AND ev.[IdEventSource] = ?");
-      parameters.add(event.getEventSource());
+      sqlFindEventSource.addParameter(event.getEventSource());
     }
-    DbDataSource.SubstSqlParameter sqlFindDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
-    parameters.add(sqlFindDate);
+    DbDataSource.SubstSqlParameter sqlFindEventDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
+    parameters.add(sqlFindEventDate);
     if (searchFields.contains(Event.EVENT_DATE)) {
-      sqlFindDate.setValue(" AND ev.DATUM = ?");
-      parameters.add(event.getDatum());
+      sqlFindEventDate.setValue(" AND ev.DATUM = ?");
+      sqlFindEventDate.addParameter(event.getDatum());
     } else {
-      sqlFindDate.setValue("");
+      sqlFindEventDate.setValue("");
     }
+    parameters.add(sqlResultFields);
+    parameters.add(sqlFindEventVersion);
+    parameters.add(sqlFindEventVersion);
+    parameters.add(sqlFindEventType);
+    parameters.add(sqlFindEventSource);
+    parameters.add(sqlFindEventDate);
+    parameters.add(sqlFindEventVersion);
+    parameters.add(sqlFindEventType);
+    parameters.add(sqlFindEventValid);
+    parameters.add(sqlFindEventSource);
+    parameters.add(sqlFindEventDate);
+
     DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
     parameters.add(sqlFind);
 
