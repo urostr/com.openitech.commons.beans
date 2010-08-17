@@ -538,7 +538,7 @@ public abstract class SqlUtilities implements UpdateEvent {
 
   public abstract FieldValue getNextIdentity(Field field) throws SQLException;
 
-  public abstract FieldValue getParrentIdentity(Field field) throws SQLException;
+  public abstract FieldValue getParentIdentity(Field field) throws SQLException;
 
   public Long storeEvent(Event event) throws SQLException {
     return storeEvent(event, null);
@@ -571,14 +571,10 @@ public abstract class SqlUtilities implements UpdateEvent {
   public abstract DbDataSource getDsSifrantModel(String dataBase, java.util.List<Object> parameters) throws SQLException;
 
   public EventQuery prepareEventQuery(Event event, Set<Field> searchFields, Set<Field> resultFields) {
-    return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), event.getSifra(), false);
+    return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), new String[]{event.getSifra()}, true, false);
   }
 
-  public EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String sifra, boolean lastEntryOnly) {
-    return prepareEventQuery(parent, searchFields, resultFields, sifrant, sifra == null ? null : new String[]{sifra}, lastEntryOnly);
-  }
-
-  public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean lastEntryOnly);
+  public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly);
 
 
   public static enum Operation {

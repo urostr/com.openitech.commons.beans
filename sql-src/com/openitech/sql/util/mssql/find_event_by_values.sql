@@ -6,18 +6,6 @@ SELECT <%ev_result_limit%>
     ev.[IdEventSource],
     ev.Datum
 <%ev_field_results%>
-FROM (
-    (SELECT ev.*,
-            CAST(<%ev_version_filter%> as int) as VersionId
-     FROM
-        <%ChangeLog%>.[dbo].[Events] ev
-     WHERE ev.id in (select eventid from <%ChangeLog%>.[dbo].[EventVersions] where versionid = <%ev_version_filter%>) AND <%ev_type_filter%> <%ev_source_filter%> <%ev_date_filter%>)
-    UNION ALL
-    (SELECT ev.*,
-           (null) as VersionId
-     FROM
-        <%ChangeLog%>.[dbo].[Events] ev
-     WHERE <%ev_version_filter%> IS NULL AND <%ev_type_filter%> <%ev_valid_filter%> <%ev_source_filter%> <%ev_date_filter%>)
-    ) ev
+FROM (<%ev_events_subquery%>) ev
 <%ev_values_filter%>
 <%ev_valid_filter%>
