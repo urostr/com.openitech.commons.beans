@@ -3235,8 +3235,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   }
 
   public boolean reload(boolean queued) {
+    com.openitech.events.concurrent.RefreshDataSource.timestamp(this);
     if (queued) {
-      com.openitech.events.concurrent.RefreshDataSource.timestamp(this);
       com.openitech.events.concurrent.DataSourceEvent.submit(new com.openitech.events.concurrent.RefreshDataSource(this, true));
       return true;
     } else {

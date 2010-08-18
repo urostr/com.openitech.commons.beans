@@ -46,6 +46,20 @@ public abstract class AbstractDataSourceFactory {
     this(null);
   }
 
+  protected List<Object> additionalParameters;
+
+  /**
+   * Get the value of additionalParameters
+   *
+   * @return the value of additionalParameters
+   */
+  public List<Object> getAdditionalParameters() {
+    if (additionalParameters==null) {
+      additionalParameters = new java.util.ArrayList<Object>();
+    }
+    return additionalParameters;
+  }
+
   /**
    * Get the value of dbDataModel
    *

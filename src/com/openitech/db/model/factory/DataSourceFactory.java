@@ -90,6 +90,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (dataSourceLimit!=null) {
       parameters.add(dataSourceLimit);
     }
+    if (additionalParameters!=null) {
+      parameters.addAll(additionalParameters);
+    }
     for (Parameters parameter : dataSourceXML.getDataSource().getParameters()) {
       if (parameter.getTemporaryTable() != null) {
         parameters.add(createTemporaryTable(parameter.getTemporaryTable()));
