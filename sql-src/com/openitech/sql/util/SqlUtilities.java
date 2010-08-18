@@ -17,6 +17,7 @@ import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
 import com.openitech.util.Equals;
+import com.openitech.value.events.EventQueryParameter;
 import java.sql.Connection;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -570,10 +571,12 @@ public abstract class SqlUtilities implements UpdateEvent {
 
   public abstract DbDataSource getDsSifrantModel(String dataBase, java.util.List<Object> parameters) throws SQLException;
 
+
   public EventQuery prepareEventQuery(Event event, Set<Field> searchFields, Set<Field> resultFields) {
     return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), new String[]{event.getSifra()}, true, false);
   }
 
+  public abstract EventQueryParameter getEventQueryParameter(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly);
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly);
 
 

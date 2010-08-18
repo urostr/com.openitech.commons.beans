@@ -18,6 +18,7 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
+import com.openitech.value.events.EventQueryParameter;
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.UnsupportedEncodingException;
 import java.sql.Clob;
@@ -31,6 +32,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1286,7 +1288,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-  private static class EventFilterSearch extends DbDataSource.SubstSqlParameter {
+  private static class EventFilterSearch extends EventQueryParameter {
 
     private static final String EV_VERSIONED_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_versioned.sql", "cp1250");
     private static final String EV_NONVERSIONED_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_valid.sql", "cp1250");
@@ -1295,7 +1297,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventSource = new DbDataSource.SubstSqlParameter("<%ev_source_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
-    DbDataSource.SqlParameter<Object> versionId;
 
     String evVersionedSubquery;
     String evNonVersionedSubquery;
@@ -1303,11 +1304,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
     List<Object> evNonVersionedParameters = new ArrayList<Object>();
     List<Object> evVersionedParameters = new ArrayList<Object>();
 
-    public EventFilterSearch(String replace, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, int sifrant, String[] sifra, boolean validOnly) {
-      super(replace);
+    public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly) {
+      super(namedParameters);
 
-      this.versionId = namedParameters.containsKey(Field.VERSION) ? namedParameters.get(Field.VERSION) : new DbDataSource.SqlParameter<Object>();
-      namedParameters.put(Field.VERSION, this.versionId);
       sqlFindEventVersion.setValue("?");
       sqlFindEventVersion.addParameter(this.versionId);
 
@@ -1329,19 +1328,20 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
         sqlFindEventType.setValue(sbet.toString());
       }
-      if (!searchFields.contains(Event.EVENT_SOURCE)) {
+
+      if (eventSource==null) {
         sqlFindEventSource.setValue("");
       } else {
         sqlFindEventSource.setValue(" AND ev.[IdEventSource] = ?");
-        sqlFindEventSource.addParameter(event.getEventSource());
+        sqlFindEventSource.addParameter(eventSource);
       }
-      if (searchFields.contains(Event.EVENT_DATE)) {
-        sqlFindEventDate.setValue(" AND ev.DATUM = ?");
-        sqlFindEventDate.addParameter(event.getDatum());
-      } else {
+      if (eventDatum==null) {
         sqlFindEventDate.setValue("");
+      } else {
+        sqlFindEventDate.setValue(" AND ev.DATUM = ?");
+        sqlFindEventDate.addParameter(eventDatum);
       }
-
+      
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventType);
@@ -1356,6 +1356,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
+    @Override
     public boolean hasVersionId() {
       return versionId.getValue() != null && (((Long) versionId.getValue()) > 0);
     }
@@ -1371,6 +1372,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
+  @Override
+  public EventQueryParameter getEventQueryParameter(Map<Field, SqlParameter<Object>> namedParameters, Integer eventSource, Date eventDatum, int sifrant, String[] sifra, boolean validOnly) {
+    return new EventFilterSearch(namedParameters, eventSource, eventDatum, sifrant, sifra, validOnly);
+  }
+
   private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly) {
     StringBuilder sb = new StringBuilder(500);
     StringBuilder sbresult = new StringBuilder(500);
@@ -1379,7 +1385,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : " DISTINCT TOP 100 PERCENT ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
     parameters.add(sqlResultFields);
-    EventFilterSearch eventSearchFilter = new EventFilterSearch("<%ev_events_subquery%>", namedParameters, event, searchFields, sifrant, sifra, validOnly);
+    EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE)?event.getEventSource():null, searchFields.contains(Event.EVENT_DATE)?event.getDatum():null, sifrant, sifra, validOnly);
     parameters.add(eventSearchFilter);
     DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
     parameters.add(sqlFind);

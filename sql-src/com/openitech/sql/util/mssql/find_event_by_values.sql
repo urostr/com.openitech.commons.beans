@@ -4,6 +4,7 @@ SELECT <%ev_result_limit%>
     ev.[IdSifranta],
     ev.[IdSifre],
     ev.[IdEventSource],
+    ev.[VersionId],
     ev.Datum
 <%ev_field_results%>
 FROM (<%ev_events_subquery%>) ev
