@@ -331,6 +331,7 @@ public class Event {
         Map.Entry<Field, List<FieldValue>> anext = aiterator.next();
         result = compareList(anext.getValue(), b.get(anext.getKey()));
       }
+      result = result && Equals.equals(getOpomba(), other.getOpomba());
       return result;
     } else {
       return false;
