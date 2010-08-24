@@ -4487,8 +4487,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
 
     for (TemporarySubselectSqlParameter tempSubselect:temporarySubselectSqlParameters) {
-      tempSubselect.setParameters(queryParameters);
-      tempSubselect.executeQuery(statement.getConnection());
+      tempSubselect.executeQuery(statement.getConnection(),queryParameters);
     }
 
     setParameters(statement, queryParameters, 1, false);

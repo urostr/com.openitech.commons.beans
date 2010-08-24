@@ -8,9 +8,11 @@ import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
+import com.openitech.sql.util.SqlUtilities;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -163,46 +165,109 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void setCheckTableSql(String checkTableSql) {
     this.checkTableSql = checkTableSql;
   }
+  protected SQLMaterializedView sqlMaterializedView;
 
-  public void executeQuery(Connection connection) throws SQLException {
+  /**
+   * Get the value of sqlMaterializedView
+   *
+   * @return the value of sqlMaterializedView
+   */
+  public SQLMaterializedView getSqlMaterializedView() {
+    return sqlMaterializedView;
+  }
+
+  /**
+   * Set the value of sqlMaterializedView
+   *
+   * @param sqlMaterializedView new value of sqlMaterializedView
+   */
+  public void setSqlMaterializedView(SQLMaterializedView sqlMaterializedView) {
+    this.sqlMaterializedView = sqlMaterializedView;
+  }
+
+  @Override
+  public String getValue() {
+    return sqlMaterializedView == null ? super.getValue() : sqlMaterializedView.getValue();
+  }
+
+  public void executeQuery(Connection connection, List<Object> parameters) throws SQLException {
     Statement statement = connection.createStatement();
     try {
       boolean fill = !isFillOnceOnly();
       long timer = System.currentTimeMillis();
 
       String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
-
-      try {
-        if (checkTableSql != null) {
-          statement.executeQuery(checkTableSql);
-        }
-      } catch (SQLException ex) {
-        lock.acquireUninterruptibly();
-        try {
-          for (String sql : createTableSqls) {
-            statement.addBatch(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())));
-          }
-          statement.executeBatch();
-          fill = true;
-        } finally {
-          lock.release();
-        }
+      final List<Object> qparams = new ArrayList<Object>(parameters.size());
+      qparams.addAll(parameters);
+      qparams.addAll(getParameters());
+      if (sqlMaterializedView != null) {
+        qparams.add(sqlMaterializedView);
       }
 
-      if (fill&&!disabled) {
-        if (emptyTableSql.length() > 0) {
-          statement.executeUpdate(emptyTableSql);
-        }
-
-        SQLDataSource.executeUpdate(fillTableSql, getParameters());
-        if (cleanTableSqls != null) {
-          for (String sql : cleanTableSqls) {
-            SQLDataSource.executeUpdate(sql, getParameters());
+      boolean transaction = false;
+      boolean commit = false;
+      try {
+        try {
+          if (checkTableSql != null) {
+            statement.executeQuery(SQLDataSource.substParameters(checkTableSql, qparams));
+          }
+        } catch (SQLException ex) {
+          if (sqlMaterializedView != null) {
+            if (!SqlUtilities.getInstance().isTransaction()) {
+              transaction = true;
+              SqlUtilities.getInstance().beginTransaction();
+            }
+          }
+          lock.acquireUninterruptibly();
+          try {
+            for (String sql : createTableSqls) {
+              statement.addBatch(SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams));
+            }
+            statement.executeBatch();
+            fill = true;
+          } finally {
+            lock.release();
           }
         }
-        if (DbDataSource.DUMP_SQL) {
-          System.out.println("temporary:fill:" + (System.currentTimeMillis() - timer) + "ms");
-          System.out.println("##############");
+
+        if ((!fill) && (sqlMaterializedView != null)) {
+          fill = !sqlMaterializedView.isViewValid(connection);
+        }
+
+        if (fill && !disabled) {
+          if (sqlMaterializedView != null) {
+            if (!SqlUtilities.getInstance().isTransaction()) {
+              transaction = true;
+              SqlUtilities.getInstance().beginTransaction();
+              lock.acquireUninterruptibly();
+            }
+          }
+
+
+          if (emptyTableSql.length() > 0) {
+            statement.executeUpdate(SQLDataSource.substParameters(emptyTableSql, qparams));
+          }
+
+          SQLDataSource.executeUpdate(fillTableSql, qparams);
+          if (cleanTableSqls != null) {
+            for (String sql : cleanTableSqls) {
+              SQLDataSource.executeUpdate(sql, qparams);
+            }
+          }
+          if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
+            SQLDataSource.execute(sqlMaterializedView.setViewVersionSql, qparams);
+          }
+          if (DbDataSource.DUMP_SQL) {
+            System.out.println("temporary:fill:" + (System.currentTimeMillis() - timer) + "ms");
+            System.out.println("##############");
+          }
+
+        }
+        commit = true;
+      } finally {
+        if (transaction) {
+          SqlUtilities.getInstance().endTransaction(commit);
+          lock.release();
         }
       }
     } finally {
