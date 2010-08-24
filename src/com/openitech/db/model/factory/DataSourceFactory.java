@@ -16,6 +16,7 @@ import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.PendingSqlParameter;
+import com.openitech.db.model.sql.SQLMaterializedView;
 import com.openitech.db.model.sql.SQLOrderByParameter;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.db.model.xml.config.DataSourceFilter;
@@ -87,6 +88,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   protected List createDataSourceParameters() {
     java.util.List parameters = new java.util.ArrayList();
+    java.util.List<TemporarySubselectSqlParameter> temporaryTables = new ArrayList<TemporarySubselectSqlParameter>();
     if (dataSourceLimit!=null) {
       parameters.add(dataSourceLimit);
     }
@@ -95,7 +97,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
     for (Parameters parameter : dataSourceXML.getDataSource().getParameters()) {
       if (parameter.getTemporaryTable() != null) {
-        parameters.add(createTemporaryTable(parameter.getTemporaryTable()));
+        final TemporarySubselectSqlParameter temporaryTable = createTemporaryTable(parameter.getTemporaryTable());
+        temporaryTables.add(temporaryTable);
+        parameters.add(temporaryTable);
       } else if (parameter.getSubQuery() != null) {
         parameters.add(createSubQuery(parameter.getSubQuery()));
       } else if (parameter.getDataSourceFilter() != null) {
@@ -151,6 +155,22 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       }
     }
     parameters.add(new SQLOrderByParameter( DB_ROW_SORTER, dataSource));
+    
+    List<SQLMaterializedView> mvParameters = new ArrayList<SQLMaterializedView>(temporaryTables.size());
+    for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
+      if (temporarySubselectSqlParameter.getSqlMaterializedView()!=null) {
+        mvParameters.add(temporarySubselectSqlParameter.getSqlMaterializedView());
+      }
+    }
+    
+    for (SQLMaterializedView sqlMaterializedView : mvParameters) {
+      for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
+        if (!sqlMaterializedView.equals(temporarySubselectSqlParameter.getSqlMaterializedView())) {
+          temporarySubselectSqlParameter.addParameter(sqlMaterializedView);
+        }        
+      }
+    }
+
     return parameters;
   }
 
@@ -340,6 +360,20 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
     if (tt.isFillOnceOnly() != null) {
       ttParameter.setFillOnceOnly(tt.isFillOnceOnly());
+    }
+    if (tt.getMaterializedView() != null) {
+      String replace = tt.getMaterializedView().getReplace();
+
+      if (replace==null) {
+        replace = tt.getTableName();
+      }
+
+      SQLMaterializedView mv = new SQLMaterializedView(replace);
+      mv.setValue(tt.getMaterializedView().getValue());
+      mv.setIsViewValidSQL(tt.getMaterializedView().getIsViewValidSql());
+      mv.setSetViewVersionSql(tt.getMaterializedView().getSetViewVersionSql());
+
+      ttParameter.setSqlMaterializedView(mv);
     }
     ttParameter.setDisabled(tt.isDisabled());
     return ttParameter;

@@ -99,37 +99,37 @@
   </xsd:complexType>
   <xsd:complexType name="DataSourceFilter">
     <xsd:all>
-       <xsd:element name="Name" type="xsd:string" minOccurs="0"></xsd:element>
+      <xsd:element name="Name" type="xsd:string" minOccurs="0"></xsd:element>
       <xsd:element name="Replace" type="xsd:string"></xsd:element>
       <xsd:element name="Operator" type="xsd:string" minOccurs="0"></xsd:element>
       <xsd:element name="Factory"  type="tns:Factory" minOccurs="0"></xsd:element>
-        <xsd:element name="Parameters" minOccurs="0">
-            <xsd:complexType>
-                <xsd:sequence>
-                    <xsd:element name="SeekParameters" type="tns:SeekParameters" maxOccurs="unbounded"></xsd:element>
-                </xsd:sequence>
-            </xsd:complexType>
-        </xsd:element>
+      <xsd:element name="Parameters" minOccurs="0">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="SeekParameters" type="tns:SeekParameters" maxOccurs="unbounded"></xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
     </xsd:all>
   </xsd:complexType>
   <xsd:complexType name="DataSourceParametersFactory">
     <xsd:all>
       <xsd:element name="Factory"  type="tns:Factory"></xsd:element>
-        <xsd:element name="Filters" minOccurs="0">
-            <xsd:complexType>
-                <xsd:sequence>
-                    <xsd:element name="DataSourceFilter" type="tns:DataSourceFilter" maxOccurs="unbounded"></xsd:element>
-                </xsd:sequence>
-            </xsd:complexType>
-        </xsd:element>
-        <xsd:element name="ExportMenuModels" minOccurs="0">
-            <xsd:complexType>
-                <xsd:sequence>
-                    <xsd:element name="Name" type="xsd:string"></xsd:element>
-                   <xsd:element name="DataModel" type="tns:DataModel"></xsd:element>
-                </xsd:sequence>
-            </xsd:complexType>
-        </xsd:element>
+      <xsd:element name="Filters" minOccurs="0">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="DataSourceFilter" type="tns:DataSourceFilter" maxOccurs="unbounded"></xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ExportMenuModels" minOccurs="0">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="DataModel" type="tns:DataModel"></xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
     </xsd:all>
   </xsd:complexType>
   <xsd:complexType name="Factory">
@@ -137,6 +137,14 @@
       <xsd:element name="Groovy" type="xsd:string"></xsd:element>
       <xsd:element name="ClassName" type="xsd:string"></xsd:element>
     </xsd:choice>
+  </xsd:complexType>
+  <xsd:complexType name="MaterializedView">
+    <xsd:all>
+      <xsd:element name="Replace" type="xsd:string" minOccurs="0"></xsd:element>
+      <xsd:element name="Value" type="xsd:string"></xsd:element>
+      <xsd:element name="IsViewValidSql" type="xsd:string"></xsd:element>
+      <xsd:element name="SetViewVersionSql" type="xsd:string" minOccurs="0"></xsd:element>
+    </xsd:all>
   </xsd:complexType>
   <xsd:complexType name="TemporaryTable">
     <xsd:all>
@@ -184,6 +192,7 @@
           <xsd:restriction base="xsd:string"/>
         </xsd:simpleType>
       </xsd:element>
+      <xsd:element name="MaterializedView" type="tns:MaterializedView" minOccurs="0"></xsd:element>
     </xsd:all>
     <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
     <xsd:attribute name="Disabled" default="false" type="xsd:boolean"/>
@@ -210,75 +219,78 @@
     <xsd:choice>
       <xsd:element name="SeekType">
         <xsd:complexType>
-            <xsd:all>
-                <xsd:element name="Name" type="xsd:string"></xsd:element>
-                <xsd:element name="Field" type="xsd:string"></xsd:element>
-                <xsd:element name="Type" type="tns:SeekType" minOccurs="0"></xsd:element>
-                <xsd:element name="MinumumLength" type="xsd:int" minOccurs="0"></xsd:element>
-                <xsd:element name="ParameterCount" type="xsd:int" minOccurs="0"></xsd:element>
-            </xsd:all>
+          <xsd:all>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="Field" type="xsd:string"></xsd:element>
+            <xsd:element name="Type" type="tns:SeekType" minOccurs="0"></xsd:element>
+            <xsd:element name="MinumumLength" type="xsd:int" minOccurs="0"></xsd:element>
+            <xsd:element name="ParameterCount" type="xsd:int" minOccurs="0"></xsd:element>
+          </xsd:all>
         </xsd:complexType>
       </xsd:element>
       <xsd:element name="IntegerSeekType">
         <xsd:complexType>
-            <xsd:all>
-                <xsd:element name="Name" type="xsd:string"></xsd:element>
-                <xsd:element name="Field" type="xsd:string"></xsd:element>
-                <xsd:element name="Type" type="tns:SeekType" minOccurs="0"></xsd:element>
-            </xsd:all>
+          <xsd:all>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="Field" type="xsd:string"></xsd:element>
+            <xsd:element name="Type" type="tns:SeekType" minOccurs="0"></xsd:element>
+          </xsd:all>
         </xsd:complexType>
       </xsd:element>
       <xsd:element name="BetweenDateSeekType">
         <xsd:complexType>
-            <xsd:all>
-                <xsd:element name="Name" type="xsd:string"></xsd:element>
-                <xsd:element name="Field" type="xsd:string"></xsd:element>
-            </xsd:all>
+          <xsd:all>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="Field" type="xsd:string"></xsd:element>
+          </xsd:all>
         </xsd:complexType>
       </xsd:element>
       <xsd:element name="SifrantSeekType">
         <xsd:complexType>
-            <xsd:all>
-                <xsd:element name="Name" type="xsd:string"></xsd:element>
-                <xsd:element name="Field" type="xsd:string"></xsd:element>
-                <xsd:element name="LookupDefinition">
+          <xsd:all>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="Field" type="xsd:string"></xsd:element>
+            <xsd:element name="LookupDefinition">
+              <xsd:complexType>
+                <xsd:choice>
+                  <xsd:element name="Factory" type="tns:Factory"></xsd:element>
+                  <xsd:element name="Lookup">
                     <xsd:complexType>
-                        <xsd:choice>
-                            <xsd:element name="Factory" type="tns:Factory"></xsd:element>
-                            <xsd:element name="Lookup">
-                                <xsd:complexType>
-                                    <xsd:sequence>
-                                        <xsd:element name="AllowedValues" type="xsd:string" maxOccurs="unbounded" minOccurs="0"></xsd:element>
-                                        <xsd:element name="ExcludedValues" type="xsd:string" maxOccurs="unbounded" minOccurs="0"></xsd:element>
-                                    </xsd:sequence>
-                                    <xsd:attribute name="SifrantSkupina" type="xsd:string"/>
-                                    <xsd:attribute name="SifrantOpis" type="xsd:string"/>
-                                    <xsd:attribute name="TextNotDefined" type="xsd:string"/>
-                                </xsd:complexType>
-                            </xsd:element>
-                        </xsd:choice>
+                      <xsd:sequence>
+                        <xsd:element name="AllowedValues" type="xsd:string" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+                        <xsd:element name="ExcludedValues" type="xsd:string" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+                      </xsd:sequence>
+                      <xsd:attribute name="SifrantSkupina" type="xsd:string"/>
+                      <xsd:attribute name="SifrantOpis" type="xsd:string"/>
+                      <xsd:attribute name="TextNotDefined" type="xsd:string"/>
                     </xsd:complexType>
-                </xsd:element>
-            </xsd:all>
+                  </xsd:element>
+                </xsd:choice>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:all>
         </xsd:complexType>
       </xsd:element>
     </xsd:choice>
   </xsd:complexType>
-    <xsd:simpleType name="SeekType">
-        <xsd:restriction base="xsd:string">
-            <xsd:enumeration value="UPPER_EQUALS"/>
-            <xsd:enumeration value="UPPER_BEGINS_WITH"/>
-            <xsd:enumeration value="UPPER_END_WITH"/>
-            <xsd:enumeration value="UPPER_CONTAINS"/>
-            <xsd:enumeration value="EQUALS"/>
-            <xsd:enumeration value="GREATER_OR_EQUALS"/>
-            <xsd:enumeration value="LESS_OR_EQUALS"/>
-            <xsd:enumeration value="PREFORMATTED"/>
-            <xsd:enumeration value="BEGINS_WITH"/>
-            <xsd:enumeration value="ENDS_WITH"/>
-            <xsd:enumeration value="CONTAINS"/>
-        </xsd:restriction>
-    </xsd:simpleType>
+  <xsd:simpleType name="SeekType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="UPPER_EQUALS"/>
+      <xsd:enumeration value="UPPER_BEGINS_WITH"/>
+      <xsd:enumeration value="UPPER_END_WITH"/>
+      <xsd:enumeration value="UPPER_CONTAINS"/>
+      <xsd:enumeration value="EQUALS"/>
+      <xsd:enumeration value="GREATER_OR_EQUALS"/>
+      <xsd:enumeration value="LESS_OR_EQUALS"/>
+      <xsd:enumeration value="PREFORMATTED"/>
+      <xsd:enumeration value="BEGINS_WITH"/>
+      <xsd:enumeration value="ENDS_WITH"/>
+      <xsd:enumeration value="CONTAINS"/>
+    </xsd:restriction>
+  </xsd:simpleType>
 </xsd:schema>
+
+
+
 
 
