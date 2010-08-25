@@ -245,7 +245,18 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
 
           if (emptyTableSql.length() > 0) {
-            statement.executeUpdate(SQLDataSource.substParameters(emptyTableSql, qparams));
+            try {
+              final String sql = SQLDataSource.substParameters(emptyTableSql, qparams);
+              if (DbDataSource.DUMP_SQL) {
+                System.out.println("##############");
+                System.out.println(sql);
+              }
+              statement.executeUpdate(sql);
+            } finally {
+              if (DbDataSource.DUMP_SQL) {
+                System.out.println("##############");
+              }
+            }
           }
 
           SQLDataSource.executeUpdate(fillTableSql, qparams);
