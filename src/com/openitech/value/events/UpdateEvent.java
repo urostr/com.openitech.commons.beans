@@ -13,6 +13,6 @@ import java.sql.SQLException;
  */
 public interface UpdateEvent {
 
-  Long updateEvent(Event newValues, Event oldValues) throws SQLException;
-  
+ public Event prepareEvent(Event newValues, Event oldValues) throws SQLException;
+
 }
