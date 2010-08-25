@@ -292,7 +292,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
           } else {
             insertEvents.setInt(param++, event.getEventSource());
           }
-          insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+          Date eventDatum = event.getDatum();
+          if (eventDatum != null) {
+            insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+          } else {
+            insertEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+          }
           //insertEvents.setString(param++, event.getOpomba());
           success = success && insertEvents.executeUpdate() > 0;
 
@@ -1297,10 +1302,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventSource = new DbDataSource.SubstSqlParameter("<%ev_source_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
-
     String evVersionedSubquery;
     String evNonVersionedSubquery;
-
     List<Object> evNonVersionedParameters = new ArrayList<Object>();
     List<Object> evVersionedParameters = new ArrayList<Object>();
 
@@ -1329,19 +1332,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlFindEventType.setValue(sbet.toString());
       }
 
-      if (eventSource==null) {
+      if (eventSource == null) {
         sqlFindEventSource.setValue("");
       } else {
         sqlFindEventSource.setValue(" AND ev.[IdEventSource] = ?");
         sqlFindEventSource.addParameter(eventSource);
       }
-      if (eventDatum==null) {
+      if (eventDatum == null) {
         sqlFindEventDate.setValue("");
       } else {
         sqlFindEventDate.setValue(" AND ev.DATUM = ?");
         sqlFindEventDate.addParameter(eventDatum);
       }
-      
+
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventType);
@@ -1385,7 +1388,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : " DISTINCT TOP 100 PERCENT ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
     parameters.add(sqlResultFields);
-    EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE)?event.getEventSource():null, searchFields.contains(Event.EVENT_DATE)?event.getDatum():null, sifrant, sifra, validOnly);
+    EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE) ? event.getEventSource() : null, searchFields.contains(Event.EVENT_DATE) ? event.getDatum() : null, sifrant, sifra, validOnly);
     parameters.add(eventSearchFilter);
     DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
     parameters.add(sqlFind);
