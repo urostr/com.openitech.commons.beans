@@ -298,7 +298,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           } else {
             insertEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
           }
-          //insertEvents.setString(param++, event.getOpomba());
+          insertEvents.setString(param++, event.getOpomba());
           success = success && insertEvents.executeUpdate() > 0;
 
           events_ID = getLastIdentity();
@@ -316,7 +316,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             updateEvents.setInt(param++, event.getEventSource());
           }
           updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-          // updateEvents.setString(param++, event.getOpomba());
+           updateEvents.setString(param++, event.getOpomba());
           updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
           updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
           updateEvents.setLong(param++, events_ID);

@@ -5,7 +5,7 @@ UPDATE
     [IdSifre]     = ?,
     [IdEventSource] = ?,
     [Datum]       = ?,
-    
+    [Opomba]      = ?,
     [valid]       = ?,
     [validTo]     = ?,
     [ChangedBy]   = SYSTEM_USER,
