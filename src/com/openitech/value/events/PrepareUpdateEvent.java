@@ -11,8 +11,8 @@ import java.sql.SQLException;
  *
  * @author uros
  */
-public interface UpdateEvent {
+public interface PrepareUpdateEvent {
 
- public Long updateEvent(Event newValues, Event oldValues) throws SQLException;
+ public Event prepareEvent(Event newValues, Event oldValues) throws SQLException;
 
 }
