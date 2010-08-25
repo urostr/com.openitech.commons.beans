@@ -12,6 +12,8 @@
     <system systemId="file:/Users/uros/Java/projects/common/db%20commons/src/com/openitech/xsd/Event.xsd" uri="xml-resources/jaxb/EVENT/Event.xsd"/>
     <system systemId="file:/Users/uros/Java/projects/common/db%20commons/src/com/openitech/xsd/SecondaryParameters.xsd" uri="xml-resources/jaxb/SECODNARY_PARAMETERS/SecondaryParameters.xsd"/>
     <system systemId="file:/Users/uros/Java/projects/common/db%20commons/src/com/openitech/xsd/CreateSecondaryDataSource.xsd" uri="xml-resources/jaxb/CREATE_SECODNARY_DATASOURCE/CreateSecondaryDataSource.xsd"/>
+    <system systemId="file:/Users/uros/Java/projects/common/db%20commons/xml-resources/jaxb/ENTRY_PARAMETER/EntryParameter.xsd" uri="xml-resources/jaxb/ENTRY_PARAMETERS/EntryParameter.xsd"/>
+    <system systemId="file:/Users/uros/Java/projects/common/db%20commons/src/com/openitech/xsd/EntryParameter.xsd" uri="xml-resources/jaxb/ENTRY_PARAMETERS/EntryParameter.xsd"/>
     <system systemId="file:/Users/uros/Java/projects/common/db%20commons/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
 </catalog>
 

@@ -11,7 +11,7 @@
                 <xsd:element name="Command" type="tns:Command"></xsd:element>
                 <xsd:element name="JAXBXml" type="xsd:anyType"></xsd:element>
             </xsd:sequence>
-        </xsd:compleaxType>
+        </xsd:complexType>
     </xsd:element>
     <xsd:simpleType name="Command">
         <xsd:restriction base="xsd:string">
