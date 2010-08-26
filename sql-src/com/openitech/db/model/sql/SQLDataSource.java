@@ -5098,7 +5098,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       } else if (Boolean.class.isAssignableFrom(type)) {
         result = openSelectResultSet.getBoolean(columnIndex);
-      } else if (Date.class.isAssignableFrom(type)) {
+      } else if (java.util.Date.class.isAssignableFrom(type)) {
         java.util.Date value = ((java.util.Date) openSelectResultSet.getObject(columnIndex));
         if (value != null) {
           if (Time.class.isAssignableFrom(type)) {
