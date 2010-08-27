@@ -63,6 +63,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement find_intvalue;
   PreparedStatement find_realvalue;
   PreparedStatement find_stringvalue;
+  PreparedStatement find_clobvalue;
   PreparedStatement get_field;
   PreparedStatement get_fields;
   PreparedStatement insertNeznaniNaslov;
@@ -528,6 +529,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, value);
+          if (find_clobvalue == null) {
+            find_clobvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_clobvalue.sql", "cp1250"));
+          }
+
+          find_clobvalue.setObject(1, value, java.sql.Types.CLOB);
+          find_clobvalue.setObject(2, value, java.sql.Types.CLOB);
+          rs = find_clobvalue.executeQuery();
+          try {
+            if (rs.next()) {
+              newValueId = rs.getLong(1);
+            }
+          } finally {
+            rs.close();
+          }
+
           break;
       }
       if (newValueId == null) {
