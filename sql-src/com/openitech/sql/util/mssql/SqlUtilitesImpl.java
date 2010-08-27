@@ -275,6 +275,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               updateEvents.setInt(param++, oldEvent.getEventSource());
             }
             updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
+            updateEvents.setString(param++, oldEvent.getOpomba());
             updateEvents.setBoolean(param++, false);
             updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
             updateEvents.setLong(param++, oldEvent.getId());
