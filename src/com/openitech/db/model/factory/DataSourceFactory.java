@@ -25,6 +25,7 @@ import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefinition;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Parameters;
+import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
 import groovy.lang.GroovyClassLoader;
 import java.lang.reflect.Constructor;
@@ -41,8 +42,10 @@ import org.codehaus.groovy.control.CompilationFailedException;
  * @author uros
  */
 public class DataSourceFactory extends AbstractDataSourceFactory {
+
   private static final String DATA_SOURCE_LIMIT = "<%DATA_SOURCE_LIMIT%>";
   private static final String DB_ROW_SORTER = "<%DB_ROW_SORTER%>";
+  private static java.util.Map<String, TemporaryTable> cachedTemporaryTables;
   private DataSourceLimit dataSourceLimit;
 
   public DataSourceFactory(DbDataModel dbDataModel) {
@@ -72,6 +75,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if (dataSourceLimit != null) {
         dataSourceLimit.reloadDataSources();
       }
+      storeCachedTemporaryTables();
 
       this.tableModel = createTableModel();
 
@@ -86,13 +90,29 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   }
 
+  protected void storeCachedTemporaryTables() {
+    if (cachedTemporaryTables == null) {
+      cachedTemporaryTables = SqlUtilities.getInstance().getCachedTemporaryTables();
+    }
+    for (Parameters parameter : dataSourceXML.getDataSource().getParameters()) {
+      if (parameter.getTemporaryTable() != null) {
+        TemporaryTable tt = parameter.getTemporaryTable();
+        if (tt.getMaterializedView() != null) {
+          if (!cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue())) {
+            SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
+          }
+        }
+      }
+    }
+  }
+
   protected List createDataSourceParameters() {
     java.util.List parameters = new java.util.ArrayList();
     java.util.List<TemporarySubselectSqlParameter> temporaryTables = new ArrayList<TemporarySubselectSqlParameter>();
-    if (dataSourceLimit!=null) {
+    if (dataSourceLimit != null) {
       parameters.add(dataSourceLimit);
     }
-    if (additionalParameters!=null) {
+    if (additionalParameters != null) {
       parameters.addAll(additionalParameters);
     }
     for (Parameters parameter : dataSourceXML.getDataSource().getParameters()) {
@@ -154,20 +174,20 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         }
       }
     }
-    parameters.add(new SQLOrderByParameter( DB_ROW_SORTER, dataSource));
-    
+    parameters.add(new SQLOrderByParameter(DB_ROW_SORTER, dataSource));
+
     List<SQLMaterializedView> mvParameters = new ArrayList<SQLMaterializedView>(temporaryTables.size());
     for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
-      if (temporarySubselectSqlParameter.getSqlMaterializedView()!=null) {
+      if (temporarySubselectSqlParameter.getSqlMaterializedView() != null) {
         mvParameters.add(temporarySubselectSqlParameter.getSqlMaterializedView());
       }
     }
-    
+
     for (SQLMaterializedView sqlMaterializedView : mvParameters) {
       for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
         if (!sqlMaterializedView.equals(temporarySubselectSqlParameter.getSqlMaterializedView())) {
           temporarySubselectSqlParameter.addParameter(sqlMaterializedView);
-        }        
+        }
       }
     }
 
@@ -247,7 +267,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       useLimitParameter = creationParameters.isUseLimitParameter();
     }
 
-    if (dataSourceXML.getDataSource().getSQL().indexOf(DATA_SOURCE_LIMIT)==-1) {
+    if (dataSourceXML.getDataSource().getSQL().indexOf(DATA_SOURCE_LIMIT) == -1) {
       useLimitParameter = Boolean.FALSE;
     }
 
@@ -262,9 +282,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void suspendDataSource() {
-     CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
+    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
 
-   Boolean suspend = null;
+    Boolean suspend = null;
     if (creationParameters != null) {
       suspend = creationParameters.isSuspend();
     }
@@ -349,6 +369,15 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected TemporarySubselectSqlParameter createTemporaryTable(TemporaryTable tt) {
+    if (cachedTemporaryTables == null) {
+      cachedTemporaryTables = SqlUtilities.getInstance().getCachedTemporaryTables();
+    }
+    final boolean cached = (tt.getMaterializedView() != null) && cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue());
+    if (cached) {
+      tt = cachedTemporaryTables.get(tt.getMaterializedView().getValue());
+      System.out.println("CACHED:TT:"+tt.getMaterializedView().getValue());
+    }
+
     TemporarySubselectSqlParameter ttParameter = new TemporarySubselectSqlParameter(tt.getReplace());
     ttParameter.setValue(tt.getTableName());
     ttParameter.setCheckTableSql(getReplacedSql(tt.getCheckTableSql()));
@@ -364,7 +393,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (tt.getMaterializedView() != null) {
       String replace = tt.getMaterializedView().getReplace();
 
-      if (replace==null) {
+      if (replace == null) {
         replace = tt.getTableName();
       }
 

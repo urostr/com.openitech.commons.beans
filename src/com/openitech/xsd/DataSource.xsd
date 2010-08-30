@@ -295,10 +295,12 @@
       <xsd:enumeration value="CONTAINS"/>
     </xsd:restriction>
   </xsd:simpleType>
+    <xsd:element name="CachedTemporaryTable">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="TemporaryTable" type="tns:TemporaryTable" maxOccurs="1"></xsd:element>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
 </xsd:schema>
-
-
-
-
-
 
