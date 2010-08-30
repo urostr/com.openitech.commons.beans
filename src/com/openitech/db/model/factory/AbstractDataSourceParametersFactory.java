@@ -251,7 +251,11 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
             && (dataSourceParametersFactory.getExportMenuModels() != null)) {
 
       javax.swing.JMenu jmiExport = new javax.swing.JMenu();
-      jmiExport.setText(dataSourceParametersFactory.getExportMenuModels().getName());
+      if (dataSourceParametersFactory.getExportMenuModels().getName()==null) {
+        jmiExport.setText("Izvozi");
+      } else {
+        jmiExport.setText(dataSourceParametersFactory.getExportMenuModels().getName());
+      }
       for (DataSourceParametersFactory.ExportMenuModels.Model model : dataSourceParametersFactory.getExportMenuModels().getModel()) {
         final DbTableModel tmExport = createTableModel(model.getDataModel());
         final JDbTable jtExport = new JDbTable();
