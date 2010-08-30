@@ -368,7 +368,7 @@ public class Event {
 
   @Override
   public String toString() {
-    return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id;
+    return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id + ":"+operation;
   }
 
   public static enum EventOperation {

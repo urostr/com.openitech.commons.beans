@@ -126,7 +126,14 @@
         <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="Name" type="xsd:string"></xsd:element>
-            <xsd:element name="DataModel" type="tns:DataModel"></xsd:element>
+            <xsd:element name="Model" maxOccurs="unbounded">
+              <xsd:complexType>
+                <xsd:all>
+                  <xsd:element name="Name" type="xsd:string"></xsd:element>
+                  <xsd:element name="DataModel" type="tns:DataModel"></xsd:element>
+                </xsd:all>
+              </xsd:complexType>
+            </xsd:element>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
@@ -289,6 +296,7 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
+
 
 
 

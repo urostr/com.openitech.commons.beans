@@ -4,10 +4,14 @@
  */
 package com.openitech.db.model.factory;
 
+import com.openitech.db.components.JDbTable;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.DbTableModel;
+import com.openitech.db.model.xml.config.DataModel;
+import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefinition;
 import com.openitech.db.model.xml.config.DataSourceFilter;
 import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.db.model.xml.config.Factory;
@@ -215,14 +219,14 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                   List<String> allowedValues = lookup.getAllowedValues();
                   List<String> excludedValues = lookup.getExcludedValues();
 
-                  if ((allowedValues.size()>0)||(excludedValues.size()>0)) {
+                  if ((allowedValues.size() > 0) || (excludedValues.size() > 0)) {
                     sifrantSeekType = new DataSourceFilters.SifrantSeekType(
                             new DataSourceFilters.SeekType(field, DataSourceFilters.SeekType.EQUALS, 1),
                             sifrantSkupina,
                             sifrantOpis,
                             textNotDefined,
-                            (allowedValues.isEmpty()?null:allowedValues),excludedValues.isEmpty()?null:excludedValues);
-                  } else if (textNotDefined==null) {
+                            (allowedValues.isEmpty() ? null : allowedValues), excludedValues.isEmpty() ? null : excludedValues);
+                  } else if (textNotDefined == null) {
                     sifrantSeekType = new DataSourceFilters.SifrantSeekType(field, sifrantSkupina, sifrantOpis);
                   } else {
                     sifrantSeekType = new DataSourceFilters.SifrantSeekType(field, sifrantSkupina, sifrantOpis, textNotDefined);
@@ -242,7 +246,57 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
     }
   }
 
+  protected void configure(List<JMenu> viewMenuItems) {
+    if ((dataSourceParametersFactory != null)
+            && (dataSourceParametersFactory.getExportMenuModels() != null)) {
+
+      javax.swing.JMenu jmiExport = new javax.swing.JMenu();
+      jmiExport.setText(dataSourceParametersFactory.getExportMenuModels().getName());
+      for (DataSourceParametersFactory.ExportMenuModels.Model model : dataSourceParametersFactory.getExportMenuModels().getModel()) {
+        final DbTableModel tmExport = createTableModel(model.getDataModel());
+        final JDbTable jtExport = new JDbTable();
+        jtExport.setModel(tmExport);
+
+        javax.swing.JMenuItem jmiExportTM = new javax.swing.JMenuItem();
+        jmiExportTM.setText(model.getName());
+        jmiExportTM.addActionListener(new java.awt.event.ActionListener() {
+
+          @Override
+          public void actionPerformed(java.awt.event.ActionEvent evt) {
+            java.awt.EventQueue.invokeLater(new Runnable() {
+
+              @Override
+              public void run() {
+                com.openitech.util.HSSFWrapper.openWorkbook(jtExport);
+              }
+            });
+          }
+        });
+
+        jmiExport.add(jmiExportTM);
+      }
+
+      if (jmiExport.getMenuComponentCount()>0) {
+        viewMenuItems.add(jmiExport);
+      }
+    }
+  }
+
   protected int getSeekType(com.openitech.db.model.xml.config.SeekType type) {
     return Arrays.asList(com.openitech.db.model.xml.config.SeekType.values()).indexOf(type);
+  }
+
+  private DbTableModel createTableModel(DataModel dataModel) {
+    com.openitech.db.model.DbTableModel tableModel = new com.openitech.db.model.DbTableModel();
+    List<String[]> tableColumns = new ArrayList<String[]>();
+    for (TableColumnDefinition tableColumnDefinition : dataModel.getTableColumns().getTableColumnDefinition()) {
+      tableColumns.add(tableColumnDefinition.getTableColumnEntry().toArray(new String[tableColumnDefinition.getTableColumnEntry().size()]));
+    }
+    tableModel.setColumns(tableColumns.toArray(new String[tableColumns.size()][]));
+    if (dataModel.getSeparator() != null) {
+      tableModel.setSeparator(dataModel.getSeparator());
+    }
+    tableModel.setDataSource(getDataSource());
+    return tableModel;
   }
 }
