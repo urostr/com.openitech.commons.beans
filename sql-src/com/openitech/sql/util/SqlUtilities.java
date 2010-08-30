@@ -46,6 +46,7 @@ public abstract class SqlUtilities implements UpdateEvent {
   public static final String CHANGE_LOG_DB = "[ChangeLog]";
   public static final String RPP_DB = "[RPP]";
   public static final String RPE_DB = "[RPE]";
+  public static final String MVIEW_CACHE_DB = "[MViewCache]";
   private static Map<Class, SqlUtilities> instances = new HashMap<Class, SqlUtilities>();
 
   protected SqlUtilities() {
@@ -578,6 +579,8 @@ public abstract class SqlUtilities implements UpdateEvent {
 
   public abstract EventQueryParameter getEventQueryParameter(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly);
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly);
+  public abstract Map<String,com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
+  public abstract void storeCachedTemporaryTable(com.openitech.db.model.xml.config.TemporaryTable tt);
 
 
   public static enum Operation {

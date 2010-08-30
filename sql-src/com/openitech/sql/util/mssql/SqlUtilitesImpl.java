@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util.mssql;
 
+import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
@@ -20,6 +21,7 @@ import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
 import com.openitech.value.events.EventQueryParameter;
 import com.sun.rowset.CachedRowSetImpl;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -43,6 +45,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.JOptionPane;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 /**
  *
@@ -73,6 +79,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement insertVersion;
   PreparedStatement insertEventVersion;
   String getEventVersionSQL;
+  PreparedStatement storeCachedTemporaryTable;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -814,6 +821,66 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
     } finally {
       rs.close();
+    }
+  }
+
+  @Override
+  public Map<String, TemporaryTable> getCachedTemporaryTables() {
+    Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();
+    try {
+      Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+      ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
+
+      while (cachedObjects.next()) {
+        if (cachedObjects.getObject("CachedObjectXML") != null) {
+          String object = cachedObjects.getString("Object");
+          com.openitech.db.model.xml.config.CachedTemporaryTable temporaryTable;
+
+          try {
+            Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
+            temporaryTable = (com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream());
+
+            result.put(object, temporaryTable.getTemporaryTable());
+          } catch (JAXBException ex) {
+            Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
+          }
+        }
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+    return result;
+  }
+
+  @Override
+  public void storeCachedTemporaryTable(TemporaryTable tt) {
+    if (tt.getMaterializedView() != null) {
+      try {
+        JAXBContext context = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class);
+        Marshaller marshaller = context.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        StringWriter sw = new StringWriter();
+
+        com.openitech.db.model.xml.config.CachedTemporaryTable ctt = new com.openitech.db.model.xml.config.CachedTemporaryTable();
+        ctt.setTemporaryTable(tt);
+
+        marshaller.marshal(ctt, sw);
+        final Connection connection = ConnectionManager.getInstance().getTxConnection();
+        if (storeCachedTemporaryTable == null) {
+          storeCachedTemporaryTable = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "storeCachedTemporaryTable.sql", "cp1250"));
+        }
+
+        storeCachedTemporaryTable.setString(1, tt.getMaterializedView().getValue());
+        storeCachedTemporaryTable.setString(2, sw.toString());
+        storeCachedTemporaryTable.executeUpdate();
+      } catch (SQLException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (JAXBException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
     }
   }
 
