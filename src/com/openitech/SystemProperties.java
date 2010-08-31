@@ -123,7 +123,7 @@ public class SystemProperties {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         //        System.setProperty("acroread.bin","/Applications/Preview.app/Contents/MacOS/Preview");
         Class<?> quaquaManagerClass = Class.forName("ch.randelshofer.quaqua.QuaquaManager");
-        System.setProperty("swing.defaultlaf", (String) quaquaManagerClass.getDeclaredMethod("getLookAndFeelClassName", null).invoke(null, null));
+        System.setProperty("swing.defaultlaf", (String) quaquaManagerClass.getDeclaredMethod("getLookAndFeelClassName", (Class<?>[]) null).invoke(null, (Object[]) null));
 
         if (isMacOSXLeopardOrBetter()) {
           String libraryName = "lib" + (System.getProperty("os.arch").equals("x86_64") ? "quaqua64" : "quaqua");
