@@ -2,15 +2,20 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.openitech;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
+import sun.misc.IOUtils;
 
 /**
  *
@@ -36,7 +41,74 @@ public class SystemProperties {
       Logger.getLogger(SystemProperties.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
-  
+
+  public static boolean isMacOSX() {
+    String osName = System.getProperty("os.name");
+    return osName.startsWith("Mac OS X");
+  }
+
+  public static boolean isMacOSXLeopardOrBetter() {
+    String osName = System.getProperty("os.name");
+    if (!osName.startsWith("Mac OS X")) {
+      return false;
+    }
+
+    // split the "10.x.y" version number
+    String osVersion = System.getProperty("os.version");
+    String[] fragments = osVersion.split("\\.");
+
+    // sanity check the "10." part of the version
+    if (!fragments[0].equals("10")) {
+      return false;
+    }
+    if (fragments.length < 2) {
+      return false;
+    }
+
+    // check if Mac OS X 10.5(.y)
+    try {
+      int minorVers = Integer.parseInt(fragments[1]);
+      if (minorVers >= 5) {
+        return true;
+      }
+    } catch (NumberFormatException e) {
+      // was not an integer
+    }
+
+    return false;
+  }
+
+  public static boolean isMacOSXSnowLeopardOrBetter() {
+    String osName = System.getProperty("os.name");
+    if (!osName.startsWith("Mac OS X")) {
+      return false;
+    }
+
+    // split the "10.x.y" version number
+    String osVersion = System.getProperty("os.version");
+    String[] fragments = osVersion.split("\\.");
+
+    // sanity check the "10." part of the version
+    if (!fragments[0].equals("10")) {
+      return false;
+    }
+    if (fragments.length < 2) {
+      return false;
+    }
+
+    // check if Mac OS X 10.6(.y)
+    try {
+      int minorVers = Integer.parseInt(fragments[1]);
+      if (minorVers >= 6) {
+        return true;
+      }
+    } catch (NumberFormatException e) {
+      // was not an integer
+    }
+
+    return false;
+  }
+
   public static void configure(String applicationName) {
     if (!System.getProperties().containsKey("netbeans.debug")) {
       setOuputLog(applicationName);
@@ -45,14 +117,38 @@ public class SystemProperties {
     }
 
 
-    if (System.getProperty("os.name").toLowerCase().startsWith("mac os x")) {
+    if (isMacOSX()) {
       try {
         System.setProperty("com.apple.mrj.application.live-resize", "true");
         System.setProperty("apple.laf.useScreenMenuBar", "true");
-//        System.setProperty("acroread.bin","/Applications/Preview.app/Contents/MacOS/Preview");
-        Class.forName("ch.randelshofer.quaqua.snow_leopard.Quaqua16SnowLeopardLookAndFeel");
-        System.setProperty("swing.defaultlaf", "ch.randelshofer.quaqua.snow_leopard.Quaqua16SnowLeopardLookAndFeel");
-      } catch (ClassNotFoundException ex) {
+        //        System.setProperty("acroread.bin","/Applications/Preview.app/Contents/MacOS/Preview");
+        Class<?> quaquaManagerClass = Class.forName("ch.randelshofer.quaqua.QuaquaManager");
+        System.setProperty("swing.defaultlaf", (String) quaquaManagerClass.getDeclaredMethod("getLookAndFeelClassName", null).invoke(null, null));
+
+        if (isMacOSXLeopardOrBetter()) {
+          String libraryName = "lib"+(System.getProperty("os.arch").equals("x86_64") ? "quaqua64" : "quaqua");
+          boolean loaded = false;
+          try {
+            System.loadLibrary(libraryName + ".jnilib");
+            loaded = true;
+          } catch (UnsatisfiedLinkError e) {
+          }
+          if (!loaded) {
+            try {
+              loadFromJar(libraryName, "jnilib");
+              loaded = true;
+            } catch (UnsatisfiedLinkError e) {
+              Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Quaqua JNI:"+libraryName, e);
+            } catch (Exception e) {
+              Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Quaqua JNI:"+libraryName, e);
+            }
+          }
+          if (loaded) {
+            System.setProperty("Quaqua.jniIsPreloaded", Boolean.toString(loaded));
+            Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Quaqua JNI:{0} is preloaded.", libraryName);
+          }
+        }
+      } catch (Exception ex) {
         //ignore it
       }
     }
@@ -76,4 +172,39 @@ public class SystemProperties {
     }
   }
 
+  /**
+   * When packaged into JAR extracts DLLs, places these into
+   */
+  private static void loadFromJar(String libraryName, String suffix) throws IOException {
+    // have to use a stream
+    InputStream in = SystemProperties.class.getResourceAsStream(libraryName + "." + suffix);
+    // always write to different location
+
+    File fileOut = File.createTempFile(libraryName, suffix);
+    OutputStream out = new FileOutputStream(fileOut);
+
+    copy(in, out);
+    in.close();
+    out.close();
+    System.load(fileOut.toString());
+
+  }
+  /**
+   * Copy the content of the input stream into the output stream, using a temporary
+   * byte array buffer whose size is defined by {@link #IO_BUFFER_SIZE}.
+   *
+   * @param in The input stream to copy from.
+   * @param out The output stream to copy to.
+   *
+   * @throws IOException If any error occurs during the copy.
+   */
+  private static final int IO_BUFFER_SIZE = 4 * 1024;
+
+  private static void copy(InputStream in, OutputStream out) throws IOException {
+    byte[] b = new byte[IO_BUFFER_SIZE];
+    int read;
+    while ((read = in.read(b)) != -1) {
+      out.write(b, 0, read);
+    }
+  }
 }
