@@ -182,7 +182,7 @@ public class SystemProperties {
     InputStream in = SystemProperties.class.getResourceAsStream(libraryName + "." + suffix);
     // always write to different location
 
-    File fileOut = File.createTempFile(libraryName, suffix);
+    File fileOut = File.createTempFile(libraryName+'_'+System.currentTimeMillis(), suffix);
     OutputStream out = new FileOutputStream(fileOut);
 
     copy(in, out);
