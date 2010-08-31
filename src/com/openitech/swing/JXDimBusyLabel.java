@@ -20,11 +20,11 @@ import java.awt.geom.RoundRectangle2D;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Icon;
 import javax.swing.Timer;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.color.ColorUtil;
 import org.jdesktop.swingx.painter.AbstractPainter;
-import org.jdesktop.swingx.painter.PainterIcon;
 
 
 /**
@@ -49,9 +49,7 @@ public class JXDimBusyLabel extends JXLabel {
     busyPainter.setBaseColor(Color.LIGHT_GRAY);
     busyPainter.setHighlightColor(getForeground());
     Dimension dim = new Dimension(getBusySize(),getBusySize());
-    PainterIcon icon = new PainterIcon(dim);
-    icon.setPainter(busyPainter);
-    this.setIcon(icon);
+    setPainterIcon(dim);
   }
   
   /**
@@ -94,6 +92,50 @@ public class JXDimBusyLabel extends JXLabel {
         });
       } catch (Exception ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.WARNING,"couldn't set the busy label.", ex);
+      }
+    }
+  }
+
+  private void setPainterIcon(Dimension dim) {
+    javax.swing.Icon icon = null;
+    try {
+      Class<?> painterIconClass = Class.forName("org.jdesktop.swingx.icon.PainterIcon");
+      icon = (Icon) painterIconClass.getConstructor(java.awt.Dimension.class).newInstance(dim);
+      painterIconClass.getMethod("setPainter", org.jdesktop.swingx.painter.Painter.class).invoke(icon, busyPainter);
+      this.setIcon(icon);
+    } catch (InstantiationException ex) {
+      Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IllegalAccessException ex) {
+      Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IllegalArgumentException ex) {
+      Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (InvocationTargetException ex) {
+      Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (NoSuchMethodException ex) {
+      Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (SecurityException ex) {
+      Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (ClassNotFoundException ex) {
+    }
+    if (icon == null) {
+      try {
+        Class<?> painterIconClass = Class.forName("org.jdesktop.swingx.painter.PainterIcon");
+        icon = (Icon) painterIconClass.getConstructor(java.awt.Dimension.class).newInstance(dim);
+        painterIconClass.getMethod("setPainter", org.jdesktop.swingx.painter.Painter.class).invoke(icon, busyPainter);
+        this.setIcon(icon);
+      } catch (InstantiationException ex) {
+        Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (IllegalAccessException ex) {
+        Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (IllegalArgumentException ex) {
+        Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (InvocationTargetException ex) {
+        Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (NoSuchMethodException ex) {
+        Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (SecurityException ex) {
+        Logger.getLogger(JXDimBusyLabel.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (ClassNotFoundException ex) {
       }
     }
   }
@@ -145,9 +187,7 @@ public class JXDimBusyLabel extends JXLabel {
       busyPainter.setCenterDistance(busySize*5/26);
       
       Dimension dim = new Dimension(getBusySize(),getBusySize());
-      PainterIcon icon = new PainterIcon(dim);
-      icon.setPainter(busyPainter);
-      this.setIcon(icon);
+      setPainterIcon(dim);
       firePropertyChange("busySize", oldValue, busySize);
     }
   }
