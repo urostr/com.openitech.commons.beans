@@ -66,7 +66,7 @@ public class SystemProperties {
     }
     try {
       UIManager.setLookAndFeel(System.getProperty("swing.defaultlaf", UIManager.getSystemLookAndFeelClassName()));
-      Logger.getLogger(Settings.LOGGER).info("Using '" + UIManager.getLookAndFeel().getName() + "' l&f on " + System.getProperty("os.name") + ".");
+      Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Using ''{0}'' l&f on {1}.", new Object[]{UIManager.getLookAndFeel().getName(), System.getProperty("os.name")});
     } catch (Exception e) {
       Logger.getLogger(Settings.LOGGER).info("Invalid system look&feel");
     }
