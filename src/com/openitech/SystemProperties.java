@@ -126,25 +126,10 @@ public class SystemProperties {
         System.setProperty("swing.defaultlaf", (String) quaquaManagerClass.getDeclaredMethod("getLookAndFeelClassName", null).invoke(null, null));
 
         if (isMacOSXLeopardOrBetter()) {
-          String libraryName = "lib"+(System.getProperty("os.arch").equals("x86_64") ? "quaqua64" : "quaqua");
-          boolean loaded = false;
-          try {
-            System.loadLibrary(libraryName + ".jnilib");
-            loaded = true;
-          } catch (UnsatisfiedLinkError e) {
-          }
-          if (!loaded) {
-            try {
-              loadFromJar(libraryName, "jnilib");
-              loaded = true;
-            } catch (UnsatisfiedLinkError e) {
-              Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Quaqua JNI:"+libraryName, e);
-            } catch (Exception e) {
-              Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Quaqua JNI:"+libraryName, e);
-            }
-          }
-          if (loaded) {
-            System.setProperty("Quaqua.jniIsPreloaded", Boolean.toString(loaded));
+          String libraryName = "lib" + (System.getProperty("os.arch").equals("x86_64") ? "quaqua64" : "quaqua");
+
+          if (loadLibrary(libraryName, "jnilib")) {
+            System.setProperty("Quaqua.jniIsPreloaded", Boolean.toString(true));
             Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Quaqua JNI:{0} is preloaded.", libraryName);
           }
         }
@@ -170,6 +155,26 @@ public class SystemProperties {
     if (System.getProperty("view.pdfs", "").length() == 0) {
       System.setProperty("view.pdfs", "true");
     }
+  }
+
+  public static boolean loadLibrary(String libraryName, String suffix) {
+    boolean loaded = false;
+    try {
+      System.loadLibrary(libraryName + '.'+suffix);
+      loaded = true;
+    } catch (UnsatisfiedLinkError e) {
+    }
+    if (!loaded) {
+      try {
+        loadFromJar(libraryName, suffix);
+        loaded = true;
+      } catch (UnsatisfiedLinkError e) {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SYSTEM:LOAD_LIBRARY:" + libraryName, e);
+      } catch (Exception e) {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SYSTEM:LOAD_LIBRARY:" + libraryName, e);
+      }
+    }
+    return loaded;
   }
 
   /**
