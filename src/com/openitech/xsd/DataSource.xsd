@@ -69,7 +69,46 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+        <xsd:element name="AssociatedTasks" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="TaskPanes" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:choice>
+                    <xsd:element name="Groovy" type="xsd:string"></xsd:element>
+                    <xsd:element name="ClassName" type="xsd:string"></xsd:element>
+                    <xsd:element name="TaskList">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="Tasks" maxOccurs="unbounded">
+                            <xsd:complexType>
+                              <xsd:choice>
+                                <xsd:element name="Groovy" type="xsd:string"></xsd:element>
+                                  <xsd:element name="ClassName" type="xsd:string"></xsd:element>
+                              </xsd:choice>
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:sequence>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:choice>
+                  <xsd:attribute name="Title" type="xsd:string"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="DataEntryPanel" minOccurs="0">
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="Groovy" type="xsd:string"></xsd:element>
+              <xsd:element name="ClassName" type="xsd:string"></xsd:element>
+            </xsd:choice>
+            <xsd:attribute name="Title" type="xsd:string"/>
+          </xsd:complexType>
+        </xsd:element>
       </xsd:all>
+      <xsd:attribute name="readOnly" type="xsd:boolean" default="false"/>
     </xsd:complexType>
   </xsd:element>
   <xsd:complexType name="SubQuery">
@@ -295,12 +334,15 @@
       <xsd:enumeration value="CONTAINS"/>
     </xsd:restriction>
   </xsd:simpleType>
-    <xsd:element name="CachedTemporaryTable">
-        <xsd:complexType>
-            <xsd:sequence>
-                <xsd:element name="TemporaryTable" type="tns:TemporaryTable" maxOccurs="1"></xsd:element>
-            </xsd:sequence>
-        </xsd:complexType>
-    </xsd:element>
+  <xsd:element name="CachedTemporaryTable">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="TemporaryTable" type="tns:TemporaryTable" maxOccurs="1"></xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
 </xsd:schema>
+
+
+
 

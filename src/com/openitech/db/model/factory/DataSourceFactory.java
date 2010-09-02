@@ -13,6 +13,7 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.db.model.DbTableModel;
+import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.TaskList.Tasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.PendingSqlParameter;
@@ -24,6 +25,7 @@ import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefinition;
+import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Parameters;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.groovy.control.CompilationFailedException;
+import org.jdesktop.swingx.JXTaskPane;
 
 /**
  *
@@ -82,6 +85,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
       if (dataSourceXML.getInformation() != null) {
         createInformationPanels();
+      }
+      getTaskPanes().addAll(createTaskPanes(dataSourceXML));
+
+      if (dataSourceXML.getDataEntryPanel() != null) {
+        createDataEntryPanel();
       }
     } finally {
       resumeDataSource();
@@ -375,7 +383,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     final boolean cached = (tt.getMaterializedView() != null) && cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue());
     if (cached) {
       tt = cachedTemporaryTables.get(tt.getMaterializedView().getValue());
-      System.out.println("CACHED:TT:"+tt.getMaterializedView().getValue());
+      System.out.println("CACHED:TT:" + tt.getMaterializedView().getValue());
     }
 
     TemporarySubselectSqlParameter ttParameter = new TemporarySubselectSqlParameter(tt.getReplace());
@@ -430,5 +438,152 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       }
     }
     return newInstance;
+  }
+
+  protected List<JXTaskPane> createTaskPanes(com.openitech.db.model.xml.config.Workarea dataSourceXML) throws ClassNotFoundException {
+    List<JXTaskPane> result = new ArrayList<JXTaskPane>();
+    try {
+      if (!dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
+        for (TaskPanes taskPane : dataSourceXML.getAssociatedTasks().getTaskPanes()) {
+          Object newInstance = null;
+          if (taskPane.getGroovy() != null) {
+            GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
+            Class gcls = gcl.parseClass(taskPane.getGroovy(), "wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis());
+            Constructor constructor = gcls.getConstructor(config.getClass());
+            newInstance = constructor.newInstance(config);
+          } else if (taskPane.getClassName() != null) {
+            @SuppressWarnings(value = "static-access")
+            Class jcls = DataSourceFactory.class.forName(taskPane.getClassName());
+            Constructor constructor = jcls.getConstructor(config.getClass());
+            newInstance = constructor.newInstance(config);
+          } else if (taskPane.getTaskList() != null && !taskPane.getTaskList().getTasks().isEmpty()) {
+            newInstance = new JXDataSourceTaskPane(config, dataSource);
+            ((JXDataSourceTaskPane) newInstance).setTitle(taskPane.getTitle());
+            ((JXDataSourceTaskPane) newInstance).addTasks(taskPane.getTaskList().getTasks());
+          }
+          if (newInstance != null) {
+            if (newInstance instanceof DataSourceObserver) {
+              ((DataSourceObserver) newInstance).setDataSource(dataSource);
+            }
+
+            if (newInstance instanceof JXTaskPane) {
+              result.add((JXTaskPane) newInstance);
+            }
+          }
+        }
+      }
+    } catch (NoSuchMethodException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (InstantiationException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IllegalAccessException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IllegalArgumentException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (InvocationTargetException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+    return result;
+  }
+
+  private void createDataEntryPanel() throws ClassNotFoundException {
+    com.openitech.db.model.xml.config.Workarea.DataEntryPanel panel = dataSourceXML.getDataEntryPanel();
+
+    try {
+      Object newInstance = null;
+      if (panel.getGroovy() != null) {
+        GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
+        Class gcls = gcl.parseClass(panel.getGroovy(), "wa_dep_" + this.getOpis() + "_" + System.currentTimeMillis());
+        Constructor constructor = gcls.getConstructor(config.getClass());
+        newInstance = constructor.newInstance(config);
+      } else if (panel.getClassName() != null) {
+        @SuppressWarnings(value = "static-access")
+        Class jcls = DataSourceFactory.class.forName(panel.getClassName());
+        Constructor constructor = jcls.getConstructor(config.getClass());
+        newInstance = constructor.newInstance(config);
+      }
+      if (newInstance instanceof javax.swing.JComponent) {
+        this.dataEntryPanel = (javax.swing.JComponent) newInstance;
+      }
+      if (newInstance instanceof DataSourceObserver) {
+        ((DataSourceObserver) newInstance).setDataSource(dataSource);
+      }
+    } catch (NoSuchMethodException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (InstantiationException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IllegalAccessException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IllegalArgumentException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (InvocationTargetException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+
+  protected static class JXDataSourceTaskPane extends JXTaskPane implements DataSourceObserver {
+
+    protected final DataSourceConfig config;
+    protected final DbDataSource dataSource;
+
+    public JXDataSourceTaskPane(DataSourceConfig config, DbDataSource dataSource) {
+      this.config = config;
+      this.dataSource = dataSource;
+    }
+
+    /**
+     * Get the value of config
+     *
+     * @return the value of config
+     */
+    public DataSourceConfig getConfig() {
+      return config;
+    }
+
+    private void addTasks(List<Tasks> tasks) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException {
+      for (Tasks task : tasks) {
+        Object newInstance = null;
+        if (task.getGroovy() != null) {
+          GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
+          Class gcls = gcl.parseClass(task.getGroovy(), "wa_task" + (this.getTitle() == null ? "" : this.getTitle()) + "_" + System.currentTimeMillis());
+          Constructor constructor = gcls.getConstructor(config.getClass());
+          newInstance = constructor.newInstance(config);
+        } else if (task.getClassName() != null) {
+          @SuppressWarnings(value = "static-access")
+          Class jcls = DataSourceFactory.class.forName(task.getClassName());
+          Constructor constructor = jcls.getConstructor(config.getClass());
+          newInstance = constructor.newInstance(config);
+        }
+        if (newInstance != null) {
+          if (newInstance instanceof DataSourceObserver) {
+            ((DataSourceObserver) newInstance).setDataSource(dataSource);
+          }
+
+          if (newInstance instanceof javax.swing.Action) {
+            this.add((javax.swing.Action) newInstance);
+          } else if (newInstance instanceof java.awt.PopupMenu) {
+            this.add((java.awt.PopupMenu) newInstance);
+          } else if (newInstance instanceof java.awt.Component) {
+            this.add((java.awt.Component) newInstance);
+          }
+        }
+      }
+    }
+
+    /**
+     * Get the value of dataSource
+     *
+     * @return the value of dataSource
+     */
+    @Override
+    public DbDataSource getDataSource() {
+      return dataSource;
+    }
+
+    @Override
+    public void setDataSource(DbDataSource dataSource) {
+      throw new UnsupportedOperationException("Not supported.");
+    }
   }
 }

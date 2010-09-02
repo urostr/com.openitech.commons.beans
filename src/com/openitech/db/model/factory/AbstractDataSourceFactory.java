@@ -11,6 +11,7 @@ import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.io.ReadInputStream;
+import com.openitech.swing.framework.context.AssociatedTasks;
 import com.openitech.value.fields.Field;
 import java.awt.Component;
 import java.io.StringReader;
@@ -23,16 +24,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import org.jdesktop.swingx.JXTaskPane;
 
 /**
  *
  * @author domenbasic
  */
-public abstract class AbstractDataSourceFactory {
+public abstract class AbstractDataSourceFactory implements AssociatedTasks {
 
   protected final DbDataModel dbDataModel;
   protected com.openitech.db.model.factory.DataSourceConfig config;
@@ -242,6 +245,64 @@ public abstract class AbstractDataSourceFactory {
    */
   public List<JMenu> getViewMenuItems() {
     return viewMenuItems;
+  }
+
+  private java.util.List<JXTaskPane> taskPanes = new java.util.ArrayList<JXTaskPane>();
+
+
+  @Override
+  public List<JXTaskPane> getTaskPanes() {
+    return taskPanes;
+  }
+
+  @Override
+  public boolean add(JXTaskPane taskPane) {
+    return taskPanes.add(taskPane);
+  }
+
+  @Override
+  public boolean remove(JXTaskPane taskPane) {
+    return taskPanes.remove(taskPane);
+  }
+  
+  protected JComponent dataEntryPanel;
+
+  /**
+   * Get the value of dataEntryPanel
+   *
+   * @return the value of dataEntryPanel
+   */
+  public JComponent getDataEntryPanel() {
+    return dataEntryPanel;
+  }
+
+  /**
+   * Set the value of dataEntryPanel
+   *
+   * @param dataEntryPanel new value of dataEntryPanel
+   */
+  public void setDataEntryPanel(JComponent dataEntryPanel) {
+    this.dataEntryPanel = dataEntryPanel;
+  }
+
+  protected boolean readOnly;
+
+  /**
+   * Get the value of readOnly
+   *
+   * @return the value of readOnly
+   */
+  public boolean isReadOnly() {
+    return readOnly;
+  }
+
+  /**
+   * Set the value of readOnly
+   *
+   * @param readOnly new value of readOnly
+   */
+  public void setReadOnly(boolean readOnly) {
+    this.readOnly = readOnly;
   }
 
   protected String getReplacedSql(String sql) {
