@@ -443,7 +443,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   protected List<JXTaskPane> createTaskPanes(com.openitech.db.model.xml.config.Workarea dataSourceXML) throws ClassNotFoundException {
     List<JXTaskPane> result = new ArrayList<JXTaskPane>();
     try {
-      if (!dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
+      if ((dataSourceXML.getAssociatedTasks()!=null)&&!dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
         for (TaskPanes taskPane : dataSourceXML.getAssociatedTasks().getTaskPanes()) {
           Object newInstance = null;
           if (taskPane.getGroovy() != null) {
