@@ -362,13 +362,17 @@ public class Event {
   @Override
   public int hashCode() {
     int hash = 5;
-    hash = 97 * hash + (int) (this.id ^ (this.id >>> 32));
+    if (this.id != null) {
+      hash = 97 * hash + (int) (this.id ^ (this.id >>> 32));
+    } else {
+      hash = 97 * hash + (int) (sifrant ^ (sifrant >>> 32)) + (int) (sifra.hashCode() ^ (sifra.hashCode() >>> 32));
+    }
     return hash;
   }
 
   @Override
   public String toString() {
-    return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id + ":"+operation;
+    return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id + ":" + operation;
   }
 
   public static enum EventOperation {
