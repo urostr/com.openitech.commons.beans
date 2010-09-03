@@ -305,20 +305,20 @@ public class Event {
     return children;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    final Event other = (Event) obj;
-    if (this.id != other.id) {
-      return false;
-    }
-    return true;
-  }
+//  @Override
+//  public boolean equals(Object obj) {
+//    if (obj == null) {
+//      return false;
+//    }
+//    if (getClass() != obj.getClass()) {
+//      return false;
+//    }
+//    final Event other = (Event) obj;
+//    if (this.id != other.id) {
+//      return false;
+//    }
+//    return true;
+//  }
 
   public boolean equalEventValues(Event other) {
     Map<Field, List<FieldValue>> a = getEventValues();
@@ -360,13 +360,33 @@ public class Event {
   }
 
   @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final Event other = (Event) obj;
+    if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
+      return false;
+    }
+    if (this.sifrant != other.sifrant) {
+      return false;
+    }
+    if ((this.sifra == null) ? (other.sifra != null) : !this.sifra.equals(other.sifra)) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
   public int hashCode() {
     int hash = 5;
     if (this.id != null) {
       hash = 97 * hash + (int) (this.id ^ (this.id >>> 32));
-    } else {
-      hash = 97 * hash + (int) (sifrant ^ (sifrant >>> 32)) + (int) (sifra.hashCode() ^ (sifra.hashCode() >>> 32));
     }
+    hash = 97 * hash + (int) (sifrant ^ (sifrant >>> 32)) + (int) (sifra.hashCode() ^ (sifra.hashCode() >>> 32));
     return hash;
   }
 
