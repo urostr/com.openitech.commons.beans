@@ -8,6 +8,7 @@ import com.openitech.db.components.JDbTable;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
+import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.DataModel;
@@ -16,6 +17,8 @@ import com.openitech.db.model.xml.config.DataSourceFilter;
 import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.SeekParameters;
+import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.ComboBoxModel;
+import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.ComboBoxModel.Display;
 import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.Lookup;
 import com.openitech.swing.framework.context.AssociatedFilter;
 import com.openitech.swing.framework.context.AssociatedTasks;
@@ -26,6 +29,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenu;
@@ -211,6 +215,41 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                   } catch (SecurityException ex) {
                     Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
                   }
+                } else if (parameter.getLookupDefinition().getComboBoxModel() != null) {
+                  final ComboBoxModel comboBoxModel = parameter.getLookupDefinition().getComboBoxModel();
+                  Callable<DbComboBoxModel> callComboBoxModel = new Callable<DbComboBoxModel>() {
+
+                    @Override
+                    public DbComboBoxModel call() {
+                      DbComboBoxModel cmSifrant = new DbComboBoxModel();
+                      try {
+                        DbDataSource dsSifrant = new DbDataSource();
+                        dsSifrant.setShareResults(comboBoxModel.isShareResults());
+                        if (comboBoxModel.getCountSQL()!=null) {
+                          dsSifrant.setCountSql(comboBoxModel.getCountSQL());
+                        }
+                        dsSifrant.setSelectSql(comboBoxModel.getSelectSQL());
+                        dsSifrant.setName(comboBoxModel.getName());
+                        cmSifrant.setKeyColumnName(comboBoxModel.getKeyColumnName());
+
+                        final Display display = comboBoxModel.getDisplay();
+                        final List<String> valueColumnNames = display.getValueColumnNames();
+                        cmSifrant.setValueColumnNames(valueColumnNames.toArray(new String[valueColumnNames.size()]));
+                        if (display.getExtendedValueColumnNames().size()>0) {
+                          cmSifrant.setExtendedValueColumnNames(display.getExtendedValueColumnNames().toArray(new String[display.getExtendedValueColumnNames().size()]));
+                        }
+                        if (display.getSeparators().size()>0) {
+                          cmSifrant.setSeparator(display.getSeparators().toArray(new String[display.getSeparators().size()]));
+                        }
+                        cmSifrant.setDataSource(dsSifrant);
+                      } catch (SQLException ex) {
+                        Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                      }
+                      return cmSifrant;
+                    }
+                  };
+
+                  sifrantSeekType = new DataSourceFilters.SifrantSeekType(field, callComboBoxModel);
                 } else {
                   Lookup lookup = parameter.getLookupDefinition().getLookup();
                   String sifrantSkupina = lookup.getSifrantSkupina();
@@ -251,7 +290,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
             && (dataSourceParametersFactory.getExportMenuModels() != null)) {
 
       javax.swing.JMenu jmiExport = new javax.swing.JMenu();
-      if (dataSourceParametersFactory.getExportMenuModels().getName()==null) {
+      if (dataSourceParametersFactory.getExportMenuModels().getName() == null) {
         jmiExport.setText("Izvozi");
       } else {
         jmiExport.setText(dataSourceParametersFactory.getExportMenuModels().getName());
@@ -280,7 +319,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
         jmiExport.add(jmiExportTM);
       }
 
-      if (jmiExport.getMenuComponentCount()>0) {
+      if (jmiExport.getMenuComponentCount() > 0) {
         viewMenuItems.add(jmiExport);
       }
     }

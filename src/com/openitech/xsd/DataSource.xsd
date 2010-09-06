@@ -311,7 +311,27 @@
                       <xsd:attribute name="TextNotDefined" type="xsd:string"/>
                     </xsd:complexType>
                   </xsd:element>
-                </xsd:choice>
+                  <xsd:element name="ComboBoxModel">
+                    <xsd:complexType>
+                      <xsd:all>
+                        <xsd:element name="Name" type="xsd:string"></xsd:element>
+                        <xsd:element name="SelectSQL" type="xsd:string"></xsd:element>
+                        <xsd:element name="CountSQL" type="xsd:string" minOccurs="0"></xsd:element>
+                        <xsd:element name="KeyColumnName" type="xsd:string"></xsd:element>
+                        <xsd:element name="Display">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element name="ValueColumnNames" type="xsd:string" maxOccurs="unbounded"></xsd:element>
+                              <xsd:element name="ExtendedValueColumnNames" type="xsd:string" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+                              <xsd:element name="Separators" type="xsd:string" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                      </xsd:all>
+                      <xsd:attribute name="ShareResults" type="xsd:boolean" default="true"/>
+                    </xsd:complexType>
+                  </xsd:element>
+               </xsd:choice>
               </xsd:complexType>
             </xsd:element>
           </xsd:all>
@@ -342,6 +362,8 @@
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>
+
+
 
 
 
