@@ -347,7 +347,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
               int fieldValueIndex = field.getFieldIndex();
 
               int field_id;
-              if (field.getIdPolja() < 0) {
+              if ((field.getIdPolja()==null) ||
+                  (field.getIdPolja() < 0)) {
                 if (fieldValueIndex > 1) {
                   Field nonIndexed = field.getNonIndexedField();
                   fieldName = nonIndexed.getName();
