@@ -119,15 +119,21 @@ public class SystemProperties {
         System.setProperty("com.apple.mrj.application.live-resize", "true");
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         //        System.setProperty("acroread.bin","/Applications/Preview.app/Contents/MacOS/Preview");
-        Class<?> quaquaManagerClass = Class.forName("ch.randelshofer.quaqua.QuaquaManager");
-        System.setProperty("swing.defaultlaf", (String) quaquaManagerClass.getDeclaredMethod("getLookAndFeelClassName", (Class<?>[]) null).invoke(null, (Object[]) null));
+        if (!System.getProperties().containsKey("swing.defaultlaf")) {
+          Class<?> quaquaManagerClass = Class.forName("ch.randelshofer.quaqua.QuaquaManager");
+          String version = (String) quaquaManagerClass.getDeclaredMethod("getVersion", (Class<?>[]) null).invoke(null, (Object[]) null);
+          if (version.startsWith("5.2.1")) {
+            System.setProperty("swing.defaultlaf", "ch.randelshofer.quaqua.leopard.Quaqua15LeopardCrossPlatformLookAndFeel");
+          } else {
+            System.setProperty("swing.defaultlaf", (String) quaquaManagerClass.getDeclaredMethod("getLookAndFeelClassName", (Class<?>[]) null).invoke(null, (Object[]) null));
+            if (isMacOSXLeopardOrBetter()) {
+              String libraryName = "lib" + (System.getProperty("os.arch").equals("x86_64") ? "quaqua64" : "quaqua");
 
-        if (isMacOSXLeopardOrBetter()) {
-          String libraryName = "lib" + (System.getProperty("os.arch").equals("x86_64") ? "quaqua64" : "quaqua");
-
-          if (loadLibrary(libraryName, "jnilib")) {
-            System.setProperty("Quaqua.jniIsPreloaded", Boolean.toString(true));
-            Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Quaqua JNI:{0} is preloaded.", libraryName);
+              if (loadLibrary(libraryName, "jnilib")) {
+                System.setProperty("Quaqua.jniIsPreloaded", Boolean.toString(true));
+                Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Quaqua JNI:{0} is preloaded.", libraryName);
+              }
+            }
           }
         }
       } catch (Exception ex) {
@@ -157,7 +163,7 @@ public class SystemProperties {
   public static boolean loadLibrary(String libraryName, String suffix) {
     boolean loaded = false;
     try {
-      System.loadLibrary(libraryName + '.'+suffix);
+      System.loadLibrary(libraryName + '.' + suffix);
       loaded = true;
     } catch (UnsatisfiedLinkError e) {
     }
@@ -182,7 +188,7 @@ public class SystemProperties {
     InputStream in = SystemProperties.class.getResourceAsStream(libraryName + "." + suffix);
     // always write to different location
 
-    File fileOut = File.createTempFile(libraryName+'_'+System.currentTimeMillis(), suffix);
+    File fileOut = File.createTempFile(libraryName + '_' + System.currentTimeMillis(), suffix);
     OutputStream out = new FileOutputStream(fileOut);
 
     copy(in, out);

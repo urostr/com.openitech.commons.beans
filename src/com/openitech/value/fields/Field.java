@@ -116,11 +116,11 @@ public class Field {
         return fieldIndex;
     }
 
-    public int getIdPolja() {
+    public Integer getIdPolja() {
         return idPolja;
     }
 
-    public void setIdPolja(int idPolja) {
+    public void setIdPolja(Integer idPolja) {
         this.idPolja = idPolja;
     }
 
