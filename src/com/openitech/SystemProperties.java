@@ -124,6 +124,14 @@ public class SystemProperties {
           String version = (String) quaquaManagerClass.getDeclaredMethod("getVersion", (Class<?>[]) null).invoke(null, (Object[]) null);
           if (version.startsWith("5.2.1")) {
             System.setProperty("swing.defaultlaf", "ch.randelshofer.quaqua.leopard.Quaqua15LeopardCrossPlatformLookAndFeel");
+            if (isMacOSXLeopardOrBetter()) {
+              String libraryName = "lib" + (System.getProperty("os.arch").equals("x86_64") ? "quaqua_521_64" : "quaqua_521");
+
+              if (loadLibrary(libraryName, "jnilib")) {
+                System.setProperty("Quaqua.jniIsPreloaded", Boolean.toString(true));
+                Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Quaqua JNI:{0} is preloaded.", libraryName);
+              }
+            }
           } else {
             System.setProperty("swing.defaultlaf", (String) quaquaManagerClass.getDeclaredMethod("getLookAndFeelClassName", (Class<?>[]) null).invoke(null, (Object[]) null));
             if (isMacOSXLeopardOrBetter()) {
