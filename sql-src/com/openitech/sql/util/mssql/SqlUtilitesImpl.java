@@ -766,6 +766,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (rs.next()) {
         Event result = new Event(rs.getInt("IdSifranta"),
                 rs.getString("IdSifre"));
+        List<Field> primaryKey = new ArrayList<Field>();
         result.setId(eventId);
         result.setEventSource(rs.getInt("IdEventSource"));
         result.setDatum(rs.getTimestamp("Datum"));
@@ -778,44 +779,51 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
         }
         do {
+          FieldValue fv = null;
           switch (rs.getInt("FieldType")) {
             case 1:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("IntValue")));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("FieldValueIndex"), rs.getInt("IntValue")));
               break;
             case 2:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getDouble("RealValue")));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getInt("FieldValueIndex"), rs.getDouble("RealValue")));
               break;
             case 3:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getString("StringValue")));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), rs.getString("StringValue")));
               break;
             case 4:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getTimestamp("DateValue")));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue")));
               break;
             case 5:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getBlob("ObjectValue")));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getInt("FieldValueIndex"), rs.getBlob("ObjectValue")));
               break;
             case 6:
               java.sql.Clob value = rs.getClob("ClobValue");
               if ((value != null) && (value.length() > 0)) {
-                result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, value.getSubString(1L, (int) value.length())));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), value.getSubString(1L, (int) value.length())));
               } else {
-                result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.VARCHAR, ""));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), ""));
               }
               break;
             case 7:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("IntValue") != 0));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("FieldValueIndex"), rs.getInt("IntValue") != 0));
               break;
             case 8:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getTimestamp("DateValue")));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue")));
               break;
             case 9:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.TIME, rs.getTime("DateValue")));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIME, rs.getInt("FieldValueIndex"), rs.getTime("DateValue")));
               break;
             case 10:
-              result.addValue(new FieldValue(rs.getString("ImePolja"), java.sql.Types.DATE, rs.getDate("DateValue")));
+              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DATE, rs.getInt("FieldValueIndex"), rs.getDate("DateValue")));
               break;
           }
+          if (fv!=null && rs.getBoolean("PrimaryKey")) {
+            primaryKey.add(new Field(fv));
+          }
         } while (rs.next());
+        if (primaryKey.size()>0) {
+          result.setPrimaryKey(primaryKey.toArray(new Field[primaryKey.size()]));
+        }
         return result;
       } else {
         return null;

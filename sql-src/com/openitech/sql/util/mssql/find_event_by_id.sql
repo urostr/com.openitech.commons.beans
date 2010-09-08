@@ -16,7 +16,11 @@ SELECT
     vval.[StringValue],
     vval.[DateValue],
     vval.[ObjectValue],
-    vval.[ClobValue]
+    vval.[ClobValue],
+    (SELECT [PrimaryKey] FROM <%ChangeLog%>.[dbo].SifrantiPolja WITH (NOLOCK)
+     WHERE SifrantiPolja.IdSifranta = ev.[IdSifranta] AND
+           SifrantiPolja.IdSifre = ev.IdSifre AND
+           SifrantiPolja.IdPolja = eval.[IdPolja]) AS [PrimaryKey]
 FROM
     <%ChangeLog%>.[dbo].[Events] ev
 INNER JOIN <%ChangeLog%>.[dbo].[EventValues] eval WITH (NOLOCK)
