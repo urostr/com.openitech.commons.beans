@@ -10,6 +10,9 @@ package com.openitech.db.connection;
 
 import com.openitech.Settings;
 import com.openitech.db.proxy.PooledConnection;
+import com.openitech.ref.WeakListenerList;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -36,6 +39,7 @@ public abstract class AbstractSQLConnection implements DbConnection {
   String dialect = null;
   String DB_URL = null;
   Properties connect = new Properties();
+  private transient WeakListenerList actionListeners;
   /**
    * Creates a new instance of AbstractSQLConnection
    */
@@ -107,7 +111,9 @@ public abstract class AbstractSQLConnection implements DbConnection {
       if (useProxool) {
         return PooledConnection.getInstance().getTemporaryConnection();
       } else {
-        return DriverManager.getConnection(DB_URL, connect);
+        final Connection connection = DriverManager.getConnection(DB_URL, connect);
+        fireActionPerformed(new ActionEvent(connection, DbConnection.ACTION_DB_CONNECT, "getTemporaryConnection"));
+        return connection;
       }
     } catch (SQLException ex) {
       Logger.getLogger(AbstractSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
@@ -241,6 +247,7 @@ public abstract class AbstractSQLConnection implements DbConnection {
 
             if (result != null) {
               createSchema(result);
+              fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, "getConnection"));
             }
 
             if (settings.containsKey(ConnectionManager.DB_SHUTDOWN_HOOK)) {
@@ -287,4 +294,29 @@ public abstract class AbstractSQLConnection implements DbConnection {
   public boolean containsKey(String key) {
     return settings.containsKey(key);
   }
+
+  public synchronized void removeActionListener(ActionListener l) {
+    if (actionListeners != null && actionListeners.contains(l)) {
+      actionListeners.removeElement(l);
+    }
+  }
+
+  public synchronized void addActionListener(ActionListener l) {
+    WeakListenerList v = actionListeners == null ? new WeakListenerList(2) : actionListeners;
+    if (!v.contains(l)) {
+      v.addElement(l);
+      actionListeners = v;
+    }
+  }
+
+  public void fireActionPerformed(ActionEvent e) {
+    if (actionListeners != null) {
+      java.util.List listeners = actionListeners.elementsList();
+      int count = listeners.size();
+      for (int i = 0; i < count; i++) {
+        ((ActionListener) listeners.get(i)).actionPerformed(e);
+      }
+    }
+  }
+
 }
