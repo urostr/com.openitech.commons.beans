@@ -9,6 +9,7 @@
 
 package com.openitech.db.connection;
 
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 
 /**
@@ -43,6 +44,8 @@ public interface DbConnection {
   
   String DB_CONNECT_PREFIX="db.connect.";
   int DB_CONNECT_PREFIX_LENGTH=DB_CONNECT_PREFIX.length();
+  
+  int ACTION_DB_CONNECT = 1;
 
 
   Connection getTemporaryConnection();
@@ -64,4 +67,7 @@ public interface DbConnection {
   boolean isCaseInsensitive();
   String getDialect();
   String getUrl();
+
+  public void addActionListener(ActionListener l);
+  public void removeActionListener(ActionListener l);
 }

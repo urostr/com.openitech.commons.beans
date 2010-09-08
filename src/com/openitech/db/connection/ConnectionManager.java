@@ -7,6 +7,7 @@
  */
 package com.openitech.db.connection;
 
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 
 /**
@@ -134,5 +135,15 @@ public class ConnectionManager implements DbConnection {
   @Override
   public boolean isCaseInsensitive() {
     return getDbConnection() == null ? false : getDbConnection().isCaseInsensitive();
+  }
+
+  @Override
+  public void addActionListener(ActionListener l) {
+    getDbConnection().addActionListener(l);
+  }
+
+  @Override
+  public void removeActionListener(ActionListener l) {
+    getDbConnection().removeActionListener(l);
   }
 }
