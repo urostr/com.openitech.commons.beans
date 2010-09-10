@@ -4,6 +4,7 @@
  */
 package com.openitech.db.model.sql;
 
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
 import java.sql.Connection;
@@ -16,18 +17,26 @@ import java.util.logging.Logger;
  *
  * @author uros
  */
-public class SQLMaterializedView  extends SubstSqlParameter {
+public class SQLMaterializedView extends SubstSqlParameter {
 
-  public SQLMaterializedView(String replace) {
-    super(replace);
+  public SQLMaterializedView(String tableName) {
+    super();
+
+    final ConnectionManager cm = ConnectionManager.getInstance();
+    final String dl = cm.getProperty(com.openitech.db.connection.DbConnection.DB_DELIMITER_LEFT, "");
+    final String dr = cm.getProperty(com.openitech.db.connection.DbConnection.DB_DELIMITER_RIGHT, "");
+
+    if (dl.length()>0&&dr.length()>0) {
+      this.replace = "(\\" + dl+tableName+"\\" + dr+'|'+tableName+')';
+    } else {
+      this.replace = tableName;
+    }
   }
-
 
   @Override
   public int getType() {
     return Types.SUBST_ALL;
   }
-
   protected String name;
 
   /**
@@ -66,7 +75,6 @@ public class SQLMaterializedView  extends SubstSqlParameter {
   public void setIsViewValidSQL(String isViewValidSQL) {
     this.isViewValidSQL = isViewValidSQL;
   }
-
   protected String setViewVersionSql;
 
   /**
@@ -86,7 +94,6 @@ public class SQLMaterializedView  extends SubstSqlParameter {
   public void setSetViewVersionSql(String setViewVersionSql) {
     this.setViewVersionSql = setViewVersionSql;
   }
-
 
   public boolean isViewValid(Connection connection) {
     try {

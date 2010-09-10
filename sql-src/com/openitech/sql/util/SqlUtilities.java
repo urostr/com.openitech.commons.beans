@@ -581,7 +581,11 @@ public abstract class SqlUtilities implements UpdateEvent {
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly);
   public abstract Map<String,com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
   public abstract void storeCachedTemporaryTable(com.openitech.db.model.xml.config.TemporaryTable tt);
-
+  public abstract com.openitech.db.model.xml.config.MaterializedView getCacheDefinition(String table);
+  /*
+   * Sestavi SQL s katerim lahko pripravimo tabelo za shranjevanje rezultatov v podanem result set.
+   */
+  public abstract String getCreateTableSQL(String tableName, java.sql.ResultSet rs) throws SQLException;
 
   public static enum Operation {
 

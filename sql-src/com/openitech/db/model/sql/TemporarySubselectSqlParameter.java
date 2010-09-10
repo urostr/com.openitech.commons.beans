@@ -15,6 +15,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -198,8 +200,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
       String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
       final List<Object> qparams = new ArrayList<Object>(parameters.size());
-      qparams.addAll(parameters);
       qparams.addAll(getParameters());
+      qparams.addAll(parameters);
       if (sqlMaterializedView != null) {
         qparams.add(sqlMaterializedView);
       }
@@ -221,7 +223,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           lock.acquireUninterruptibly();
           try {
             for (String sql : createTableSqls) {
-              statement.addBatch(SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams));
+              String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
+              statement.addBatch(createSQL);
+              if (DbDataSource.DUMP_SQL) {
+                System.out.println(createSQL+";");
+                System.out.println("-- -- -- --");
+              }
             }
             statement.executeBatch();
             fill = true;
@@ -236,49 +243,50 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
         if (fill && !disabled) {
           if (sqlMaterializedView != null) {
-            if (!SqlUtilities.getInstance().isTransaction()) {
+            if (!(transaction||SqlUtilities.getInstance().isTransaction())) {
               transaction = true;
               SqlUtilities.getInstance().beginTransaction();
-              lock.acquireUninterruptibly();
             }
+            lock.acquireUninterruptibly();
           }
 
-
-          if (emptyTableSql.length() > 0) {
-            try {
-              final String sql = SQLDataSource.substParameters(emptyTableSql, qparams);
-              if (DbDataSource.DUMP_SQL) {
-                System.out.println("##############");
-                System.out.println(sql);
-              }
-              statement.executeUpdate(sql);
-            } finally {
-              if (DbDataSource.DUMP_SQL) {
-                System.out.println("##############");
+          try {
+            if (emptyTableSql.length() > 0) {
+              try {
+                SQLDataSource.executeUpdate(emptyTableSql, qparams);
+              } finally {
+                if (DbDataSource.DUMP_SQL) {
+                  System.out.println("##############");
+                }
               }
             }
-          }
 
-          SQLDataSource.executeUpdate(fillTableSql, qparams);
-          if (cleanTableSqls != null) {
-            for (String sql : cleanTableSqls) {
-              SQLDataSource.executeUpdate(sql, qparams);
+            SQLDataSource.executeUpdate(fillTableSql, qparams);
+            if (cleanTableSqls != null) {
+              for (String sql : cleanTableSqls) {
+                SQLDataSource.executeUpdate(sql, qparams);
+              }
+            }
+            if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
+              SQLDataSource.execute(sqlMaterializedView.setViewVersionSql, qparams);
+            }
+            if (DbDataSource.DUMP_SQL) {
+              System.out.println("temporary:fill:" + (System.currentTimeMillis() - timer) + "ms");
+              System.out.println("##############");
+            }
+          } finally {
+            if (transaction) {
+              lock.release();
             }
           }
-          if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
-            SQLDataSource.execute(sqlMaterializedView.setViewVersionSql, qparams);
-          }
-          if (DbDataSource.DUMP_SQL) {
-            System.out.println("temporary:fill:" + (System.currentTimeMillis() - timer) + "ms");
-            System.out.println("##############");
-          }
-
         }
         commit = true;
+      } catch (SQLException ex) {
+        Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, null, ex);
+        throw new SQLException(ex);
       } finally {
         if (transaction) {
           SqlUtilities.getInstance().endTransaction(commit);
-          lock.release();
         }
       }
     } finally {

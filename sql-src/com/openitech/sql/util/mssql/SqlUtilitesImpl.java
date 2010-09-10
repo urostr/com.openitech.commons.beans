@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util.mssql;
 
+import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.db.connection.ConnectionManager;
@@ -27,6 +28,7 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -347,8 +349,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
               int fieldValueIndex = field.getFieldIndex();
 
               int field_id;
-              if ((field.getIdPolja()==null) ||
-                  (field.getIdPolja() < 0)) {
+              if ((field.getIdPolja() == null)
+                      || (field.getIdPolja() < 0)) {
                 if (fieldValueIndex > 1) {
                   Field nonIndexed = field.getNonIndexedField();
                   fieldName = nonIndexed.getName();
@@ -817,11 +819,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
               result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DATE, rs.getInt("FieldValueIndex"), rs.getDate("DateValue")));
               break;
           }
-          if (fv!=null && rs.getBoolean("PrimaryKey")) {
+          if (fv != null && rs.getBoolean("PrimaryKey")) {
             primaryKey.add(new Field(fv));
           }
         } while (rs.next());
-        if (primaryKey.size()>0) {
+        if (primaryKey.size() > 0) {
           result.setPrimaryKey(primaryKey.toArray(new Field[primaryKey.size()]));
         }
         return result;
@@ -831,6 +833,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
     } finally {
       rs.close();
     }
+  }
+
+  @Override
+  public MaterializedView getCacheDefinition(String table) {
+    MaterializedView result = new MaterializedView();
+    result.setValue("[MViewCache].[dbo].[" + table + "]");
+    result.setIsViewValidSql(com.openitech.text.Document.identText(
+                             "\nSELECT [MViewCache].[DBO].[isValidCachedObject]\n"
+                              + "    ('" + table + "'\n"
+                              + "     ,NULL\n"
+                              + "     ,NULL)",15));
+    result.setSetViewVersionSql("EXECUTE [MViewCache].[dbo].[updateRefreshDate] '" + table + "'");
+    return result;
   }
 
   @Override
@@ -1332,6 +1347,68 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
+  public String getCreateTableSQL(String tableName, ResultSet rs) throws SQLException {
+    ResultSetMetaData rsmd = rs.getMetaData();
+    StringBuilder sb = new StringBuilder();
+    sb.append("CREATE TABLE [").append(tableName).append("] (\n");
+    sb.append("     [__RsID] bigint identity NOT NULL\n");
+    for (int column = 1; column <= rsmd.getColumnCount(); column++) {
+      //sb.append("    ").append(column == 1 ? ' ' : ',');
+      sb.append("    ,");
+      sb.append('[').append(rsmd.getColumnName(column)).append("] ");
+      String columnTypeName = rsmd.getColumnTypeName(column);
+
+
+      //MS SQL-fix
+      boolean scaled = true;
+      if (columnTypeName.equals("timestamp")) {
+        if (rsmd.isNullable(column) == ResultSetMetaData.columnNoNulls) {
+          columnTypeName = "binary";
+        } else if (rsmd.isNullable(column) == ResultSetMetaData.columnNullable) {
+          columnTypeName = "varbinary";
+        }
+      } else if (columnTypeName.indexOf(" identity") != -1) {
+        columnTypeName = columnTypeName.replace(" identity", "");
+      } else if (columnTypeName.equals("text")) {
+        columnTypeName = "varchar(max)";
+        scaled = false;
+      }
+
+      if (columnTypeName.equals("datetime")
+              || columnTypeName.equals("int")
+              || columnTypeName.equals("bigint")) {
+        scaled = false;
+      }
+      sb.append(columnTypeName);
+
+
+      if (scaled) {
+        final int precision = rsmd.getPrecision(column);
+        final int scale = rsmd.getScale(column);
+
+        if (precision > 0) {
+          sb.append('(').append(precision);
+          if (scale > 0) {
+            sb.append(',').append(scale);
+          }
+          sb.append(")");
+        }
+      }
+
+      if (rsmd.isNullable(column) == ResultSetMetaData.columnNoNulls) {
+        sb.append(" NOT NULL");
+      } else if (rsmd.isNullable(column) == ResultSetMetaData.columnNullable) {
+        sb.append(" NULL");
+      }
+      sb.append('\n');
+    }
+    sb.append("    ,CONSTRAINT [<%PK%>_<%TS%>] PRIMARY KEY CLUSTERED\n").append(" (\n").append("   [__RsID] ASC\n").append(")\n");
+    sb.append(")");
+
+    return sb.toString();
+  }
+
+  @Override
   public Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException {
     if (get_fields == null) {
       get_fields = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_fields.sql", "cp1250"));
@@ -1403,23 +1480,25 @@ public class SqlUtilitesImpl extends SqlUtilities {
     public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly) {
       super(namedParameters);
 
+      final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifrant);
+
       sqlFindEventVersion.setValue("?");
       sqlFindEventVersion.addParameter(this.versionId);
 
       sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
       if (sifra == null) {
         sqlFindEventType.setValue("ev.[IdSifranta] = ?");
-        sqlFindEventType.addParameter(sifrant);
+        sqlFindEventType.addParameter(qpSifrant);
       } else if (sifra.length == 1) {
         sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
-        sqlFindEventType.addParameter(sifrant);
-        sqlFindEventType.addParameter(sifra[0]);
+        sqlFindEventType.addParameter(qpSifrant);
+        sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, sifra[0]));
       } else {
         StringBuilder sbet = new StringBuilder();
-        sqlFindEventType.addParameter(sifrant);
+        sqlFindEventType.addParameter(qpSifrant);
         for (String s : sifra) {
           sbet.append(sbet.length() > 0 ? ", " : "").append("?");
-          sqlFindEventType.addParameter(s);
+          sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, s));
         }
         sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
         sqlFindEventType.setValue(sbet.toString());
@@ -1429,13 +1508,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlFindEventSource.setValue("");
       } else {
         sqlFindEventSource.setValue(" AND ev.[IdEventSource] = ?");
-        sqlFindEventSource.addParameter(eventSource);
+        sqlFindEventSource.addParameter(new SqlParameter<Integer>(java.sql.Types.INTEGER, eventSource));
       }
       if (eventDatum == null) {
         sqlFindEventDate.setValue("");
       } else {
         sqlFindEventDate.setValue(" AND ev.DATUM = ?");
-        sqlFindEventDate.addParameter(eventDatum);
+        sqlFindEventDate.addParameter(new SqlParameter<Date>(java.sql.Types.TIMESTAMP, eventDatum));
       }
 
       evVersionedParameters.add(sqlFindEventVersion);
@@ -1748,6 +1827,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     result.sifrant = sifrant;
     result.sifra = sifra;
+    result.resultFields = Collections.unmodifiableSet(resultFields);
+    result.searchFields = Collections.unmodifiableSet(searchFields);
     result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, validOnly, lastEntryOnly);
 
     return result;
@@ -1762,6 +1843,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     private String query = getFindEventSQL();
     private int sifrant;
     private String[] sifra;
+    private Set<Field> searchFields;
+    private Set<Field> resultFields;
 
     public EventQueryImpl(Event parent) {
       this.parent = parent;
@@ -1834,5 +1917,24 @@ public class SqlUtilitesImpl extends SqlUtilities {
     public Map<Field, SqlParameter<Object>> getNamedParameters() {
       return namedParameters;
     }
+
+    /**
+     * Get the value of resultFields
+     *
+     * @return the value of resultFields
+     */
+    public Set<Field> getResultFields() {
+      return resultFields;
+    }
+    
+    /**
+     * Get the value of searchFields
+     *
+     * @return the value of searchFields
+     */
+    public Set<Field> getSearchFields() {
+        return searchFields;
+    }
+
   }
 }

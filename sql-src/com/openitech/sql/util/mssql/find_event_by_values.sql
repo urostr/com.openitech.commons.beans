@@ -5,6 +5,7 @@ SELECT <%ev_result_limit%>
     ev.[IdSifre],
     ev.[IdEventSource],
     ev.[VersionId],
+    ev.[Version],
     ev.Datum
 <%ev_field_results%>
 FROM (<%ev_events_subquery%>) ev
