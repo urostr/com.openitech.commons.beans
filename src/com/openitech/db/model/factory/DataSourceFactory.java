@@ -25,8 +25,8 @@ import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefinition;
+import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
-import com.openitech.db.model.xml.config.Workarea.DataSource.Parameters;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
 import groovy.lang.GroovyClassLoader;
@@ -102,7 +102,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (cachedTemporaryTables == null) {
       cachedTemporaryTables = SqlUtilities.getInstance().getCachedTemporaryTables();
     }
-    for (Parameters parameter : dataSourceXML.getDataSource().getParameters()) {
+    for (QueryParameter parameter : dataSourceXML.getDataSource().getParameters()) {
       if (parameter.getTemporaryTable() != null) {
         TemporaryTable tt = parameter.getTemporaryTable();
         if (tt.getMaterializedView() != null) {
@@ -123,35 +123,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (additionalParameters != null) {
       parameters.addAll(additionalParameters);
     }
-    for (Parameters parameter : dataSourceXML.getDataSource().getParameters()) {
+    for (QueryParameter parameter : dataSourceXML.getDataSource().getParameters()) {
+      Object queryParameter = createQueryParameter(parameter);
       if (parameter.getTemporaryTable() != null) {
-        final TemporarySubselectSqlParameter temporaryTable = createTemporaryTable(parameter.getTemporaryTable());
-        temporaryTables.add(temporaryTable);
-        parameters.add(temporaryTable);
-      } else if (parameter.getSubQuery() != null) {
-        parameters.add(createSubQuery(parameter.getSubQuery()));
-      } else if (parameter.getDataSourceFilter() != null) {
-        try {
-          DataSourceFilter dsf = parameter.getDataSourceFilter();
-          Object newInstance = createDataSourceFilter(dsf);
-          if (newInstance != null) {
-            if (newInstance instanceof ActiveFiltersReader) {
-              DataSourceFilters filter = ((ActiveFiltersReader) newInstance).getActiveFilter();
-              if (dsf.getOperator() != null) {
-                filter.setOperator(dsf.getOperator());
-              }
-              parameters.add(filter);
-            } else if (newInstance instanceof DataSourceFilters) {
-              DataSourceFilters filter = (DataSourceFilters) newInstance;
-              if (dsf.getOperator() != null) {
-                filter.setOperator(dsf.getOperator());
-              }
-              parameters.add(filter);
-            }
-          }
-        } catch (Exception ex) {
-          Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        temporaryTables.add((TemporarySubselectSqlParameter) queryParameter);
+        parameters.add(queryParameter);
       } else if ((parameter.getDataSourceParametersFactory() != null) || (parameter.getDataSourceFilterFactory() != null)) {
         try {
           DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
@@ -180,6 +156,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         } catch (Exception ex) {
           Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
         }
+      } else if (queryParameter!=null) {
+        parameters.add(queryParameter);
       }
     }
     parameters.add(new SQLOrderByParameter(DB_ROW_SORTER, dataSource));
@@ -364,6 +342,45 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
   }
 
+  protected Object createQueryParameter(QueryParameter parameter) {
+    Object result = null;
+    if (parameter.getTemporaryTable() != null) {
+      final TemporarySubselectSqlParameter temporaryTable = createTemporaryTable(parameter.getTemporaryTable());
+      result = temporaryTable;
+    } else if (parameter.getSubQuery() != null) {
+      result = createSubQuery(parameter.getSubQuery());
+    } else if (parameter.getSqlParameter() != null) {
+      final DbDataSource.SqlParameter<Object> sqlParameter = new DbDataSource.SqlParameter<Object>();
+
+      sqlParameter.setValue(parameter.getSqlParameter().getValue());
+      sqlParameter.setType(parameter.getSqlParameter().getType());
+
+      result = sqlParameter;
+    } else if (parameter.getDataSourceFilter() != null) {
+      try {
+        DataSourceFilter dsf = parameter.getDataSourceFilter();
+        Object newInstance = createDataSourceFilter(dsf);
+        if (newInstance != null) {
+          DataSourceFilters filter = null;
+          if (newInstance instanceof ActiveFiltersReader) {
+            ((ActiveFiltersReader) newInstance).getActiveFilter();
+          } else if (newInstance instanceof DataSourceFilters) {
+            filter = (DataSourceFilters) newInstance;
+          }
+          if (filter != null) {
+            if (dsf.getOperator() != null) {
+              filter.setOperator(dsf.getOperator());
+            }
+          }
+          result = filter;
+        }
+      } catch (Exception ex) {
+        Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+    return result;
+  }
+
   protected PendingSqlParameter createSubQuery(SubQuery subQuery) {
     PendingSqlParameter subQueryFilter = new PendingSqlParameter(subQuery.getReplace());
     subQueryFilter.setImmediateSQL(subQuery.getImmediateSQL());
@@ -397,6 +414,14 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
     if (tt.isFillOnceOnly() != null) {
       ttParameter.setFillOnceOnly(tt.isFillOnceOnly());
+    }
+    if (tt.getParameter() != null) {
+      for (QueryParameter parameter : tt.getParameter().getParameters()) {
+        final Object queryParameter = createQueryParameter(parameter);
+        if (queryParameter!=null) {
+          ttParameter.addParameter(queryParameter);
+        }
+      }
     }
     if (tt.getMaterializedView() != null) {
       String replace = tt.getMaterializedView().getReplace();
@@ -443,7 +468,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   protected List<JXTaskPane> createTaskPanes(com.openitech.db.model.xml.config.Workarea dataSourceXML) throws ClassNotFoundException {
     List<JXTaskPane> result = new ArrayList<JXTaskPane>();
     try {
-      if ((dataSourceXML.getAssociatedTasks()!=null)&&!dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
+      if ((dataSourceXML.getAssociatedTasks() != null) && !dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
         for (TaskPanes taskPane : dataSourceXML.getAssociatedTasks().getTaskPanes()) {
           Object newInstance = null;
           if (taskPane.getGroovy() != null) {

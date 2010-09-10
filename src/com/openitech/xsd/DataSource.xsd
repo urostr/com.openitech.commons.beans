@@ -14,21 +14,7 @@
               <xsd:element name="COUNT_SQL" type="xsd:string" minOccurs="0"/>
               <xsd:element name="EventColumns" maxOccurs="unbounded" type="xsd:string">
               </xsd:element>
-              <xsd:element name="Parameters" maxOccurs="unbounded" minOccurs="0">
-                <xsd:complexType>
-                  <xsd:choice>
-                    <xsd:element name="DataSourceFilter" type="tns:DataSourceFilter"></xsd:element>
-                    <xsd:element name="DataSourceFilterFactory" type="tns:DataSourceParametersFactory">
-                      <xsd:annotation>
-                        <xsd:documentation>Deprecated</xsd:documentation>
-                      </xsd:annotation>
-                    </xsd:element>
-                    <xsd:element name="DataSourceParametersFactory" type="tns:DataSourceParametersFactory"></xsd:element>
-                    <xsd:element name="SubQuery" type="tns:SubQuery"></xsd:element>
-                    <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
-                  </xsd:choice>
-                </xsd:complexType>
-              </xsd:element>
+              <xsd:element name="Parameters" maxOccurs="unbounded" minOccurs="0" type="tns:QueryParameter"></xsd:element>
               <xsd:element name="CanAddRows" type="xsd:boolean" minOccurs="0"></xsd:element>
               <xsd:element name="CanDeleteRows" type="xsd:boolean" minOccurs="0"></xsd:element>
               <xsd:element name="QueuedDelay" type="xsd:long" minOccurs="0"></xsd:element>
@@ -84,7 +70,7 @@
                             <xsd:complexType>
                               <xsd:choice>
                                 <xsd:element name="Groovy" type="xsd:string"></xsd:element>
-                                  <xsd:element name="ClassName" type="xsd:string"></xsd:element>
+                                <xsd:element name="ClassName" type="xsd:string"></xsd:element>
                               </xsd:choice>
                             </xsd:complexType>
                           </xsd:element>
@@ -238,6 +224,13 @@
           <xsd:restriction base="xsd:string"/>
         </xsd:simpleType>
       </xsd:element>
+      <xsd:element name="Parameter" minOccurs="0">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Parameters" type="tns:QueryParameter" maxOccurs="unbounded"></xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
       <xsd:element name="MaterializedView" type="tns:MaterializedView" minOccurs="0"></xsd:element>
     </xsd:all>
     <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
@@ -331,7 +324,7 @@
                       <xsd:attribute name="ShareResults" type="xsd:boolean" default="true"/>
                     </xsd:complexType>
                   </xsd:element>
-               </xsd:choice>
+                </xsd:choice>
               </xsd:complexType>
             </xsd:element>
           </xsd:all>
@@ -361,7 +354,29 @@
       </xsd:sequence>
     </xsd:complexType>
   </xsd:element>
+  <xsd:complexType name="SqlParameter">
+    <xsd:all>
+      <xsd:element name="Value"></xsd:element>
+      <xsd:element name="Type" type="xsd:int"></xsd:element>
+    </xsd:all>
+  </xsd:complexType>
+  <xsd:complexType name="QueryParameter">
+    <xsd:choice>
+      <xsd:element name="DataSourceFilter" type="tns:DataSourceFilter"></xsd:element>
+      <xsd:element name="DataSourceFilterFactory" type="tns:DataSourceParametersFactory">
+        <xsd:annotation>
+          <xsd:documentation>Deprecated</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="DataSourceParametersFactory" type="tns:DataSourceParametersFactory"></xsd:element>
+      <xsd:element name="SqlParameter" type="tns:SqlParameter"></xsd:element>
+      <xsd:element name="SubQuery" type="tns:SubQuery"></xsd:element>
+      <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
+    </xsd:choice>
+  </xsd:complexType>
 </xsd:schema>
+
+
 
 
 

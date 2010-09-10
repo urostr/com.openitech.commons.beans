@@ -61,6 +61,25 @@ public class Field {
   public FieldModel getModel() {
     return model;
   }
+  protected String opis;
+
+  /**
+   * Get the value of opis
+   *
+   * @return the value of opis
+   */
+  public String getOpis() {
+    return opis==null?name:opis;
+  }
+
+  /**
+   * Set the value of opis
+   *
+   * @param opis new value of opis
+   */
+  public void setOpis(String opis) {
+    this.opis = opis;
+  }
 
 
  

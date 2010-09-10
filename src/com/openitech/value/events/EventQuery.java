@@ -8,6 +8,7 @@ import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.value.fields.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -46,4 +47,18 @@ public interface EventQuery {
   public int getSifrant();
 
   public String[] getSifra();
+
+  /**
+   * Get the value of resultFields
+   *
+   * @return the value of resultFields
+   */
+  public Set<Field> getResultFields();
+
+  /**
+   * Get the value of searchFields
+   *
+   * @return the value of searchFields
+   */
+  public Set<Field> getSearchFields();
 }
