@@ -11,6 +11,9 @@ import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
+import com.openitech.db.model.xml.config.MaterializedView;
+import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
@@ -24,6 +27,7 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -507,10 +511,10 @@ public abstract class SqlUtilities implements UpdateEvent {
       newValues.setId(find.getId());
       newValues.setEventSource(find.getEventSource());
     }
-    if (eventIds==null) {
+    if (eventIds == null) {
       eventIds = new ArrayList<Long>();
     }
-    
+
     for (Event childEvent : newValues.getChildren()) {
       if (childEvent.getOperation() != Event.EventOperation.IGNORE) {
         updateEvent(childEvent, childEvent, eventIds);
@@ -526,14 +530,14 @@ public abstract class SqlUtilities implements UpdateEvent {
   }
 
   private void addIngoredEventIds(Event newValues, List<Long> eventIds) {
-    if ((newValues.getId()!=null)&&(newValues.getId()>0)) {
+    if ((newValues.getId() != null) && (newValues.getId() > 0)) {
       eventIds.add(newValues.getId());
       for (Event childEvent : newValues.getChildren()) {
         addIngoredEventIds(childEvent, eventIds);
       }
     }
   }
-  
+
   protected abstract Long assignEventVersion(List<Long> eventIds) throws SQLException;
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
@@ -572,19 +576,51 @@ public abstract class SqlUtilities implements UpdateEvent {
 
   public abstract DbDataSource getDsSifrantModel(String dataBase, java.util.List<Object> parameters) throws SQLException;
 
-
   public EventQuery prepareEventQuery(Event event, Set<Field> searchFields, Set<Field> resultFields) {
     return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), new String[]{event.getSifra()}, true, false);
   }
 
   public abstract EventQueryParameter getEventQueryParameter(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly);
+
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly);
-  public abstract Map<String,com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
+
+  public abstract Map<String, com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
+
+  public void storeCachedTemporaryTable(TemporarySubselectSqlParameter ttsql) {
+    if (ttsql.getSqlMaterializedView() != null) {
+      TemporaryTable tt = new TemporaryTable();
+
+      tt.setFillOnceOnly(ttsql.isFillOnceOnly());
+      tt.setTableName(ttsql.getValue());
+      tt.setReplace(ttsql.getReplace());
+      tt.setCheckTableSql(ttsql.getCheckTableSql());
+      if (ttsql.getCleanTableSqls() != null) {
+        tt.setCleanTableSqls(new TemporaryTable.CleanTableSqls());
+        tt.getCleanTableSqls().getQuery().addAll(Arrays.asList(ttsql.getCleanTableSqls()));
+      }
+      if (ttsql.getCreateTableSqls() != null) {
+        tt.setCreateTableSqls(new TemporaryTable.CreateTableSqls());
+        tt.getCreateTableSqls().getQuery().addAll(Arrays.asList(ttsql.getCreateTableSqls()));
+      }
+      tt.setEmptyTableSql(ttsql.getEmptyTableSql());
+      tt.setFillTableSql(ttsql.getFillTableSql());
+
+      tt.setMaterializedView(new MaterializedView());
+      tt.getMaterializedView().setValue(ttsql.getSqlMaterializedView().getValue());
+      tt.getMaterializedView().setIsViewValidSql(ttsql.getSqlMaterializedView().getIsViewValidSQL());
+      tt.getMaterializedView().setSetViewVersionSql(ttsql.getSqlMaterializedView().getSetViewVersionSql());
+      
+      storeCachedTemporaryTable(tt);
+    }
+  }
+
   public abstract void storeCachedTemporaryTable(com.openitech.db.model.xml.config.TemporaryTable tt);
+
   public abstract com.openitech.db.model.xml.config.MaterializedView getCacheDefinition(String table);
   /*
    * Sestavi SQL s katerim lahko pripravimo tabelo za shranjevanje rezultatov v podanem result set.
    */
+
   public abstract String getCreateTableSQL(String tableName, java.sql.ResultSet rs) throws SQLException;
 
   public static enum Operation {
