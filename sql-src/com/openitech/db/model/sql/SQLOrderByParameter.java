@@ -34,6 +34,25 @@ public class SQLOrderByParameter extends DbDataSource.SubstSqlParameter implemen
     this.dataSource = dataSource;
     addDataSource(dataSource);
   }
+  protected String orderBy = "";
+
+  /**
+   * Get the value of orderBy
+   *
+   * @return the value of orderBy
+   */
+  public String getOrderBy() {
+    return orderBy;
+  }
+
+  /**
+   * Set the value of orderBy
+   *
+   * @param orderBy new value of orderBy
+   */
+  public void setOrderBy(String orderBy) {
+    this.orderBy = orderBy;
+  }
 
   public SQLOrderByParameter(String replace, DbDataSource dataSource, List<? extends DbTableRowSorter.SortKey> keys) {
     this(replace, dataSource);
@@ -117,7 +136,7 @@ public class SQLOrderByParameter extends DbDataSource.SubstSqlParameter implemen
     if (result.length() > 0) {
       return "ORDER BY " + result.toString();
     } else {
-      return "";
+      return getOrderBy();
     }
   }
 
