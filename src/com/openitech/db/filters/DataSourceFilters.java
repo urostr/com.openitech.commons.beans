@@ -31,6 +31,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   //Uporabljamo za locevanje med web in sql dostopi
   public interface Reader {
+
     public DataSourceFilters getDataSourceFilter(String name);
   }
 
@@ -849,7 +850,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public SifrantSeekType(AbstractSeekType<String> seekType, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined) {
       this(seekType, sifrantSkupina, sifrantOpis, textNotDefined, null, null);
     }
-    
+
     public SifrantSeekType(AbstractSeekType<String> seekType, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined, final List<String> allowedValues, final List<String> excludedValues) {
       super("", PREFORMATTED, 1);
 
@@ -865,7 +866,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         public DbComboBoxModel call() {
           DbSifrantModel result = null;
           try {
-            result = new DbSifrantModel(textNotDefined,"",allowedValues, excludedValues);
+            result = new DbSifrantModel(textNotDefined, "", allowedValues, excludedValues);
             result.setSifrantOpis(sifrantOpis);
             result.setSifrantSkupina(sifrantSkupina);
           } catch (SQLException ex) {
@@ -1010,6 +1011,89 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
+  public static class SeekTypeWrapper<T, V extends AbstractSeekType<T>> extends AbstractSeekType<T> {
+
+//    protected V seekType;
+    protected V seekType;
+    protected String pattern;
+
+    public SeekTypeWrapper(String pattern, V seekType) {
+      super("", PREFORMATTED, 1);
+      if (seekType==null) {
+        throw new NullPointerException("Wrapped AbstractSeekType can't be null");
+      }
+      this.pattern  = pattern;
+      this.seekType = seekType;
+      
+      this.i_type = seekType.getSeekType();
+      this.p_count = seekType.p_count;
+    }
+
+    @Override
+    public boolean setValue(T value) {
+      boolean result = seekType.setValue(value);
+
+      this.value = seekType.value;
+      return result;
+    }
+
+    @Override
+    public boolean hasValue() {
+      return seekType.hasValue();
+    }
+
+    @Override
+    public void setName(String name) {
+      seekType.setName(name);
+      super.setName(name);
+    }
+
+    @Override
+    public void setOperator(String operator) {
+      seekType.setOperator(operator);
+      super.setOperator(operator);
+    }
+
+    @Override
+    public boolean setSeekType(int i) {
+      seekType.setSeekType(i);
+      return super.setSeekType(i);
+    }
+
+    @Override
+    public int getSeekType() {
+      return super.getSeekType();
+    }
+
+    /**
+     * Get the value of pattern
+     *
+     * @return the value of pattern
+     */
+    public String getPattern() {
+      return pattern;
+    }
+
+    /**
+     * Set the value of pattern
+     *
+     * @param pattern new value of pattern
+     */
+    public void setPattern(String pattern) {
+      this.pattern = pattern;
+    }
+
+    @Override
+    public StringBuilder getSQLSegment() {
+      if (pattern == null) {
+        return seekType.getSQLSegment();
+      } else {
+        return new StringBuilder(MessageFormat.format(pattern, seekType.getSQLSegment()));
+      }
+
+    }
+  }
+
   public abstract static class InnerJoinSeekType<T> extends AbstractSeekType<T> {
 
     protected static final String pattern = " {0} {1}\n " + " ON ( {2} {3} )";
@@ -1092,12 +1176,12 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
-  public static class TelefonSeekType extends AbstractSeekType<String> {
+  public static class TelefonSeekType<V extends AbstractSeekType<String>> extends AbstractSeekType<String> {
 
-    DataSourceFiltersSeek<VariousValuesSeekType> omrezna;
-    DataSourceFiltersSeek<VariousValuesSeekType> telefonska;
+    DataSourceFiltersSeek<V> omrezna;
+    DataSourceFiltersSeek<V> telefonska;
 
-    public TelefonSeekType(DataSourceFiltersSeek<VariousValuesSeekType> omrezna, DataSourceFiltersSeek<VariousValuesSeekType> telefonska) {
+    public TelefonSeekType(DataSourceFiltersSeek<V> omrezna, DataSourceFiltersSeek<V> telefonska) {
       super("", telefonska.seek.getSeekType(), 1);
 
       this.omrezna = omrezna;
@@ -1186,7 +1270,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     private int min_length = 1;
 
     public VariousValuesSeekType(String tableName, String valueIdField, String alias, String joinON, String valueType, int seekType) {
-      super(tableName + " " + alias, alias + "."+valueIdField+" = " + joinON + "\n AND ", alias + "." + valueType);
+      super(tableName + " " + alias, alias + "." + valueIdField + " = " + joinON + "\n AND ", alias + "." + valueType);
       setSeekType(seekType);
     }
     private boolean useAlways = false;

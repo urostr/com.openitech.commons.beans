@@ -46,8 +46,8 @@ import org.jdesktop.swingx.JXTaskPane;
  */
 public class DataSourceFactory extends AbstractDataSourceFactory {
 
-  private static final String DATA_SOURCE_LIMIT = "<%DATA_SOURCE_LIMIT%>";
-  private static final String DB_ROW_SORTER = "<%DB_ROW_SORTER%>";
+  public static final String DATA_SOURCE_LIMIT = "<%DATA_SOURCE_LIMIT%>";
+  public static final String DB_ROW_SORTER = "<%DB_ROW_SORTER%>";
   private static java.util.Map<String, TemporaryTable> cachedTemporaryTables;
   private DataSourceLimit dataSourceLimit;
 
