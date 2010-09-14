@@ -8,11 +8,15 @@ import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
+import com.openitech.db.model.xml.config.MaterializedView;
+import com.openitech.db.model.xml.config.QueryParameter;
+import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.sql.util.SqlUtilities;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -287,7 +291,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               SQLDataSource.execute(sqlMaterializedView.setViewVersionSql, qparams);
             }
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("temporary:fill:" + getValue()+"..." + (System.currentTimeMillis() - timer) + "ms");
+              System.out.println("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
               System.out.println("##############");
             }
           } finally {
@@ -298,7 +302,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
         commit = true;
       } catch (SQLException ex) {
-        Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:"+getValue(), ex);
+        Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
         throw new SQLException(ex);
       } finally {
         if (transaction) {
@@ -308,6 +312,59 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     } finally {
       statement.close();
     }
+  }
+
+  public TemporaryTable getTemporaryTable() {
+    TemporaryTable tt = new TemporaryTable();
+
+    tt.setFillOnceOnly(isFillOnceOnly());
+    tt.setTableName(getValue());
+    tt.setReplace(getReplace());
+    tt.setCheckTableSql(getCheckTableSql());
+    if (getCleanTableSqls() != null) {
+      tt.setCleanTableSqls(new TemporaryTable.CleanTableSqls());
+      tt.getCleanTableSqls().getQuery().addAll(Arrays.asList(getCleanTableSqls()));
+    }
+    if (getCreateTableSqls() != null) {
+      tt.setCreateTableSqls(new TemporaryTable.CreateTableSqls());
+      tt.getCreateTableSqls().getQuery().addAll(Arrays.asList(getCreateTableSqls()));
+    }
+    tt.setEmptyTableSql(getEmptyTableSql());
+    tt.setFillTableSql(getFillTableSql());
+
+    if (getParameters().size() > 0) {
+      tt.setParameter(new TemporaryTable.Parameter());
+      for (Object parameter : getParameters()) {
+        if (parameter instanceof TemporarySubselectSqlParameter) {
+          QueryParameter queryParameter = new QueryParameter();
+
+          queryParameter.setTemporaryTable(((TemporarySubselectSqlParameter) parameter).getTemporaryTable());
+
+          tt.getParameter().getParameters().add(queryParameter);
+        } else if (parameter instanceof PendingSqlParameter) {
+          QueryParameter queryParameter = new QueryParameter();
+
+          queryParameter.setSubQuery(((PendingSqlParameter) parameter).getSubQuery());
+
+          tt.getParameter().getParameters().add(queryParameter);
+        } else if (parameter instanceof DbDataSource.SqlParameter<?>) {
+          QueryParameter queryParameter = new QueryParameter();
+
+          queryParameter.setSqlParameter(((DbDataSource.SqlParameter) parameter).getSqlParameter());
+
+          tt.getParameter().getParameters().add(queryParameter);
+        }
+      }
+    }
+
+    if (getSqlMaterializedView() != null) {
+      tt.setMaterializedView(new MaterializedView());
+      tt.getMaterializedView().setValue(getSqlMaterializedView().getValue());
+      tt.getMaterializedView().setIsViewValidSql(getSqlMaterializedView().getIsViewValidSQL());
+      tt.getMaterializedView().setSetViewVersionSql(getSqlMaterializedView().getSetViewVersionSql());
+    }
+
+    return tt;
   }
 
   public void setParameters(List<Object> queryParameters) {

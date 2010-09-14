@@ -588,29 +588,7 @@ public abstract class SqlUtilities implements UpdateEvent {
 
   public void storeCachedTemporaryTable(TemporarySubselectSqlParameter ttsql) {
     if (ttsql.getSqlMaterializedView() != null) {
-      TemporaryTable tt = new TemporaryTable();
-
-      tt.setFillOnceOnly(ttsql.isFillOnceOnly());
-      tt.setTableName(ttsql.getValue());
-      tt.setReplace(ttsql.getReplace());
-      tt.setCheckTableSql(ttsql.getCheckTableSql());
-      if (ttsql.getCleanTableSqls() != null) {
-        tt.setCleanTableSqls(new TemporaryTable.CleanTableSqls());
-        tt.getCleanTableSqls().getQuery().addAll(Arrays.asList(ttsql.getCleanTableSqls()));
-      }
-      if (ttsql.getCreateTableSqls() != null) {
-        tt.setCreateTableSqls(new TemporaryTable.CreateTableSqls());
-        tt.getCreateTableSqls().getQuery().addAll(Arrays.asList(ttsql.getCreateTableSqls()));
-      }
-      tt.setEmptyTableSql(ttsql.getEmptyTableSql());
-      tt.setFillTableSql(ttsql.getFillTableSql());
-
-      tt.setMaterializedView(new MaterializedView());
-      tt.getMaterializedView().setValue(ttsql.getSqlMaterializedView().getValue());
-      tt.getMaterializedView().setIsViewValidSql(ttsql.getSqlMaterializedView().getIsViewValidSQL());
-      tt.getMaterializedView().setSetViewVersionSql(ttsql.getSqlMaterializedView().getSetViewVersionSql());
-      
-      storeCachedTemporaryTable(tt);
+      storeCachedTemporaryTable(ttsql.getTemporaryTable());
     }
   }
 

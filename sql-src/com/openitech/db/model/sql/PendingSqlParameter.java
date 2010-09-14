@@ -8,6 +8,7 @@ import com.openitech.value.CollectionKey;
 import com.openitech.value.NamedValue;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.ref.events.PropertyChangeWeakListener;
 import com.openitech.value.fields.FieldValue;
 import java.beans.PropertyChangeEvent;
@@ -15,6 +16,7 @@ import java.beans.PropertyChangeListener;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -184,7 +186,21 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
   public void setMultipleKeysLimit(int multipleKeysLimit) {
     this.multipleKeysLimit = multipleKeysLimit;
   }
-
+  
+  public SubQuery getSubQuery() {
+    SubQuery subQuery = new SubQuery();
+    subQuery.setReplace(getReplace());
+    subQuery.setImmediateSQL(getImmediateSQL());
+    subQuery.setPendingSQL(getPendingSQL());
+    subQuery.setPendingColumns(new SubQuery.PendingColumns());
+    subQuery.getPendingColumns().getColumnNames().addAll(pendingFields);
+    subQuery.setDeferredSQL(getDeferredSQL());
+    subQuery.setParentKey(new SubQuery.ParentKey());
+    subQuery.getParentKey().getColumnNames().addAll(parentKeyFields);
+    subQuery.setSupportsMultipleKeys(isSupportsMultipleKeys());
+    subQuery.setMultipleKeysLimit(getMultipleKeysLimit());
+    return subQuery;
+  }
   private java.util.List<PendingValue> getPendingValues(java.util.List<Object> parameters) throws SQLException {
     java.util.List<PendingValue> result = new java.util.ArrayList<PendingValue>();
 
