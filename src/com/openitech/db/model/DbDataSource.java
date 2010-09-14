@@ -19,7 +19,6 @@ import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.events.concurrent.DataSourceListDataEvent;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.ref.WeakListenerList;
-import com.openitech.awt.OwnerFrame;
 import com.openitech.db.model.sql.SQLNotificationException;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -66,7 +65,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.sql.RowSet;
 import javax.sql.RowSetListener;
-import javax.swing.JOptionPane;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
@@ -4689,6 +4687,15 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
     public boolean isAutomaticReload() {
       return automaticReload;
+    }
+
+    public com.openitech.db.model.xml.config.SqlParameter getSqlParameter() {
+      com.openitech.db.model.xml.config.SqlParameter sqlParameter = new com.openitech.db.model.xml.config.SqlParameter();
+
+      sqlParameter.setType(getType());
+      sqlParameter.setValue(getValue());
+
+      return sqlParameter;
     }
 
     /**
