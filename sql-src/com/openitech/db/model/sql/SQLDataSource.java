@@ -5106,7 +5106,9 @@ public class SQLDataSource implements DbDataSourceImpl {
           result = openSelectResultSet.getFloat(columnIndex);
         } else if (Long.class.isAssignableFrom(type)) {
           result = openSelectResultSet.getLong(columnIndex);
-        } else {
+        } else if (BigDecimal.class.isAssignableFrom(type)) {
+          result = openSelectResultSet.getBigDecimal(columnIndex);
+        } else if (!Object.class.isAssignableFrom(type)) {
           result = openSelectResultSet.getBigDecimal(columnIndex);
         }
       } else if (Boolean.class.isAssignableFrom(type)) {
