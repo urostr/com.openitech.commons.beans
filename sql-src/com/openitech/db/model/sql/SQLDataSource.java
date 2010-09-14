@@ -5023,7 +5023,9 @@ public class SQLDataSource implements DbDataSourceImpl {
               result = new java.sql.Time(value.getTime());
             } else if (Timestamp.class.isAssignableFrom(type)) {
               result = new java.sql.Timestamp(value.getTime());
-            } else {
+            } else if (java.sql.Date.class.isAssignableFrom(type)) {
+              result = new java.sql.Date(value.getTime());
+            } else if (!Object.class.isAssignableFrom(type)) {
               result = new java.sql.Date(value.getTime());
             }
           }
