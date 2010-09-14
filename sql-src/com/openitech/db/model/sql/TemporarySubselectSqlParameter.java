@@ -13,7 +13,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +27,7 @@ import java.util.logging.Logger;
  */
 public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
-  private static final Semaphore lock = new Semaphore(1);
+  private static final Map<String, Semaphore> locks = Collections.synchronizedMap(new HashMap<String, Semaphore>());
 
   public TemporarySubselectSqlParameter(String replace) {
     super(replace);
@@ -192,6 +195,14 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     return sqlMaterializedView == null ? super.getValue() : sqlMaterializedView.getValue();
   }
 
+  public SubstSqlParameter getSubstSqlParameter() {
+    SubstSqlParameter substSqlParameter = new DbDataSource.SubstSqlParameter(this.getReplace());
+    substSqlParameter.setValue(this.getValue());
+    substSqlParameter.setType(com.openitech.db.model.Types.SUBST_ALL);
+
+    return substSqlParameter;
+  }
+
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException {
     Statement statement = connection.createStatement();
     try {
@@ -202,8 +213,19 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       final List<Object> qparams = new ArrayList<Object>(parameters.size());
       qparams.addAll(getParameters());
       qparams.addAll(parameters);
+      qparams.add(getSubstSqlParameter());
       if (sqlMaterializedView != null) {
         qparams.add(sqlMaterializedView);
+      }
+
+      String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
+
+      Semaphore lock = null;
+      if (locks.containsKey(table)) {
+        lock = locks.get(table);
+      } else {
+        lock = new Semaphore(1);
+        locks.put(table, lock);
       }
 
       boolean transaction = false;
@@ -226,7 +248,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
               statement.addBatch(createSQL);
               if (DbDataSource.DUMP_SQL) {
-                System.out.println(createSQL+";");
+                System.out.println(createSQL + ";");
                 System.out.println("-- -- -- --");
               }
             }
@@ -238,12 +260,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
 
         if ((!fill) && (sqlMaterializedView != null)) {
-          fill = !sqlMaterializedView.isViewValid(connection);
+          fill = !sqlMaterializedView.isViewValid(connection, qparams);
         }
 
         if (fill && !disabled) {
           if (sqlMaterializedView != null) {
-            if (!(transaction||SqlUtilities.getInstance().isTransaction())) {
+            if (!(transaction || SqlUtilities.getInstance().isTransaction())) {
               transaction = true;
               SqlUtilities.getInstance().beginTransaction();
             }
@@ -252,13 +274,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
           try {
             if (emptyTableSql.length() > 0) {
-              try {
-                SQLDataSource.executeUpdate(emptyTableSql, qparams);
-              } finally {
-                if (DbDataSource.DUMP_SQL) {
-                  System.out.println("##############");
-                }
-              }
+              SQLDataSource.executeUpdate(emptyTableSql, qparams);
             }
 
             SQLDataSource.executeUpdate(fillTableSql, qparams);
@@ -271,7 +287,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               SQLDataSource.execute(sqlMaterializedView.setViewVersionSql, qparams);
             }
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("temporary:fill:" + (System.currentTimeMillis() - timer) + "ms");
+              System.out.println("temporary:fill:" + getValue()+"..." + (System.currentTimeMillis() - timer) + "ms");
               System.out.println("##############");
             }
           } finally {
@@ -282,7 +298,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
         commit = true;
       } catch (SQLException ex) {
-        Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, null, ex);
+        Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:"+getValue(), ex);
         throw new SQLException(ex);
       } finally {
         if (transaction) {

@@ -7,6 +7,7 @@
  */
 package com.openitech.db.model.sql;
 
+import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.value.CollectionKey;
 import com.openitech.value.NamedValue;
 import com.openitech.db.model.*;
@@ -72,6 +73,7 @@ import javax.swing.event.ListDataEvent;
 public class SQLDataSource implements DbDataSourceImpl {
 
   public static final String SELECT_1 = "SELECT 1";
+
   private String selectSql;
   private String countSql;
   private String preparedSelectSql;
@@ -4476,19 +4478,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
-    List<Object> queryParameters = new java.util.ArrayList(parameters.size());
-    List<TemporarySubselectSqlParameter> temporarySubselectSqlParameters = new java.util.ArrayList<TemporarySubselectSqlParameter>(parameters.size());
-    for (Object parameter : parameters) {
-      if (parameter instanceof TemporarySubselectSqlParameter) {
-        temporarySubselectSqlParameters.add((TemporarySubselectSqlParameter) parameter);
-      } else {
-        queryParameters.add(parameter);
-      }
-    }
-
-    for (TemporarySubselectSqlParameter tempSubselect:temporarySubselectSqlParameters) {
-      tempSubselect.executeQuery(statement.getConnection(),queryParameters);
-    }
+    List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
     setParameters(statement, queryParameters, 1, false);
 
@@ -4528,15 +4518,36 @@ public class SQLDataSource implements DbDataSourceImpl {
       return executeUpdate(statement, parameters);
     } finally {
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("##############");
+        System.out.println("##############\n");
       }
     }
   }
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
-    setParameters(statement, parameters, 1, false);
+    List<Object> queryParameters = executeTemporarySelects(parameters, statement);
+    
+    setParameters(statement, queryParameters, 1, false);
 
     return statement.executeUpdate();
+  }
+
+
+  private static List<Object> executeTemporarySelects(List<?> parameters, PreparedStatement statement) throws SQLException {
+    List<Object> queryParameters = new java.util.ArrayList(parameters.size());
+    List<TemporarySubselectSqlParameter> temporarySubselectSqlParameters = new java.util.ArrayList<TemporarySubselectSqlParameter>(parameters.size());
+    for (Object parameter : parameters) {
+      if (parameter instanceof TemporarySubselectSqlParameter) {
+        TemporarySubselectSqlParameter tt = (TemporarySubselectSqlParameter) parameter;
+        temporarySubselectSqlParameters.add(tt);
+        queryParameters.add(tt.getSubstSqlParameter());
+      } else {
+        queryParameters.add(parameter);
+      }
+    }
+    for (TemporarySubselectSqlParameter tempSubselect : temporarySubselectSqlParameters) {
+      tempSubselect.executeQuery(statement.getConnection(), queryParameters);
+    }
+    return queryParameters;
   }
 
   @Override

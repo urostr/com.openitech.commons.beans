@@ -95,9 +95,9 @@ public class SQLMaterializedView extends SubstSqlParameter {
     this.setViewVersionSql = setViewVersionSql;
   }
 
-  public boolean isViewValid(Connection connection) {
+  public boolean isViewValid(Connection connection, java.util.List<Object> parameters) {
     try {
-      ResultSet executeQuery = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY).executeQuery(isViewValidSQL);
+      ResultSet executeQuery = SQLDataSource.executeQuery(isViewValidSQL, parameters, connection);
       if (executeQuery.next()) {
         return executeQuery.getBoolean(1);
       }
