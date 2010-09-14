@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -62,6 +63,16 @@ public class EventQuerySpringImpl implements EventQuery{
   @Override
   public int getValuesSet() {
     return 0;
+  }
+
+  @Override
+  public Set<Field> getResultFields() {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public Set<Field> getSearchFields() {
+    throw new UnsupportedOperationException("Not supported yet.");
   }
 
 
