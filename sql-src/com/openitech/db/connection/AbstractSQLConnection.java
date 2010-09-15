@@ -112,7 +112,7 @@ public abstract class AbstractSQLConnection implements DbConnection {
         return PooledConnection.getInstance().getTemporaryConnection();
       } else {
         final Connection connection = DriverManager.getConnection(DB_URL, connect);
-        fireActionPerformed(new ActionEvent(connection, DbConnection.ACTION_DB_CONNECT, "getTemporaryConnection"));
+        fireActionPerformed(new ActionEvent(connection, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
         return connection;
       }
     } catch (SQLException ex) {
@@ -247,7 +247,7 @@ public abstract class AbstractSQLConnection implements DbConnection {
 
             if (result != null) {
               createSchema(result);
-              fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, "getConnection"));
+              fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_CONNECTION));
             }
 
             if (settings.containsKey(ConnectionManager.DB_SHUTDOWN_HOOK)) {
