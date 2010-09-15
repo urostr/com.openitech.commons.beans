@@ -33,6 +33,7 @@
                     <xsd:element name="ResumeAfterCreation" type="xsd:boolean" minOccurs="0"></xsd:element>
                     <xsd:element name="ClassName" type="xsd:string" minOccurs="0"></xsd:element>
                     <xsd:element name="ProviderClassName" type="xsd:string" minOccurs="0"></xsd:element>
+                    <xsd:element name="Sharing" type="tns:Sharing" minOccurs="0" default="SHARING_GLOBAL"></xsd:element>
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
@@ -374,12 +375,11 @@
       <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
     </xsd:choice>
   </xsd:complexType>
+  <xsd:simpleType name="Sharing">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="SHARING_OFF"/>
+      <xsd:enumeration value="SHARING_GLOBAL"/>
+      <xsd:enumeration value="SHARING_LOCAL"/>
+    </xsd:restriction>
+  </xsd:simpleType>
 </xsd:schema>
-
-
-
-
-
-
-
-

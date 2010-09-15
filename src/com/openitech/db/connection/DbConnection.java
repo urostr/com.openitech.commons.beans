@@ -46,6 +46,8 @@ public interface DbConnection {
   int DB_CONNECT_PREFIX_LENGTH=DB_CONNECT_PREFIX.length();
   
   int ACTION_DB_CONNECT = 1;
+  String ACTION_GET_CONNECTION = "getConnection";
+  String ACTION_GET_TEMP_CONNECTION = "getTemporaryConnection";
 
 
   Connection getTemporaryConnection();

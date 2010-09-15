@@ -30,18 +30,38 @@ public class JDbTimeTextField extends JDbFormattedTextField {
     if (text != null) {
       StringBuilder sb = new StringBuilder(text);
       switch (text.length()) {
-        case 1: text = sb.insert(0, "0").append(":00:00").toString(); break;
-        case 2: text = sb.append(":00:00").toString(); break;
-        case 3: if (sb.indexOf(":") < 0) {
-                  text = sb.insert(0, "0").insert(2, ":").append(":00").toString();
-                } else {
-                  text = sb.append(":00").toString();
-                }; break;
-        case 4: text = sb.insert(2, sb.indexOf(":") < 0?":":"").append(":00").toString(); break;
-        case 5: text = sb.append(":00").toString(); break;
+        case 1:
+          text = sb.insert(0, "0").append(":00:00").toString();
+          break;
+        case 2:
+          text = sb.append(":00:00").toString();
+          break;
+        case 3:
+          if (sb.indexOf(":") < 0) {
+            text = sb.insert(0, "0").insert(2, ":").append(":00").toString();
+          } else {
+            text = sb.append(":00").toString();
+          }
+          ;
+          break;
+        case 4:
+          text = sb.insert(2, sb.indexOf(":") < 0 ? ":" : "").append(":00").toString();
+          break;
+        case 5:
+          text = sb.append(":00").toString();
+          break;
       }
     }
     return text;
   }
-  
+
+  @Override
+  public Object getValue() {
+    Object value = super.getValue();
+    if (value instanceof java.sql.Timestamp) {
+    } else if (value instanceof java.util.Date) {
+      value = new java.sql.Timestamp(((java.util.Date) value).getTime());
+    }
+    return value;
+  }
 }

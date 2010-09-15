@@ -26,6 +26,7 @@ import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefinition;
 import com.openitech.db.model.xml.config.QueryParameter;
+import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
@@ -91,6 +92,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if (dataSourceXML.getDataEntryPanel() != null) {
         createDataEntryPanel();
       }
+    } catch (Exception ex) {
+      Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
     } finally {
       resumeDataSource();
       dataSource.unlock();
@@ -230,6 +233,22 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     dataSource.setCanAddRows(canAddRows == null ? false : canAddRows);
     dataSource.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
 
+    if (creationParameters != null) {
+      Sharing sharing = creationParameters.getSharing();
+      if (sharing != null) {
+        switch (sharing) {
+          case SHARING_GLOBAL:
+            dataSource.setSharing(DbDataSource.SHARING_GLOBAL);
+            break;
+          case SHARING_LOCAL:
+            dataSource.setSharing(DbDataSource.SHARING_LOCAL);
+            break;
+          case SHARING_OFF:
+            dataSource.setSharing(DbDataSource.SHARING_OFF);
+            break;
+        }
+      }
+    }
     return dataSource;
   }
 
