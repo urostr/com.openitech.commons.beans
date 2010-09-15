@@ -21,6 +21,7 @@ import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
 import com.openitech.value.events.EventQueryParameter;
+import com.openitech.value.events.EventPK;
 import com.sun.rowset.CachedRowSetImpl;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -82,6 +83,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement insertEventVersion;
   String getEventVersionSQL;
   PreparedStatement storeCachedTemporaryTable;
+  PreparedStatement delete_eventPK;
+  PreparedStatement insert_eventPK;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -256,6 +259,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (get_field == null) {
         get_field = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
       }
+      if (delete_eventPK == null) {
+        delete_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "delete_eventPK.sql", "cp1250"));
+      }
       int param;
       boolean success = true;
       boolean commit = false;
@@ -275,6 +281,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
           if (event.isVersioned() && (oldEvent != null)) {
             //updataj stari event
+            //oz.deletej valid = false
             param = 1;
             updateEvents.clearParameters();
             updateEvents.setInt(param++, oldEvent.getSifrant());
@@ -291,6 +298,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
             updateEvents.setLong(param++, oldEvent.getId());
 
             success = success && updateEvents.executeUpdate() > 0;
+
+            //
+            param = 1;
+            delete_eventPK.clearParameters();
+            delete_eventPK.setLong(param++, oldEvent.getId());
+            success = success && delete_eventPK.executeUpdate() > 0;
           }
 
           //insertaj event
@@ -313,6 +326,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
           success = success && insertEvents.executeUpdate() > 0;
 
           events_ID = getLastIdentity();
+
+
+
         } else {
           events_ID = event.getId();
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
@@ -338,6 +354,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
         success = success && storeOpomba(events_ID, event.getOpomba());
 
         if (success) {
+          EventPK eventPK = new EventPK();
+
           Map<Field, List<FieldValue>> eventValues = event.getEventValues();
           for (Field field : eventValues.keySet()) {
             List<FieldValue> fieldValues = eventValues.get(field);
@@ -391,6 +409,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 }
 
                 success = success && insertEventValues.executeUpdate() > 0;
+
+                for (Field field1 : event.getPrimaryKey()) {
+                  FieldValue fieldValuePK = new FieldValue(field_id, fieldName, value.getType(), fieldValueIndex, valueId);
+                  if (field1.equals(fieldValuePK)) {
+                    eventPK.addField(fieldValuePK);
+
+                  }
+                }
+
               } else {
                 //updataj event value
                 param = 1;
@@ -408,6 +435,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
               }
             }
           }
+          eventPK.setEventId(events_ID);
+          eventPK.setIdSifranta(event.getSifrant());
+          eventPK.setIdSifre(event.getSifra());
+          success = success && storePrimaryKey(eventPK);
         }
 
         commit = success;
@@ -840,10 +871,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
     MaterializedView result = new MaterializedView();
     result.setValue("[MViewCache].[dbo].[" + table + "]");
     result.setIsViewValidSql(com.openitech.text.Document.identText(
-                             "\nSELECT [MViewCache].[DBO].[isValidCachedObject]\n"
-                              + "    ('" + table + "'\n"
-                              + "     ,NULL\n"
-                              + "     ,NULL)",15));
+            "\nSELECT [MViewCache].[DBO].[isValidCachedObject]\n"
+            + "    ('" + table + "'\n"
+            + "     ,NULL\n"
+            + "     ,NULL)", 15));
     result.setSetViewVersionSql("EXECUTE [MViewCache].[dbo].[updateRefreshDate] '" + table + "'");
     return result;
   }
@@ -906,6 +937,28 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
     }
+  }
+
+  private boolean storePrimaryKey(EventPK eventPK) throws SQLException {
+    boolean success = true;
+    int param = 1;
+
+    int idSifranta = eventPK.getIdSifranta();
+    String idSifre = eventPK.getIdSifre();
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+    if (insert_eventPK == null) {
+      insert_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_eventPK.sql", "cp1250"));
+    }
+
+    param = 1;
+    insert_eventPK.clearParameters();
+    insert_eventPK.setLong(param++, eventPK.getEventId());
+    insert_eventPK.setInt(param++, idSifranta);
+    insert_eventPK.setString(param++, idSifre);
+    insert_eventPK.setString(param++, eventPK.toString());
+    success = success && insert_eventPK.executeUpdate() > 0;
+
+    return success;
   }
 
   private static class EventQueryKey {
@@ -1926,15 +1979,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
     public Set<Field> getResultFields() {
       return resultFields;
     }
-    
+
     /**
      * Get the value of searchFields
      *
      * @return the value of searchFields
      */
     public Set<Field> getSearchFields() {
-        return searchFields;
+      return searchFields;
     }
-
   }
 }
