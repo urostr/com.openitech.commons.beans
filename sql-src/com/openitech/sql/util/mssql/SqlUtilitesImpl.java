@@ -426,7 +426,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 success = success && updateEventValues.executeUpdate() > 0;
               }
 
-              if (event.getPrimaryKey().length > 0) {
+              if (event.getPrimaryKey()!=null && event.getPrimaryKey().length > 0) {
                 FieldValue fieldValuePK = new FieldValue(field_id, fieldName, field.getType(), fieldValueIndex, valueId);
                 for (Field field1 : event.getPrimaryKey()) {
                   if (field1.equals(fieldValuePK)) {
@@ -437,7 +437,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               }
             }
           }
-          if (event.getPrimaryKey().length > 0) {
+          if (event.getPrimaryKey()!=null && event.getPrimaryKey().length > 0) {
             eventPK.setEventId(events_ID);
             eventPK.setIdSifranta(event.getSifrant());
             eventPK.setIdSifre(event.getSifra());
