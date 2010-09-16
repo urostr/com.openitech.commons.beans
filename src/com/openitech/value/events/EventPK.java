@@ -86,8 +86,7 @@ public class EventPK {
 
   
 
-  @Override
-  public String toString() {
+  public String toHexString() {
     StringBuilder result = new StringBuilder();
 
     for (FieldValue fieldValue : fields) {
@@ -95,6 +94,19 @@ public class EventPK {
       result.append(Integer.toHexString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toHexString(fieldValue.getFieldIndex())).append(";");
       result.append(Long.toHexString((Long) fieldValue.getValue())).append(";");
+      result.append("}");
+    }
+    return result.toString();
+  }
+
+  public String toNormalString() {
+    StringBuilder result = new StringBuilder();
+
+    for (FieldValue fieldValue : fields) {
+      result.append("{");
+      result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
+      result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
+      result.append(Long.toString((Long) fieldValue.getValue())).append(";");
       result.append("}");
     }
     return result.toString();
