@@ -12,6 +12,7 @@ import com.openitech.db.components.DbNaslovDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.db.model.sql.SQLDataSource;
+import com.openitech.db.model.sql.SQLNotificationException;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
@@ -409,15 +410,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 }
 
                 success = success && insertEventValues.executeUpdate() > 0;
-
-                for (Field field1 : event.getPrimaryKey()) {
-                  FieldValue fieldValuePK = new FieldValue(field_id, fieldName, value.getType(), fieldValueIndex, valueId);
-                  if (field1.equals(fieldValuePK)) {
-                    eventPK.addField(fieldValuePK);
-
-                  }
-                }
-
               } else {
                 //updataj event value
                 param = 1;
@@ -433,12 +425,24 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
                 success = success && updateEventValues.executeUpdate() > 0;
               }
+
+              if (event.getPrimaryKey().length > 0) {
+                FieldValue fieldValuePK = new FieldValue(field_id, fieldName, field.getType(), fieldValueIndex, valueId);
+                for (Field field1 : event.getPrimaryKey()) {
+                  if (field1.equals(fieldValuePK)) {
+                    eventPK.addField(fieldValuePK);
+                    break;
+                  }
+                }
+              }
             }
           }
-          eventPK.setEventId(events_ID);
-          eventPK.setIdSifranta(event.getSifrant());
-          eventPK.setIdSifre(event.getSifra());
-          success = success && storePrimaryKey(eventPK);
+          if (event.getPrimaryKey().length > 0) {
+            eventPK.setEventId(events_ID);
+            eventPK.setIdSifranta(event.getSifrant());
+            eventPK.setIdSifre(event.getSifra());
+            success = success && storePrimaryKey(eventPK);
+          }
         }
 
         commit = success;
@@ -940,8 +944,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   private boolean storePrimaryKey(EventPK eventPK) throws SQLException {
-    boolean success = true;
-    int param = 1;
+    boolean success = false;
+
 
     int idSifranta = eventPK.getIdSifranta();
     String idSifre = eventPK.getIdSifre();
@@ -950,13 +954,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
       insert_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_eventPK.sql", "cp1250"));
     }
 
-    param = 1;
-    insert_eventPK.clearParameters();
-    insert_eventPK.setLong(param++, eventPK.getEventId());
-    insert_eventPK.setInt(param++, idSifranta);
-    insert_eventPK.setString(param++, idSifre);
-    insert_eventPK.setString(param++, eventPK.toString());
-    success = success && insert_eventPK.executeUpdate() > 0;
+    try {
+      int param = 1;
+
+      insert_eventPK.clearParameters();
+      insert_eventPK.setLong(param++, eventPK.getEventId());
+      insert_eventPK.setInt(param++, idSifranta);
+      insert_eventPK.setString(param++, idSifre);
+      insert_eventPK.setString(param++, eventPK.toString());
+      success = insert_eventPK.executeUpdate() > 0;
+    } catch (SQLException ex) {
+      throw new SQLNotificationException("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toString(), ex);
+    }
 
     return success;
   }
