@@ -961,7 +961,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       insert_eventPK.setLong(param++, eventPK.getEventId());
       insert_eventPK.setInt(param++, idSifranta);
       insert_eventPK.setString(param++, idSifre);
-      insert_eventPK.setString(param++, eventPK.toString());
+      insert_eventPK.setString(param++, eventPK.toHexString());
       success = insert_eventPK.executeUpdate() > 0;
     } catch (SQLException ex) {
       throw new SQLNotificationException("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toString(), ex);
