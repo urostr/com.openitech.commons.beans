@@ -86,6 +86,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement storeCachedTemporaryTable;
   PreparedStatement delete_eventPK;
   PreparedStatement insert_eventPK;
+  PreparedStatement find_eventPK;
+  PreparedStatement update_eventPK;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -426,7 +428,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 success = success && updateEventValues.executeUpdate() > 0;
               }
 
-              if (event.getPrimaryKey()!=null && event.getPrimaryKey().length > 0) {
+              if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
                 FieldValue fieldValuePK = new FieldValue(field_id, fieldName, field.getType(), fieldValueIndex, valueId);
                 for (Field field1 : event.getPrimaryKey()) {
                   if (field1.equals(fieldValuePK)) {
@@ -437,7 +439,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               }
             }
           }
-          if (event.getPrimaryKey()!=null && event.getPrimaryKey().length > 0) {
+          if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
             eventPK.setEventId(events_ID);
             eventPK.setIdSifranta(event.getSifrant());
             eventPK.setIdSifre(event.getSifra());
@@ -945,26 +947,56 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   private boolean storePrimaryKey(EventPK eventPK) throws SQLException {
     boolean success = false;
+    int param = 1;
 
-
-    int idSifranta = eventPK.getIdSifranta();
-    String idSifre = eventPK.getIdSifre();
+    final long eventId = eventPK.getEventId();
+    final int idSifranta = eventPK.getIdSifranta();
+    final String idSifre = eventPK.getIdSifre();
+    final String primaryKey = eventPK.toHexString();
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insert_eventPK == null) {
       insert_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_eventPK.sql", "cp1250"));
     }
+    if (find_eventPK == null) {
+      find_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventPK.sql", "cp1250"));
+    }
+    if (update_eventPK == null) {
+      update_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK.sql", "cp1250"));
+    }
+
+
 
     try {
-      int param = 1;
+      param = 1;
+      find_eventPK.clearParameters();
+      find_eventPK.setLong(param++, eventPK.getEventId());
+      find_eventPK.setInt(param++, idSifranta);
+      find_eventPK.setString(param++, idSifre);
+      find_eventPK.setString(param++, primaryKey);
+      ResultSet rs_findEventPK = find_eventPK.executeQuery();
+      if (rs_findEventPK.next()) {
+        //update
+        param = 1;
+        update_eventPK.clearParameters();
+        update_eventPK.setInt(param++, idSifranta);
+        update_eventPK.setString(param++, idSifre);
+        update_eventPK.setString(param++, primaryKey);
+        update_eventPK.setLong(param++, eventId);
 
-      insert_eventPK.clearParameters();
-      insert_eventPK.setLong(param++, eventPK.getEventId());
-      insert_eventPK.setInt(param++, idSifranta);
-      insert_eventPK.setString(param++, idSifre);
-      insert_eventPK.setString(param++, eventPK.toHexString());
-      success = insert_eventPK.executeUpdate() > 0;
+        success = update_eventPK.executeUpdate() > 0;
+      } else {
+        //insert
+        param = 1;
+
+        insert_eventPK.clearParameters();
+        insert_eventPK.setLong(param++, eventId);
+        insert_eventPK.setInt(param++, idSifranta);
+        insert_eventPK.setString(param++, idSifre);
+        insert_eventPK.setString(param++, primaryKey);
+        success = insert_eventPK.executeUpdate() > 0;
+      }
     } catch (SQLException ex) {
-     // System.out.println("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString());
+      // System.out.println("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString());
       throw new SQLNotificationException("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString(), ex);
     }
 
