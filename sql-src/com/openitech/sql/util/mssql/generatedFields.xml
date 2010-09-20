@@ -1,0 +1,340 @@
+<CachedTemporaryTable xmlns="http://xml.netbeans.org/schema/sifranti_custom">
+    <TemporaryTable FillOnceOnly="true">
+        <Replace>&lt;%GENERATED_FIELDS%&gt;</Replace>
+        <CreateTableSqls>
+            <Query>CREATE TABLE #GENERATED_FIELDS (
+                [Id] [int] NOT NULL,
+                [ActivityId] [bigint] NULL,
+                [IdSifranta] [int] NOT NULL,
+                [IdSifre] [varchar](15) NOT NULL,
+                [IdPolja] [int] NOT NULL,
+                [FieldValueIndex] [int] NOT NULL,
+                [Opis] [varchar](450) NULL,
+                [TabName] [varchar](50) NULL,
+                [StTabNames] [int] NULL,
+                [ZapSt] [int] NULL,
+                [NewLine] [bit] NULL,
+                [Hidden] [bit] NULL,
+                [Potrebno] [bit] NULL,
+                [ShowInTable] [bit] NULL,
+                [PrimaryKey] [bit] NOT NULL,
+                [UporabiPrivzetoVrednost] [bit] NULL,
+                [OpisNadVnosom] [bit] NULL,
+                [OpisVNaslovu] [bit] NULL,
+                [FieldActions] [varchar](max) NULL,
+                [SecondarySourceXML] [varchar](max) NULL,
+                [ReadOnly] [int] NULL,
+                [LastValueOnly] [bit] NULL,
+                [Persisted] [bit] NOT NULL,
+                [validFrom] [datetime] NOT NULL,
+                [validTo] [datetime] NULL,
+                [ImePolja] [varchar](130) NULL,
+                [VecVrednosti] [bit] NULL,
+                [PrikazkotTabela] [bit] NULL,
+                [TipPolja] [int] NULL,
+                [DolzinaPolja] [int] NULL,
+                [StDecimalnihMestPolja] [int] NULL,
+                [IdentityField] [bit] NULL,
+                [BrezSifranta] [bit] NULL,
+                [UporabiSifrantIdSifranta] [int] NULL,
+                [UporabiSifrantSkupina] [varchar](100) NULL,
+                [UporabiSifrantOpis] [varchar](100) NULL,
+                [UporabiSifrantPP] [int] NULL,
+                [UporabiSifrantSvetovalcev] [bit] NULL,
+                [UporabiSifrantPodjetji] [bit] NULL,
+                [UporabiSifrantPonudb] [bit] NULL,
+                [UporabiSifrantXML] [varchar](max) NULL,
+                [Opombe] [varchar](max) NULL,
+                [SifrantiPoljaChanged] [binary](8) NOT NULL,
+                [ActivityEventsChanged] [binary](8) NULL,
+                [Changed] [binary](16) NOT NULL,
+                CONSTRAINT [GENERATED_FIELDS$ActivityField&lt;%TS%&gt;] UNIQUE NONCLUSTERED
+                (
+                  [ActivityId] ASC,
+                  [IdSifranta] ASC,
+                  [IdSifre] ASC,
+                  [IdPolja] ASC,
+                  [FieldValueIndex] ASC
+                )
+              )
+          </Query>
+          <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$Changed&lt;%TS%&gt;] ON #GENERATED_FIELDS
+            (
+              [Changed] ASC
+            )
+          </Query>
+          <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$SifrantiPoljaChanged&lt;%TS%&gt;] ON #GENERATED_FIELDS
+            (
+              [SifrantiPoljaChanged] ASC
+            )
+          </Query>
+          <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$ActivityEventsChanged&lt;%TS%&gt;] ON #GENERATED_FIELDS
+            (
+              [ActivityEventsChanged] ASC
+            )
+          </Query>
+        </CreateTableSqls>
+        <FillTableSql>INSERT INTO #GENERATED_FIELDS
+               ([Id]
+               ,[ActivityId]
+               ,[IdSifranta]
+               ,[IdSifre]
+               ,[IdPolja]
+               ,[FieldValueIndex]
+               ,[Opis]
+               ,[TabName]
+               ,[StTabNames]
+               ,[ZapSt]
+               ,[NewLine]
+               ,[Hidden]
+               ,[Potrebno]
+               ,[ShowInTable]
+               ,[PrimaryKey]
+               ,[UporabiPrivzetoVrednost]
+               ,[OpisNadVnosom]
+               ,[OpisVNaslovu]
+               ,[FieldActions]
+               ,[SecondarySourceXML]
+               ,[ReadOnly]
+               ,[LastValueOnly]
+               ,[Persisted]
+               ,[validFrom]
+               ,[validTo]
+               ,[ImePolja]
+               ,[VecVrednosti]
+               ,[PrikazkotTabela]
+               ,[TipPolja]
+               ,[DolzinaPolja]
+               ,[StDecimalnihMestPolja]
+               ,[IdentityField]
+               ,[BrezSifranta]
+               ,[UporabiSifrantIdSifranta]
+               ,[UporabiSifrantSkupina]
+               ,[UporabiSifrantOpis]
+               ,[UporabiSifrantPP]
+               ,[UporabiSifrantSvetovalcev]
+               ,[UporabiSifrantPodjetji]
+               ,[UporabiSifrantPonudb]
+               ,[UporabiSifrantXML]
+               ,[Opombe]
+               ,[SifrantiPoljaChanged]
+               ,[ActivityEventsChanged]
+               ,[Changed])
+            SELECT
+              SifrantiPolja.[Id],
+              ActivityEvents.[ActivityId],
+              SifrantiPolja.[IdSifranta],
+              SifrantiPolja.[IdSifre],
+              SifrantiPolja.[IdPolja],
+              SifrantiPolja.FieldValueIndex,
+              CASE
+                WHEN ActivityEventsPolja.Opis IS NOT NULL
+                THEN ActivityEventsPolja.Opis
+                ELSE SifrantiPolja.[Opis]
+              END AS Opis,
+              CASE
+                WHEN ActivityEventsPolja.TabName IS NOT NULL
+                THEN ActivityEventsPolja.TabName
+                ELSE SifrantiPolja.[TabName]
+              END AS TabName,
+              CountTabNames.StTabNames,
+              CASE
+                WHEN ActivityEventsPolja.[ZapSt] IS NOT NULL
+                THEN ActivityEventsPolja.[ZapSt]
+                ELSE SifrantiPolja.[ZapSt]
+              END AS [ZapSt],
+              CASE
+                WHEN ActivityEventsPolja.[NewLine] IS NOT NULL
+                THEN ActivityEventsPolja.[NewLine]
+                ELSE SifrantiPolja.[NewLine]
+              END AS [NewLine],
+              CASE
+                WHEN ActivityEventsPolja.[Hidden] IS NOT NULL
+                THEN ActivityEventsPolja.[Hidden]
+                ELSE SifrantiPolja.[Hidden]
+              END AS [Hidden],
+              CASE
+                WHEN ActivityEventsPolja.[Potrebno] IS NOT NULL
+                THEN ActivityEventsPolja.[Potrebno]
+                ELSE SifrantiPolja.[Potrebno]
+              END AS [Potrebno],
+              CASE
+                WHEN ActivityEventsPolja.[ShowInTable] IS NOT NULL
+                THEN ActivityEventsPolja.[ShowInTable]
+                ELSE SifrantiPolja.[ShowInTable]
+              END AS [ShowInTable],
+              SifrantiPolja.[PrimaryKey],
+              CASE
+                WHEN ActivityEventsPolja.[UporabiPrivzetoVrednost] IS NOT NULL
+                THEN ActivityEventsPolja.[UporabiPrivzetoVrednost]
+                ELSE SifrantiPolja.[UporabiPrivzetoVrednost]
+              END AS [UporabiPrivzetoVrednost],
+              CASE
+                WHEN ActivityEventsPolja.[OpisNadVnosom] IS NOT NULL
+                THEN ActivityEventsPolja.[OpisNadVnosom]
+                ELSE SifrantiPolja.[OpisNadVnosom]
+              END AS [OpisNadVnosom],
+              CASE
+                WHEN ActivityEventsPolja.[OpisVNaslovu] IS NOT NULL
+                THEN ActivityEventsPolja.[OpisVNaslovu]
+                ELSE SifrantiPolja.[OpisVNaslovu]
+              END AS [OpisVNaslovu],
+              CASE
+                WHEN ActivityEventsPolja.[FieldActions] IS NOT NULL
+                THEN ActivityEventsPolja.[FieldActions]
+                ELSE SifrantiPolja.[FieldActions]
+              END AS [FieldActions],
+              CASE
+                WHEN ActivityEventsPolja.[SecondarySourceXML] IS NOT NULL
+                THEN ActivityEventsPolja.[SecondarySourceXML]
+                ELSE SifrantiPolja.[SecondarySourceXML]
+              END AS [SecondarySourceXML],
+              CASE
+                WHEN SifrantiPolja.[Persisted] = 0
+                THEN 1
+                WHEN ActivityEventsPolja.[ReadOnly] IS NOT NULL
+                THEN ActivityEventsPolja.[ReadOnly]
+                ELSE SifrantiPolja.[ReadOnly]
+              END AS [ReadOnly],
+              CASE
+                WHEN ActivityEventsPolja.[LastValueOnly] IS NOT NULL
+                THEN ActivityEventsPolja.[LastValueOnly]
+                ELSE SifrantiPolja.[LastValueOnly]
+              END AS [LastValueOnly],
+              SifrantiPolja.[Persisted],
+              SifrantiPolja.[validFrom],
+              SifrantiPolja.[validTo],
+              SifrantVnosnihPolj.[ImePolja]+
+              CASE
+                WHEN SifrantiPolja.FieldValueIndex>1
+                THEN CAST(SifrantiPolja.FieldValueIndex AS VARCHAR)
+                ELSE ''
+              END AS [ImePolja],
+              CAST(
+                CASE
+                  WHEN SifrantiPolja.[PrimaryKey]=1
+                  THEN 0
+                  ELSE SifrantVnosnihPolj.[VecVrednosti]
+                END AS BIT) AS [VecVrednosti],
+              SifrantVnosnihPolj.[PrikazkotTabela],
+              SifrantVnosnihPolj.[TipPolja],
+              SifrantVnosnihPolj.[DolzinaPolja],
+              SifrantVnosnihPolj.[StDecimalnihMestPolja],
+              SifrantVnosnihPolj.[IdentityField],
+              SifrantVnosnihPolj.[BrezSifranta],
+              SifrantVnosnihPolj.[UporabiSifrantIdSifranta],
+              SeznamSifrantov.Skupina AS UporabiSifrantSkupina,
+              SeznamSifrantov.Opis    AS UporabiSifrantOpis,
+              SifrantVnosnihPolj.[UporabiSifrantPP],
+              SifrantVnosnihPolj.[UporabiSifrantSvetovalcev],
+              SifrantVnosnihPolj.[UporabiSifrantPodjetji],
+              SifrantVnosnihPolj.[UporabiSifrantPonudb],
+              SifrantVnosnihPolj.[UporabiSifrantXML],
+              SifrantVnosnihPolj.[Opombe],
+              SifrantiPolja.[Changed],
+              ActivityEventsPolja.[Changed],
+              CAST(
+                CASE
+                  WHEN ActivityEventsPolja.[Changed] IS NULL
+                  THEN 0
+                  ELSE ActivityEventsPolja.[Changed]
+                END AS BINARY(8))+CAST(SifrantiPolja.[Changed] AS BINARY(8)) AS [Changed]
+            FROM
+              &lt;%ChangeLog%&gt;.[DBO].[SifrantiPolja]                  AS SifrantiPolja
+            LEFT OUTER JOIN &lt;%ChangeLog%&gt;.[DBO].SifrantVnosnihPolj AS SifrantVnosnihPolj
+            ON
+              SifrantVnosnihPolj.Id = SifrantiPolja.IdPolja
+            LEFT OUTER JOIN &lt;%ChangeLog%&gt;.[DBO].SeznamSifrantov
+            ON
+              SeznamSifrantov.Id = SifrantVnosnihPolj.[UporabiSifrantIdSifranta]
+            INNER JOIN (
+                (SELECT (null) AS ActivityID,
+                   SifrantiPolja.[IdSifranta],
+                   SifrantiPolja.[IdSifre]
+                 FROM &lt;%ChangeLog%&gt;.[dbo].[SifrantiPolja]
+                )
+                UNION
+                (SELECT  ActivityEvents.ActivityID,
+                         ActivityEvents.[IdSifranta],
+                         ActivityEvents.[IdSifre]
+                 FROM &lt;%ChangeLog%&gt;.[dbo].[ActivityEvents]
+                )
+            ) ActivityEvents
+            ON
+              ActivityEvents.IdSifranta = SifrantiPolja.[IdSifranta]
+            AND ActivityEvents.IdSifre = SifrantiPolja.[IdSifre]
+            LEFT OUTER JOIN
+              (
+                SELECT
+                  ActivityEventsPolja.ActivityId,
+                  SifrantiPolja.[IdSifranta],
+                  SifrantiPolja.[IdSifre],
+                  CASE
+                    WHEN ActivityEventsPolja.[TabName] IS NOT NULL
+                    THEN ActivityEventsPolja.[TabName]
+                    ELSE SifrantiPolja.[TabName]
+                  END [TabName],
+                  MIN(
+                    CASE
+                      WHEN ActivityEventsPolja.[ZapSt] IS NOT NULL
+                      THEN ActivityEventsPolja.[ZapSt]
+                      ELSE SifrantiPolja.[ZapSt]
+                    END)   AS MinZapSt,
+                  COUNT(*) AS StTabNames
+                FROM
+                  &lt;%ChangeLog%&gt;.[DBO].[SifrantiPolja]
+                LEFT OUTER JOIN &lt;%ChangeLog%&gt;.[DBO].[ActivityEventsPolja]
+                ON
+                  ActivityEventsPolja.IdSifranta = SifrantiPolja.[IdSifranta]
+                AND ActivityEventsPolja.IdSifre = SifrantiPolja.[IdSifre]
+                AND ActivityEventsPolja.IdPolja = SifrantiPolja.[IdPolja]
+                AND ActivityEventsPolja.FieldValueIndex = SifrantiPolja.FieldValueIndex
+                GROUP BY
+                  ActivityEventsPolja.ActivityId,
+                  SifrantiPolja.[IdSifranta],
+                  SifrantiPolja.[IdSifre],
+                  SifrantiPolja.[TabName],
+                  ActivityEventsPolja.[TabName]
+              ) AS CountTabNames
+            ON
+              (
+                CountTabNames.[ActivityId] = ActivityEvents.[ActivityId]
+              AND CountTabNames.[IdSifranta] = SifrantiPolja.[IdSifranta]
+              AND CountTabNames.[IdSifre] = SifrantiPolja.[IdSifre]
+              AND CountTabNames.[TabName] = SifrantiPolja.[TabName]
+              )
+            LEFT OUTER JOIN &lt;%ChangeLog%&gt;.[DBO].[ActivityEventsPolja]
+            ON
+              ActivityEventsPolja.ActivityId = ActivityEvents.[ActivityId]
+            AND ActivityEventsPolja.IdSifranta = SifrantiPolja.[IdSifranta]
+            AND ActivityEventsPolja.IdSifre = SifrantiPolja.[IdSifre]
+            AND ActivityEventsPolja.IdPolja = SifrantiPolja.[IdPolja]
+            AND ActivityEventsPolja.FieldValueIndex = SifrantiPolja.FieldValueIndex
+            WHERE NOT EXISTS (SELECT [Changed] FROM #GENERATED_FIELDS 
+                                WHERE ([SifrantiPoljaChanged]  = SifrantiPolja.[Changed]) OR
+                                      ([ActivityEventsChanged] = ActivityEventsPolja.[Changed]))
+        </FillTableSql>
+        <EmptyTableSql> DELETE FROM #GENERATED_FIELDS WHERE 
+              [SifrantiPoljaChanged] NOT IN
+              (SELECT [Changed]
+              FROM
+                &lt;%ChangeLog%&gt;.[DBO].[SifrantiPolja]) OR
+              [ActivityEventsChanged] NOT IN
+              (SELECT [Changed]
+              FROM
+                &lt;%ChangeLog%&gt;.[DBO].[ActivityEventsPolja])
+        </EmptyTableSql>
+        <CheckTableSql> SELECT TOP 0 * FROM #GENERATED_FIELDS </CheckTableSql>
+        <TableName>#GENERATED_FIELDS</TableName>
+        <MaterializedView>
+            <Value>[MViewCache].[dbo].[CACHE:GENERATED_FIELDS]</Value>
+            <IsViewValidSql>
+              SELECT CAST(CASE
+                WHEN ((SELECT MAX([SifrantiPoljaChanged]) FROM &lt;%GENERATED_FIELDS%&gt;) &lt; (SELECT MAX([Changed]) FROM &lt;%ChangeLog%&gt;.[DBO].[SifrantiPolja])) OR
+                     ((SELECT MAX([ActivityEventsChanged]) FROM &lt;%GENERATED_FIELDS%&gt;) &lt; (SELECT MAX([Changed]) FROM &lt;%ChangeLog%&gt;.[DBO].[ActivityEvents]))
+              THEN 0 ELSE 1 END AS BIT)
+          </IsViewValidSql>
+          <SetViewVersionSql>EXECUTE [MViewCache].[dbo].[updateRefreshDate] 'CACHE:GENERATED_FIELDS'</SetViewVersionSql>
+        </MaterializedView>
+    </TemporaryTable>
+</CachedTemporaryTable>

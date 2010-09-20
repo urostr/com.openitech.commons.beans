@@ -22,6 +22,7 @@ import com.openitech.text.FormatFactory;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
 import com.openitech.awt.OwnerFrame;
+import com.openitech.io.ReadInputStream;
 import com.sun.rowset.CachedRowSetImpl;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -4321,6 +4322,8 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (sql != null && sql.length() > 0) {
       Object value;
       Integer type;
+
+      sql = ReadInputStream.getReplacedSql(sql);
 
       for (Iterator values = parameters.iterator(); values.hasNext();) {
         value = values.next();
