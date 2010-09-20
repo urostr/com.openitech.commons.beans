@@ -1308,7 +1308,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     ttGeneratedFields.executeQuery(ConnectionManager.getInstance().getConnection(), new java.util.ArrayList<Object>());
+    setGeneratedFieldsParameters(idSifranta, idSifre, visibleOnly, activityEvent);
+    CachedRowSet rs = new CachedRowSetImpl();
+    rs.populate(getGeneratedFields.executeQuery());
 
+    if (rs.size()==0) {
+      setGeneratedFieldsParameters(idSifranta, idSifre, visibleOnly, null);
+      rs.populate(getGeneratedFields.executeQuery());
+    }
+
+    return rs;
+  }
+
+  private void setGeneratedFieldsParameters(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
     getGeneratedFields.clearParameters();
     int param = 1;
     getGeneratedFields.setInt(param++, idSifranta);
@@ -1324,10 +1336,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
       getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
     }
-    CachedRowSet rs = new CachedRowSetImpl();
-    rs.populate(getGeneratedFields.executeQuery());
-
-    return rs;
   }
 
   private Map<NamedFieldIds, NamedFieldIds> getEventFields(int idSifranta, String idSifre) throws SQLException {

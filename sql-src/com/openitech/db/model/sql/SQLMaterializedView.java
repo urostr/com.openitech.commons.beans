@@ -7,11 +7,14 @@ package com.openitech.db.model.sql;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
+import com.openitech.util.Equals;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.text.html.HTMLDocument.HTMLReader.PreAction;
 
 /**
  *
@@ -26,8 +29,8 @@ public class SQLMaterializedView extends SubstSqlParameter {
     final String dl = cm.getProperty(com.openitech.db.connection.DbConnection.DB_DELIMITER_LEFT, "");
     final String dr = cm.getProperty(com.openitech.db.connection.DbConnection.DB_DELIMITER_RIGHT, "");
 
-    if (dl.length()>0&&dr.length()>0) {
-      this.replace = "(\\" + dl+tableName+"\\" + dr+'|'+tableName+')';
+    if (dl.length() > 0 && dr.length() > 0) {
+      this.replace = "(\\" + dl + tableName + "\\" + dr + '|' + tableName + ')';
     } else {
       this.replace = tableName;
     }
@@ -94,10 +97,22 @@ public class SQLMaterializedView extends SubstSqlParameter {
   public void setSetViewVersionSql(String setViewVersionSql) {
     this.setViewVersionSql = setViewVersionSql;
   }
+  
+  private Connection connection = null;
+  private PreparedStatement isViewValid = null;
 
   public boolean isViewValid(Connection connection, java.util.List<Object> parameters) {
     try {
-      ResultSet executeQuery = SQLDataSource.executeQuery(isViewValidSQL, parameters, connection);
+      if (!Equals.equals(this.connection, connection)) {
+        String sql = SQLDataSource.substParameters(isViewValidSQL, parameters);
+        isViewValid = connection.prepareStatement(sql,
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY,
+                ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        this.connection = connection;
+      }
+
+      ResultSet executeQuery = SQLDataSource.executeQuery(isViewValid, parameters);
       if (executeQuery.next()) {
         return executeQuery.getBoolean(1);
       }
