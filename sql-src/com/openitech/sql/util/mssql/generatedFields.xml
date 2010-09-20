@@ -330,8 +330,25 @@
             <Value>[MViewCache].[dbo].[CACHE:GENERATED_FIELDS]</Value>
             <IsViewValidSql>
               SELECT CAST(CASE
-                WHEN ((SELECT MAX([SifrantiPoljaChanged]) FROM &lt;%GENERATED_FIELDS%&gt;) &lt; (SELECT MAX([Changed]) FROM &lt;%ChangeLog%&gt;.[DBO].[SifrantiPolja])) OR
-                     ((SELECT MAX([ActivityEventsChanged]) FROM &lt;%GENERATED_FIELDS%&gt;) &lt; (SELECT MAX([Changed]) FROM &lt;%ChangeLog%&gt;.[DBO].[ActivityEvents]))
+                WHEN (SELECT
+                        COUNT(*)
+                      FROM
+                        [MViewCache].[DBO].[CACHE:GENERATED_FIELDS]
+                      WHERE
+                        [SifrantiPoljaChanged] NOT IN
+                        (
+                          SELECT
+                            [Changed]
+                          FROM
+                            &lt;%ChangeLog%&gt;.[DBO].[SifrantiPolja]
+                        )
+                      OR [ActivityEventsChanged] NOT IN
+                        (
+                          SELECT
+                            [Changed]
+                          FROM
+                            &lt;%ChangeLog%&gt;.[DBO].[ActivityEventsPolja]
+                        )) &gt; 0
               THEN 0 ELSE 1 END AS BIT)
           </IsViewValidSql>
           <SetViewVersionSql>EXECUTE [MViewCache].[dbo].[updateRefreshDate] 'CACHE:GENERATED_FIELDS'</SetViewVersionSql>
