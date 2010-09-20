@@ -209,10 +209,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
     return substSqlParameter;
   }
-
   private Connection connection = null;
   private String qFillTable;
   private PreparedStatement psFillTable = null;
+  private String qEmptyTable;
+  private PreparedStatement psEmptyTable = null;
 
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException {
     Statement statement = connection.createStatement();
@@ -285,16 +286,31 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
           try {
             if (emptyTableSql.length() > 0) {
-              SQLDataSource.executeUpdate(emptyTableSql, qparams);
+              String query = SQLDataSource.substParameters(emptyTableSql, qparams);
+              if (!Equals.equals(this.connection, connection)
+                      || !Equals.equals(this.qEmptyTable, query)) {
+                this.psEmptyTable = connection.prepareStatement(query,
+                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY,
+                        ResultSet.HOLD_CURSORS_OVER_COMMIT);
+                this.connection = connection;
+                this.qEmptyTable = query;
+              }
+
+              if (DbDataSource.DUMP_SQL) {
+                System.out.println("##############");
+                System.out.println(this.qEmptyTable);
+              }
+              SQLDataSource.executeUpdate(psEmptyTable, qparams);
             }
 
             String query = SQLDataSource.substParameters(fillTableSql, qparams);
-            if (!Equals.equals(this.connection, connection)||
-                !Equals.equals(this.qFillTable, query)) {
+            if (!Equals.equals(this.connection, connection)
+                    || !Equals.equals(this.qFillTable, query)) {
               this.psFillTable = connection.prepareStatement(query,
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY,
-                ResultSet.HOLD_CURSORS_OVER_COMMIT);
+                      ResultSet.TYPE_SCROLL_INSENSITIVE,
+                      ResultSet.CONCUR_READ_ONLY,
+                      ResultSet.HOLD_CURSORS_OVER_COMMIT);
               this.connection = connection;
               this.qFillTable = query;
             }
