@@ -4,6 +4,7 @@
  */
 package com.openitech.value.events;
 
+import com.openitech.value.events.Event.EventOperation;
 import com.openitech.value.fields.FieldValue;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 public class EventPK {
 
   private long eventId;
+  private EventOperation eventOperation;
 
   /**
    * Get the value of eventId
@@ -84,7 +86,11 @@ public class EventPK {
     return fields;
   }
 
-  
+  public EventOperation getEventOperation() {
+    return eventOperation;
+  }
+
+ 
 
   public String toHexString() {
     StringBuilder result = new StringBuilder();
@@ -110,5 +116,9 @@ public class EventPK {
       result.append("}");
     }
     return result.toString();
+  }
+
+  public void setOperation(EventOperation eventOperation) {
+    this.eventOperation = eventOperation;
   }
 }
