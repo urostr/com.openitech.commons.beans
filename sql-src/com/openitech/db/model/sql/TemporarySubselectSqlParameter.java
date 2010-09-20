@@ -12,7 +12,10 @@ import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.sql.util.SqlUtilities;
+import com.openitech.util.Equals;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -207,6 +210,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     return substSqlParameter;
   }
 
+  private Connection connection = null;
+  private String qFillTable;
+  private PreparedStatement psFillTable = null;
+
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException {
     Statement statement = connection.createStatement();
     try {
@@ -281,7 +288,22 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               SQLDataSource.executeUpdate(emptyTableSql, qparams);
             }
 
-            SQLDataSource.executeUpdate(fillTableSql, qparams);
+            String query = SQLDataSource.substParameters(fillTableSql, qparams);
+            if (!Equals.equals(this.connection, connection)||
+                !Equals.equals(this.qFillTable, query)) {
+              this.psFillTable = connection.prepareStatement(query,
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY,
+                ResultSet.HOLD_CURSORS_OVER_COMMIT);
+              this.connection = connection;
+              this.qFillTable = query;
+            }
+
+            if (DbDataSource.DUMP_SQL) {
+              System.out.println("##############");
+              System.out.println(this.qFillTable);
+            }
+            SQLDataSource.executeUpdate(psFillTable, qparams);
             if (cleanTableSqls != null) {
               for (String sql : cleanTableSqls) {
                 SQLDataSource.executeUpdate(sql, qparams);
