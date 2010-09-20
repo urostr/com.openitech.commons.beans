@@ -1259,19 +1259,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
   private TemporarySubselectSqlParameter ttGeneratedFields;
 
   private static class GeneratedFieldFactory extends DataSourceFactory {
-    private static GeneratedFieldFactory instance;
 
+    private static GeneratedFieldFactory instance;
 
     public GeneratedFieldFactory() {
       super(null);
     }
 
     private static TemporarySubselectSqlParameter getGeneratedFields() throws JAXBException, UnsupportedEncodingException, IOException {
-      if (instance==null) {
+      if (instance == null) {
         instance = new GeneratedFieldFactory();
       }
 
-      LineNumberReader is = new LineNumberReader(new InputStreamReader(SqlUtilitesImpl.class.getResourceAsStream("generatedFields.xml"),"UTF-8"));
+      LineNumberReader is = new LineNumberReader(new InputStreamReader(SqlUtilitesImpl.class.getResourceAsStream("generatedFields.xml"), "UTF-8"));
 
 //      StringBuilder sb = new StringBuilder(2000);
 //      String line;
@@ -1287,37 +1287,69 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       return instance.createTemporaryTable(ctt.getTemporaryTable());
     }
-
   }
+  
+  private static final boolean CACHED_GGF = false;
 
   @Override
   public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
-    if (ttGeneratedFields == null) {
-      try {
-        ttGeneratedFields = GeneratedFieldFactory.getGeneratedFields();
-      } catch (Exception ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-        throw new SQLException("Error preparing the temporary data source", ex);
+    if (CACHED_GGF) {
+      if (ttGeneratedFields == null) {
+        try {
+          ttGeneratedFields = GeneratedFieldFactory.getGeneratedFields();
+        } catch (Exception ex) {
+          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+          throw new SQLException("Error preparing the temporary data source", ex);
+        }
       }
-    }
 
-    if (getGeneratedFields == null) {
-      getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(
-                ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250").replaceAll(ttGeneratedFields.getReplace(), ttGeneratedFields.getValue()),
+      if (getGeneratedFields == null) {
+        getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(
+                ReadInputStream.getResourceAsString(getClass(), "getGeneratedFieldsCached.sql", "cp1250").replaceAll(ttGeneratedFields.getReplace(), ttGeneratedFields.getValue()),
                 java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-    }
+      }
 
-    ttGeneratedFields.executeQuery(ConnectionManager.getInstance().getConnection(), new java.util.ArrayList<Object>());
-    setGeneratedFieldsParameters(idSifranta, idSifre, visibleOnly, activityEvent);
-    CachedRowSet rs = new CachedRowSetImpl();
-    rs.populate(getGeneratedFields.executeQuery());
-
-    if (rs.size()==0) {
-      setGeneratedFieldsParameters(idSifranta, idSifre, visibleOnly, null);
+      ttGeneratedFields.executeQuery(ConnectionManager.getInstance().getConnection(), new java.util.ArrayList<Object>());
+      setGeneratedFieldsParameters(idSifranta, idSifre, visibleOnly, activityEvent);
+      CachedRowSet rs = new CachedRowSetImpl();
       rs.populate(getGeneratedFields.executeQuery());
-    }
 
-    return rs;
+      if (rs.size() == 0) {
+        setGeneratedFieldsParameters(idSifranta, idSifre, visibleOnly, null);
+        rs.populate(getGeneratedFields.executeQuery());
+      }
+
+      return rs;
+    } else {
+      if (getGeneratedFields == null) {
+        getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+      }
+      getGeneratedFields.clearParameters();
+      int param = 1;
+      if (activityEvent != null) {
+        getGeneratedFields.setLong(param++, activityEvent.getActivityId());
+        getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
+        getGeneratedFields.setString(param++, activityEvent.getIdSifre());
+        getGeneratedFields.setLong(param++, activityEvent.getActivityId());
+        getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
+        getGeneratedFields.setString(param++, activityEvent.getIdSifre());
+      } else {
+        getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+        getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+        getGeneratedFields.setNull(param++, java.sql.Types.VARCHAR);
+        getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+        getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+        getGeneratedFields.setNull(param++, java.sql.Types.VARCHAR);
+      }
+      getGeneratedFields.setInt(param++, idSifranta);
+      getGeneratedFields.setBoolean(param++, idSifre == null);
+      getGeneratedFields.setString(param++, idSifre);
+      getGeneratedFields.setBoolean(param++, !visibleOnly);
+      CachedRowSet rs = new CachedRowSetImpl();
+      rs.populate(getGeneratedFields.executeQuery());
+
+      return rs;
+    }
   }
 
   private void setGeneratedFieldsParameters(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
