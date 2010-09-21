@@ -375,11 +375,11 @@
                       ActivityEvents.[IdSifre]
                     FROM (
                         (SELECT (null) AS ActivityID,
-                           SifrantiPolja.[IdSifranta],
-                           SifrantiPolja.[IdSifre]
-                         FROM &lt;%ChangeLog%&gt;.[dbo].[SifrantiPolja]
+                           Sifranti.[IdSifranta],
+                           Sifranti.[IdSifre]
+                         FROM &lt;%ChangeLog%&gt;.[dbo].[Sifranti]
                         )
-                        UNION
+                        UNION ALL
                         (SELECT  ActivityEvents.ActivityID,
                                  ActivityEvents.[IdSifranta],
                                  ActivityEvents.[IdSifre]
