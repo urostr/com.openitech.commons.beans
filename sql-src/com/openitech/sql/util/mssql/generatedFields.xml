@@ -250,7 +250,23 @@
             LEFT OUTER JOIN &lt;%ChangeLog%&gt;.[DBO].SeznamSifrantov
             ON
               SeznamSifrantov.Id = SifrantVnosnihPolj.[UporabiSifrantIdSifranta]
-            INNER JOIN &lt;%ACTIVITY_EVENTS%&gt; ActivityEvents
+            INNER JOIN (SELECT
+              ActivityEvents.[ActivityId],
+              ActivityEvents.[IdSifranta],
+              ActivityEvents.[IdSifre]
+            FROM (
+                (SELECT (null) AS ActivityID,
+                   Sifranti.[IdSifranta],
+                   Sifranti.[IdSifre]
+                 FROM &lt;%ChangeLog%&gt;.[dbo].[Sifranti]
+                )
+                UNION
+                (SELECT  ActivityEvents.ActivityID,
+                         ActivityEvents.[IdSifranta],
+                         ActivityEvents.[IdSifre]
+                 FROM &lt;%ChangeLog%&gt;.[dbo].[ActivityEvents]
+                )
+            ) ActivityEvents) ActivityEvents
             ON
               ActivityEvents.IdSifranta = SifrantiPolja.[IdSifranta]
             AND ActivityEvents.IdSifre = SifrantiPolja.[IdSifre]
@@ -310,89 +326,11 @@
       <Value>[MViewCache].[dbo].[CACHE:GENERATED_FIELDS]</Value>
       <IsViewValidSql>
               SELECT CAST(CASE
-                WHEN (SELECT
-                        COUNT(*)
-                      FROM
-                        &lt;%ChangeLog%&gt;.[DBO].[SifrantiPolja] AS SifrantiPolja
-                      INNER JOIN &lt;%ACTIVITY_EVENTS%&gt; ActivityEvents
-                      ON
-                        ActivityEvents.IdSifranta = SifrantiPolja.[IdSifranta]
-                      AND ActivityEvents.IdSifre = SifrantiPolja.[IdSifre]
-                      LEFT OUTER JOIN &lt;%ChangeLog%&gt;.[DBO].[ActivityEventsPolja]
-                      ON
-                        ActivityEventsPolja.ActivityId = ActivityEvents.[ActivityId]
-                      AND ActivityEventsPolja.IdSifranta = SifrantiPolja.[IdSifranta]
-                      AND ActivityEventsPolja.IdSifre = SifrantiPolja.[IdSifre]
-                      AND ActivityEventsPolja.IdPolja = SifrantiPolja.[IdPolja]
-                      AND ActivityEventsPolja.FieldValueIndex = SifrantiPolja.FieldValueIndex
-                      WHERE
-                        NOT EXISTS
-                        (
-                          SELECT
-                            [Changed]
-                          FROM
-                            [MViewCache].[DBO].[CACHE:GENERATED_FIELDS]
-                          WHERE ([SifrantiPoljaChanged] = SifrantiPolja.[Changed])
-                          AND ( ActivityEventsPolja.[Changed] IS NULL OR
-                               ([ActivityEventsChanged] = ActivityEventsPolja.[Changed])
-                              )
-                        )) &gt; 0
-              THEN 0 ELSE 1 END AS BIT)
+                WHEN (SELECT MAX(Changed) FROM &lt;%ChangeLog%&gt;.[DBO].[SifrantiPolja]) =
+                     (SELECT MAX(SifrantiPoljaChanged) FROM [MViewCache].[DBO].[CACHE:GENERATED_FIELDS])
+              THEN 1 ELSE 0 END AS BIT)
       </IsViewValidSql>
       <SetViewVersionSql>EXECUTE [MViewCache].[dbo].[updateRefreshDate] 'CACHE:GENERATED_FIELDS'</SetViewVersionSql>
     </MaterializedView>
-    <Parameter>
-      <Parameters>
-        <TemporaryTable FillOnceOnly="false">
-          <Replace>&lt;%ACTIVITY_EVENTS%&gt;</Replace>
-          <CreateTableSqls>
-            <Query>CREATE TABLE #ACTIVITY_EVENTS (
-                  [ActivityId] [bigint] NULL,
-                  [IdSifranta] [int] NOT NULL,
-                  [IdSifre] [varchar](15) NOT NULL,
-                  CONSTRAINT [ACTIVITY_EVENTS$ActivityField&lt;%TS%&gt;] UNIQUE NONCLUSTERED
-                  (
-                    [ActivityId] ASC,
-                    [IdSifranta] ASC,
-                    [IdSifre] ASC
-                  )
-                )
-            </Query>
-            <Query>CREATE NONCLUSTERED INDEX [ACTIVITY_EVENTS$IdSifranta+IdSifre&lt;%TS%&gt;] ON #ACTIVITY_EVENTS
-                  (
-                    [IdSifranta] ASC,
-                    [IdSifre] ASC
-                  )
-            </Query>
-          </CreateTableSqls>
-          <FillTableSql>INSERT INTO #ACTIVITY_EVENTS
-                       ([ActivityId]
-                       ,[IdSifranta]
-                       ,[IdSifre])
-                    SELECT
-                      ActivityEvents.[ActivityId],
-                      ActivityEvents.[IdSifranta],
-                      ActivityEvents.[IdSifre]
-                    FROM (
-                        (SELECT (null) AS ActivityID,
-                           Sifranti.[IdSifranta],
-                           Sifranti.[IdSifre]
-                         FROM &lt;%ChangeLog%&gt;.[dbo].[Sifranti]
-                        )
-                        UNION ALL
-                        (SELECT  ActivityEvents.ActivityID,
-                                 ActivityEvents.[IdSifranta],
-                                 ActivityEvents.[IdSifre]
-                         FROM &lt;%ChangeLog%&gt;.[dbo].[ActivityEvents]
-                        )
-                    ) ActivityEvents
-          </FillTableSql>
-          <EmptyTableSql> TRUNCATE TABLE #ACTIVITY_EVENTS
-          </EmptyTableSql>
-          <CheckTableSql> SELECT TOP 0 * FROM #ACTIVITY_EVENTS </CheckTableSql>
-          <TableName>#ACTIVITY_EVENTS</TableName>
-        </TemporaryTable>
-      </Parameters>
-    </Parameter>
   </TemporaryTable>
 </CachedTemporaryTable>

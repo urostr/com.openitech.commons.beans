@@ -5,6 +5,7 @@
 package com.openitech.db.model.sql;
 
 import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
 import com.openitech.util.Equals;
@@ -14,7 +15,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.text.html.HTMLDocument.HTMLReader.PreAction;
 
 /**
  *
@@ -97,22 +97,31 @@ public class SQLMaterializedView extends SubstSqlParameter {
   public void setSetViewVersionSql(String setViewVersionSql) {
     this.setViewVersionSql = setViewVersionSql;
   }
-  
   private Connection connection = null;
+  private String qIsViewValid = null;
   private PreparedStatement isViewValid = null;
 
   public boolean isViewValid(Connection connection, java.util.List<Object> parameters) {
     try {
+      long timer = System.currentTimeMillis();
       if (!Equals.equals(this.connection, connection)) {
-        String sql = SQLDataSource.substParameters(isViewValidSQL, parameters);
-        isViewValid = connection.prepareStatement(sql,
+        this.qIsViewValid = SQLDataSource.substParameters(isViewValidSQL, parameters);
+        isViewValid = connection.prepareStatement(this.qIsViewValid,
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY,
                 ResultSet.HOLD_CURSORS_OVER_COMMIT);
         this.connection = connection;
       }
 
+      if (DbDataSource.DUMP_SQL) {
+        System.out.println("##############");
+        System.out.println(this.qIsViewValid);
+      }
       ResultSet executeQuery = SQLDataSource.executeQuery(isViewValid, parameters);
+      if (DbDataSource.DUMP_SQL) {
+        System.out.println("materialized:isvalid:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+        System.out.println("##############");
+      }
       if (executeQuery.next()) {
         return executeQuery.getBoolean(1);
       }
