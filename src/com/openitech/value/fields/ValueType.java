@@ -96,7 +96,7 @@ public enum ValueType {
 
     @Override
     public int getSqlType() {
-      return Types.DATE;
+      return Types.TIMESTAMP;
     }
   }, TimeValue {
 
@@ -107,7 +107,7 @@ public enum ValueType {
 
     @Override
     public int getSqlType() {
-      return Types.TIME;
+      return Types.TIMESTAMP;
     }
   }, MonthValue {
 
