@@ -4,6 +4,7 @@
  */
 package com.openitech.value.events;
 
+import com.openitech.value.VariousValue;
 import com.openitech.value.events.Event.EventOperation;
 import com.openitech.value.fields.FieldValue;
 import java.util.ArrayList;
@@ -99,7 +100,7 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toHexString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toHexString(fieldValue.getFieldIndex())).append(";");
-      result.append(Long.toHexString((Long) fieldValue.getValue())).append(";");
+      result.append(Long.toHexString(((VariousValue) fieldValue.getValue()).getId())).append(";");
       result.append("}");
     }
     return result.toString();
@@ -112,8 +113,22 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
-      result.append(Long.toString((Long) fieldValue.getValue())).append(";");
+      result.append(Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
       result.append("}");
+    }
+    return result.toString();
+  }
+
+  public String getDebugString(){
+    StringBuilder result = new StringBuilder();
+
+    for (FieldValue fieldValue : fields) {
+      result.append("{");
+      result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
+      result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
+      result.append(Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append((((VariousValue) fieldValue.getValue()).getValue().toString())).append(";");
+      result.append("}\n");
     }
     return result.toString();
   }
