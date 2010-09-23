@@ -7,6 +7,7 @@ package com.openitech.db.model.sql;
 import com.openitech.value.events.EventPK;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -21,7 +22,13 @@ public class SQLPrimaryKeyException extends SQLException {
     super(reason, cause);
     this.reason = reason;
     this.eventPK = eventPK;
-    showDialog();
+    SwingUtilities.invokeLater(new Runnable() {
+
+      @Override
+      public void run() {
+        showDialog();
+      }
+    });
   }
 
   private void showDialog() {

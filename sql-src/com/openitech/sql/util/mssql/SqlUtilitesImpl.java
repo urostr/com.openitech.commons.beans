@@ -1305,7 +1305,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
   
-  private static final boolean CACHED_GGF = false;
+  private static final boolean CACHED_GGF = true;
 
   @Override
   public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
