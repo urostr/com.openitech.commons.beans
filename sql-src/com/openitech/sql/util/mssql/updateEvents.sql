@@ -6,6 +6,7 @@ UPDATE
     [IdEventSource] = ?,
     [Datum]       = ?,
     [Opomba]      = ?,
+    [validFrom]   = ?,
     [valid]       = ?,
     [validTo]     = ?,
     [ChangedBy]   = SYSTEM_USER,

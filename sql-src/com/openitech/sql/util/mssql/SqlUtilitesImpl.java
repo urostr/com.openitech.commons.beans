@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util.mssql;
 
+import com.openitech.db.model.sql.SQLPrimaryKeyException;
 import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
@@ -23,6 +24,7 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
+import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.EventPK;
 import com.sun.rowset.CachedRowSetImpl;
@@ -303,6 +305,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
             updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
             updateEvents.setString(param++, oldEvent.getOpomba());
+            updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
             updateEvents.setBoolean(param++, false);
             updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
             updateEvents.setLong(param++, oldEvent.getId());
@@ -354,6 +357,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
           updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
           updateEvents.setString(param++, event.getOpomba());
+          updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
           updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
           updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
           updateEvents.setLong(param++, events_ID);
@@ -374,6 +378,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               Long valueId = storeValue(value.getValueType(), value.getValue());
 
               String fieldName = field.getName();
+              String fieldNameWithIndex = field.getName();
               int fieldValueIndex = field.getFieldIndex();
 
               int field_id;
@@ -436,7 +441,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               }
 
               if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
-                FieldValue fieldValuePK = new FieldValue(field_id, fieldName, field.getType(), fieldValueIndex, valueId);
+                FieldValue fieldValuePK = new FieldValue(field_id, fieldNameWithIndex, field.getType(), fieldValueIndex, new VariousValue(valueId, value.getType(), value.getValue()));
                 for (Field field1 : event.getPrimaryKey()) {
                   if (field1.equals(fieldValuePK)) {
                     eventPK.addField(fieldValuePK);
@@ -1015,7 +1020,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
     } catch (SQLException ex) {
       // System.out.println("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString());
-      throw new SQLNotificationException("Najden je podvojeni zapis za dogodek E:" + eventId + "-" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString(), ex);
+      throw new SQLPrimaryKeyException("Najden je podvojeni zapis za dogodek E:" + eventId + "-" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toHexString(), ex, eventPK);
     }
 
     return success;
@@ -1300,7 +1305,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
   
-  private static final boolean CACHED_GGF = true;
+  private static final boolean CACHED_GGF = false;
 
   @Override
   public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
