@@ -74,7 +74,6 @@ import javax.swing.event.ListDataEvent;
 public class SQLDataSource implements DbDataSourceImpl {
 
   public static final String SELECT_1 = "SELECT 1";
-
   private String selectSql;
   private String countSql;
   private String preparedSelectSql;
@@ -4143,7 +4142,7 @@ public class SQLDataSource implements DbDataSourceImpl {
                 newCount = 0;
               }
 
-              if (newCount>0) {
+              if (newCount > 0) {
                 openSelectResultSet.absolute(row);
               } else {
                 openSelectResultSet.first();
@@ -4248,62 +4247,67 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   @Override
   public boolean loadData(boolean reload, int oldRow) {
-    boolean reloaded = false;
-    if (reload) {
-      owner.lock();
-      try {
-        if (!((currentResultSet == null) || owner.isShareResults())) {
-          currentResultSet.close();
+    try {
+      boolean reloaded = false;
+      if (reload) {
+        owner.lock();
+        try {
+          if (!((currentResultSet == null) || owner.isShareResults())) {
+            currentResultSet.close();
+          }
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
+        } finally {
+          currentResultSet = null;
+          owner.unlock();
         }
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
-      } finally {
-        currentResultSet = null;
-        owner.unlock();
       }
-    }
-    if ((currentResultSet == null) && selectStatementReady) {
-      owner.lock();
-      try {
-        owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
-        createCurrentResultSet();
-      } finally {
-        inserting = false;
-        count = -1;
-        storedUpdates.clear();
-        cache.clear();
-        pendingValuesCache.clear();
-        for (Object parameter : owner.getParameters()) {
-          if (parameter instanceof PendingSqlParameter) {
-            ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+      if ((currentResultSet == null) && selectStatementReady) {
+        owner.lock();
+        try {
+          owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
+          createCurrentResultSet();
+        } finally {
+          inserting = false;
+          count = -1;
+          storedUpdates.clear();
+          cache.clear();
+          pendingValuesCache.clear();
+          for (Object parameter : owner.getParameters()) {
+            if (parameter instanceof PendingSqlParameter) {
+              ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+            }
+          }
+          reloaded = true;
+          owner.unlock();
+          Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+        }
+        if (oldRow > 0 && getRowCount() > 0) {
+          try {
+            currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
+          } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
           }
         }
-        reloaded = true;
-        owner.unlock();
-        Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+        owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
       }
-      if (oldRow > 0 && getRowCount() > 0) {
-        try {
-          currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+      if (reloaded && currentResultSet != null) {
+        if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
+          events.run();
+        } else {
+          try {
+            EventQueue.invokeAndWait(events);
+          } catch (Exception ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
+          }
         }
       }
-      owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
+      return currentResultSet != null;
+    } catch (IllegalStateException ex) {
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE,ex.getMessage(), ex);
+      owner.reload(true);
+      return false;
     }
-    if (reloaded && currentResultSet != null) {
-      if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
-        events.run();
-      } else {
-        try {
-          EventQueue.invokeAndWait(events);
-        } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
-        }
-      }
-    }
-    return currentResultSet != null;
-
   }
 
   public boolean loadData() {
@@ -4528,12 +4532,11 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
     List<Object> queryParameters = executeTemporarySelects(parameters, statement);
-    
+
     setParameters(statement, queryParameters, 1, false);
 
     return statement.executeUpdate();
   }
-
 
   private static List<Object> executeTemporarySelects(List<?> parameters, PreparedStatement statement) throws SQLException {
     List<Object> queryParameters = new java.util.ArrayList(parameters.size());
