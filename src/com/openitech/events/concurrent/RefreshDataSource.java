@@ -134,6 +134,9 @@ public final class RefreshDataSource extends DataSourceEvent {
     if (isSuspended()) { //re-queue
       resubmit();
     } else {
+      if (timestamps.get(event).longValue()>timestamp.longValue()) {
+        return;
+      }
       try {
         System.out.println("QUEUED DELAY:"+this.queuedDelay+"ms:"+event.dataSource.getName()+":"+(isSuspended()?"SUSPENDED":"ACTIVE"));
         Thread.sleep(this.queuedDelay);
