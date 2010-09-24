@@ -215,8 +215,6 @@ public class SQLCache implements Serializable {
               System.out.println(query);
             }
             entry.populate(SQLDataSource.executeQuery(getStatement(connection), parameters));
-          } catch (Exception ex) {
-            Logger.getLogger(SQLCache.class.getName()).log(Level.SEVERE, null, ex);
           } finally {
             if (this.connection == null) {
               connection.close();
