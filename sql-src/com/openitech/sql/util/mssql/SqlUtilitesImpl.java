@@ -10,11 +10,11 @@ import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
+import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.sql.SQLDataSource;
-import com.openitech.db.model.sql.SQLNotificationException;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
@@ -28,11 +28,9 @@ import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.EventPK;
 import com.sun.rowset.CachedRowSetImpl;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.Clob;
@@ -1276,118 +1274,135 @@ public class SqlUtilitesImpl extends SqlUtilities {
       return findEvent(event.getId());
     }
   }
-  public PreparedStatement getGeneratedFields;
-  private TemporarySubselectSqlParameter ttGeneratedFields;
 
   private static class GeneratedFieldFactory extends DataSourceFactory {
 
+    private static final boolean CACHED_GGF = true;
     private static GeneratedFieldFactory instance;
+
+    public PreparedStatement getGeneratedFields;
+    
+    private DbDataSource dsGeneratedFields = null;
+    private DataSourceFilters dsGeneratedFieldsFilter = new DataSourceFilters("<%GENERATED_FILTERS%>");
+    private DataSourceFilters.IntegerSeekType I_TYPE_ID_SIFANTA = new DataSourceFilters.IntegerSeekType("GeneratedFields.IdSifranta",DataSourceFilters.IntegerSeekType.EQUALS);
+    private DataSourceFilters.SeekType I_TYPE_ID_SIFRE = new DataSourceFilters.SeekType("GeneratedFields.IdSifre",DataSourceFilters.SeekType.EQUALS,1);
+    private DataSourceFilters.IntegerSeekType I_TYPE_HIDDEN = new DataSourceFilters.IntegerSeekType("GeneratedFields.Hidden",DataSourceFilters.IntegerSeekType.EQUALS);
+    private DbDataSource.SubstSqlParameter S_ACTIVITY = new DbDataSource.SubstSqlParameter("<%ACTIVITY_ID%>");
 
     public GeneratedFieldFactory() {
       super(null);
     }
 
-    private static TemporarySubselectSqlParameter getGeneratedFields() throws JAXBException, UnsupportedEncodingException, IOException {
+    private static GeneratedFieldFactory getInstance() throws JAXBException, UnsupportedEncodingException, IOException, SQLException {
       if (instance == null) {
-        instance = new GeneratedFieldFactory();
+        instance = (new GeneratedFieldFactory()).init();
       }
 
+      return instance;
+    }
+
+    private GeneratedFieldFactory init() throws JAXBException, UnsupportedEncodingException, IOException, SQLException {
+      if (CACHED_GGF) {
+        dsGeneratedFields = new DbDataSource();
+        dsGeneratedFields.setQueuedDelay(0);
+        dsGeneratedFields.setCacheRowSet(true);
+
+        dsGeneratedFieldsFilter.setOperator("WHERE");
+        dsGeneratedFieldsFilter.addRequired(I_TYPE_ID_SIFANTA);
+        
+        TemporarySubselectSqlParameter ttGeneratedFields = createTemporaryTable(GeneratedFieldFactory.getCachedTemporaryTable().getTemporaryTable());
+
+
+        java.util.List<Object> parameters = new ArrayList<Object>();
+
+        parameters.add(ttGeneratedFields);
+        parameters.add(dsGeneratedFieldsFilter);
+        parameters.add(S_ACTIVITY);
+
+        dsGeneratedFields.setParameters(parameters);
+        dsGeneratedFields.setSelectSql(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFieldsCached.sql", "cp1250"));
+      }
+
+      return this;
+    }
+
+    private static com.openitech.db.model.xml.config.CachedTemporaryTable getCachedTemporaryTable() throws JAXBException, UnsupportedEncodingException, IOException {
       LineNumberReader is = new LineNumberReader(new InputStreamReader(SqlUtilitesImpl.class.getResourceAsStream("generatedFields.xml"), "UTF-8"));
-
-//      StringBuilder sb = new StringBuilder(2000);
-//      String line;
-//
-//      while ((line = is.readLine())!=null) {
-//        sb.append(line).append('\n');
-//      }
-
-
       JAXBContext ctx = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class);
       Unmarshaller um = ctx.createUnmarshaller();
-      com.openitech.db.model.xml.config.CachedTemporaryTable ctt = (com.openitech.db.model.xml.config.CachedTemporaryTable) um.unmarshal(is);
+      return (com.openitech.db.model.xml.config.CachedTemporaryTable) um.unmarshal(is);
+    }
 
-      return instance.createTemporaryTable(ctt.getTemporaryTable());
+    public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
+      if (CACHED_GGF) {
+        dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFANTA, idSifranta);
+        dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFRE, idSifre);
+        dsGeneratedFieldsFilter.setSeekValue(I_TYPE_HIDDEN, visibleOnly?0:Integer.MIN_VALUE);
+        if (activityEvent==null) {
+          S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId] IS NULL");
+          S_ACTIVITY.clearParameters();
+        } else {
+          S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId]=?");
+          S_ACTIVITY.addParameter(activityEvent.getActivityId());
+        }
+        dsGeneratedFields.filterChanged();
+        if  ((activityEvent!=null)&&(dsGeneratedFields.getRowCount()==0)) {
+          S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId] IS NULL");
+          S_ACTIVITY.clearParameters();
+          dsGeneratedFields.filterChanged();
+        }
+
+        CachedRowSet rs = new CachedRowSetImpl();
+        rs.populate(dsGeneratedFields.getResultSet());
+
+        return rs;
+      } else {
+        if (getGeneratedFields == null) {
+          getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+        }
+        getGeneratedFields.clearParameters();
+        int param = 1;
+        if (activityEvent != null) {
+          getGeneratedFields.setLong(param++, activityEvent.getActivityId());
+          getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
+          getGeneratedFields.setString(param++, activityEvent.getIdSifre());
+          getGeneratedFields.setLong(param++, activityEvent.getActivityId());
+          getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
+          getGeneratedFields.setString(param++, activityEvent.getIdSifre());
+        } else {
+          getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+          getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+          getGeneratedFields.setNull(param++, java.sql.Types.VARCHAR);
+          getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+          getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
+          getGeneratedFields.setNull(param++, java.sql.Types.VARCHAR);
+        }
+        getGeneratedFields.setInt(param++, idSifranta);
+        getGeneratedFields.setBoolean(param++, idSifre == null);
+        getGeneratedFields.setString(param++, idSifre);
+        getGeneratedFields.setBoolean(param++, !visibleOnly);
+        CachedRowSet rs = new CachedRowSetImpl();
+        rs.populate(getGeneratedFields.executeQuery());
+
+        return rs;
+      }
     }
   }
-  private static final boolean CACHED_GGF = true;
 
   @Override
   public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
-    if (CACHED_GGF) {
-      if (ttGeneratedFields == null) {
-        try {
-          ttGeneratedFields = GeneratedFieldFactory.getGeneratedFields();
-        } catch (Exception ex) {
-          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-          throw new SQLException("Error preparing the temporary data source", ex);
-        }
-      }
-
-      if (getGeneratedFields == null) {
-        getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(
-                ReadInputStream.getResourceAsString(getClass(), "getGeneratedFieldsCached.sql", "cp1250").replaceAll(ttGeneratedFields.getReplace(), ttGeneratedFields.getValue()),
-                java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-      }
-
-      ttGeneratedFields.executeQuery(ConnectionManager.getInstance().getConnection(), new java.util.ArrayList<Object>());
-      setGeneratedFieldsParameters(idSifranta, idSifre, visibleOnly, activityEvent);
-      CachedRowSet rs = new CachedRowSetImpl();
-      rs.populate(getGeneratedFields.executeQuery());
-
-      if (rs.size() == 0) {
-        setGeneratedFieldsParameters(idSifranta, idSifre, visibleOnly, null);
-        rs.populate(getGeneratedFields.executeQuery());
-      }
-
-      return rs;
-    } else {
-      if (getGeneratedFields == null) {
-        getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-      }
-      getGeneratedFields.clearParameters();
-      int param = 1;
-      if (activityEvent != null) {
-        getGeneratedFields.setLong(param++, activityEvent.getActivityId());
-        getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
-        getGeneratedFields.setString(param++, activityEvent.getIdSifre());
-        getGeneratedFields.setLong(param++, activityEvent.getActivityId());
-        getGeneratedFields.setInt(param++, activityEvent.getIdSifranta());
-        getGeneratedFields.setString(param++, activityEvent.getIdSifre());
-      } else {
-        getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
-        getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
-        getGeneratedFields.setNull(param++, java.sql.Types.VARCHAR);
-        getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
-        getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
-        getGeneratedFields.setNull(param++, java.sql.Types.VARCHAR);
-      }
-      getGeneratedFields.setInt(param++, idSifranta);
-      getGeneratedFields.setBoolean(param++, idSifre == null);
-      getGeneratedFields.setString(param++, idSifre);
-      getGeneratedFields.setBoolean(param++, !visibleOnly);
-      CachedRowSet rs = new CachedRowSetImpl();
-      rs.populate(getGeneratedFields.executeQuery());
-
-      return rs;
+    CachedRowSet result = null;
+    try {
+      result = GeneratedFieldFactory.getInstance().getGeneratedFields(idSifranta, idSifre, visibleOnly, activityEvent);
+    } catch (JAXBException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (UnsupportedEncodingException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (IOException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
     }
-  }
 
-  private void setGeneratedFieldsParameters(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
-    getGeneratedFields.clearParameters();
-    int param = 1;
-    getGeneratedFields.setInt(param++, idSifranta);
-    getGeneratedFields.setBoolean(param++, idSifre == null);
-    getGeneratedFields.setString(param++, idSifre);
-    getGeneratedFields.setBoolean(param++, !visibleOnly);
-    if (activityEvent != null) {
-      getGeneratedFields.setLong(param++, activityEvent.getActivityId());
-      getGeneratedFields.setLong(param++, activityEvent.getActivityId());
-      getGeneratedFields.setLong(param++, activityEvent.getActivityId());
-    } else {
-      getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
-      getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
-      getGeneratedFields.setNull(param++, java.sql.Types.INTEGER);
-    }
+    return result;
   }
 
   private Map<NamedFieldIds, NamedFieldIds> getEventFields(int idSifranta, String idSifre) throws SQLException {
