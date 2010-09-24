@@ -9,6 +9,9 @@ import com.openitech.Settings;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
+import com.openitech.events.concurrent.DataSourceActiveRowChangeEvent;
+import com.openitech.events.concurrent.DataSourceEvent;
+import com.openitech.events.concurrent.RefreshDataSource;
 import com.openitech.ref.events.PropertyChangeWeakListener;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -350,9 +353,9 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
           this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
           this.dataSource.addPropertyChangeListener("model", propertyChangeWeakListener);
           if (this.dataSource.canLock()) {
-          if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
-            checkButtons();
-          }
+            if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
+              checkButtons();
+            }
           }
         }
       }
@@ -404,6 +407,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         dataSource.unlock();
       }
     } catch (IllegalStateException ex) {
+      DataSourceEvent.submit(new DataSourceActiveRowChangeEvent(dataSource.getDataSource(), this));
       //ignore it
     }
   }

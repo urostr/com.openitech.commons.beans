@@ -3148,6 +3148,8 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
         if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
           if (fatal) {
             throw new IllegalStateException("Can't obtain lock");
+          } else {
+            Logger.getLogger(DbDataSource.class.getName()).log(Level.WARNING, null, new IllegalStateException("Can't obtain lock"));
           }
         }
       }
@@ -5043,11 +5045,11 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public static class SubstSqlParameter extends SqlParameter<String> {
 
-  public interface Reader {
-    public SubstSqlParameter getSubstSqlParameter(String name);
-  }
+    public interface Reader {
 
-  public static final String ALIAS = "<%table_alias%>";
+      public SubstSqlParameter getSubstSqlParameter(String name);
+    }
+    public static final String ALIAS = "<%table_alias%>";
     protected List<Object> parameters = new ArrayList<Object>();
     protected String replace = "";
     protected String alias = "";
