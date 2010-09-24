@@ -6534,19 +6534,19 @@ public class SQLDataSource implements DbDataSourceImpl {
     public void run() {
       Logger.getLogger(Settings.LOGGER).fine("Firing events '" + owner.selectSql + "'");
       owner.refreshPending = DataSourceEvent.isRefreshing(owner.owner);
-      owner.owner.fireContentsChanged(new ListDataEvent(owner.owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-      int pos = 0;
-      if (owner.isDataLoaded()) {
-        try {
-          if (owner.currentResultSet != null) {
-            pos = owner.openSelectResultSet().getRow();
+        owner.owner.fireContentsChanged(new ListDataEvent(owner.owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+        int pos = 0;
+        if (owner.isDataLoaded()) {
+          try {
+            if (owner.currentResultSet != null) {
+              pos = owner.openSelectResultSet().getRow();
+            }
+          } catch (SQLException err) {
+            pos = 0;
           }
-        } catch (SQLException err) {
-          pos = 0;
         }
+        owner.owner.fireActiveRowChange(new ActiveRowChangeEvent(owner.owner, pos, -1));
       }
-      owner.owner.fireActiveRowChange(new ActiveRowChangeEvent(owner.owner, pos, -1));
-    }
   };
   private String catalogName;
 
