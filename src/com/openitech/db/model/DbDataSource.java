@@ -5170,6 +5170,12 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
       firePropertyChange("parameters", size, parameters.size());
     }
 
+    public void clearParameters() {
+      int size = parameters.size();
+      parameters.clear();
+      firePropertyChange("parameters", size, 0);
+    }
+
     @Override
     public String toString() {
       return "" + getReplace() + " " + getValue();
