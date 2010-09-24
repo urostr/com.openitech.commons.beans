@@ -494,6 +494,7 @@ public abstract class SqlUtilities implements UpdateEvent {
         assignEventVersion(eventIds);
       }
 
+      commit = true;
       return eventId;
     } finally {
       if (!isTransaction) {

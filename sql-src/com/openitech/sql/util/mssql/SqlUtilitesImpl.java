@@ -280,7 +280,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       boolean isTransaction = isTransaction();
       // <editor-fold defaultstate="collapsed" desc="Shrani">
 
-      long events_ID = 0;
+      connection.clearWarnings();
+      Long events_ID = null;
       try {
         if (!isTransaction) {
           beginTransaction();
@@ -316,7 +317,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
             param = 1;
             delete_eventPK.clearParameters();
             delete_eventPK.setLong(param++, oldEvent.getId());
-            success = success && delete_eventPK.executeUpdate() > 0;
+            delete_eventPK.executeUpdate();
+            //success = success && delete_eventPK.executeUpdate() > 0;
           }
 
           //insertaj event
@@ -338,10 +340,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
           insertEvents.setString(param++, event.getOpomba());
           success = success && insertEvents.executeUpdate() > 0;
 
-          events_ID = getLastIdentity();
-
-
-
+          if (success) {
+            events_ID = getLastIdentity();
+          } else {
+            throw new SQLException("Neuspešno dodajanje dogodka!");
+          }
         } else {
           events_ID = event.getId();
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
@@ -365,7 +368,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
           success = success && updateEvents.executeUpdate() > 0;
         }
 
-        success = success && storeOpomba(events_ID, event.getOpomba());
+        if (success) {
+          success = success && storeOpomba(events_ID, event.getOpomba());
+        }
 
         if (success) {
           EventPK eventPK = new EventPK();
@@ -1304,7 +1309,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       return instance.createTemporaryTable(ctt.getTemporaryTable());
     }
   }
-  
   private static final boolean CACHED_GGF = true;
 
   @Override
