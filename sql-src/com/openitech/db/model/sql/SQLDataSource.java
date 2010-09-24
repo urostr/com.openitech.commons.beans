@@ -6536,7 +6536,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       owner.refreshPending = DataSourceEvent.isRefreshing(owner.owner);
       owner.owner.fireContentsChanged(new ListDataEvent(owner.owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
       int pos = 0;
-      if (owner.getRowCount() > 0) {
+      if (owner.isDataLoaded()) {
         try {
           if (owner.currentResultSet != null) {
             pos = owner.openSelectResultSet().getRow();
