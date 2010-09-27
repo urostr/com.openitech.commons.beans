@@ -210,11 +210,14 @@ public class SQLCache implements Serializable {
           entry = new CachedRowSetImpl();
           Connection connection = (this.connection == null) ? ConnectionManager.getInstance().getTemporaryConnection() : this.connection;
           try {
-            if(DbDataSource.DUMP_SQL){
+            if (DbDataSource.DUMP_SQL) {
               System.out.println("Reloading cached entry ####################);");
               System.out.println(query);
             }
+            long start = System.currentTimeMillis();
             entry.populate(SQLDataSource.executeQuery(getStatement(connection), parameters));
+            long end = System.currentTimeMillis();
+            System.out.println("reloadEntry::" + (end - start) + " ms.");
           } finally {
             if (this.connection == null) {
               connection.close();

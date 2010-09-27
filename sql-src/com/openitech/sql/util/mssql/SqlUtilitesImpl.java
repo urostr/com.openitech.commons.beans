@@ -97,7 +97,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement find_eventPK;
   PreparedStatement update_eventPK;
 
-
   @Override
   public long getScopeIdentity() throws SQLException {
     Statement statement = ConnectionManager.getInstance().getTxConnection().createStatement();
@@ -1296,14 +1295,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     private static final boolean CACHED_GGF = true;
     private static GeneratedFieldFactory instance;
-
     public PreparedStatement getGeneratedFields;
-    
     private DbDataSource dsGeneratedFields = null;
     private DataSourceFilters dsGeneratedFieldsFilter = new DataSourceFilters("<%GENERATED_FILTERS%>");
-    private DataSourceFilters.IntegerSeekType I_TYPE_ID_SIFANTA = new DataSourceFilters.IntegerSeekType("GeneratedFields.IdSifranta",DataSourceFilters.IntegerSeekType.EQUALS);
-    private DataSourceFilters.SeekType I_TYPE_ID_SIFRE = new DataSourceFilters.SeekType("GeneratedFields.IdSifre",DataSourceFilters.SeekType.EQUALS,1);
-    private DataSourceFilters.IntegerSeekType I_TYPE_HIDDEN = new DataSourceFilters.IntegerSeekType("GeneratedFields.Hidden",DataSourceFilters.IntegerSeekType.EQUALS);
+    private DataSourceFilters.IntegerSeekType I_TYPE_ID_SIFANTA = new DataSourceFilters.IntegerSeekType("GeneratedFields.IdSifranta", DataSourceFilters.IntegerSeekType.EQUALS);
+    private DataSourceFilters.SeekType I_TYPE_ID_SIFRE = new DataSourceFilters.SeekType("GeneratedFields.IdSifre", DataSourceFilters.SeekType.EQUALS, 1);
+    private DataSourceFilters.IntegerSeekType I_TYPE_HIDDEN = new DataSourceFilters.IntegerSeekType("GeneratedFields.Hidden", DataSourceFilters.IntegerSeekType.EQUALS);
     private DbDataSource.SubstSqlParameter S_ACTIVITY = new DbDataSource.SubstSqlParameter("<%ACTIVITY_ID%>");
 
     public GeneratedFieldFactory() {
@@ -1326,7 +1323,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
         dsGeneratedFieldsFilter.setOperator("WHERE");
         dsGeneratedFieldsFilter.addRequired(I_TYPE_ID_SIFANTA);
-        
+
         TemporarySubselectSqlParameter ttGeneratedFields = createTemporaryTable(GeneratedFieldFactory.getCachedTemporaryTable().getTemporaryTable());
 
 
@@ -1354,8 +1351,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (CACHED_GGF) {
         dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFANTA, idSifranta);
         dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFRE, idSifre);
-        dsGeneratedFieldsFilter.setSeekValue(I_TYPE_HIDDEN, visibleOnly?0:Integer.MIN_VALUE);
-        if (activityEvent==null) {
+        dsGeneratedFieldsFilter.setSeekValue(I_TYPE_HIDDEN, visibleOnly ? 0 : Integer.MIN_VALUE);
+        if (activityEvent == null) {
           S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId] IS NULL");
           S_ACTIVITY.clearParameters();
         } else {
@@ -1363,14 +1360,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
           S_ACTIVITY.addParameter(activityEvent.getActivityId());
         }
         dsGeneratedFields.filterChanged();
-        if  ((activityEvent!=null)&&(dsGeneratedFields.getRowCount()==0)) {
+        if ((activityEvent != null) && (dsGeneratedFields.getRowCount() == 0)) {
           S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId] IS NULL");
           S_ACTIVITY.clearParameters();
           dsGeneratedFields.filterChanged();
         }
 
         CachedRowSet rs = new CachedRowSetImpl();
+        long start = System.currentTimeMillis();
         rs.populate(dsGeneratedFields.getResultSet());
+        long end = System.currentTimeMillis();
+        System.out.println("getGeneratedFields::" + (end - start) + " ms.");
+
 
         return rs;
       } else {
