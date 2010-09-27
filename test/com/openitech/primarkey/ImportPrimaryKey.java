@@ -96,7 +96,7 @@ public class ImportPrimaryKey extends TestCase {
           SqlUtilities.getInstance().storePrimaryKey(eventPK);
         } catch (SQLPrimaryKeyException ex) {
 
-          
+
           //uredi podvojene zapise
           //ce so ostale vrednosti enake, zbrisi stare eventId (valid= false)
           //drugace podvojene pa izpisi za rocni pregled
@@ -124,9 +124,9 @@ public class ImportPrimaryKey extends TestCase {
           eventValues.setInt(param++, podvojenPK_eventId);
           CachedRowSet rs_old_allEventValues = new CachedRowSetImpl();
           rs_old_allEventValues.populate(eventValues.executeQuery());
-         
-          boolean enaka = true;
-          while (rs_allEventValues.next()) {
+
+          boolean enaka = rs_old_allEventValues.size() == rs_allEventValues.size();
+          while (enaka && rs_allEventValues.next()) {
             if (rs_old_allEventValues.next()) {
               int idPolja = rs_allEventValues.getInt("idPolja");
               int idPoljaOld = rs_old_allEventValues.getInt("idPolja");
@@ -141,14 +141,10 @@ public class ImportPrimaryKey extends TestCase {
                       || fieldValueIndex != fieldValueIndexOld
                       || valueId != valueIdOld) {
                 enaka = false;
-                break;
               }
             } else {
               enaka = false;
             }
-          }
-          if (rs_old_allEventValues.next()) {
-            enaka = false;
           }
 
           //ce sta enaka zbrisem manjsi eventId
@@ -156,7 +152,7 @@ public class ImportPrimaryKey extends TestCase {
             int deleteEventId = eventId > podvojenPK_eventId ? podvojenPK_eventId : eventId;
             SqlUtilities.getInstance().deleteEvent(deleteEventId);
             deletaniEventId.add(deleteEventId);
-          }else{
+          } else {
             podvojeniEventId.add(eventId);
           }
         }
