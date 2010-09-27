@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util;
 
+import com.openitech.value.events.EventPK;
 import com.openitech.value.events.UpdateEvent;
 import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.Field;
@@ -598,6 +599,10 @@ public abstract class SqlUtilities implements UpdateEvent {
    */
 
   public abstract String getCreateTableSQL(String tableName, java.sql.ResultSet rs) throws SQLException;
+
+  public abstract boolean storePrimaryKey(EventPK eventPK) throws SQLException;
+
+  public abstract boolean deleteEvent(long eventId) throws SQLException;
 
   public static enum Operation {
 

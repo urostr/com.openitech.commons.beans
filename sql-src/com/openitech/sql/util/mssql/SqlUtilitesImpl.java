@@ -71,6 +71,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement logValues;
   PreparedStatement logChangedValues;
   PreparedStatement updateEvents;
+  PreparedStatement delete_event;
   PreparedStatement insertEvents;
   PreparedStatement findEventValue;
   PreparedStatement findEventById;
@@ -95,6 +96,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement insert_eventPK;
   PreparedStatement find_eventPK;
   PreparedStatement update_eventPK;
+
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -458,7 +460,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             eventPK.setEventId(events_ID);
             eventPK.setIdSifranta(event.getSifrant());
             eventPK.setIdSifre(event.getSifra());
-            eventPK.setOperation(event.getOperation());
+            eventPK.setEventOperation(event.getOperation());
             success = success && storePrimaryKey(eventPK);
           }
         }
@@ -961,7 +963,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-  private boolean storePrimaryKey(EventPK eventPK) throws SQLException {
+  @Override
+  public boolean storePrimaryKey(EventPK eventPK) throws SQLException {
     boolean success = false;
     int param = 1;
 
@@ -1025,6 +1028,20 @@ public class SqlUtilitesImpl extends SqlUtilities {
       // System.out.println("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString());
       throw new SQLPrimaryKeyException("Najden je podvojeni zapis za dogodek E:" + eventId + "-" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toHexString(), ex, eventPK);
     }
+
+    return success;
+  }
+
+  public boolean deleteEvent(long eventId) throws SQLException {
+    boolean success = false;
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+    if (delete_event == null) {
+      delete_event = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "delete_event.sql", "cp1250"));
+    }
+    int param = 1;
+    delete_event.clearParameters();
+    delete_event.setLong(param++, eventId);
+    success = delete_event.executeUpdate() > 0;
 
     return success;
   }

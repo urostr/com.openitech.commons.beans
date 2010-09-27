@@ -22,16 +22,12 @@ public class SQLPrimaryKeyException extends SQLException {
     super(reason, cause);
     this.reason = reason;
     this.eventPK = eventPK;
-    SwingUtilities.invokeLater(new Runnable() {
 
-      @Override
-      public void run() {
-        showDialog();
-      }
-    });
+   // showDialog();
+
   }
 
   private void showDialog() {
-    JOptionPane.showMessageDialog(null, reason  + "\n\n" + eventPK.getDebugString(), "Napaka!", JOptionPane.ERROR_MESSAGE, null);
+    JOptionPane.showMessageDialog(null, reason + "\n\n" + eventPK.getDebugString(), "Napaka!", JOptionPane.ERROR_MESSAGE, null);
   }
 }
