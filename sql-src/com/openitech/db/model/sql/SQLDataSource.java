@@ -4757,6 +4757,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       System.out.println("##############");
       System.out.println(preparedSelectSql);
     }
+    long start = System.currentTimeMillis();
     ResultSet result;
     if (owner.isShareResults()) {
       result = getSqlCache().getSharedResult(preparedSelectSql, owner.getParameters());
@@ -4783,8 +4784,10 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
     }
+    long end = System.currentTimeMillis();
     if (DbDataSource.DUMP_SQL) {
       System.out.println("##############");
+      System.out.println("getResultSet::" + (end - start) + " ms.");
     }
 
     return result;
@@ -6534,19 +6537,19 @@ public class SQLDataSource implements DbDataSourceImpl {
     public void run() {
       Logger.getLogger(Settings.LOGGER).fine("Firing events '" + owner.selectSql + "'");
       owner.refreshPending = DataSourceEvent.isRefreshing(owner.owner);
-        owner.owner.fireContentsChanged(new ListDataEvent(owner.owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-        int pos = 0;
-        if (owner.isDataLoaded()) {
-          try {
-            if (owner.currentResultSet != null) {
-              pos = owner.openSelectResultSet().getRow();
-            }
-          } catch (SQLException err) {
-            pos = 0;
+      owner.owner.fireContentsChanged(new ListDataEvent(owner.owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+      int pos = 0;
+      if (owner.isDataLoaded()) {
+        try {
+          if (owner.currentResultSet != null) {
+            pos = owner.openSelectResultSet().getRow();
           }
+        } catch (SQLException err) {
+          pos = 0;
         }
-        owner.owner.fireActiveRowChange(new ActiveRowChangeEvent(owner.owner, pos, -1));
       }
+      owner.owner.fireActiveRowChange(new ActiveRowChangeEvent(owner.owner, pos, -1));
+    }
   };
   private String catalogName;
 
