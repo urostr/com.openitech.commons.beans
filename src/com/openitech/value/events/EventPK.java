@@ -17,7 +17,7 @@ import java.util.List;
 public class EventPK {
 
   private long eventId;
-  private EventOperation eventOperation;
+  private EventOperation eventOperation = EventOperation.UPDATE;
 
   /**
    * Get the value of eventId
@@ -36,7 +36,6 @@ public class EventPK {
   public void setEventId(long eventId) {
     this.eventId = eventId;
   }
-
   private int idSifranta;
 
   /**
@@ -56,7 +55,6 @@ public class EventPK {
   public void setIdSifranta(int idSifranta) {
     this.idSifranta = idSifranta;
   }
-
   private String idSifre;
 
   /**
@@ -76,7 +74,6 @@ public class EventPK {
   public void setIdSifre(String idSifre) {
     this.idSifre = idSifre;
   }
-
   private List<FieldValue> fields = new ArrayList<FieldValue>();
 
   public void addField(FieldValue field) {
@@ -90,8 +87,6 @@ public class EventPK {
   public EventOperation getEventOperation() {
     return eventOperation;
   }
-
- 
 
   public String toHexString() {
     StringBuilder result = new StringBuilder();
@@ -119,7 +114,7 @@ public class EventPK {
     return result.toString();
   }
 
-  public String getDebugString(){
+  public String getDebugString() {
     StringBuilder result = new StringBuilder();
 
     for (FieldValue fieldValue : fields) {
@@ -127,13 +122,20 @@ public class EventPK {
       result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
       result.append(Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
-      result.append((((VariousValue) fieldValue.getValue()).getValue().toString())).append(";");
+      if (fieldValue.getValue() != null) {
+        if (fieldValue.getValue() instanceof VariousValue) {
+          result.append((((VariousValue) fieldValue.getValue()).getValue().toString()));
+        } else {
+          result.append(fieldValue.getValue());
+        }
+      }
+      result.append(";");
       result.append("}\n");
     }
     return result.toString();
   }
 
-  public void setOperation(EventOperation eventOperation) {
+  public void setEventOperation(EventOperation eventOperation) {
     this.eventOperation = eventOperation;
   }
 }
