@@ -67,6 +67,19 @@
               [Changed] ASC
             )
       </Query>
+      <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$IdSifranta+IdSifre+ActivityId&lt;%TS%&gt;] ON #GENERATED_FIELDS
+            (
+              [IdSifranta] ASC,
+              [IdSifre] ASC,
+              [ActivityId] ASC
+            )
+      </Query>
+      <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$IdSifranta+ActivityId&lt;%TS%&gt;] ON #GENERATED_FIELDS
+            (
+              [IdSifranta] ASC,
+              [ActivityId] ASC
+            )
+      </Query>
       <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$SifrantiPoljaChanged&lt;%TS%&gt;] ON #GENERATED_FIELDS
             (
               [SifrantiPoljaChanged] ASC
@@ -75,6 +88,12 @@
       <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$ActivityEventsChanged&lt;%TS%&gt;] ON #GENERATED_FIELDS
             (
               [ActivityEventsChanged] ASC
+            )
+      </Query>
+      <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$ZapSt+Id&lt;%TS%&gt;] ON #GENERATED_FIELDS
+            (
+              [ZapSt] ASC,
+              [Id] ASC
             )
       </Query>
     </CreateTableSqls>

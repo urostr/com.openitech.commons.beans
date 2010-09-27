@@ -2844,14 +2844,17 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   protected PreparedStatement getSelectStatement(String sql, Connection connection) throws SQLException {
-    //TODO ni logièna koda. Ne uprablja se owner.isCacheStatements()
     if (this.selectStatement != null) {
       return this.selectStatement;
     } else {
+      long start = System.currentTimeMillis();
       PreparedStatement selectStatement = null;
       if (sql != null && sql.length() > 0 && connection != null) {
         if (cachedStatements.containsKey(sql)) {
           selectStatement = cachedStatements.get(sql);
+          if (DbDataSource.DUMP_SQL) {
+            System.out.println("getSelectStatement:" + owner.getName() + ":cached");
+          }
         } else {
 
           selectStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
@@ -2866,6 +2869,10 @@ public class SQLDataSource implements DbDataSourceImpl {
           owner.setName();
           Logger.getLogger(Settings.LOGGER).info("Successfully prepared the selectSql.");
         }
+      }
+      if (DbDataSource.DUMP_SQL) {
+        long end = System.currentTimeMillis();
+        System.out.println("getSelectStatement:" + owner.getName() + ":" + (end - start) + " ms.");
       }
       return selectStatement;
     }
@@ -4762,13 +4769,8 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (owner.isShareResults()) {
       result = getSqlCache().getSharedResult(preparedSelectSql, owner.getParameters());
     } else {
-      final Connection connection = getConnection();
       try {
-        java.sql.PreparedStatement resultStatement = connection.prepareStatement(preparedSelectSql,
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY,
-                ResultSet.HOLD_CURSORS_OVER_COMMIT);
-        resultStatement.setFetchSize(1008);
+        java.sql.PreparedStatement resultStatement = getSelectStatement(preparedSelectSql, getConnection());
 
 
         result = executeSql(resultStatement, owner.getParameters());
@@ -4784,10 +4786,10 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
     }
-    long end = System.currentTimeMillis();
     if (DbDataSource.DUMP_SQL) {
+      long end = System.currentTimeMillis();
       System.out.println("##############");
-      System.out.println("getResultSet::" + (end - start) + " ms.");
+      System.out.println("getResultSet:" + owner.getName() + ":" + (end - start) + " ms.");
     }
 
     return result;

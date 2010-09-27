@@ -1333,6 +1333,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
         parameters.add(dsGeneratedFieldsFilter);
         parameters.add(S_ACTIVITY);
 
+        dsGeneratedFields.setName("DS:GET_GENERATED_FIELDS");
+
         dsGeneratedFields.setParameters(parameters);
         dsGeneratedFields.setSelectSql(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFieldsCached.sql", "cp1250"));
       }
