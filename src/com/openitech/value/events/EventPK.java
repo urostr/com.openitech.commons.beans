@@ -95,7 +95,7 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toHexString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toHexString(fieldValue.getFieldIndex())).append(";");
-      result.append(Long.toHexString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append(((VariousValue) fieldValue.getValue()).getId()==null?"null":Long.toHexString(((VariousValue) fieldValue.getValue()).getId())).append(";");
       result.append("}");
     }
     return result.toString();
@@ -108,7 +108,7 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
-      result.append(Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append(((VariousValue) fieldValue.getValue()).getId()==null?"null":Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
       result.append("}");
     }
     return result.toString();
@@ -121,10 +121,10 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
-      result.append(Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append(((VariousValue) fieldValue.getValue()).getId()==null?"null":Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
       if (fieldValue.getValue() != null) {
         if (fieldValue.getValue() instanceof VariousValue) {
-          result.append((((VariousValue) fieldValue.getValue()).getValue().toString()));
+          result.append(((VariousValue) fieldValue.getValue()).getValue()==null?"null":(((VariousValue) fieldValue.getValue()).getValue().toString()));
         } else {
           result.append(fieldValue.getValue());
         }

@@ -13,7 +13,7 @@ import com.openitech.value.fields.ValueType;
  */
 public class VariousValue {
 
-  private long id;
+  private Long id;
 
   public VariousValue(Long valueId, int type, Object value) {
     this.id = valueId;
@@ -26,7 +26,7 @@ public class VariousValue {
    *
    * @return the value of id
    */
-  public long getId() {
+  public Long getId() {
     return id;
   }
 
@@ -35,7 +35,7 @@ public class VariousValue {
    *
    * @param id new value of id
    */
-  public void setId(long id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
