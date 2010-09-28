@@ -1343,10 +1343,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     private static com.openitech.db.model.xml.config.CachedTemporaryTable getCachedTemporaryTable() throws JAXBException, UnsupportedEncodingException, IOException {
+      Map<String, TemporaryTable> mCtt = SqlUtilities.getInstance().getCachedTemporaryTables();
       LineNumberReader is = new LineNumberReader(new InputStreamReader(SqlUtilitesImpl.class.getResourceAsStream("generatedFields.xml"), "UTF-8"));
       JAXBContext ctx = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class);
       Unmarshaller um = ctx.createUnmarshaller();
-      return (com.openitech.db.model.xml.config.CachedTemporaryTable) um.unmarshal(is);
+
+      com.openitech.db.model.xml.config.CachedTemporaryTable ctt = (com.openitech.db.model.xml.config.CachedTemporaryTable) um.unmarshal(is);
+      String mv = ctt.getTemporaryTable().getMaterializedView().getValue();
+
+      if (mCtt.containsKey(mv)) {
+        ctt.setTemporaryTable(mCtt.get(mv));
+      } else {
+        SqlUtilities.getInstance().storeCachedTemporaryTable(ctt.getTemporaryTable());
+      }
+
+      return ctt;
     }
 
     public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
