@@ -41,6 +41,7 @@ SELECT
     SifrantVnosnihPolj.[UporabiSifrantPodjetji],
     SifrantVnosnihPolj.[UporabiSifrantPonudb],
     SifrantVnosnihPolj.[UporabiSifrantXML],
+    SifrantVnosnihPolj.[UporabiWorkAreaId],
     SifrantVnosnihPolj.[Opombe]
 FROM
     <%ChangeLog%>.[dbo].[SifrantiPolja] as SifrantiPolja
