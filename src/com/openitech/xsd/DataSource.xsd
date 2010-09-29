@@ -12,6 +12,7 @@
             <xsd:sequence>
               <xsd:element name="SQL" type="xsd:string"/>
               <xsd:element name="COUNT_SQL" type="xsd:string" minOccurs="0"/>
+              <xsd:element name="QueryHints" type="xsd:string" minOccurs="0"/>
               <xsd:element name="EventColumns" maxOccurs="unbounded" type="xsd:string">
               </xsd:element>
               <xsd:element name="Parameters" maxOccurs="unbounded" minOccurs="0" type="tns:QueryParameter"></xsd:element>

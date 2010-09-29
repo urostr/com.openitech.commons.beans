@@ -70,6 +70,12 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         dataSource.setCountSql(getReplacedSql(dataSourceXML.getDataSource().getCOUNTSQL()));
       }
       dataSource.setSelectSql(getReplacedSql(dataSourceXML.getDataSource().getSQL()));
+
+      if (dataSourceXML.getDataSource().getQueryHints()!=null) {
+        dataSource.setCountSql(dataSource.getCountSql()+'\n'+dataSourceXML.getDataSource().getQueryHints());
+        dataSource.setSelectSql(dataSource.getSelectSql()+'\n'+dataSourceXML.getDataSource().getQueryHints());
+      }
+
       dataSource.setName("DS:FACTORY:" + this.getOpis());
       createEventColumns();
       suspendDataSource();
