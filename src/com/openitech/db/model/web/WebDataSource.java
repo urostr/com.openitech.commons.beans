@@ -4390,6 +4390,14 @@ public class WebDataSource implements DbDataSourceImpl {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
   }
+  
+  @Override
+  public CachedRowSet getCachedRowSet() throws SQLException {
+    CachedRowSet crs = new com.sun.rowset.CachedRowSetImpl();
+    crs.populate(getResultSet());
+    return crs;
+  }
+
 
   @Override
   public ResultSet getResultSet() throws SQLException {

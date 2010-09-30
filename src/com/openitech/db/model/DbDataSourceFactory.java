@@ -8,6 +8,7 @@ import com.openitech.db.model.sql.SQLDataSource;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.rowset.CachedRowSet;
 
 /**
  *
@@ -192,5 +193,7 @@ public class DbDataSourceFactory {
     public void setProvider(String providerClassName);
 
     public boolean fireEvents();
+
+    public CachedRowSet getCachedRowSet() throws SQLException;
   }
 }

@@ -65,6 +65,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.sql.RowSet;
 import javax.sql.RowSetListener;
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
@@ -3369,6 +3370,11 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public Object getValueAt(int rowIndex, String columnName, String... columnNames) throws SQLException {
     return implementation.getValueAt(rowIndex, columnName, columnNames);
+  }
+
+
+  public CachedRowSet getCachedRowSet() throws SQLException {
+    return implementation.getCachedRowSet();
   }
 
   public ResultSet getResultSet() throws SQLException {
