@@ -3537,6 +3537,17 @@ public class SpringDataSource implements DbDataSourceImpl {
   }
 
   @Override
+  public CachedRowSet getCachedRowSet() throws SQLException {
+    CachedRowSet crs = new CachedRowSetImpl();
+    if (isDataLoaded()) {
+      crs.populate(openSelectResultSet());
+    } else {
+      crs.populate(getResultSet());
+    }
+    return crs;
+  }
+
+  @Override
   public ResultSet getResultSet() throws SQLException {
     return openSelectResultSet();
   }
