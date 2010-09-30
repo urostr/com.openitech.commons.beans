@@ -1425,6 +1425,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (CACHED_GGF) {
         CachedRowSet rs;
         if (USE_INDEXED_CACHE) {
+          long start = System.currentTimeMillis();
           rs = new com.openitech.sql.rowset.CachedRowSetImpl();
           Set<Integer> rows;
 
@@ -1454,6 +1455,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
           }
           ((com.openitech.sql.rowset.CachedRowSetImpl) rs).populate(crsAllGeneratedFields, rows);
+
+          long end = System.currentTimeMillis();
+          System.out.println("getGeneratedFields::" + (end - start) + " ms.");
 
           return rs;
         } else {
