@@ -1461,6 +1461,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
           return rs;
         } else {
+          long start = System.currentTimeMillis();
           dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFANTA, idSifranta);
           dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFRE, idSifre);
           dsGeneratedFieldsFilter.setSeekValue(I_TYPE_HIDDEN, visibleOnly ? 0 : Integer.MIN_VALUE);
@@ -1479,7 +1480,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           rs = new com.sun.rowset.CachedRowSetImpl();
-          long start = System.currentTimeMillis();
           rs.populate(dsGeneratedFields.getResultSet());
           long end = System.currentTimeMillis();
           System.out.println("getGeneratedFields::" + (end - start) + " ms.");
