@@ -4759,6 +4759,13 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   @Override
+  public CachedRowSet getCachedRowSet() throws SQLException {
+    CachedRowSet crs = new CachedRowSetImpl();
+    crs.populate(getResultSet());
+    return crs;
+  }
+
+  @Override
   public ResultSet getResultSet() throws SQLException {
     if (DbDataSource.DUMP_SQL) {
       System.out.println("##############");

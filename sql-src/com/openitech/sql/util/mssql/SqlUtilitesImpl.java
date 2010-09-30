@@ -13,6 +13,7 @@ import com.openitech.db.components.DbNaslovDataModel;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SqlParameter;
+import com.openitech.db.model.DbDataSourceIndex;
 import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
@@ -27,7 +28,6 @@ import com.openitech.io.ReadInputStream;
 import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.EventPK;
-import com.sun.rowset.CachedRowSetImpl;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -207,7 +207,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       sb.append(sb.length() > 0 ? ", " : "").append("?");
     }
 
-    CachedRowSet versions = new CachedRowSetImpl();
+    CachedRowSet versions = new com.sun.rowset.CachedRowSetImpl();
 
     versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())),
             eventIds,
@@ -1327,9 +1327,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
   private static class GeneratedFieldFactory extends DataSourceFactory {
 
     private static final boolean CACHED_GGF = true;
+    private static final boolean USE_INDEXED_CACHE = true;
     private static GeneratedFieldFactory instance;
     public PreparedStatement getGeneratedFields;
     private DbDataSource dsGeneratedFields = null;
+    private DbDataSourceIndex dbxAllVisibleGeneratedFields = null;
+    private DbDataSourceIndex dbxAllGeneratedFields = null;
+    private DbDataSourceIndex dbxAllVisibleGeneratedFieldsSifrant = null;
+    private DbDataSourceIndex dbxAllGeneratedFieldsSifrant = null;
+    private CachedRowSet crsAllGeneratedFields = null;
     private DataSourceFilters dsGeneratedFieldsFilter = new DataSourceFilters("<%GENERATED_FILTERS%>");
     private DataSourceFilters.IntegerSeekType I_TYPE_ID_SIFANTA = new DataSourceFilters.IntegerSeekType("GeneratedFields.IdSifranta", DataSourceFilters.IntegerSeekType.EQUALS);
     private DataSourceFilters.SeekType I_TYPE_ID_SIFRE = new DataSourceFilters.SeekType("GeneratedFields.IdSifre", DataSourceFilters.SeekType.EQUALS, 1);
@@ -1370,6 +1376,28 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
         dsGeneratedFields.setParameters(parameters);
         dsGeneratedFields.setSelectSql(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFieldsCached.sql", "cp1250"));
+
+        if (USE_INDEXED_CACHE) {
+          dsGeneratedFields.loadData();
+
+          dbxAllVisibleGeneratedFields = new DbDataSourceIndex();
+          dbxAllVisibleGeneratedFields.addKeys("IdSifranta", "IdSifre", "Hidden", "ActivityId");
+          dbxAllVisibleGeneratedFields.setDataSource(dsGeneratedFields);
+
+          dbxAllGeneratedFields = new DbDataSourceIndex();
+          dbxAllGeneratedFields.addKeys("IdSifranta", "IdSifre", "ActivityId");
+          dbxAllGeneratedFields.setDataSource(dsGeneratedFields);
+
+          dbxAllVisibleGeneratedFieldsSifrant = new DbDataSourceIndex();
+          dbxAllVisibleGeneratedFieldsSifrant.addKeys("IdSifranta", "Hidden", "ActivityId");
+          dbxAllVisibleGeneratedFieldsSifrant.setDataSource(dsGeneratedFields);
+
+          dbxAllGeneratedFieldsSifrant = new DbDataSourceIndex();
+          dbxAllGeneratedFieldsSifrant.addKeys("IdSifranta", "ActivityId");
+          dbxAllGeneratedFieldsSifrant.setDataSource(dsGeneratedFields);
+
+          crsAllGeneratedFields = dsGeneratedFields.getCachedRowSet();
+        }
       }
 
       return this;
@@ -1395,31 +1423,66 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
       if (CACHED_GGF) {
-        dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFANTA, idSifranta);
-        dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFRE, idSifre);
-        dsGeneratedFieldsFilter.setSeekValue(I_TYPE_HIDDEN, visibleOnly ? 0 : Integer.MIN_VALUE);
-        if (activityEvent == null) {
-          S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId] IS NULL");
-          S_ACTIVITY.clearParameters();
+        CachedRowSet rs;
+        if (USE_INDEXED_CACHE) {
+          rs = new com.openitech.sql.rowset.CachedRowSetImpl();
+          Set<Integer> rows;
+
+          if (idSifre == null) {
+            if (visibleOnly) {
+              rows = dbxAllVisibleGeneratedFieldsSifrant.findRows(idSifranta, !visibleOnly, (activityEvent == null) ? null : activityEvent.getActivityId());
+              if (rows == null || rows.isEmpty()) {
+                rows = dbxAllVisibleGeneratedFieldsSifrant.findRows(idSifranta, !visibleOnly, null);
+              }
+            } else {
+              rows = dbxAllGeneratedFieldsSifrant.findRows(idSifranta, (activityEvent == null) ? null : activityEvent.getActivityId());
+              if (rows == null || rows.isEmpty()) {
+                rows = dbxAllGeneratedFieldsSifrant.findRows(idSifranta, null);
+              }
+            }
+          } else {
+            if (visibleOnly) {
+              rows = dbxAllVisibleGeneratedFields.findRows(idSifranta, idSifre, !visibleOnly, (activityEvent == null) ? null : activityEvent.getActivityId());
+              if (rows == null || rows.isEmpty()) {
+                rows = dbxAllVisibleGeneratedFields.findRows(idSifranta, idSifre, !visibleOnly, null);
+              }
+            } else {
+              rows = dbxAllGeneratedFields.findRows(idSifranta, idSifre, (activityEvent == null) ? null : activityEvent.getActivityId());
+              if (rows == null || rows.isEmpty()) {
+                rows = dbxAllGeneratedFields.findRows(idSifranta, idSifre, null);
+              }
+            }
+          }
+          ((com.openitech.sql.rowset.CachedRowSetImpl) rs).populate(crsAllGeneratedFields, rows);
+
+          return rs;
         } else {
-          S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId]=?");
-          S_ACTIVITY.addParameter(activityEvent.getActivityId());
-        }
-        dsGeneratedFields.filterChanged();
-        if ((activityEvent != null) && (dsGeneratedFields.getRowCount() == 0)) {
-          S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId] IS NULL");
-          S_ACTIVITY.clearParameters();
+          dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFANTA, idSifranta);
+          dsGeneratedFieldsFilter.setSeekValue(I_TYPE_ID_SIFRE, idSifre);
+          dsGeneratedFieldsFilter.setSeekValue(I_TYPE_HIDDEN, visibleOnly ? 0 : Integer.MIN_VALUE);
+          if (activityEvent == null) {
+            S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId] IS NULL");
+            S_ACTIVITY.clearParameters();
+          } else {
+            S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId]=?");
+            S_ACTIVITY.addParameter(activityEvent.getActivityId());
+          }
           dsGeneratedFields.filterChanged();
+          if ((activityEvent != null) && (dsGeneratedFields.getRowCount() == 0)) {
+            S_ACTIVITY.setValue("AND GeneratedFields.[ActivityId] IS NULL");
+            S_ACTIVITY.clearParameters();
+            dsGeneratedFields.filterChanged();
+          }
+
+          rs = new com.sun.rowset.CachedRowSetImpl();
+          long start = System.currentTimeMillis();
+          rs.populate(dsGeneratedFields.getResultSet());
+          long end = System.currentTimeMillis();
+          System.out.println("getGeneratedFields::" + (end - start) + " ms.");
+
+
+          return rs;
         }
-
-        CachedRowSet rs = new CachedRowSetImpl();
-        long start = System.currentTimeMillis();
-        rs.populate(dsGeneratedFields.getResultSet());
-        long end = System.currentTimeMillis();
-        System.out.println("getGeneratedFields::" + (end - start) + " ms.");
-
-
-        return rs;
       } else {
         if (getGeneratedFields == null) {
           getGeneratedFields = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getGeneratedFields.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
@@ -1445,7 +1508,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         getGeneratedFields.setBoolean(param++, idSifre == null);
         getGeneratedFields.setString(param++, idSifre);
         getGeneratedFields.setBoolean(param++, !visibleOnly);
-        CachedRowSet rs = new CachedRowSetImpl();
+        CachedRowSet rs = new com.sun.rowset.CachedRowSetImpl();
         rs.populate(getGeneratedFields.executeQuery());
 
         return rs;
