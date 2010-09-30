@@ -286,185 +286,221 @@ public class SqlUtilitesImpl extends SqlUtilities {
           beginTransaction();
         }
 
-        boolean insert = (event.getId() == null) || (event.getId() == -1) || event.isVersioned();
+        if (event.getOperation() == Event.EventOperation.UPDATE) {
+          boolean insert = (event.getId() == null) || (event.getId() == -1) || event.isVersioned();
 
-        if (insert) {
+          if (insert) {
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
 
-          if (event.isVersioned() && (oldEvent != null)) {
+            if (event.isVersioned() && (oldEvent != null)) {
+              //updataj stari event
+              //oz.deletej valid = false
+              param = 1;
+              updateEvents.clearParameters();
+              updateEvents.setInt(param++, oldEvent.getSifrant());
+              updateEvents.setString(param++, oldEvent.getSifra());
+              if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
+                updateEvents.setNull(param++, java.sql.Types.INTEGER);
+              } else {
+                updateEvents.setInt(param++, oldEvent.getEventSource());
+              }
+              updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
+              updateEvents.setString(param++, oldEvent.getOpomba());
+              updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+              updateEvents.setBoolean(param++, false);
+              updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
+              updateEvents.setLong(param++, oldEvent.getId());
+
+              success = success && updateEvents.executeUpdate() > 0;
+
+              //
+              param = 1;
+              delete_eventPK.clearParameters();
+              delete_eventPK.setLong(param++, oldEvent.getId());
+              delete_eventPK.executeUpdate();
+              //success = success && delete_eventPK.executeUpdate() > 0;
+            }
+
+            //insertaj event
+            param = 1;
+            insertEvents.clearParameters();
+            insertEvents.setInt(param++, event.getSifrant());
+            insertEvents.setString(param++, event.getSifra());
+            if (event.getEventSource() == Integer.MIN_VALUE) {
+              insertEvents.setNull(param++, java.sql.Types.INTEGER);
+            } else {
+              insertEvents.setInt(param++, event.getEventSource());
+            }
+            Date eventDatum = event.getDatum();
+            if (eventDatum != null) {
+              insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+            } else {
+              insertEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+            }
+            insertEvents.setString(param++, event.getOpomba());
+            success = success && insertEvents.executeUpdate() > 0;
+
+            if (success) {
+              events_ID = getLastIdentity();
+            } else {
+              throw new SQLException("Neuspešno dodajanje dogodka!");
+            }
+          } else {
+            events_ID = event.getId();
+//        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
+
+            param = 1;
+            updateEvents.clearParameters();
+            updateEvents.setInt(param++, event.getSifrant());
+            updateEvents.setString(param++, event.getSifra());
+            if (event.getEventSource() == Integer.MIN_VALUE) {
+              updateEvents.setNull(param++, java.sql.Types.INTEGER);
+            } else {
+              updateEvents.setInt(param++, event.getEventSource());
+            }
+            updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+            updateEvents.setString(param++, event.getOpomba());
+            updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+            updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
+            updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
+            updateEvents.setLong(param++, events_ID);
+
+            success = success && updateEvents.executeUpdate() > 0;
+          }
+
+          if (success) {
+            success = success && storeOpomba(events_ID, event.getOpomba());
+          }
+
+          if (success) {
+            EventPK eventPK = new EventPK();
+
+            Map<Field, List<FieldValue>> eventValues = event.getEventValues();
+            for (Field field : eventValues.keySet()) {
+              List<FieldValue> fieldValues = eventValues.get(field);
+              for (int i = 0; i < fieldValues.size(); i++) {
+                FieldValue value = fieldValues.get(i);
+                Long valueId = storeValue(value.getValueType(), value.getValue());
+
+                String fieldName = field.getName();
+                String fieldNameWithIndex = field.getName();
+                int fieldValueIndex = field.getFieldIndex();
+
+                int field_id;
+                if ((field.getIdPolja() == null)
+                        || (field.getIdPolja() < 0)) {
+                  if (fieldValueIndex > 1) {
+                    Field nonIndexed = field.getNonIndexedField();
+                    fieldName = nonIndexed.getName();
+                  }
+                  param = 1;
+                  get_field.setString(param, fieldName);
+
+                  ResultSet rs_field = get_field.executeQuery();
+                  if (!rs_field.next()) {
+                    throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
+                  }
+
+                  field_id = rs_field.getInt("Id");
+                } else {
+                  field_id = field.getIdPolja();
+                }
+
+                param = 1;
+                findEventValue.clearParameters();
+                findEventValue.setLong(param++, events_ID);
+                findEventValue.setInt(param++, field_id);
+                findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
+
+                ResultSet rs = findEventValue.executeQuery();
+                rs.next();
+
+                if (rs.getInt(1) == 0) {
+                  //insertaj event value
+                  param = 1;
+                  insertEventValues.clearParameters();
+                  insertEventValues.setLong(param++, events_ID);
+                  insertEventValues.setInt(param++, field_id);
+                  insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                  if (valueId == null) {
+                    insertEventValues.setNull(param++, java.sql.Types.BIGINT);
+                  } else {
+                    insertEventValues.setLong(param++, valueId);
+                  }
+
+                  success = success && insertEventValues.executeUpdate() > 0;
+                } else {
+                  //updataj event value
+                  param = 1;
+                  updateEventValues.clearParameters();
+                  if (valueId == null) {
+                    updateEventValues.setNull(param++, java.sql.Types.BIGINT);
+                  } else {
+                    updateEventValues.setLong(param++, valueId);
+                  }
+                  updateEventValues.setLong(param++, events_ID);
+                  updateEventValues.setInt(param++, field_id);
+                  updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+
+                  success = success && updateEventValues.executeUpdate() > 0;
+                }
+
+                if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
+                  FieldValue fieldValuePK = new FieldValue(field_id, fieldNameWithIndex, field.getType(), fieldValueIndex, new VariousValue(valueId, value.getType(), value.getValue()));
+                  for (Field field1 : event.getPrimaryKey()) {
+                    if (field1.equals(fieldValuePK)) {
+                      eventPK.addField(fieldValuePK);
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+            if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
+              eventPK.setEventId(events_ID);
+              eventPK.setIdSifranta(event.getSifrant());
+              eventPK.setIdSifre(event.getSifra());
+              eventPK.setEventOperation(event.getOperation());
+              success = success && storePrimaryKey(eventPK);
+            }
+          }
+
+          commit = success;
+        } else if (event.getOperation() == Event.EventOperation.DELETE) {
+          if ((event.getId() != null) && (event.getId() > 0)) {
+            events_ID = event.getId();
             //updataj stari event
             //oz.deletej valid = false
             param = 1;
             updateEvents.clearParameters();
-            updateEvents.setInt(param++, oldEvent.getSifrant());
-            updateEvents.setString(param++, oldEvent.getSifra());
+            updateEvents.setInt(param++, event.getSifrant());
+            updateEvents.setString(param++, event.getSifra());
             if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
               updateEvents.setNull(param++, java.sql.Types.INTEGER);
             } else {
-              updateEvents.setInt(param++, oldEvent.getEventSource());
+              updateEvents.setInt(param++, event.getEventSource());
             }
             updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
-            updateEvents.setString(param++, oldEvent.getOpomba());
+            updateEvents.setString(param++, event.getOpomba());
             updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
             updateEvents.setBoolean(param++, false);
             updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
-            updateEvents.setLong(param++, oldEvent.getId());
+            updateEvents.setLong(param++, event.getId());
 
             success = success && updateEvents.executeUpdate() > 0;
 
             //
             param = 1;
             delete_eventPK.clearParameters();
-            delete_eventPK.setLong(param++, oldEvent.getId());
+            delete_eventPK.setLong(param++, event.getId());
             delete_eventPK.executeUpdate();
             //success = success && delete_eventPK.executeUpdate() > 0;
-          }
 
-          //insertaj event
-          param = 1;
-          insertEvents.clearParameters();
-          insertEvents.setInt(param++, event.getSifrant());
-          insertEvents.setString(param++, event.getSifra());
-          if (event.getEventSource() == Integer.MIN_VALUE) {
-            insertEvents.setNull(param++, java.sql.Types.INTEGER);
-          } else {
-            insertEvents.setInt(param++, event.getEventSource());
-          }
-          Date eventDatum = event.getDatum();
-          if (eventDatum != null) {
-            insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-          } else {
-            insertEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-          }
-          insertEvents.setString(param++, event.getOpomba());
-          success = success && insertEvents.executeUpdate() > 0;
-
-          if (success) {
-            events_ID = getLastIdentity();
-          } else {
-            throw new SQLException("Neuspešno dodajanje dogodka!");
+            commit = success;
           }
         } else {
           events_ID = event.getId();
-//        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
-
-          param = 1;
-          updateEvents.clearParameters();
-          updateEvents.setInt(param++, event.getSifrant());
-          updateEvents.setString(param++, event.getSifra());
-          if (event.getEventSource() == Integer.MIN_VALUE) {
-            updateEvents.setNull(param++, java.sql.Types.INTEGER);
-          } else {
-            updateEvents.setInt(param++, event.getEventSource());
-          }
-          updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-          updateEvents.setString(param++, event.getOpomba());
-          updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-          updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
-          updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
-          updateEvents.setLong(param++, events_ID);
-
-          success = success && updateEvents.executeUpdate() > 0;
         }
-
-        if (success) {
-          success = success && storeOpomba(events_ID, event.getOpomba());
-        }
-
-        if (success) {
-          EventPK eventPK = new EventPK();
-
-          Map<Field, List<FieldValue>> eventValues = event.getEventValues();
-          for (Field field : eventValues.keySet()) {
-            List<FieldValue> fieldValues = eventValues.get(field);
-            for (int i = 0; i < fieldValues.size(); i++) {
-              FieldValue value = fieldValues.get(i);
-              Long valueId = storeValue(value.getValueType(), value.getValue());
-
-              String fieldName = field.getName();
-              String fieldNameWithIndex = field.getName();
-              int fieldValueIndex = field.getFieldIndex();
-
-              int field_id;
-              if ((field.getIdPolja() == null)
-                      || (field.getIdPolja() < 0)) {
-                if (fieldValueIndex > 1) {
-                  Field nonIndexed = field.getNonIndexedField();
-                  fieldName = nonIndexed.getName();
-                }
-                param = 1;
-                get_field.setString(param, fieldName);
-
-                ResultSet rs_field = get_field.executeQuery();
-                if (!rs_field.next()) {
-                  throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
-                }
-
-                field_id = rs_field.getInt("Id");
-              } else {
-                field_id = field.getIdPolja();
-              }
-
-              param = 1;
-              findEventValue.clearParameters();
-              findEventValue.setLong(param++, events_ID);
-              findEventValue.setInt(param++, field_id);
-              findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
-
-              ResultSet rs = findEventValue.executeQuery();
-              rs.next();
-
-              if (rs.getInt(1) == 0) {
-                //insertaj event value
-                param = 1;
-                insertEventValues.clearParameters();
-                insertEventValues.setLong(param++, events_ID);
-                insertEventValues.setInt(param++, field_id);
-                insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-                if (valueId == null) {
-                  insertEventValues.setNull(param++, java.sql.Types.BIGINT);
-                } else {
-                  insertEventValues.setLong(param++, valueId);
-                }
-
-                success = success && insertEventValues.executeUpdate() > 0;
-              } else {
-                //updataj event value
-                param = 1;
-                updateEventValues.clearParameters();
-                if (valueId == null) {
-                  updateEventValues.setNull(param++, java.sql.Types.BIGINT);
-                } else {
-                  updateEventValues.setLong(param++, valueId);
-                }
-                updateEventValues.setLong(param++, events_ID);
-                updateEventValues.setInt(param++, field_id);
-                updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-
-                success = success && updateEventValues.executeUpdate() > 0;
-              }
-
-              if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
-                FieldValue fieldValuePK = new FieldValue(field_id, fieldNameWithIndex, field.getType(), fieldValueIndex, new VariousValue(valueId, value.getType(), value.getValue()));
-                for (Field field1 : event.getPrimaryKey()) {
-                  if (field1.equals(fieldValuePK)) {
-                    eventPK.addField(fieldValuePK);
-                    break;
-                  }
-                }
-              }
-            }
-          }
-          if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
-            eventPK.setEventId(events_ID);
-            eventPK.setIdSifranta(event.getSifrant());
-            eventPK.setIdSifre(event.getSifra());
-            eventPK.setEventOperation(event.getOperation());
-            success = success && storePrimaryKey(eventPK);
-          }
-        }
-
-        commit = success;
       } finally {
         if (!isTransaction) {
           endTransaction(commit);
@@ -991,9 +1027,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       param = 1;
       find_eventPK.clearParameters();
       find_eventPK.setLong(param++, eventPK.getEventId());
-      find_eventPK.setInt(param++, idSifranta);
-      find_eventPK.setString(param++, idSifre);
-      find_eventPK.setString(param++, primaryKey);
       ResultSet rs_findEventPK = find_eventPK.executeQuery();
       if (rs_findEventPK.next()) {
         if (eventPK.getEventOperation().equals(Event.EventOperation.DELETE)) {

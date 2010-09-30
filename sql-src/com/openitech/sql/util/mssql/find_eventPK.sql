@@ -8,6 +8,3 @@ FROM
     <%ChangeLog%>.[dbo].[EventsPK]
 WHERE
     EventId        = ?
-    AND IdSifranta = ?
-    AND IdSifre    = ?
-    AND PrimaryKey = ?
