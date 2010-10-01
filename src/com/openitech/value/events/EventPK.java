@@ -19,6 +19,17 @@ public class EventPK {
   private long eventId;
   private EventOperation eventOperation = EventOperation.UPDATE;
 
+  public EventPK() {
+  }
+
+  
+  public EventPK(long eventId, int idSifranta, String idSifre, String primaryKey) {
+    this.eventId = eventId;
+    this.idSifranta = idSifranta;
+    this.idSifre = idSifre;
+    this.primaryKey = primaryKey;
+  }
+
   /**
    * Get the value of eventId
    *
@@ -74,6 +85,25 @@ public class EventPK {
   public void setIdSifre(String idSifre) {
     this.idSifre = idSifre;
   }
+  private String primaryKey;
+
+  /**
+   * Get the value of primaryKey
+   *
+   * @return the value of primaryKey
+   */
+  public String getPrimaryKey() {
+    return primaryKey;
+  }
+
+  /**
+   * Set the value of primaryKey
+   *
+   * @param primaryKey new value of primaryKey
+   */
+  public void setPrimaryKey(String primaryKey) {
+    this.primaryKey = primaryKey;
+  }
   private List<FieldValue> fields = new ArrayList<FieldValue>();
 
   public void addField(FieldValue field) {
@@ -81,6 +111,7 @@ public class EventPK {
   }
 
   public List<FieldValue> getFields() {
+    //TODO potrebno implementirat: primaryKeyToFields
     return fields;
   }
 
@@ -95,7 +126,7 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toHexString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toHexString(fieldValue.getFieldIndex())).append(";");
-      result.append(((VariousValue) fieldValue.getValue()).getId()==null?"null":Long.toHexString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append(((VariousValue) fieldValue.getValue()).getId() == null ? "null" : Long.toHexString(((VariousValue) fieldValue.getValue()).getId())).append(";");
       result.append("}");
     }
     return result.toString();
@@ -108,7 +139,7 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
-      result.append(((VariousValue) fieldValue.getValue()).getId()==null?"null":Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append(((VariousValue) fieldValue.getValue()).getId() == null ? "null" : Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
       result.append("}");
     }
     return result.toString();
@@ -121,10 +152,10 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
-      result.append(((VariousValue) fieldValue.getValue()).getId()==null?"null":Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append(((VariousValue) fieldValue.getValue()).getId() == null ? "null" : Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
       if (fieldValue.getValue() != null) {
         if (fieldValue.getValue() instanceof VariousValue) {
-          result.append(((VariousValue) fieldValue.getValue()).getValue()==null?"null":(((VariousValue) fieldValue.getValue()).getValue().toString()));
+          result.append(((VariousValue) fieldValue.getValue()).getValue() == null ? "null" : (((VariousValue) fieldValue.getValue()).getValue().toString()));
         } else {
           result.append(fieldValue.getValue());
         }

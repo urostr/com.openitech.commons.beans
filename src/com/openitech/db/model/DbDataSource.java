@@ -76,10 +76,23 @@ import javax.swing.event.ListDataListener;
 public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public static boolean DUMP_SQL = false;
+  /**
+   * Pred moveToInsertRow
+   */
   public final static String MOVE_TO_INSERT_ROW = "moveToInsertRow";
   public final static String CAN_UPDATE_ROW = "canUpdateRow";
+  /**
+   * Pred shranjevanjem
+   */
   public final static String UPDATE_ROW = "updateRow";
+  /**
+   * Po moveToInsertRow
+   */
   public final static String ROW_INSERTED = "rowInserted";
+
+  /**
+   * Po shranjevanju
+   */
   public final static String ROW_UPDATED = "rowUpdated";
   public final static String CANCEL_UPDATES = "cancelUpdates";
   public final static String DELETE_ROW = "deleteRow";
