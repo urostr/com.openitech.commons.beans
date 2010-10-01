@@ -1024,11 +1024,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
 
     try {
-      param = 1;
-      find_eventPK.clearParameters();
-      find_eventPK.setLong(param++, eventPK.getEventId());
-      ResultSet rs_findEventPK = find_eventPK.executeQuery();
-      if (rs_findEventPK.next()) {
+      if (findEventPK(eventId) != null) {
         if (eventPK.getEventOperation().equals(Event.EventOperation.DELETE)) {
           param = 1;
           delete_eventPK.clearParameters();
@@ -1064,6 +1060,29 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return success;
   }
 
+  @Override
+  public EventPK findEventPK(long eventId) throws SQLException {
+    EventPK result = null;
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+
+    if (find_eventPK == null) {
+      find_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventPK.sql", "cp1250"));
+    }
+
+    int param = 1;
+    find_eventPK.clearParameters();
+    find_eventPK.setLong(param++, eventId);
+    ResultSet rs_findEventPK = find_eventPK.executeQuery();
+    if (rs_findEventPK.next()) {
+      int idSifranta = rs_findEventPK.getInt("IdSifranta");
+      String idSifre = rs_findEventPK.getString("IdSifre");
+      String primaryKey = rs_findEventPK.getString("PrimaryKey");
+      result = new EventPK(eventId, idSifranta, idSifre, primaryKey);
+    }
+    return result;
+  }
+
+  @Override
   public boolean deleteEvent(long eventId) throws SQLException {
     boolean success = false;
     final Connection connection = ConnectionManager.getInstance().getTxConnection();

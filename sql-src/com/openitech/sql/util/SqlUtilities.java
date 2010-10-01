@@ -602,6 +602,8 @@ public abstract class SqlUtilities implements UpdateEvent {
 
   public abstract boolean storePrimaryKey(EventPK eventPK) throws SQLException;
 
+  public abstract EventPK findEventPK(long eventId) throws SQLException;
+
   public abstract boolean deleteEvent(long eventId) throws SQLException;
 
   public static enum Operation {
