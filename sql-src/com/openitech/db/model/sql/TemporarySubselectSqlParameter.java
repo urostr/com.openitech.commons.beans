@@ -222,7 +222,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       long timer = System.currentTimeMillis();
 
       String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
-
       List<Object> qparams = new ArrayList<Object>(parameters.size());
       qparams.addAll(getParameters());
       qparams.addAll(parameters);
@@ -230,7 +229,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       if (sqlMaterializedView != null) {
         qparams.add(sqlMaterializedView);
       }
-      qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
 
       String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
 
@@ -272,6 +270,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             lock.release();
           }
         }
+
+        qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
 
         if ((!fill) && (sqlMaterializedView != null)) {
           fill = !sqlMaterializedView.isViewValid(connection, qparams);
