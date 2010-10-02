@@ -25,6 +25,7 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
+import com.openitech.sql.cache.CachedTemporaryTablesManager;
 import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.EventPK;
@@ -1382,8 +1383,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         dsGeneratedFieldsFilter.setOperator("WHERE");
         dsGeneratedFieldsFilter.addRequired(I_TYPE_ID_SIFANTA);
 
-        TemporarySubselectSqlParameter ttGeneratedFields = createTemporaryTable(GeneratedFieldFactory.getCachedTemporaryTable().getTemporaryTable());
-
+        TemporarySubselectSqlParameter ttGeneratedFields = CachedTemporaryTablesManager.getInstance().getCachedTemporarySubselectSqlParameter(this.getClass(), "generatedFields.xml");
 
         java.util.List<Object> parameters = new ArrayList<Object>();
 
@@ -1420,24 +1420,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       return this;
-    }
-
-    private static com.openitech.db.model.xml.config.CachedTemporaryTable getCachedTemporaryTable() throws JAXBException, UnsupportedEncodingException, IOException {
-      Map<String, TemporaryTable> mCtt = SqlUtilities.getInstance().getCachedTemporaryTables();
-      LineNumberReader is = new LineNumberReader(new InputStreamReader(SqlUtilitesImpl.class.getResourceAsStream("generatedFields.xml"), "UTF-8"));
-      JAXBContext ctx = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class);
-      Unmarshaller um = ctx.createUnmarshaller();
-
-      com.openitech.db.model.xml.config.CachedTemporaryTable ctt = (com.openitech.db.model.xml.config.CachedTemporaryTable) um.unmarshal(is);
-      String mv = ctt.getTemporaryTable().getMaterializedView().getValue();
-
-      if (mCtt.containsKey(mv)) {
-        ctt.setTemporaryTable(mCtt.get(mv));
-      } else {
-        SqlUtilities.getInstance().storeCachedTemporaryTable(ctt.getTemporaryTable());
-      }
-
-      return ctt;
     }
 
     public synchronized CachedRowSet getGeneratedFields(int idSifranta, String idSifre, boolean visibleOnly, ActivityEvent activityEvent) throws SQLException {
@@ -1578,7 +1560,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     Event system = findEvent(SYSTEM_IDENTITIES);
     system = system == null ? SYSTEM_IDENTITIES : system;
     List<FieldValue> get = system.getEventValues().get(field);
-    if ((get == null) || (get.size() == 0)) {
+    if ((get == null) || (get.isEmpty())) {
       ValueType type = ValueType.getType(field.getType());
       FieldValue start = new FieldValue(field);
 

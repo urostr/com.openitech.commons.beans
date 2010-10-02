@@ -222,13 +222,15 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       long timer = System.currentTimeMillis();
 
       String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
-      final List<Object> qparams = new ArrayList<Object>(parameters.size());
+
+      List<Object> qparams = new ArrayList<Object>(parameters.size());
       qparams.addAll(getParameters());
       qparams.addAll(parameters);
       qparams.add(getSubstSqlParameter());
       if (sqlMaterializedView != null) {
         qparams.add(sqlMaterializedView);
       }
+      qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
 
       String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
 

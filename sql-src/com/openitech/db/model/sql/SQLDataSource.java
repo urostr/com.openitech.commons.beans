@@ -4225,7 +4225,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     ResultSet currentResultSet;
 
     public CurrentResultSet(ResultSet currentResultSet) throws SQLException {
-      if ((currentResultSet != null) && (owner.isConnectOnDemand() || owner.isCacheRowSet())) {
+      if ((currentResultSet != null) && (currentResultSet.getMetaData() != null) && (owner.isConnectOnDemand() || owner.isCacheRowSet())) {
         this.currentResultSet = new CachedRowSetImpl();
         this.currentResultSet.setFetchSize(getFetchSize());
         ((CachedRowSet) this.currentResultSet).populate(currentResultSet);
@@ -4539,7 +4539,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     return statement.executeUpdate();
   }
 
-  private static List<Object> executeTemporarySelects(List<?> parameters, PreparedStatement statement) throws SQLException {
+  public static List<Object> executeTemporarySelects(List<?> parameters, Connection connection) throws SQLException {
     List<Object> queryParameters = new java.util.ArrayList(parameters.size());
     List<TemporarySubselectSqlParameter> temporarySubselectSqlParameters = new java.util.ArrayList<TemporarySubselectSqlParameter>(parameters.size());
     for (Object parameter : parameters) {
@@ -4552,9 +4552,13 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
     }
     for (TemporarySubselectSqlParameter tempSubselect : temporarySubselectSqlParameters) {
-      tempSubselect.executeQuery(statement.getConnection(), queryParameters);
+      tempSubselect.executeQuery(connection, queryParameters);
     }
     return queryParameters;
+  }
+
+  private static List<Object> executeTemporarySelects(List<?> parameters, PreparedStatement statement) throws SQLException {
+    return executeTemporarySelects(parameters, statement.getConnection());
   }
 
   @Override
