@@ -5,8 +5,6 @@
 package com.openitech.db.model.factory;
 
 import com.openitech.db.model.DataSourceObserver;
-import com.openitech.db.filters.ActiveFiltersReader;
-import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.filters.DataSourceLimit;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
@@ -16,15 +14,13 @@ import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.TaskList.Tasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.events.concurrent.DataSourceEvent;
-import com.openitech.db.model.sql.PendingSqlParameter;
 import com.openitech.db.model.sql.SQLMaterializedView;
 import com.openitech.db.model.sql.SQLOrderByParameter;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
-import com.openitech.db.model.xml.config.DataSourceFilter;
 import com.openitech.db.model.xml.config.DataSourceParametersFactory;
-import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefinition;
+import com.openitech.db.model.xml.config.DataSourceFilter;
 import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
@@ -49,7 +45,6 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   public static final String DATA_SOURCE_LIMIT = "<%DATA_SOURCE_LIMIT%>";
   public static final String DB_ROW_SORTER = "<%DB_ROW_SORTER%>";
-  private static java.util.Map<String, TemporaryTable> cachedTemporaryTables;
   private DataSourceLimit dataSourceLimit;
 
   public DataSourceFactory(DbDataModel dbDataModel) {
@@ -71,9 +66,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       }
       dataSource.setSelectSql(getReplacedSql(dataSourceXML.getDataSource().getSQL()));
 
-      if (dataSourceXML.getDataSource().getQueryHints()!=null) {
-        dataSource.setCountSql(dataSource.getCountSql()+'\n'+dataSourceXML.getDataSource().getQueryHints());
-        dataSource.setSelectSql(dataSource.getSelectSql()+'\n'+dataSourceXML.getDataSource().getQueryHints());
+      if (dataSourceXML.getDataSource().getQueryHints() != null) {
+        dataSource.setCountSql(dataSource.getCountSql() + '\n' + dataSourceXML.getDataSource().getQueryHints());
+        dataSource.setSelectSql(dataSource.getSelectSql() + '\n' + dataSourceXML.getDataSource().getQueryHints());
       }
 
       dataSource.setName("DS:FACTORY:" + this.getOpis());
@@ -165,7 +160,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         } catch (Exception ex) {
           Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
         }
-      } else if (queryParameter!=null) {
+      } else if (queryParameter != null) {
         parameters.add(queryParameter);
       }
     }
@@ -367,124 +362,13 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
   }
 
-  protected Object createQueryParameter(QueryParameter parameter) {
-    Object result = null;
-    if (parameter.getTemporaryTable() != null) {
-      final TemporarySubselectSqlParameter temporaryTable = createTemporaryTable(parameter.getTemporaryTable());
-      result = temporaryTable;
-    } else if (parameter.getSubQuery() != null) {
-      result = createSubQuery(parameter.getSubQuery());
-    } else if (parameter.getSqlParameter() != null) {
-      final DbDataSource.SqlParameter<Object> sqlParameter = new DbDataSource.SqlParameter<Object>();
-
-      sqlParameter.setValue(parameter.getSqlParameter().getValue());
-      sqlParameter.setType(parameter.getSqlParameter().getType());
-
-      result = sqlParameter;
-    } else if (parameter.getDataSourceFilter() != null) {
-      try {
-        DataSourceFilter dsf = parameter.getDataSourceFilter();
-        Object newInstance = createDataSourceFilter(dsf);
-        if (newInstance != null) {
-          DataSourceFilters filter = null;
-          if (newInstance instanceof ActiveFiltersReader) {
-            ((ActiveFiltersReader) newInstance).getActiveFilter();
-          } else if (newInstance instanceof DataSourceFilters) {
-            filter = (DataSourceFilters) newInstance;
-          }
-          if (filter != null) {
-            if (dsf.getOperator() != null) {
-              filter.setOperator(dsf.getOperator());
-            }
-          }
-          result = filter;
-        }
-      } catch (Exception ex) {
-        Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
-      }
-    }
-    return result;
-  }
-
-  protected PendingSqlParameter createSubQuery(SubQuery subQuery) {
-    PendingSqlParameter subQueryFilter = new PendingSqlParameter(subQuery.getReplace());
-    subQueryFilter.setImmediateSQL(subQuery.getImmediateSQL());
-    subQueryFilter.setPendingSQL(subQuery.getPendingSQL(), subQuery.getPendingColumns().getColumnNames().toArray(new String[subQuery.getPendingColumns().getColumnNames().size()]));
-    subQueryFilter.setDeferredSQL(subQuery.getDeferredSQL(), subQuery.getParentKey().getColumnNames().toArray(new String[subQuery.getParentKey().getColumnNames().size()]));
-    subQueryFilter.setSupportsMultipleKeys(subQuery.isSupportsMultipleKeys());
-    if (subQuery.getMultipleKeysLimit() != null) {
-      subQueryFilter.setMultipleKeysLimit(subQuery.getMultipleKeysLimit());
-    }
-    return subQueryFilter;
-  }
-
-  protected TemporarySubselectSqlParameter createTemporaryTable(TemporaryTable tt) {
-    if (cachedTemporaryTables == null) {
-      cachedTemporaryTables = SqlUtilities.getInstance().getCachedTemporaryTables();
-    }
-    final boolean cached = (tt.getMaterializedView() != null) && cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue());
-    if (cached) {
-      tt = cachedTemporaryTables.get(tt.getMaterializedView().getValue());
-      System.out.println("CACHED:TT:" + tt.getMaterializedView().getValue());
-    }
-
-    TemporarySubselectSqlParameter ttParameter = new TemporarySubselectSqlParameter(tt.getReplace());
-    ttParameter.setValue(tt.getTableName());
-    ttParameter.setCheckTableSql(getReplacedSql(tt.getCheckTableSql()));
-    ttParameter.setCreateTableSqls(getReplacedSqls(tt.getCreateTableSqls().getQuery().toArray(new String[]{})));
-    ttParameter.setEmptyTableSql(getReplacedSql(tt.getEmptyTableSql()));
-    ttParameter.setFillTableSql(getReplacedSql(tt.getFillTableSql()));
-    if (tt.getCleanTableSqls() != null) {
-      ttParameter.setCleanTableSqls(getReplacedSqls(tt.getCleanTableSqls().getQuery().toArray(new String[]{})));
-    }
-    if (tt.isFillOnceOnly() != null) {
-      ttParameter.setFillOnceOnly(tt.isFillOnceOnly());
-    }
-    if (tt.getParameter() != null) {
-      for (QueryParameter parameter : tt.getParameter().getParameters()) {
-        final Object queryParameter = createQueryParameter(parameter);
-        if (queryParameter!=null) {
-          ttParameter.addParameter(queryParameter);
-        }
-      }
-    }
-    if (tt.getMaterializedView() != null) {
-      String replace = tt.getMaterializedView().getReplace();
-
-      if (replace == null) {
-        replace = tt.getTableName();
-      }
-
-      SQLMaterializedView mv = new SQLMaterializedView(replace);
-      mv.setValue(tt.getMaterializedView().getValue());
-      mv.setIsViewValidSQL(tt.getMaterializedView().getIsViewValidSql());
-      mv.setSetViewVersionSql(tt.getMaterializedView().getSetViewVersionSql());
-
-      ttParameter.setSqlMaterializedView(mv);
-    }
-    ttParameter.setDisabled(tt.isDisabled());
-    return ttParameter;
-  }
-
+  @Override
   protected Object createDataSourceFilter(DataSourceFilter dsf) throws NoSuchMethodException, IllegalAccessException, InstantiationException, ClassNotFoundException, InvocationTargetException, CompilationFailedException, IllegalArgumentException, SecurityException {
-    Object newInstance = null;
-    if (dsf.getFactory().getGroovy() != null) {
-      GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-      Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + (dsf.getName() == null ? "" : dsf.getName()) + "_" + System.currentTimeMillis());
-      Constructor constructor = gcls.getConstructor(String.class, config.getClass());
-      newInstance = constructor.newInstance(dsf.getReplace(), config);
-    } else if (dsf.getFactory().getClassName() != null) {
-      @SuppressWarnings(value = "static-access")
-      Class jcls = DataSourceFactory.class.forName(dsf.getFactory().getClassName());
-      Constructor constructor = jcls.getConstructor(String.class, config.getClass());
-      newInstance = constructor.newInstance(dsf.getReplace(), config);
-    }
+    Object newInstance = super.createDataSourceFilter(dsf);
+
     if (newInstance != null) {
       if (newInstance instanceof java.awt.Component) {
         this.filterPanel = (java.awt.Component) newInstance;
-      }
-      if (newInstance instanceof DataSourceObserver) {
-        ((DataSourceObserver) newInstance).setDataSource(dataSource);
       }
     }
     return newInstance;

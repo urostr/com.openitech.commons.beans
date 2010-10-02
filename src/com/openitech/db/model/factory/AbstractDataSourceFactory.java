@@ -35,10 +35,9 @@ import org.jdesktop.swingx.JXTaskPane;
  *
  * @author domenbasic
  */
-public abstract class AbstractDataSourceFactory implements AssociatedTasks {
+public abstract class AbstractDataSourceFactory extends com.openitech.db.model.factory.DataSourceParametersFactory<DataSourceConfig> implements AssociatedTasks {
 
   protected final DbDataModel dbDataModel;
-  protected com.openitech.db.model.factory.DataSourceConfig config;
   protected com.openitech.db.model.xml.config.Workarea dataSourceXML;
 
   public AbstractDataSourceFactory(DbDataModel dbDataModel) {
@@ -122,16 +121,7 @@ public abstract class AbstractDataSourceFactory implements AssociatedTasks {
 
   public abstract void configure() throws SQLException, ClassNotFoundException;
 //   
-  protected DbDataSource dataSource;
 
-  /**
-   * Get the value of dataSource
-   *
-   * @return the value of dataSource
-   */
-  public DbDataSource getDataSource() {
-    return dataSource;
-  }
   protected DbTableModel tableModel;
 
   /**
@@ -305,11 +295,4 @@ public abstract class AbstractDataSourceFactory implements AssociatedTasks {
     this.readOnly = readOnly;
   }
 
-  protected String getReplacedSql(String sql) {
-    return ReadInputStream.getReplacedSql(sql);
-  }
-
-  protected String[] getReplacedSqls(String[] sqls) {
-    return ReadInputStream.getReplacedSqls(sqls);
-  }
 }
