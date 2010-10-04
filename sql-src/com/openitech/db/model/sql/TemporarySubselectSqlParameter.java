@@ -177,6 +177,25 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void setCheckTableSql(String checkTableSql) {
     this.checkTableSql = checkTableSql;
   }
+  protected String isTableDataValidSql;
+
+  /**
+   * Get the value of isTableDataValidSql
+   *
+   * @return the value of isTableDataValidSql
+   */
+  public String getIsTableDataValidSql() {
+    return isTableDataValidSql;
+  }
+
+  /**
+   * Set the value of isTableDataValidSql
+   *
+   * @param isTableDataValidSql new value of isTableDataValidSql
+   */
+  public void setIsTableDataValidSql(String isTableDataValidSql) {
+    this.isTableDataValidSql = isTableDataValidSql;
+  }
   protected SQLMaterializedView sqlMaterializedView;
 
   /**
@@ -214,6 +233,44 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   private PreparedStatement psFillTable = null;
   private String qEmptyTable;
   private PreparedStatement psEmptyTable = null;
+  private String qIsTableDataValidSql = null;
+  private PreparedStatement psIsTableDataValidSql = null;
+
+  public boolean isTableDataValidSql(Connection connection, java.util.List<Object> parameters) {
+    if (isTableDataValidSql == null) {
+      return true;
+    } else {
+      try {
+        long timer = System.currentTimeMillis();
+        String query = SQLDataSource.substParameters(isTableDataValidSql, parameters);
+        if (!Equals.equals(this.connection, connection)
+                      || !Equals.equals(this.qIsTableDataValidSql, query)) {
+          this.qIsTableDataValidSql = query;
+          psIsTableDataValidSql = connection.prepareStatement(this.qIsTableDataValidSql,
+                  ResultSet.TYPE_SCROLL_INSENSITIVE,
+                  ResultSet.CONCUR_READ_ONLY,
+                  ResultSet.HOLD_CURSORS_OVER_COMMIT);
+          this.connection = connection;
+        }
+
+        if (DbDataSource.DUMP_SQL) {
+          System.out.println("##############");
+          System.out.println(this.qIsTableDataValidSql);
+        }
+        ResultSet executeQuery = SQLDataSource.executeQuery(psIsTableDataValidSql, parameters);
+        if (DbDataSource.DUMP_SQL) {
+          System.out.println("tt:isvalid:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+          System.out.println("##############");
+        }
+        if (executeQuery.next()) {
+          return executeQuery.getBoolean(1);
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(SQLMaterializedView.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      return false;
+    }
+  }
 
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException {
     Statement statement = connection.createStatement();
@@ -272,6 +329,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
 
         qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+
+        fill = fill || !isTableDataValidSql(connection, qparams);
 
         if ((!fill) && (sqlMaterializedView != null)) {
           fill = !sqlMaterializedView.isViewValid(connection, qparams);
@@ -368,6 +427,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     if (getCreateTableSqls() != null) {
       tt.setCreateTableSqls(new TemporaryTable.CreateTableSqls());
       tt.getCreateTableSqls().getQuery().addAll(Arrays.asList(getCreateTableSqls()));
+    }
+    if (getIsTableDataValidSql() != null) {
+      tt.setIsTableDataValidSql(getIsTableDataValidSql());
     }
     tt.setEmptyTableSql(getEmptyTableSql());
     tt.setFillTableSql(getFillTableSql());

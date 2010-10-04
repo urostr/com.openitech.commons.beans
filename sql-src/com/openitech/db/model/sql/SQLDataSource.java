@@ -23,6 +23,7 @@ import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
 import com.openitech.awt.OwnerFrame;
 import com.openitech.io.ReadInputStream;
+import com.openitech.sql.util.SqlUtilities;
 import com.sun.rowset.CachedRowSetImpl;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -4551,8 +4552,26 @@ public class SQLDataSource implements DbDataSourceImpl {
         queryParameters.add(parameter);
       }
     }
-    for (TemporarySubselectSqlParameter tempSubselect : temporarySubselectSqlParameters) {
-      tempSubselect.executeQuery(connection, queryParameters);
+
+    if (!temporarySubselectSqlParameters.isEmpty()) {
+      boolean transaction = false;
+      boolean commit = false;
+
+      if (!SqlUtilities.getInstance().isTransaction()) {
+        transaction = true;
+        SqlUtilities.getInstance().beginTransaction();
+      }
+
+      try {
+        for (TemporarySubselectSqlParameter tempSubselect : temporarySubselectSqlParameters) {
+          tempSubselect.executeQuery(connection, queryParameters);
+        }
+        commit = true;
+      } finally {
+        if (transaction) {
+          SqlUtilities.getInstance().endTransaction(commit);
+        }
+      }
     }
     return queryParameters;
   }
