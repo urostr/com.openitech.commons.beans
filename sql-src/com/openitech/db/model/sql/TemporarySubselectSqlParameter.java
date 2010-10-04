@@ -11,7 +11,7 @@ import com.openitech.db.model.Types;
 import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.TemporaryTable;
-import com.openitech.sql.util.SqlUtilities;
+import com.openitech.sql.util.TransactionManager;
 import com.openitech.util.Equals;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,8 +22,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -297,6 +300,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         locks.put(table, lock);
       }
 
+      TransactionManager tm = TransactionManager.getInstance(connection);
+
       boolean transaction = false;
       boolean commit = false;
       try {
@@ -306,9 +311,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           }
         } catch (SQLException ex) {
           if (sqlMaterializedView != null) {
-            if (!SqlUtilities.getInstance().isTransaction()) {
+            if (!tm.isTransaction()) {
               transaction = true;
-              SqlUtilities.getInstance().beginTransaction();
+              tm.beginTransaction();
             }
           }
           lock.acquireUninterruptibly();
@@ -338,9 +343,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
         if (fill && !disabled) {
           if (sqlMaterializedView != null) {
-            if (!(transaction || SqlUtilities.getInstance().isTransaction())) {
+            if (!(transaction || tm.isTransaction())) {
               transaction = true;
-              SqlUtilities.getInstance().beginTransaction();
+              tm.beginTransaction();
             }
             lock.acquireUninterruptibly();
           }
@@ -383,11 +388,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             SQLDataSource.executeUpdate(psFillTable, qparams);
             if (cleanTableSqls != null) {
               for (String sql : cleanTableSqls) {
-                SQLDataSource.executeUpdate(sql, qparams);
+                SQLDataSource.executeUpdate(connection.prepareStatement(SQLDataSource.substParameters(sql, qparams)), qparams);
               }
             }
             if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
-              SQLDataSource.execute(sqlMaterializedView.setViewVersionSql, qparams);
+              SQLDataSource.execute(connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams)), qparams);
             }
             if (DbDataSource.DUMP_SQL) {
               System.out.println("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
@@ -405,7 +410,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         throw new SQLException(ex);
       } finally {
         if (transaction) {
-          SqlUtilities.getInstance().endTransaction(commit);
+          tm.endTransaction(commit);
         }
       }
     } finally {
@@ -472,5 +477,81 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void setParameters(List<Object> queryParameters) {
     parameters.clear();
     parameters.addAll(queryParameters);
+  }
+
+  public TemporaryTableGroup getGroup() {
+    return TemporaryTableGroup.getGroup(this);
+  }
+
+  public static class TemporaryTableGroup implements Iterable<TemporarySubselectSqlParameter> {
+    private static final Map<TemporarySubselectSqlParameter,TemporaryTableGroup> groups = new HashMap<TemporarySubselectSqlParameter, TemporaryTableGroup>();
+    private final Semaphore lock = new Semaphore(1);
+
+    final Set<TemporarySubselectSqlParameter> ttp = new LinkedHashSet<TemporarySubselectSqlParameter>();
+    
+    private TemporaryTableGroup() {
+    }
+
+    public static TemporaryTableGroup getGroup(TemporarySubselectSqlParameter parameter) {
+      TemporaryTableGroup result;
+      if (groups.containsKey(parameter)) {
+        result = groups.get(parameter);
+      } else {
+        result = new TemporaryTableGroup();
+        groups.put(parameter, result);
+      }
+
+      result.ttp.add(parameter);
+
+      return result;
+    }
+
+    public int size() {
+      return ttp.size();
+    }
+
+    public boolean add(TemporarySubselectSqlParameter e) {
+      groups.put(e, this);
+      return ttp.add(e);
+    }
+
+    public boolean remove(TemporarySubselectSqlParameter e) {
+      groups.remove(e);
+      return ttp.remove(e);
+    }
+
+    @Override
+    public Iterator<TemporarySubselectSqlParameter> iterator() {
+      return ttp.iterator();
+    }
+
+    public void executeQuery(Connection connection, List<Object> queryParameters) throws SQLException {
+      if (size()>1) {
+        lock.acquireUninterruptibly();
+        try {
+          TransactionManager tm = TransactionManager.getInstance(connection);
+
+          boolean commit = false;
+          tm.beginTransaction();
+          try {
+            execute(connection, queryParameters);
+            commit = true;
+          } finally {
+            tm.endTransaction(commit);
+          }
+
+        } finally {
+          lock.release();
+        }
+      } else {
+        execute(connection, queryParameters);
+      }
+    }
+
+    private void execute(Connection connection, List<Object> queryParameters) throws SQLException {
+      for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : ttp) {
+        temporarySubselectSqlParameter.executeQuery(connection, queryParameters);
+      }
+    }
   }
 }

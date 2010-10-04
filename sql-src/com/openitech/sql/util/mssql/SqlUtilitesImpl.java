@@ -1348,6 +1348,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     private static final boolean CACHED_GGF = true;
     private static final boolean USE_INDEXED_CACHE = true;
+    private final boolean DEVELOPMENT;
     private static GeneratedFieldFactory instance;
     public PreparedStatement getGeneratedFields;
     private DbDataSource dsGeneratedFields = null;
@@ -1357,6 +1358,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     private DbDataSourceIndex dbxAllGeneratedFieldsSifrant = null;
     private CachedRowSet crsAllGeneratedFields = null;
     private DataSourceFilters dsGeneratedFieldsFilter = new DataSourceFilters("<%GENERATED_FILTERS%>");
+    private TemporarySubselectSqlParameter ttGeneratedFields;
+    private java.util.List<Object> ttGeneratedFieldsParameters = new ArrayList<Object>();
     private DataSourceFilters.IntegerSeekType I_TYPE_ID_SIFANTA = new DataSourceFilters.IntegerSeekType("GeneratedFields.IdSifranta", DataSourceFilters.IntegerSeekType.EQUALS);
     private DataSourceFilters.SeekType I_TYPE_ID_SIFRE = new DataSourceFilters.SeekType("GeneratedFields.IdSifre", DataSourceFilters.SeekType.EQUALS, 1);
     private DataSourceFilters.IntegerSeekType I_TYPE_HIDDEN = new DataSourceFilters.IntegerSeekType("GeneratedFields.Hidden", DataSourceFilters.IntegerSeekType.EQUALS);
@@ -1364,6 +1367,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     public GeneratedFieldFactory() {
       super(null);
+      DEVELOPMENT = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty("application.mode.development", "false"));
     }
 
     private static GeneratedFieldFactory getInstance() throws JAXBException, UnsupportedEncodingException, IOException, SQLException {
@@ -1383,13 +1387,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
         dsGeneratedFieldsFilter.setOperator("WHERE");
         dsGeneratedFieldsFilter.addRequired(I_TYPE_ID_SIFANTA);
 
-        TemporarySubselectSqlParameter ttGeneratedFields = CachedTemporaryTablesManager.getInstance().getCachedTemporarySubselectSqlParameter(this.getClass(), "generatedFields.xml");
+        ttGeneratedFields = CachedTemporaryTablesManager.getInstance().getCachedTemporarySubselectSqlParameter(this.getClass(), "generatedFields.xml");
 
         java.util.List<Object> parameters = new ArrayList<Object>();
 
         parameters.add(ttGeneratedFields);
         parameters.add(dsGeneratedFieldsFilter);
         parameters.add(S_ACTIVITY);
+
+        ttGeneratedFieldsParameters.add(dsGeneratedFieldsFilter);
+        ttGeneratedFieldsParameters.add(S_ACTIVITY);
 
         dsGeneratedFields.setName("DS:GET_GENERATED_FIELDS");
 
@@ -1427,6 +1434,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
         CachedRowSet rs;
         if (USE_INDEXED_CACHE) {
           long start = System.currentTimeMillis();
+          if (DEVELOPMENT&&!ttGeneratedFields.getSqlMaterializedView().isViewValid(dsGeneratedFields.getConnection(), ttGeneratedFieldsParameters)) {
+            dsGeneratedFields.reload();
+            crsAllGeneratedFields = dsGeneratedFields.getCachedRowSet();
+          }
           rs = new com.openitech.sql.rowset.CachedRowSetImpl();
           Set<Integer> rows;
 

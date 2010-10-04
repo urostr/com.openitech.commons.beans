@@ -39,11 +39,11 @@ import javax.sql.rowset.CachedRowSet;
  *
  * @author uros
  */
-public abstract class SqlUtilities implements UpdateEvent {
+public abstract class SqlUtilities extends TransactionManager implements UpdateEvent {
 
   private static final Map<String, Class<? extends SqlUtilities>> implementations = new HashMap<String, Class<? extends SqlUtilities>>();
   private static SqlUtilities instance;
-  private boolean autocommit;
+
   public static Properties DATABASES = new Properties();
   public static final String CHANGE_LOG_DB = "[ChangeLog]";
   public static final String RPP_DB = "[RPP]";
@@ -347,93 +347,6 @@ public abstract class SqlUtilities implements UpdateEvent {
   }
 
   protected abstract void logChanges(String application, String database, String tableName, Operation operation, List<FieldValue> newValues, List<FieldValue> oldValues) throws SQLException;
-  private java.util.Stack<Savepoint> activeSavepoints = new java.util.Stack<Savepoint>();
-
-  public Savepoint beginTransaction() throws SQLException {
-    Connection connection = ConnectionManager.getInstance().getTxConnection();
-
-    if (connection.getAutoCommit()) {
-      autocommit = connection.getAutoCommit();
-
-      connection.setAutoCommit(false);
-    }
-
-    activeSavepoints.push(connection.setSavepoint());
-    if (DbDataSource.DUMP_SQL) {
-      if (activeSavepoints.size() > 1) {
-        System.err.println("-- SET SAVEPOINT (" + activeSavepoints.peek().toString() + ") -- ");
-      } else {
-        System.err.println("-- BEGIN TRANSACTION (" + activeSavepoints.peek().toString() + ") -- ");
-      }
-    }
-
-    return activeSavepoints.peek();
-  }
-
-  public boolean endTransaction(boolean commit, boolean force) throws SQLException {
-    Connection connection = ConnectionManager.getInstance().getTxConnection();
-
-    if (force) {
-      try {
-        while (!activeSavepoints.empty()) {
-          connection.releaseSavepoint(activeSavepoints.pop());
-        }
-      } catch (SQLException err) {
-        Logger.getLogger(SqlUtilities.class.getName()).log(Level.WARNING, err.getMessage(), err);
-      } finally {
-        activeSavepoints.clear();
-      }
-    }
-    return endTransaction(commit);
-  }
-
-  public boolean endTransaction(boolean commit) throws SQLException {
-    return endTransaction(commit, activeSavepoints.empty() ? null : activeSavepoints.pop());
-  }
-
-  public boolean isTransaction() {
-    return !activeSavepoints.empty();
-  }
-
-  public boolean endTransaction(boolean commit, Savepoint savepoint) throws SQLException {
-    Connection connection = ConnectionManager.getInstance().getTxConnection();
-
-    if (!connection.getAutoCommit()) {
-      if (commit) {
-        if (savepoint != null) {
-          try {
-            connection.releaseSavepoint(savepoint);
-          } catch (SQLException err) {
-            Logger.getLogger(SqlUtilities.class.getName()).log(Level.WARNING, err.getMessage(), err);
-          }
-        }
-        if (activeSavepoints.empty()) {
-          connection.commit();
-          if (DbDataSource.DUMP_SQL) {
-            System.err.println("-- COMMIT TRANSACTION -- ");
-          }
-        } else if (savepoint != null) {
-          System.err.println("-- RELEASE SAVEPOINT (" + savepoint.toString() + ") -- ");
-        }
-      } else if (savepoint != null) {
-        connection.rollback(savepoint);
-        System.err.println("-- ROLLBACK TO SAVEPOINT (" + savepoint.toString() + ") -- ");
-      } else {
-        activeSavepoints.clear();
-        connection.rollback();
-        System.err.println("-- ROLLBACK TRANSACTION -- ");
-      }
-      if (savepoint != null) {
-        activeSavepoints.remove(savepoint);
-      }
-      if (activeSavepoints.size() == 0) {
-        connection.setAutoCommit(autocommit);
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
 
   public Map<Field, Object> getColumnValues(DbDataSource source) throws SQLException {
     ResultSetMetaData metaData = source.getMetaData();

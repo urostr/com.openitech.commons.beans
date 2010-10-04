@@ -57,9 +57,11 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -4542,11 +4544,11 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public static List<Object> executeTemporarySelects(List<?> parameters, Connection connection) throws SQLException {
     List<Object> queryParameters = new java.util.ArrayList(parameters.size());
-    List<TemporarySubselectSqlParameter> temporarySubselectSqlParameters = new java.util.ArrayList<TemporarySubselectSqlParameter>(parameters.size());
+    Set<TemporarySubselectSqlParameter.TemporaryTableGroup> temporarySubselectSqlParameters = new java.util.LinkedHashSet<TemporarySubselectSqlParameter.TemporaryTableGroup>(parameters.size());
     for (Object parameter : parameters) {
       if (parameter instanceof TemporarySubselectSqlParameter) {
         TemporarySubselectSqlParameter tt = (TemporarySubselectSqlParameter) parameter;
-        temporarySubselectSqlParameters.add(tt);
+        temporarySubselectSqlParameters.add(tt.getGroup());
         queryParameters.add(tt.getSubstSqlParameter());
       } else {
         queryParameters.add(parameter);
@@ -4554,23 +4556,8 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
 
     if (!temporarySubselectSqlParameters.isEmpty()) {
-      boolean transaction = false;
-      boolean commit = false;
-
-      if (!SqlUtilities.getInstance().isTransaction()) {
-        transaction = true;
-        SqlUtilities.getInstance().beginTransaction();
-      }
-
-      try {
-        for (TemporarySubselectSqlParameter tempSubselect : temporarySubselectSqlParameters) {
-          tempSubselect.executeQuery(connection, queryParameters);
-        }
-        commit = true;
-      } finally {
-        if (transaction) {
-          SqlUtilities.getInstance().endTransaction(commit);
-        }
+      for (TemporarySubselectSqlParameter.TemporaryTableGroup tempSubselect : temporarySubselectSqlParameters) {
+        tempSubselect.executeQuery(connection, queryParameters);
       }
     }
     return queryParameters;
