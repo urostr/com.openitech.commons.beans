@@ -101,6 +101,9 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     if (tt.isFillOnceOnly() != null) {
       ttParameter.setFillOnceOnly(tt.isFillOnceOnly());
     }
+    if (tt.getIsTableDataValidSql() != null) {
+      ttParameter.setIsTableDataValidSql(getReplacedSql(tt.getIsTableDataValidSql()));
+    }
     if (tt.getParameter() != null) {
       for (QueryParameter parameter : tt.getParameter().getParameters()) {
         final Object queryParameter = createQueryParameter(parameter);
