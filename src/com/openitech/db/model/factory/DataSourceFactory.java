@@ -135,18 +135,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       } else if ((parameter.getDataSourceParametersFactory() != null) || (parameter.getDataSourceFilterFactory() != null)) {
         try {
           DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
-          Object newInstance = null;
-          if (dsf.getFactory().getGroovy() != null) {
-            GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-            Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + this.getOpis() + "_" + System.currentTimeMillis());
-            Constructor constructor = gcls.getConstructor(DbDataSource.class, config.getClass());
-            newInstance = constructor.newInstance(dataSource, config);
-          } else if (dsf.getFactory().getClassName() != null) {
-            @SuppressWarnings(value = "static-access")
-            Class jcls = DataSourceFactory.class.forName(dsf.getFactory().getClassName());
-            Constructor constructor = jcls.getConstructor(DbDataSource.class, config.getClass());
-            newInstance = constructor.newInstance(dataSource, config);
-          }
+          Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), dsf.getFactory(), DbDataSource.class, config.getClass()).newInstance(dataSource, config);
           if (newInstance != null) {
             if (newInstance instanceof AbstractDataSourceParametersFactory) {
               AbstractDataSourceParametersFactory instance = (AbstractDataSourceParametersFactory) newInstance;
@@ -302,18 +291,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   protected void createInformationPanels() {
     for (com.openitech.db.model.xml.config.Workarea.Information.Panels panel : dataSourceXML.getInformation().getPanels()) {
       try {
-        Object newInstance = null;
-        if (panel.getGroovy() != null) {
-          GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-          Class gcls = gcl.parseClass(panel.getGroovy(), "wa" + this.getOpis() + "_" + System.currentTimeMillis());
-          Constructor constructor = gcls.getConstructor(config.getClass());
-          newInstance = constructor.newInstance(config);
-        } else if (panel.getClassName() != null) {
-          @SuppressWarnings(value = "static-access")
-          Class jcls = DataSourceFactory.class.forName(panel.getClassName());
-          Constructor constructor = jcls.getConstructor(config.getClass());
-          newInstance = constructor.newInstance(config);
-        }
+        Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), panel.getGroovy(), panel.getClassName(), config.getClass()).newInstance(config);
+        
         if (newInstance instanceof java.awt.Component) {
           this.informationPanels.put(panel.getTitle(), (java.awt.Component) newInstance);
         } else {
@@ -380,16 +359,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if ((dataSourceXML.getAssociatedTasks() != null) && !dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
         for (TaskPanes taskPane : dataSourceXML.getAssociatedTasks().getTaskPanes()) {
           Object newInstance = null;
-          if (taskPane.getGroovy() != null) {
-            GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-            Class gcls = gcl.parseClass(taskPane.getGroovy(), "wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis());
-            Constructor constructor = gcls.getConstructor(config.getClass());
-            newInstance = constructor.newInstance(config);
-          } else if (taskPane.getClassName() != null) {
-            @SuppressWarnings(value = "static-access")
-            Class jcls = DataSourceFactory.class.forName(taskPane.getClassName());
-            Constructor constructor = jcls.getConstructor(config.getClass());
-            newInstance = constructor.newInstance(config);
+          if ((taskPane.getGroovy() != null) ||
+              (taskPane.getClassName() != null)) {
+            ClassInstanceFactory.getInstance("wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis(), taskPane.getGroovy(), taskPane.getClassName(), config.getClass()).newInstance(config);
           } else if (taskPane.getTaskList() != null && !taskPane.getTaskList().getTasks().isEmpty()) {
             newInstance = new JXDataSourceTaskPane(config, dataSource);
             ((JXDataSourceTaskPane) newInstance).setTitle(taskPane.getTitle());
@@ -425,18 +397,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     com.openitech.db.model.xml.config.Workarea.DataEntryPanel panel = dataSourceXML.getDataEntryPanel();
 
     try {
-      Object newInstance = null;
-      if (panel.getGroovy() != null) {
-        GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-        Class gcls = gcl.parseClass(panel.getGroovy(), "wa_dep_" + this.getOpis() + "_" + System.currentTimeMillis());
-        Constructor constructor = gcls.getConstructor(config.getClass());
-        newInstance = constructor.newInstance(config);
-      } else if (panel.getClassName() != null) {
-        @SuppressWarnings(value = "static-access")
-        Class jcls = DataSourceFactory.class.forName(panel.getClassName());
-        Constructor constructor = jcls.getConstructor(config.getClass());
-        newInstance = constructor.newInstance(config);
-      }
+      Object newInstance = ClassInstanceFactory.getInstance("wa_dep_" + this.getOpis() + "_" + System.currentTimeMillis(), panel.getGroovy(), panel.getClassName(), config.getClass()).newInstance(config);
       if (newInstance instanceof javax.swing.JComponent) {
         this.dataEntryPanel = (javax.swing.JComponent) newInstance;
       }
@@ -477,18 +438,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
     private void addTasks(List<Tasks> tasks) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException {
       for (Tasks task : tasks) {
-        Object newInstance = null;
-        if (task.getGroovy() != null) {
-          GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-          Class gcls = gcl.parseClass(task.getGroovy(), "wa_task" + (this.getTitle() == null ? "" : this.getTitle()) + "_" + System.currentTimeMillis());
-          Constructor constructor = gcls.getConstructor(config.getClass());
-          newInstance = constructor.newInstance(config);
-        } else if (task.getClassName() != null) {
-          @SuppressWarnings(value = "static-access")
-          Class jcls = DataSourceFactory.class.forName(task.getClassName());
-          Constructor constructor = jcls.getConstructor(config.getClass());
-          newInstance = constructor.newInstance(config);
-        }
+        Object newInstance = ClassInstanceFactory.getInstance("wa_task" + (this.getTitle() == null ? "" : this.getTitle()) + "_" + System.currentTimeMillis(), task.getGroovy(), task.getClassName(), config.getClass()).newInstance(config);
         if (newInstance != null) {
           if (newInstance instanceof DataSourceObserver) {
             ((DataSourceObserver) newInstance).setDataSource(dataSource);

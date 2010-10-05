@@ -188,17 +188,8 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 if (factory != null) {
                   Object newInstance = null;
                   try {
-                    if (factory.getGroovy() != null) {
-                      GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-                      Class gcls = gcl.parseClass(factory.getGroovy(), "waSifrantSeekType_" + System.currentTimeMillis());
-                      Constructor constructor = gcls.getConstructor(String.class);
-                      newInstance = constructor.newInstance(field);
-                    } else if (factory.getClassName() != null) {
-                      @SuppressWarnings(value = "static-access")
-                      Class jcls = AbstractDataSourceParametersFactory.class.forName(factory.getClassName());
-                      Constructor constructor = jcls.getConstructor(String.class);
-                      newInstance = constructor.newInstance(field);
-                    }
+                    newInstance = ClassInstanceFactory.getInstance("waSifrantSeekType_"  + System.currentTimeMillis(), factory.getGroovy(), factory.getClassName(), String.class).newInstance(field);
+                    
                     sifrantSeekType = (DataSourceFilters.SifrantSeekType) newInstance;
                   } catch (ClassNotFoundException ex) {
                     Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);

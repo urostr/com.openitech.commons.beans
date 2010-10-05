@@ -143,18 +143,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
   }
 
   protected Object createDataSourceFilter(DataSourceFilter dsf) throws NoSuchMethodException, IllegalAccessException, InstantiationException, ClassNotFoundException, InvocationTargetException, CompilationFailedException, IllegalArgumentException, SecurityException {
-    Object newInstance = null;
-    if (dsf.getFactory().getGroovy() != null) {
-      GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-      Class gcls = gcl.parseClass(dsf.getFactory().getGroovy(), "wa" + (dsf.getName() == null ? "" : dsf.getName()) + "_" + System.currentTimeMillis());
-      Constructor constructor = gcls.getConstructor(String.class, config.getClass());
-      newInstance = constructor.newInstance(dsf.getReplace(), config);
-    } else if (dsf.getFactory().getClassName() != null) {
-      @SuppressWarnings(value = "static-access")
-      Class jcls = DataSourceFactory.class.forName(dsf.getFactory().getClassName());
-      Constructor constructor = jcls.getConstructor(String.class, config.getClass());
-      newInstance = constructor.newInstance(dsf.getReplace(), config);
-    }
+    Object newInstance = ClassInstanceFactory.getInstance("wa" + (dsf.getName() == null ? "" : dsf.getName()) + "_" + System.currentTimeMillis(), dsf.getFactory(), String.class, config.getClass()).newInstance(dsf.getReplace(), config);
     if (newInstance != null) {
       if (newInstance instanceof DataSourceObserver) {
         ((DataSourceObserver) newInstance).setDataSource(dataSource);
