@@ -104,7 +104,7 @@ public class ClassInstanceFactory<T> {
     Class clazz = null;
     if (getFactory().getGroovy() != null) {
       GroovyClassLoader gcl = new GroovyClassLoader(DataSourceFactory.class.getClassLoader());
-      clazz = gcl.parseClass(getFactory().getGroovy(), "wa" + (getName() == null ? "" : getName()) + "_" + System.currentTimeMillis());
+      clazz = gcl.parseClass(getFactory().getGroovy(), (getName() == null ? "classInstance_" + System.currentTimeMillis() : getName()));
     } else if (getFactory().getClassName() != null) {
       clazz = ClassInstanceFactory.class.forName(getFactory().getClassName());
     }
