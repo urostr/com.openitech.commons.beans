@@ -359,7 +359,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
             } else {
               updateEvents.setInt(param++, event.getEventSource());
             }
-            updateEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+            long time = System.currentTimeMillis();
+            if (event != null && event.getDatum() != null) {
+              time = event.getDatum().getTime();
+            }
+            updateEvents.setTimestamp(param++, new java.sql.Timestamp(time));
             updateEvents.setString(param++, event.getOpomba());
             updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
             updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
