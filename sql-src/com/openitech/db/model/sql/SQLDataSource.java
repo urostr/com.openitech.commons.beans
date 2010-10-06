@@ -4556,8 +4556,12 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
 
     if (!temporarySubselectSqlParameters.isEmpty()) {
-      for (TemporarySubselectSqlParameter.TemporaryTableGroup tempSubselect : temporarySubselectSqlParameters) {
-        tempSubselect.executeQuery(connection, queryParameters);
+      try {
+        for (TemporarySubselectSqlParameter.TemporaryTableGroup tempSubselect : temporarySubselectSqlParameters) {
+          tempSubselect.executeQuery(connection, queryParameters);
+        }
+      } catch (InterruptedException ex) {
+        throw new SQLException("Can't prepare the temporary tables", ex);
       }
     }
     return queryParameters;

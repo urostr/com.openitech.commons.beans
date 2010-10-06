@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,7 +39,7 @@ import java.util.logging.Logger;
  */
 public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
-  private static final Map<String, Semaphore> locks = Collections.synchronizedMap(new HashMap<String, Semaphore>());
+  private static final Map<String, ReentrantLock> locks = Collections.synchronizedMap(new HashMap<String, ReentrantLock>());
 
   public TemporarySubselectSqlParameter(String replace) {
     super(replace);
@@ -275,7 +277,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
   }
 
-  public void executeQuery(Connection connection, List<Object> parameters) throws SQLException {
+  public void executeQuery(Connection connection, List<Object> parameters) throws SQLException, InterruptedException {
     Statement statement = connection.createStatement();
     try {
       boolean fill = !isFillOnceOnly();
@@ -292,11 +294,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
       String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
 
-      Semaphore lock = null;
+      ReentrantLock lock = null;
       if (locks.containsKey(table)) {
         lock = locks.get(table);
       } else {
-        lock = new Semaphore(1);
+        lock = new ReentrantLock();
         locks.put(table, lock);
       }
 
@@ -316,7 +318,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               tm.beginTransaction();
             }
           }
-          lock.acquireUninterruptibly();
+          lock.tryLock(1, TimeUnit.SECONDS);
           try {
             for (String sql : createTableSqls) {
               String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
@@ -329,7 +331,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             statement.executeBatch();
             fill = true;
           } finally {
-            lock.release();
+            lock.unlock();
           }
         }
 
@@ -347,7 +349,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               transaction = true;
               tm.beginTransaction();
             }
-            lock.acquireUninterruptibly();
+            lock.tryLock(1, TimeUnit.SECONDS);
           }
 
           try {
@@ -400,7 +402,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             }
           } finally {
             if (transaction) {
-              lock.release();
+              lock.unlock();
             }
           }
         }
@@ -525,7 +527,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       return ttp.iterator();
     }
 
-    public void executeQuery(Connection connection, List<Object> queryParameters) throws SQLException {
+    public void executeQuery(Connection connection, List<Object> queryParameters) throws SQLException, InterruptedException {
       if (size()>1) {
         lock.acquireUninterruptibly();
         try {
@@ -548,7 +550,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       }
     }
 
-    private void execute(Connection connection, List<Object> queryParameters) throws SQLException {
+    private void execute(Connection connection, List<Object> queryParameters) throws SQLException, InterruptedException {
       for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : ttp) {
         temporarySubselectSqlParameter.executeQuery(connection, queryParameters);
       }
