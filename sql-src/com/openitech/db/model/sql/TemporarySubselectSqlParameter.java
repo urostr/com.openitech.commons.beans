@@ -487,7 +487,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
   public static class TemporaryTableGroup implements Iterable<TemporarySubselectSqlParameter> {
     private static final Map<TemporarySubselectSqlParameter,TemporaryTableGroup> groups = new HashMap<TemporarySubselectSqlParameter, TemporaryTableGroup>();
-    private final Semaphore lock = new Semaphore(1);
+    private final ReentrantLock lock = new ReentrantLock();
 
     final Set<TemporarySubselectSqlParameter> ttp = new LinkedHashSet<TemporarySubselectSqlParameter>();
     
@@ -529,7 +529,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
     public void executeQuery(Connection connection, List<Object> queryParameters) throws SQLException, InterruptedException {
       if (size()>1) {
-        lock.acquireUninterruptibly();
+        lock.tryLock(1, TimeUnit.SECONDS);
         try {
           TransactionManager tm = TransactionManager.getInstance(connection);
 
@@ -543,7 +543,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           }
 
         } finally {
-          lock.release();
+          lock.unlock();
         }
       } else {
         execute(connection, queryParameters);

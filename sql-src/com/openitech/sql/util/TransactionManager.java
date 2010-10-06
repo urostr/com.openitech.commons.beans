@@ -108,16 +108,22 @@ public class TransactionManager {
         }
       } else if (savepoint != null) {
         connection.rollback(savepoint);
-        System.err.println("-- ROLLBACK TO SAVEPOINT (" + savepoint.toString() + ") -- ");
       } else {
         activeSavepoints.clear();
         connection.rollback();
-        System.err.println("-- ROLLBACK TRANSACTION -- ");
       }
       if (savepoint != null) {
         activeSavepoints.remove(savepoint);
       }
-      if (activeSavepoints.size() == 0) {
+      if (!commit) {
+        if (activeSavepoints.empty()) {
+          System.err.println("-- ROLLBACK TRANSACTION -- ");
+        } else {
+          System.err.println("-- ROLLBACK TO SAVEPOINT (" + savepoint.toString() + ") -- ");
+        }
+      }
+
+      if (activeSavepoints.empty()) {
         connection.setAutoCommit(autocommit);
       }
       return true;
