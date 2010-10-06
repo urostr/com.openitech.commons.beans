@@ -4,14 +4,11 @@ import com.openitech.Settings;
 import com.openitech.swing.JXDimBusyLabel;
 import com.openitech.db.model.*;
 import java.awt.EventQueue;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -205,6 +202,8 @@ public final class RefreshDataSource extends DataSourceEvent {
         event.dataSource.reload();
     } catch (SQLException ex) {
       event.dataSource.reload();
+    } catch (Throwable thw) {
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading ["+event.dataSource.getName()+"]", thw);
     }
     setReady();
   }
