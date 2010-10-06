@@ -318,7 +318,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               tm.beginTransaction();
             }
           }
-          lock.tryLock(1, TimeUnit.SECONDS);
+          if (!(lock.tryLock()||lock.tryLock(3, TimeUnit.SECONDS))) {
+            throw new SQLException("Can't lock "+sqlMaterializedView.getValue());
+          }
+
           try {
             for (String sql : createTableSqls) {
               String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
@@ -344,12 +347,17 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
 
         if (fill && !disabled) {
+          boolean locked = false;
+          
           if (sqlMaterializedView != null) {
             if (!(transaction || tm.isTransaction())) {
               transaction = true;
               tm.beginTransaction();
             }
-            lock.tryLock(1, TimeUnit.SECONDS);
+
+            if (!(locked = lock.tryLock()||lock.tryLock(3, TimeUnit.SECONDS))) {
+              throw new SQLException("Can't lock "+sqlMaterializedView.getValue());
+            }
           }
 
           try {
@@ -401,7 +409,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               System.out.println("##############");
             }
           } finally {
-            if (transaction) {
+            if (locked) {
               lock.unlock();
             }
           }
