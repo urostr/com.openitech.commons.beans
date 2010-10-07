@@ -27,7 +27,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -249,7 +248,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         long timer = System.currentTimeMillis();
         String query = SQLDataSource.substParameters(isTableDataValidSql, parameters);
         if (!Equals.equals(this.connection, connection)
-                      || !Equals.equals(this.qIsTableDataValidSql, query)) {
+                || !Equals.equals(this.qIsTableDataValidSql, query)) {
           this.qIsTableDataValidSql = query;
           psIsTableDataValidSql = connection.prepareStatement(this.qIsTableDataValidSql,
                   ResultSet.TYPE_SCROLL_INSENSITIVE,
@@ -278,35 +277,41 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   }
 
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException, InterruptedException {
-    Statement statement = connection.createStatement();
+    boolean fill = !isFillOnceOnly();
+    long timer = System.currentTimeMillis();
+
+    String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
+    List<Object> qparams = new ArrayList<Object>(parameters.size());
+    qparams.addAll(getParameters());
+    qparams.addAll(parameters);
+    qparams.add(getSubstSqlParameter());
+    if (sqlMaterializedView != null) {
+      qparams.add(sqlMaterializedView);
+    }
+
+    String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
+
+    ReentrantLock lock = null;
+    if (locks.containsKey(table)) {
+      lock = locks.get(table);
+    } else {
+      lock = new ReentrantLock();
+      locks.put(table, lock);
+    }
+
+    boolean locked = false;
+    if (!(locked = lock.tryLock() || lock.tryLock(3, TimeUnit.SECONDS))) {
+      throw new SQLException("Can't lock " + sqlMaterializedView.getValue());
+    }
+
     try {
-      boolean fill = !isFillOnceOnly();
-      long timer = System.currentTimeMillis();
-
-      String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
-      List<Object> qparams = new ArrayList<Object>(parameters.size());
-      qparams.addAll(getParameters());
-      qparams.addAll(parameters);
-      qparams.add(getSubstSqlParameter());
-      if (sqlMaterializedView != null) {
-        qparams.add(sqlMaterializedView);
-      }
-
-      String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
-
-      ReentrantLock lock = null;
-      if (locks.containsKey(table)) {
-        lock = locks.get(table);
-      } else {
-        lock = new ReentrantLock();
-        locks.put(table, lock);
-      }
-
-      TransactionManager tm = TransactionManager.getInstance(connection);
-
-      boolean transaction = false;
-      boolean commit = false;
+      Statement statement = connection.createStatement();
       try {
+        TransactionManager tm = TransactionManager.getInstance(connection);
+
+        boolean transaction = false;
+        boolean commit = false;
+
         try {
           if (checkTableSql != null) {
             statement.executeQuery(SQLDataSource.substParameters(checkTableSql, qparams));
@@ -318,8 +323,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               tm.beginTransaction();
             }
           }
-          if (!(lock.tryLock()||lock.tryLock(3, TimeUnit.SECONDS))) {
-            throw new SQLException("Can't lock "+sqlMaterializedView.getValue());
+          if (!(lock.tryLock() || lock.tryLock(3, TimeUnit.SECONDS))) {
+            throw new SQLException("Can't lock " + sqlMaterializedView.getValue());
           }
 
           try {
@@ -347,16 +352,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
 
         if (fill && !disabled) {
-          boolean locked = false;
-          
           if (sqlMaterializedView != null) {
             if (!(transaction || tm.isTransaction())) {
               transaction = true;
               tm.beginTransaction();
-            }
-
-            if (!(locked = lock.tryLock()||lock.tryLock(3, TimeUnit.SECONDS))) {
-              throw new SQLException("Can't lock "+sqlMaterializedView.getValue());
             }
           }
 
@@ -408,23 +407,25 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               System.out.println("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
               System.out.println("##############");
             }
+
+
+            commit = true;
+          } catch (SQLException ex) {
+            Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
+            throw new SQLException(ex);
           } finally {
-            if (locked) {
-              lock.unlock();
+            if (transaction) {
+              tm.endTransaction(commit);
             }
           }
         }
-        commit = true;
-      } catch (SQLException ex) {
-        Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
-        throw new SQLException(ex);
       } finally {
-        if (transaction) {
-          tm.endTransaction(commit);
-        }
+        statement.close();
       }
     } finally {
-      statement.close();
+      if (locked) {
+        lock.unlock();
+      }
     }
   }
 
@@ -494,11 +495,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   }
 
   public static class TemporaryTableGroup implements Iterable<TemporarySubselectSqlParameter> {
-    private static final Map<TemporarySubselectSqlParameter,TemporaryTableGroup> groups = new HashMap<TemporarySubselectSqlParameter, TemporaryTableGroup>();
-    private final ReentrantLock lock = new ReentrantLock();
 
+    private static final Map<TemporarySubselectSqlParameter, TemporaryTableGroup> groups = new HashMap<TemporarySubselectSqlParameter, TemporaryTableGroup>();
+    private final ReentrantLock lock = new ReentrantLock();
     final Set<TemporarySubselectSqlParameter> ttp = new LinkedHashSet<TemporarySubselectSqlParameter>();
-    
+
     private TemporaryTableGroup() {
     }
 
@@ -536,7 +537,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
 
     public void executeQuery(Connection connection, List<Object> queryParameters) throws SQLException, InterruptedException {
-      if (size()>1) {
+      if (size() > 1) {
         lock.tryLock(1, TimeUnit.SECONDS);
         try {
           TransactionManager tm = TransactionManager.getInstance(connection);
