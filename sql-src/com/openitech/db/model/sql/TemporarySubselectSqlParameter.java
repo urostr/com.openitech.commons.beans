@@ -301,7 +301,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
     boolean locked = false;
     if (!(locked = lock.tryLock() || lock.tryLock(3, TimeUnit.SECONDS))) {
-      throw new SQLException("Can't lock " + sqlMaterializedView.getValue());
+      throw new SQLException("Can't lock " + table);
     }
 
     try {
