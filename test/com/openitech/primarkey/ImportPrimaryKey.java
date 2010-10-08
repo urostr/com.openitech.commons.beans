@@ -50,128 +50,157 @@ public class ImportPrimaryKey extends TestCase {
     List<Integer> podvojeniEventId = new ArrayList<Integer>();
     List<Integer> deletaniEventId = new ArrayList<Integer>();
     boolean commit = false;
+    int progress = 0;
+    final int korak = 5000;
     try {
       DbConnection.register();
       int param = 1;
 
       //prepare
-      SqlUtilities.getInstance().beginTransaction();
+
       Connection connection = ConnectionManager.getInstance().getTxConnection();
       PreparedStatement allEvents = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKey.class, "sql/events.sql", "cp1250"));
       PreparedStatement eventValues = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKey.class, "sql/primaryKey.sql", "cp1250"));
 
-      //najdi vse evente
-      ResultSet rs_allEvents = allEvents.executeQuery();
-      while (rs_allEvents.next()) {
-        int eventId = rs_allEvents.getInt("Id");
-        int idSIfranta = rs_allEvents.getInt("idSIfranta");
-        String idSifre = rs_allEvents.getString("IdSifre");
-
-        //ustvari nov primarykey za shranjevanje
-        EventPK eventPK = new EventPK();
-        eventPK.setEventId(eventId);
-        eventPK.setIdSifranta(idSIfranta);
-        eventPK.setIdSifre(idSifre);
-
-        //najdi eventValues za doloèen eventId
+//      while (progress < 1000000)
+      {
         param = 1;
-        eventValues.clearParameters();
-        eventValues.setInt(param++, 1);
-        eventValues.setInt(param++, eventId);
-        ResultSet rs_primaryKeys = eventValues.executeQuery();
-        while (rs_primaryKeys.next()) {
-          //za vsak PK dodaj polje v eventPK
-          int idPolja = rs_primaryKeys.getInt("idPolja");
-          int tipPolja = rs_primaryKeys.getInt("TipPolja");
-          int fieldValueIndex = rs_primaryKeys.getInt("fieldValueIndex");
-          long valueId = rs_primaryKeys.getLong("valueId");
-          String imePolja = rs_primaryKeys.getString("ImePolja");
-          if (fieldValueIndex > 1) {
-            imePolja = imePolja + fieldValueIndex;
-          }
-          eventPK.addField(new FieldValue(idPolja, imePolja, tipPolja, fieldValueIndex, new VariousValue(valueId, tipPolja, "")));
-        }
+//        allEvents.setInt(param++, progress);
+//        allEvents.setInt(param++, progress + korak);
+
+        //najdi vse evente
+        CachedRowSet rs_allEvents = new CachedRowSetImpl();
+        rs_allEvents.populate(allEvents.executeQuery());
+
+        SqlUtilities.getInstance().beginTransaction();
         try {
-          //shrani PK
-          SqlUtilities.getInstance().storePrimaryKey(eventPK);
-        } catch (SQLPrimaryKeyException ex) {
+          commit = false;
 
+          while (rs_allEvents.next()) {
+            int eventId = rs_allEvents.getInt("Id");
+            int idSIfranta = rs_allEvents.getInt("idSIfranta");
+            String idSifre = rs_allEvents.getString("IdSifre");
 
-          //uredi podvojene zapise
-          //ce so ostale vrednosti enake, zbrisi stare eventId (valid= false)
-          //drugace podvojene pa izpisi za rocni pregled
+            //ustvari nov primarykey za shranjevanje
+            EventPK eventPK = new EventPK();
+            eventPK.setEventId(eventId);
+            eventPK.setIdSifranta(idSIfranta);
+            eventPK.setIdSifre(idSifre);
 
-          //preveri ostale vrednosti
-          param = 1;
-          eventValues.clearParameters();
-          eventValues.setInt(param++, 0);
-          eventValues.setInt(param++, eventId);
-          CachedRowSet rs_allEventValues = new CachedRowSetImpl();
-          rs_allEventValues.populate(eventValues.executeQuery());
-
-          PreparedStatement oldEevntPK = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKey.class, "sql/findOldPK.sql", "cp1250"));
-          param = 1;
-          oldEevntPK.clearParameters();
-          oldEevntPK.setString(param++, eventPK.toHexString());
-          ResultSet rs_oldEevntPK = oldEevntPK.executeQuery();
-          int podvojenPK_eventId = -1;
-          if (rs_oldEevntPK.next()) {
-            podvojenPK_eventId = rs_oldEevntPK.getInt("EventId");
-          }
-          param = 1;
-          eventValues.clearParameters();
-          eventValues.setInt(param++, 0);
-          eventValues.setInt(param++, podvojenPK_eventId);
-          CachedRowSet rs_old_allEventValues = new CachedRowSetImpl();
-          rs_old_allEventValues.populate(eventValues.executeQuery());
-
-          boolean enaka = rs_old_allEventValues.size() == rs_allEventValues.size();
-          while (enaka && rs_allEventValues.next()) {
-            if (rs_old_allEventValues.next()) {
-              int idPolja = rs_allEventValues.getInt("idPolja");
-              int idPoljaOld = rs_old_allEventValues.getInt("idPolja");
-
-              int fieldValueIndex = rs_allEventValues.getInt("fieldValueIndex");
-              int fieldValueIndexOld = rs_old_allEventValues.getInt("fieldValueIndex");
-
-              long valueId = rs_allEventValues.getLong("valueId");
-              long valueIdOld = rs_old_allEventValues.getLong("valueId");
-
-              if (idPolja != idPoljaOld
-                      || fieldValueIndex != fieldValueIndexOld
-                      || valueId != valueIdOld) {
-                enaka = false;
+            //najdi eventValues za doloèen eventId
+            param = 1;
+            eventValues.clearParameters();
+            eventValues.setInt(param++, 1);
+            eventValues.setInt(param++, eventId);
+            ResultSet rs_primaryKeys = eventValues.executeQuery();
+            while (rs_primaryKeys.next()) {
+              //za vsak PK dodaj polje v eventPK
+              int idPolja = rs_primaryKeys.getInt("idPolja");
+              int tipPolja = rs_primaryKeys.getInt("TipPolja");
+              int fieldValueIndex = rs_primaryKeys.getInt("fieldValueIndex");
+              long valueId = rs_primaryKeys.getLong("valueId");
+              String imePolja = rs_primaryKeys.getString("ImePolja");
+              if (fieldValueIndex > 1) {
+                imePolja = imePolja + fieldValueIndex;
               }
-            } else {
-              enaka = false;
+              eventPK.addField(new FieldValue(idPolja, imePolja, tipPolja, fieldValueIndex, new VariousValue(valueId, tipPolja, "")));
             }
+
+            try {
+              //shrani PK
+              SqlUtilities.getInstance().storePrimaryKey(eventPK);
+              commit = true;
+            } catch (SQLPrimaryKeyException ex) {
+              // <editor-fold defaultstate="collapsed" desc="uredi podvojene zapise">
+
+              //uredi podvojene zapise
+              //ce so ostale vrednosti enake, zbrisi stare eventId (valid= false)
+              //drugace podvojene pa izpisi za rocni pregled
+
+              //preveri ostale vrednosti
+              param = 1;
+              eventValues.clearParameters();
+              eventValues.setInt(param++, 0);
+              eventValues.setInt(param++, eventId);
+              CachedRowSet rs_allEventValues = new CachedRowSetImpl();
+              rs_allEventValues.populate(eventValues.executeQuery());
+
+              PreparedStatement oldEevntPK = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKey.class, "sql/findOldPK.sql", "cp1250"));
+              param = 1;
+              oldEevntPK.clearParameters();
+              oldEevntPK.setString(param++, eventPK.toHexString());
+              ResultSet rs_oldEevntPK = oldEevntPK.executeQuery();
+              int podvojenPK_eventId = -1;
+              if (rs_oldEevntPK.next()) {
+                podvojenPK_eventId = rs_oldEevntPK.getInt("EventId");
+              }
+              param = 1;
+              eventValues.clearParameters();
+              eventValues.setInt(param++, 0);
+              eventValues.setInt(param++, podvojenPK_eventId);
+              CachedRowSet rs_old_allEventValues = new CachedRowSetImpl();
+              rs_old_allEventValues.populate(eventValues.executeQuery());
+
+              boolean enaka = rs_old_allEventValues.size() == rs_allEventValues.size();
+              while (enaka && rs_allEventValues.next()) {
+                if (rs_old_allEventValues.next()) {
+                  int idPolja = rs_allEventValues.getInt("idPolja");
+                  int idPoljaOld = rs_old_allEventValues.getInt("idPolja");
+
+                  int fieldValueIndex = rs_allEventValues.getInt("fieldValueIndex");
+                  int fieldValueIndexOld = rs_old_allEventValues.getInt("fieldValueIndex");
+
+                  long valueId = rs_allEventValues.getLong("valueId");
+                  long valueIdOld = rs_old_allEventValues.getLong("valueId");
+
+                  if (idPolja != idPoljaOld
+                          || fieldValueIndex != fieldValueIndexOld
+                          || valueId != valueIdOld) {
+                    enaka = false;
+                  }
+                } else {
+                  enaka = false;
+                }
+              }
+
+              //ce sta enaka zbrisem manjsi eventId
+              if (enaka) {
+                int deleteEventId = eventId > podvojenPK_eventId ? podvojenPK_eventId : eventId;
+                SqlUtilities.getInstance().deleteEvent(deleteEventId);
+                deletaniEventId.add(deleteEventId);
+              } else {
+                podvojeniEventId.add(eventId);
+              }
+              // </editor-fold>
+              commit = true;
+            } catch (SQLException ex3) {
+              ex3.printStackTrace();
+              commit = false;
+            } finally {
+            }
+            
+
           }
 
-          //ce sta enaka zbrisem manjsi eventId
-          if (enaka) {
-            int deleteEventId = eventId > podvojenPK_eventId ? podvojenPK_eventId : eventId;
-            SqlUtilities.getInstance().deleteEvent(deleteEventId);
-            deletaniEventId.add(deleteEventId);
-          } else {
-            podvojeniEventId.add(eventId);
+        } finally {
+          try {
+            SqlUtilities.getInstance().endTransaction(commit);
+          } catch (SQLException ex1) {
+            Logger.getLogger(ImportPrimaryKey.class.getName()).log(Level.SEVERE, null, ex1);
           }
         }
+        progress += korak;
       }
-      commit = true;
     } catch (SQLException ex) {
       Logger.getLogger(ImportPrimaryKey.class.getName()).log(Level.SEVERE, null, ex);
 
     } finally {
-      try {
-        SqlUtilities.getInstance().endTransaction(commit);
-      } catch (SQLException ex1) {
-        Logger.getLogger(ImportPrimaryKey.class.getName()).log(Level.SEVERE, null, ex1);
-      }
-      izposiEventIdje(podvojeniEventId, deletaniEventId);
+
+      izpisiEventIdje(podvojeniEventId, deletaniEventId);
     }
   }
 
-  private void izposiEventIdje(List<Integer> podvojeniEventId, List<Integer> deletaniEventId) {
+  private void izpisiEventIdje(List<Integer> podvojeniEventId, List<Integer> deletaniEventId) {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("Podvojeni zapisi:\n");
     for (Integer integer : podvojeniEventId) {
