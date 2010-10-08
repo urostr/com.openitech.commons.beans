@@ -173,6 +173,29 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     }
   }
 
+  protected boolean canExportData = true;
+
+  /**
+   * Get the value of canExportData
+   *
+   * @return the value of canExportData
+   */
+  public boolean isCanExportData() {
+    return canExportData;
+  }
+
+  /**
+   * Set the value of canExportData
+   *
+   * @param canExportData new value of canExportData
+   */
+  public void setCanExportData(boolean canExportData) {
+    if (this.canExportData!=canExportData) {
+      this.canExportData = canExportData;
+      firePropertyChange("canExportData", !canExportData, canExportData);
+    }
+  }
+
   /**
    * Get the value of cacheRowSet
    *

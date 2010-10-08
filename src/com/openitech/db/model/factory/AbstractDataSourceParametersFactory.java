@@ -22,8 +22,6 @@ import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDe
 import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.Lookup;
 import com.openitech.swing.framework.context.AssociatedFilter;
 import com.openitech.swing.framework.context.AssociatedTasks;
-import groovy.lang.GroovyClassLoader;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -69,6 +67,25 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
    * Configures the data source parameters factory
    */
   public abstract void configure() throws SQLException;
+  protected boolean canExportData = true;
+
+  /**
+   * Get the value of canExportData
+   *
+   * @return the value of canExportData
+   */
+  public boolean isCanExportData() {
+    return canExportData;
+  }
+
+  /**
+   * Set the value of canExportData
+   *
+   * @param canExportData new value of canExportData
+   */
+  public void setCanExportData(boolean canExportData) {
+    this.canExportData = canExportData;
+  }
 
   /**
    * Get the value of parameters
@@ -84,8 +101,13 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
    * @return the value of viewMenuItems
    */
   public List<JMenu> getViewMenuItems() {
-    return viewMenuItems;
+    if (isCanExportData()) {
+      return viewMenuItems;
+    } else {
+      return new ArrayList<JMenu>();
+    }
   }
+  
   protected DataSourceFiltersMap filtersMap = new DataSourceFiltersMap();
 
   /**
@@ -188,8 +210,8 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 if (factory != null) {
                   Object newInstance = null;
                   try {
-                    newInstance = ClassInstanceFactory.getInstance("waSifrantSeekType_"  + System.currentTimeMillis(), factory.getGroovy(), factory.getClassName(), String.class).newInstance(field);
-                    
+                    newInstance = ClassInstanceFactory.getInstance("waSifrantSeekType_" + System.currentTimeMillis(), factory.getGroovy(), factory.getClassName(), String.class).newInstance(field);
+
                     sifrantSeekType = (DataSourceFilters.SifrantSeekType) newInstance;
                   } catch (ClassNotFoundException ex) {
                     Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
@@ -216,7 +238,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                       try {
                         DbDataSource dsSifrant = new DbDataSource();
                         dsSifrant.setShareResults(comboBoxModel.isShareResults());
-                        if (comboBoxModel.getCountSQL()!=null) {
+                        if (comboBoxModel.getCountSQL() != null) {
                           dsSifrant.setCountSql(comboBoxModel.getCountSQL());
                         }
                         dsSifrant.setSelectSql(comboBoxModel.getSelectSQL());
@@ -226,10 +248,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                         final Display display = comboBoxModel.getDisplay();
                         final List<String> valueColumnNames = display.getValueColumnNames();
                         cmSifrant.setValueColumnNames(valueColumnNames.toArray(new String[valueColumnNames.size()]));
-                        if (display.getExtendedValueColumnNames().size()>0) {
+                        if (display.getExtendedValueColumnNames().size() > 0) {
                           cmSifrant.setExtendedValueColumnNames(display.getExtendedValueColumnNames().toArray(new String[display.getExtendedValueColumnNames().size()]));
                         }
-                        if (display.getSeparators().size()>0) {
+                        if (display.getSeparators().size() > 0) {
                           cmSifrant.setSeparator(display.getSeparators().toArray(new String[display.getSeparators().size()]));
                         }
                         cmSifrant.setDataSource(dsSifrant);

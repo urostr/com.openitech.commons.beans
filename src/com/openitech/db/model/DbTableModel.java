@@ -15,7 +15,10 @@ import com.openitech.text.FormatFactory;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.ref.WeakObjectReference;
 import com.openitech.ref.events.ListDataWeakListener;
+import com.openitech.ref.events.PropertyChangeWeakListener;
 import java.awt.Component;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +45,7 @@ import org.jdesktop.swingx.table.DefaultTableColumnModelExt;
  *
  * @author uros
  */
-public class DbTableModel extends AbstractTableModel implements ListDataListener, ActiveRowChangeListener {
+public class DbTableModel extends AbstractTableModel implements ListDataListener, ActiveRowChangeListener, PropertyChangeListener {
 
   private static final Pattern columnPattern = Pattern.compile("\\$C\\{(.*)\\}");
   private static final Pattern functionPattern = Pattern.compile("\\$F\\{(.*)\\}");
@@ -64,6 +67,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   protected ColumnDescriptor[] columnDescriptors = new ColumnDescriptor[]{};
   private transient ListDataWeakListener listDataWeakListener = new ListDataWeakListener(this);
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this);
+  private transient PropertyChangeWeakListener propertyChangeWeakListener = new PropertyChangeWeakListener(this);
   private transient WeakListenerList activeRowChangeListeners;
   private String separator = " ";
   private boolean valuesAsString = false;
@@ -369,11 +373,13 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     if (this.dataSource != null) {
       this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       this.dataSource.removeListDataListener(listDataWeakListener);
+      this.dataSource.removePropertyChangeListener(propertyChangeWeakListener);
     }
     this.dataSource = dataSource;
     if (this.dataSource != null) {
       this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
       this.dataSource.addListDataListener(listDataWeakListener);
+      this.dataSource.addPropertyChangeListener(propertyChangeWeakListener);
     }
     fireTableDataChanged();
   }
@@ -486,6 +492,11 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
   @Override
   public Class<?> getColumnClass(int columnIndex) {
     return ColumnDescriptor.class;
+  }
+
+  @Override
+  public void propertyChange(PropertyChangeEvent evt) {
+    fireTableDataChanged();
   }
 
   public static class DateTimeRenderer extends javax.swing.table.DefaultTableCellRenderer {

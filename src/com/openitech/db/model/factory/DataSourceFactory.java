@@ -26,8 +26,6 @@ import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
-import groovy.lang.GroovyClassLoader;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -220,8 +218,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       canAddRows = dataSourceXML.getDataSource().isCanAddRows();
       canDeleteRows = dataSourceXML.getDataSource().isCanDeleteRows();
     }
+    setCanExportData(dataSourceXML.isCanExportData());
+
     dataSource.setCanAddRows(canAddRows == null ? false : canAddRows);
     dataSource.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
+    dataSource.setCanExportData(isCanExportData());
 
     if (creationParameters != null) {
       Sharing sharing = creationParameters.getSharing();

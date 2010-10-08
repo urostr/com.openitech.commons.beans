@@ -29,6 +29,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.TableModel;
 
 /**
@@ -156,7 +157,40 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   }
 
   public void setExportTableMenu(JMenuItem exportTableMenu) {
-    this.exportTableMenu = addTableMenuItem(exportTableMenu, false);
+    if (isCanExportData()) {
+      this.exportTableMenu = addTableMenuItem(exportTableMenu, false);
+    }
+  }
+  protected boolean canExportData = true;
+
+  /**
+   * Get the value of canExportData
+   *
+   * @return the value of canExportData
+   */
+  public boolean isCanExportData() {
+    return canExportData;
+  }
+
+  /**
+   * Set the value of canExportData
+   *
+   * @param canExportData new value of canExportData
+   */
+  public void setCanExportData(boolean canExportData) {
+    if (this.canExportData != canExportData) {
+      this.canExportData = canExportData;
+      if (exportTableMenu != null) {
+        javax.swing.JPopupMenu menu = getComponentPopupMenu();
+        int index = -1;
+        if (exportTableMenu != null) {
+          index = menu.getComponentIndex(exportTableMenu);
+          if (index >= 0) {
+            menu.remove(index);
+          }
+        }
+      }
+    }
   }
 
   public JMenuItem addTableMenuItem(JMenuItem jMenuItem, boolean separator) {
@@ -323,6 +357,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     } else {
       throw new IllegalArgumentException("The data model for JDbTable is not a DbTableModel.");
     }
+    checkDataSource();
   }
 
   @Override
@@ -505,6 +540,19 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   @Override
   public boolean reload(int row) {
     return (getDataSource() != null) ? getDataSource().reload(row) : false;
+  }
+
+  @Override
+  public void tableChanged(TableModelEvent e) {
+    super.tableChanged(e);
+    checkDataSource();
+  }
+
+
+  private void checkDataSource() {
+    if (getDataSource()!=null) {
+      setCanExportData(getDataSource().isCanExportData());
+    }
   }
 
   private class UpdateViewRunnable implements Runnable {

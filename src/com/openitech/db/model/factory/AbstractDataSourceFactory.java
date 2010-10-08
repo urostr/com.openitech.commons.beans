@@ -47,7 +47,6 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public AbstractDataSourceFactory() {
     this(null);
   }
-
   protected List<Object> additionalParameters;
 
   /**
@@ -56,7 +55,7 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
    * @return the value of additionalParameters
    */
   public List<Object> getAdditionalParameters() {
-    if (additionalParameters==null) {
+    if (additionalParameters == null) {
       additionalParameters = new java.util.ArrayList<Object>();
     }
     return additionalParameters;
@@ -121,7 +120,6 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
 
   public abstract void configure() throws SQLException, ClassNotFoundException;
 //   
-
   protected DbTableModel tableModel;
 
   /**
@@ -226,6 +224,25 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public DataSourceFiltersMap getFiltersMap() {
     return filtersMap;
   }
+  protected boolean canExportData = true;
+
+  /**
+   * Get the value of canExportData
+   *
+   * @return the value of canExportData
+   */
+  public boolean isCanExportData() {
+    return canExportData;
+  }
+
+  /**
+   * Set the value of canExportData
+   *
+   * @param canExportData new value of canExportData
+   */
+  public void setCanExportData(boolean canExportData) {
+    this.canExportData = canExportData;
+  }
   protected List<JMenu> viewMenuItems = new ArrayList<JMenu>();
 
   /**
@@ -234,11 +251,14 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
    * @return the value of viewMenuItems
    */
   public List<JMenu> getViewMenuItems() {
-    return viewMenuItems;
+    if (canExportData) {
+      return viewMenuItems;
+    } else {
+      return new ArrayList<JMenu>();
+    }
   }
-
+  
   private java.util.List<JXTaskPane> taskPanes = new java.util.ArrayList<JXTaskPane>();
-
 
   @Override
   public List<JXTaskPane> getTaskPanes() {
@@ -254,7 +274,6 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public boolean remove(JXTaskPane taskPane) {
     return taskPanes.remove(taskPane);
   }
-  
   protected JComponent dataEntryPanel;
 
   /**
@@ -274,7 +293,6 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public void setDataEntryPanel(JComponent dataEntryPanel) {
     this.dataEntryPanel = dataEntryPanel;
   }
-
   protected boolean readOnly;
 
   /**
@@ -294,5 +312,4 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public void setReadOnly(boolean readOnly) {
     this.readOnly = readOnly;
   }
-
 }
