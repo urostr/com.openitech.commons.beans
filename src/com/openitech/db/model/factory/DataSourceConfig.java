@@ -6,7 +6,6 @@
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-
 package com.openitech.db.model.factory;
 
 import com.openitech.text.CaseInsensitiveString;
@@ -19,13 +18,12 @@ import javax.swing.text.Document;
  * @author uros
  */
 public class DataSourceConfig<T extends DbDataModel> {
+
   private final static java.util.Map<CaseInsensitiveString, Document> documents = Collections.synchronizedMap(new java.util.HashMap<CaseInsensitiveString, Document>());
 
   public DataSourceConfig(T dataModel) {
     this.dataModel = dataModel;
   }
-
-
   private T dataModel;
 
   /**
@@ -45,7 +43,7 @@ public class DataSourceConfig<T extends DbDataModel> {
   public void setDataModel(T dataModel) {
     this.dataModel = dataModel;
   }
-  
+
   public static Document get(String documentName) {
     return get(documentName, new javax.swing.text.PlainDocument());
   }
@@ -56,11 +54,13 @@ public class DataSourceConfig<T extends DbDataModel> {
     if (documents.containsKey(ci)) {
       result = documents.get(ci);
     } else {
+      if (document == null) {
+        document = new javax.swing.text.PlainDocument();
+      }
       documents.put(ci, document);
       result = document;
     }
 
     return result;
   }
-
 }
