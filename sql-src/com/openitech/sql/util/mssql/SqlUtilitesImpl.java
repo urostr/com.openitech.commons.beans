@@ -1438,7 +1438,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         CachedRowSet rs;
         if (USE_INDEXED_CACHE) {
           long start = System.currentTimeMillis();
-          if (DEVELOPMENT&&!ttGeneratedFields.getSqlMaterializedView().isViewValid(dsGeneratedFields.getConnection(), ttGeneratedFieldsParameters)) {
+          if (DEVELOPMENT && !ttGeneratedFields.getSqlMaterializedView().isViewValid(dsGeneratedFields.getConnection(), ttGeneratedFieldsParameters)) {
             dsGeneratedFields.reload();
             crsAllGeneratedFields = dsGeneratedFields.getCachedRowSet();
           }
@@ -2098,15 +2098,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues] ").append(ev_alias).append(" WITH (NOLOCK) ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
         NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
-        if (fieldNames.containsKey(fn)) {
-          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId);
+        //TODO to ni uredu, ker ne da pravilnega rezultata, ce ne iscem po id polja
+        if (fieldNames.containsKey(fn) || f.getIdPolja() != null) {
+          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn) != null ? fieldNames.get(fn).fieldId : f.getIdPolja().intValue());
           sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
         } else {
+          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append("(SELECT Id FROM " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] WHERE ImePolja = '").append(f.getName()).append("' ) ");
+          sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
           sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex());
-          sb.append(") ");
-          sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" WITH (NOLOCK) ON (");
-          sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
-          sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
+//          sb.append(") ");
+//          sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" WITH (NOLOCK) ON (");
+//          sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
+//          sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
         }
         sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[VariousValues] ").append(val_alias).append(" WITH (NOLOCK) ON (");
         sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
