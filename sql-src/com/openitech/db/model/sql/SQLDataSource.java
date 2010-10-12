@@ -3118,7 +3118,11 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public int getRow() throws SQLException {
     if (loadData()) {
-      return inserting ? getRowCount() : openSelectResultSet().getRow();
+      if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
+        return 1;
+      } else {
+        return inserting ? getRowCount() : openSelectResultSet().getRow();
+      }
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
