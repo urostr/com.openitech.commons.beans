@@ -15,6 +15,8 @@ import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.text.FormatFactory;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.util.Equals;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.Types;
 import javax.swing.SwingUtilities;
+import javax.swing.event.EventListenerList;
 
 /**
  *
@@ -42,6 +45,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
   private boolean updatingFieldValue = false;
   private transient Object oldValue = null;
   private boolean wasNull = false;
+  protected EventListenerList listenerList = new EventListenerList();
 
   /** Creates a new instance of DbFieldObserver */
   public DbFieldObserver() {
@@ -49,6 +53,58 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", "dataSource_activeRowChanged");
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
+    }
+  }
+
+  /**
+   * Adds an <code>ActionListener</code>.
+   * <p>
+   * The <code>ActionListener</code> will receive an <code>ActionEvent</code>
+   * when a selection has been made. If the combo box is editable, then
+   * an <code>ActionEvent</code> will be fired when editing has stopped.
+   *
+   * @param l  the <code>ActionListener</code> that is to be notified
+   * @see #setSelectedItem
+   */
+  public void addActionListener(ActionListener l) {
+    listenerList.add(ActionListener.class, l);
+  }
+
+  /** Removes an <code>ActionListener</code>.
+   *
+   * @param l  the <code>ActionListener</code> to remove
+   */
+  public void removeActionListener(ActionListener l) {
+    listenerList.remove(ActionListener.class, l);
+  }
+  private boolean firingActionEvent = false;
+
+  /**
+   * Notifies all listeners that have registered interest for
+   * notification on this event type.
+   *
+   * @see EventListenerList
+   */
+  protected void fireUpdateActionEvent() {
+    if (!firingActionEvent) {
+      // Set flag to ensure that an infinite loop is not created
+      firingActionEvent = true;
+      ActionEvent e = null;
+      // Guaranteed to return a non-null array
+      Object[] listeners = listenerList.getListenerList();
+      // Process the listeners last to first, notifying
+      // those that are interested in this event
+      for (int i = listeners.length - 2; i >= 0; i -= 2) {
+        if (listeners[i] == ActionListener.class) {
+          // Lazily create the event:
+          if (e == null) {
+            e = new ActionEvent(this, ActionEvent.ACTION_PERFORMED,
+                    "UPDATE");
+          }
+          ((ActionListener) listeners[i + 1]).actionPerformed(e);
+        }
+      }
+      firingActionEvent = false;
     }
   }
 
@@ -130,7 +186,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             }
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource "+dataSource.getName()+" sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
           result = null;
         }
       }
@@ -172,7 +228,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             result = Integer.MIN_VALUE;
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource "+dataSource.getName()+" sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
           result = 0;
         }
       }
@@ -197,7 +253,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             result = Double.MIN_VALUE;
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource "+dataSource.getName()+" sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
           result = 0;
         }
       }
@@ -206,6 +262,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
     return result;
   }
   //TODO motoda ki vraèa date in ne timestamp
+
   public Date getValueAsDate() {
     Date result = null;
     wasNull = true;
@@ -222,7 +279,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             }
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource "+dataSource.getName()+" sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
           result = null;
         }
       }
@@ -279,7 +336,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             }
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource "+dataSource.getName()+" sql: '" + dataSource.getSelectSql() + "'. [" + ex.getMessage() + "]", ex);
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql: '" + dataSource.getSelectSql() + "'. [" + ex.getMessage() + "]", ex);
           result = false;
         }
       }
@@ -300,7 +357,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             wasNull = dataSource.wasNull();
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource "+dataSource.getName()+" sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
           result = new byte[]{};
         }
       }
@@ -314,6 +371,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       activeRowChangeWeakListener.setEnabled(false);
       try {
         dataSource.updateBytes(columnName, value);
+        fireUpdateActionEvent();
         byte[] newvalue = dataSource.getBytes(columnName);
         if ((newvalue == null && value != null) || (!Arrays.equals(newvalue, value))) {
           fireLaterFieldValueChanged(new ActiveRowChangeEvent(dataSource, columnName, -1));
@@ -360,6 +418,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
               break;
           }
         }
+        fireUpdateActionEvent();
         boolean newvalue = this.getValueAsBoolean();
         if (newvalue != value) {
           fireLaterFieldValueChanged(new ActiveRowChangeEvent(dataSource, columnName, -1));
@@ -378,6 +437,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
           value = new java.sql.Timestamp(((java.util.Date) value).getTime());
         }
         dataSource.updateObject(columnName, value);
+        fireUpdateActionEvent();
         Object newvalue = dataSource.getObject(columnName);
 //        if (!((newvalue==null && value==null) || (value!=null && value.equals(newvalue))))
         if (!Equals.equals(newvalue, value)) {
@@ -394,6 +454,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       activeRowChangeWeakListener.setEnabled(false);
       try {
         dataSource.updateInt(columnName, value);
+        fireUpdateActionEvent();
         int newvalue = dataSource.getInt(columnName);
         if (newvalue != value) {
           fireLaterFieldValueChanged(new ActiveRowChangeEvent(dataSource, columnName, -1));
