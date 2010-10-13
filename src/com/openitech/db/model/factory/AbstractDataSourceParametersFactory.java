@@ -94,6 +94,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
    */
   public abstract List<? extends Object> getParameters();
   protected List<JMenu> viewMenuItems = new ArrayList<JMenu>();
+  protected List<JMenu> exportMenuItems = new ArrayList<JMenu>();
 
   /**
    * Get the value of viewMenuItems
@@ -104,7 +105,8 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
     if (isCanExportData()) {
       return viewMenuItems;
     } else {
-      return new ArrayList<JMenu>();
+      viewMenuItems.removeAll(exportMenuItems);
+      return viewMenuItems;
     }
   }
   
@@ -333,6 +335,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
       }
 
       if (jmiExport.getMenuComponentCount() > 0) {
+        exportMenuItems.add(jmiExport);
         viewMenuItems.add(jmiExport);
       }
     }
