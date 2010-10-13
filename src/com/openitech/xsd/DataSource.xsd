@@ -261,6 +261,11 @@
       </xsd:element>
     </xsd:all>
   </xsd:complexType>
+    <xsd:complexType name="SeekLayout">
+    <xsd:all>
+      <xsd:element name="DisplayInPanel" type="xsd:boolean"/>
+    </xsd:all>
+  </xsd:complexType>
   <xsd:complexType name="SeekParameters">
     <xsd:choice>
       <xsd:element name="SeekType">
@@ -271,6 +276,7 @@
             <xsd:element name="Type" type="tns:SeekType" minOccurs="0"></xsd:element>
             <xsd:element name="MinumumLength" type="xsd:int" minOccurs="0"></xsd:element>
             <xsd:element name="ParameterCount" type="xsd:int" minOccurs="0"></xsd:element>
+            <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -280,6 +286,7 @@
             <xsd:element name="Name" type="xsd:string"></xsd:element>
             <xsd:element name="Field" type="xsd:string"></xsd:element>
             <xsd:element name="Type" type="tns:SeekType" minOccurs="0"></xsd:element>
+            <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -288,6 +295,7 @@
           <xsd:all>
             <xsd:element name="Name" type="xsd:string"></xsd:element>
             <xsd:element name="Field" type="xsd:string"></xsd:element>
+            <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -296,6 +304,7 @@
           <xsd:all>
             <xsd:element name="Name" type="xsd:string"></xsd:element>
             <xsd:element name="Field" type="xsd:string"></xsd:element>
+            <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
             <xsd:element name="LookupDefinition">
               <xsd:complexType>
                 <xsd:choice>

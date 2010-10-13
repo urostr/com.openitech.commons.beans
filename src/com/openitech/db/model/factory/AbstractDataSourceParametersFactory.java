@@ -109,7 +109,6 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
       return viewMenuItems;
     }
   }
-  
   protected DataSourceFiltersMap filtersMap = new DataSourceFiltersMap();
 
   /**
@@ -175,6 +174,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 seekType = new DataSourceFilters.SeekType(field, getSeekType(type), minumumLength, parameterCount);
               }
               seekType.setName(parameter.getName());
+              seekType.setLayout(parameter.getLayout());
 
               filtersMap.put(filter, seekType);
             } else if (seekParameter.getIntegerSeekType() != null) {
@@ -190,6 +190,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 integerSeekType = new DataSourceFilters.IntegerSeekType(field, getSeekType(type));
               }
               integerSeekType.setName(parameter.getName());
+              integerSeekType.setLayout(parameter.getLayout());
 
               filtersMap.put(filter, integerSeekType);
             } else if (seekParameter.getBetweenDateSeekType() != null) {
@@ -199,6 +200,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
 
               DataSourceFilters.BetweenDateSeekType betweenDateSeekType = new DataSourceFilters.BetweenDateSeekType(field);
               betweenDateSeekType.setName(parameter.getName());
+              betweenDateSeekType.setLayout(parameter.getLayout());
 
               filtersMap.put(filter, betweenDateSeekType);
             } else if (seekParameter.getSifrantSeekType() != null) {
@@ -289,6 +291,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
 
                 if (sifrantSeekType != null) {
                   sifrantSeekType.setName(parameter.getName());
+                  sifrantSeekType.setLayout(parameter.getLayout());
 
                   filtersMap.put(filter, sifrantSeekType);
                 }

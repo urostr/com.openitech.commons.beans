@@ -1,5 +1,6 @@
 package com.openitech.db.filters;
 
+import com.openitech.db.model.xml.config.SeekLayout;
 import com.openitech.value.ValuesList;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.*;
@@ -297,6 +298,27 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public void setCaseInsensitive(boolean caseInsensitive) {
       this.caseInsensitive = caseInsensitive;
     }
+
+    protected SeekLayout layout = null;
+
+    /**
+     * Get the value of layout
+     *
+     * @return the value of layout
+     */
+    public SeekLayout getLayout() {
+      return layout;
+    }
+
+    /**
+     * Set the value of layout
+     *
+     * @param layout new value of layout
+     */
+    public void setLayout(SeekLayout layout) {
+      this.layout = layout;
+    }
+
   }
 
   public final static class SeekType extends AbstractSeekType<String> {
