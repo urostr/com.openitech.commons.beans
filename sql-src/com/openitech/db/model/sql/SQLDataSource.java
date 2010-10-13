@@ -5119,6 +5119,11 @@ public class SQLDataSource implements DbDataSourceImpl {
         openSelectResultSet.absolute(row);
       }
 
+      if ((openSelectResultSet.getRow() == 0)&&SELECT_1.equalsIgnoreCase(preparedCountSql)) {
+        storedResult[0] = true;
+        return nullValue;
+      }
+
       int columnIndex = getColumnIndex(columnName);
 
       if (String.class.isAssignableFrom(type)) {
