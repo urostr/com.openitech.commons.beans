@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -97,12 +98,30 @@ public class SQLMaterializedView extends SubstSqlParameter {
   public void setSetViewVersionSql(String setViewVersionSql) {
     this.setViewVersionSql = setViewVersionSql;
   }
+  
+  private Connection connection = null;
+  private String qIsViewValid = null;
+  private PreparedStatement isViewValid = null;
+  private final ReentrantLock lock = new ReentrantLock();
 
   public boolean isViewValid(Connection connection, java.util.List<Object> parameters) {
+    lock.lock();
     try {
       long timer = System.currentTimeMillis();
+      if (!Equals.equals(this.connection, connection)) {
+        this.qIsViewValid = SQLDataSource.substParameters(isViewValidSQL, parameters);
+        isViewValid = connection.prepareStatement(this.qIsViewValid,
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY,
+                ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        this.connection = connection;
+      }
 
-      ResultSet executeQuery = SQLDataSource.executeQuery(isViewValidSQL, parameters);
+      if (DbDataSource.DUMP_SQL) {
+        System.out.println("##############");
+        System.out.println(this.qIsViewValid);
+      }
+      ResultSet executeQuery = SQLDataSource.executeQuery(isViewValid, parameters);
       if (DbDataSource.DUMP_SQL) {
         System.out.println("materialized:isvalid:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
         System.out.println("##############");
@@ -112,7 +131,10 @@ public class SQLMaterializedView extends SubstSqlParameter {
       }
     } catch (SQLException ex) {
       Logger.getLogger(SQLMaterializedView.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      lock.unlock();
     }
+
     return false;
   }
 }
