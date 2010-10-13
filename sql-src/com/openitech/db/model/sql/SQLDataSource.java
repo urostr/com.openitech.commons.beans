@@ -4916,7 +4916,11 @@ public class SQLDataSource implements DbDataSourceImpl {
       columnName = columnName.toUpperCase();
       Integer row = new Integer(getRow());
       boolean isUpdating = inserting || storedUpdates.containsKey(row);
-      if (isUpdating || !Equals.equals(value, openSelectResultSet().getObject(columnName))) {
+
+      final ResultSet openSelectResultSet = openSelectResultSet();
+      final Object resultSetValue =  (openSelectResultSet.getRow()==0)?null:openSelectResultSet.getObject(columnName);
+
+      if (isUpdating || !Equals.equals(value, resultSetValue)) {
         Map<String, Object> columnValues;
         if (storedUpdates.containsKey(row)) {
           columnValues = storedUpdates.get(row);
