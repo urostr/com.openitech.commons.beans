@@ -106,8 +106,23 @@ public class DataSourceLimit extends DbDataSource.SubstSqlParameter implements A
       return bg;
     }
 
+    public boolean isSelected() {
+      return model.isSelected();
+    }
+
     public void setSelected() {
       setSelected(this);
+    }
+
+    public static Limit getSelected() {
+      Limit result = null;
+      for (Limit l : Limit.values()) {
+        if (l.model.isSelected()) {
+          result =l; break;
+        }
+      }
+
+      return result;
     }
 
     public void setSelected(Limit limit) {
