@@ -678,7 +678,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     customPanel.setLayout(new java.awt.GridBagLayout());
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
     gridBagConstraints.weightx = 1.0;
     add(customPanel, gridBagConstraints);
 
@@ -714,19 +714,16 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(jLabel2)
-        .addGap(110, 110, 110)
-        .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(47, Short.MAX_VALUE))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
     );
     jpDateFieldLayout.setVerticalGroup(
       jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(jpDateFieldLayout.createSequentialGroup()
-        .addGroup(jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-          .addComponent(jLabel1)
-          .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-          .addComponent(jLabel2)
-          .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        .addContainerGap(13, Short.MAX_VALUE))
+      .addGroup(jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+        .addComponent(jLabel1)
+        .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addComponent(jLabel2)
+        .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
     );
 
     jpFilterValues.add(jpDateField, "DATEFIELD_CARD");
@@ -750,13 +747,13 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpTextFieldLayout.createSequentialGroup()
         .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 317, Short.MAX_VALUE))
+        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 467, Short.MAX_VALUE))
     );
     jpTextFieldLayout.setVerticalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(jpTextFieldLayout.createSequentialGroup()
         .addGap(1, 1, 1)
-        .addGroup(jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+        .addGroup(jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
           .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
           .addComponent(jtfValue, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
     );
@@ -779,16 +776,14 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(jpSifrantPanelLayout.createSequentialGroup()
         .addComponent(jtfSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addGap(228, 228, 228)
-        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 494, Short.MAX_VALUE))
     );
     jpSifrantPanelLayout.setVerticalGroup(
       jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(jpSifrantPanelLayout.createSequentialGroup()
-        .addGroup(jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-          .addComponent(jcbSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-          .addComponent(jtfSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+      .addGroup(jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+        .addComponent(jtfSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addComponent(jcbSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
     );
 
     jpFilterValues.add(jpSifrantPanel, "SIFRANT_CARD");
@@ -800,7 +795,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpPreformattedField.setLayout(jpPreformattedFieldLayout);
     jpPreformattedFieldLayout.setHorizontalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 399, Short.MAX_VALUE)
+      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 597, Short.MAX_VALUE)
     );
     jpPreformattedFieldLayout.setVerticalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -827,13 +822,13 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpNumberFieldLayout.createSequentialGroup()
         .addComponent(jcbNumberType, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE))
+        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 460, Short.MAX_VALUE))
     );
     jpNumberFieldLayout.setVerticalGroup(
       jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(jpNumberFieldLayout.createSequentialGroup()
         .addGap(1, 1, 1)
-        .addGroup(jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+        .addGroup(jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
           .addComponent(jcbNumberType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
           .addComponent(jtfNumberValue, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
     );
@@ -908,6 +903,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         filters.getFilterFor(item).setSeekType(item, jcbNumberType.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
       }
     }//GEN-LAST:event_jcbNumberTypeActionPerformed
+
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel customPanel;
   private javax.swing.JLabel jLabel1;
