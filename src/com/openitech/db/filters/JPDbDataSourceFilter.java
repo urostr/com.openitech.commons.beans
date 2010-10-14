@@ -16,7 +16,6 @@ import com.openitech.db.components.JDbTextField;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.xml.config.GridBagConstraints;
-import com.openitech.db.model.xml.config.GridBagLayoutFill;
 import com.openitech.db.model.xml.config.SeekLayout;
 import com.openitech.util.Equals;
 import java.awt.CardLayout;
