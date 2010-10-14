@@ -294,40 +294,37 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jXDatePicker.setEditor(jtfDateValueOd);
             jXDatePicker2.setEditor(jtfDateValueDo);
 
+            int index = 0;
 
-            jpHoldingPanel.add(jlOd, new java.awt.GridBagConstraints());
-            jpHoldingPanel.add(jXDatePicker, new java.awt.GridBagConstraints());
-
-            jpHoldingPanel.add(jlDo, new java.awt.GridBagConstraints());
             gridBagConstraints = new java.awt.GridBagConstraints();
+            jpHoldingPanel.add(jlOd, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
+            jpHoldingPanel.add(jXDatePicker, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
+            jpHoldingPanel.add(jlDo, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-            jpHoldingPanel.add(jXDatePicker2, gridBagConstraints);
-
-            customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
+            jpHoldingPanel.add(jXDatePicker2, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             JLabel jlOpis = new javax.swing.JLabel();
             JDbTextField jtfSifraOnPanel = new com.openitech.db.components.JDbTextField();
             final JDbComboBox jcbSifrantOnPanel = new com.openitech.db.components.JDbComboBox();
 
-            jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+            int index = 0;
 
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            jpHoldingPanel.add(jlOpis, gridBagConstraints);
+            jpHoldingPanel.add(jlOpis, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
 
+            gridBagConstraints = new java.awt.GridBagConstraints();
             jtfSifraOnPanel.setColumns(4);
             jtfSifraOnPanel.setText("");
             jtfSifraOnPanel.setDocument(documents.get(item)[0]);
-            jpHoldingPanel.add(jtfSifraOnPanel, new java.awt.GridBagConstraints());
+            jpHoldingPanel.add(jtfSifraOnPanel, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
 
             jcbSifrantOnPanel.setModel(sifranti.get(item));
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
-            jpHoldingPanel.add(jcbSifrantOnPanel, gridBagConstraints);
-
-            customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
+            jpHoldingPanel.add(jcbSifrantOnPanel, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
 
             documents.get(item)[0].addDocumentListener(new DocumentListener() {
 
@@ -351,12 +348,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             final JComboBox jDbComboBox1 = new JComboBox();
             final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
 
-            jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+            int index = 0;
 
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            jpHoldingPanel.add(jlOpis, gridBagConstraints);
+            jpHoldingPanel.add(jlOpis, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
 
             jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
             jDbComboBox1.setFocusable(false);
@@ -369,7 +366,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                 }
               }
             });
-            jpHoldingPanel.add(jDbComboBox1, new java.awt.GridBagConstraints());
+            jpHoldingPanel.add(jDbComboBox1, group?new java.awt.GridBagConstraints():getCustomGridBagConstraints(layout.getLayout(), index++));
 
             jDbTextField1.setText("");
             jDbTextField1.setSearchField(true);
@@ -378,9 +375,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
-            jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
-
-            customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
+            jpHoldingPanel.add(jDbTextField1, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
 
             if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
               item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
@@ -391,12 +386,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             final JComboBox jDbComboBox1 = new JComboBox();
             final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
 
-            jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+            int index = 0;
 
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            jpHoldingPanel.add(jlOpis, gridBagConstraints);
+            jpHoldingPanel.add(jlOpis, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
 
             jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
             jDbComboBox1.setSelectedIndex(1);
@@ -411,7 +406,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                 }
               }
             });
-            jpHoldingPanel.add(jDbComboBox1, new java.awt.GridBagConstraints());
+            jpHoldingPanel.add(jDbComboBox1, group?new java.awt.GridBagConstraints():getCustomGridBagConstraints(layout.getLayout(), index++));
 
             jDbTextField1.setText("");
             jDbTextField1.setColumns(20);
@@ -421,8 +416,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
-            jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
+            jpHoldingPanel.add(jDbTextField1, group?gridBagConstraints:getCustomGridBagConstraints(layout.getLayout(), index++));
+          }
 
+          if (group) {
             customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
           }
         }
