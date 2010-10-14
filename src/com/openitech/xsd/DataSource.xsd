@@ -283,6 +283,7 @@
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>
+      <xsd:element name="Columns" type="xsd:int" minOccurs="0"></xsd:element>
     </xsd:all>
   </xsd:complexType>
   <xsd:complexType name="GridBagConstraints">
@@ -599,6 +600,7 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
+
 
 
 
