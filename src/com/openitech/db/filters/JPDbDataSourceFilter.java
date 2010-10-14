@@ -183,6 +183,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     Vector<DataSourceFilters.AbstractSeekType<? extends Object>> headers = new Vector<DataSourceFilters.AbstractSeekType<? extends Object>>();
     java.awt.GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
 
+    customPanel.removeAll();
     documents.clear();
 
     for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
