@@ -5,10 +5,15 @@
 
 package com.openitech.db.model;
 
+import java.util.Map;
+import javax.swing.text.Document;
+
 /**
  *
  * @author uros
  */
 public interface DbDataModel {
+
+  public Map<String, Document> getDocuments();
 
 }
