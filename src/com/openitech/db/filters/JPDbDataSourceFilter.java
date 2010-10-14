@@ -264,6 +264,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
                 jtfSifra.setColumns(4);
                 jtfSifra.setText("");
+                jtfSifra.setDocument(documents.get(item)[0]);
                 jpHoldingPanel.add(jtfSifra, new java.awt.GridBagConstraints());
 
                 jcbSifrant.setModel(sifranti.get(item));
