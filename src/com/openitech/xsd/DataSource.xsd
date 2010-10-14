@@ -276,7 +276,7 @@
       <xsd:element name="GridHeight" type="xsd:int" default="-1"/>
       <xsd:element name="Fill" type="tns:Fill" default="0"></xsd:element>
       <xsd:element name="Anchor" type="xsd:int" default="10"></xsd:element>
-      <xsd:element name="WeightX" type="xsd:int" default="10"></xsd:element>
+      <xsd:element name="WeightX" type="xsd:float" default="10"></xsd:element>
       <xsd:element name="WeightY" type="xsd:float" default="0.0"></xsd:element>
       <xsd:element name="Insets">
         <xsd:complexType>
