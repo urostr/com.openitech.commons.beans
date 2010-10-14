@@ -557,10 +557,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       e1.printStackTrace();
     }
     customPanel = new javax.swing.JPanel();
-    jPanel2 = new javax.swing.JPanel();
-    jLabel3 = new javax.swing.JLabel();
-    jDbTextField1 = new com.openitech.db.components.JDbTextField();
-    jDbComboBox1 = new com.openitech.db.components.JDbComboBox();
     jcbStolpec = new javax.swing.JComboBox();
     jpFilterValues = new javax.swing.JPanel();
     jpDateField = new javax.swing.JPanel();
@@ -588,31 +584,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     setLayout(new java.awt.GridBagLayout());
 
     customPanel.setLayout(new java.awt.GridBagLayout());
-
-    jPanel2.setLayout(new java.awt.GridBagLayout());
-
-    jLabel3.setText("jLabel3");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-    jPanel2.add(jLabel3, gridBagConstraints);
-
-    jDbTextField1.setColumns(4);
-    jDbTextField1.setText("jDbTextField1");
-    jPanel2.add(jDbTextField1, new java.awt.GridBagConstraints());
-
-    jDbComboBox1.setModel(smSifrant);
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.weightx = 1.0;
-    jPanel2.add(jDbComboBox1, gridBagConstraints);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.weightx = 1.0;
-    customPanel.add(jPanel2, gridBagConstraints);
-
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
@@ -847,13 +818,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     }//GEN-LAST:event_jcbNumberTypeActionPerformed
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel customPanel;
-  private com.openitech.db.components.JDbComboBox jDbComboBox1;
-  private com.openitech.db.components.JDbTextField jDbTextField1;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
-  private javax.swing.JLabel jLabel3;
   private javax.swing.JPanel jPanel1;
-  private javax.swing.JPanel jPanel2;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker1;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker2;
   private javax.swing.JComboBox jcbNumberType;
