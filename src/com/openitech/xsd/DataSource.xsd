@@ -270,30 +270,28 @@
   </xsd:complexType>
   <xsd:complexType name="GridBagConstraints">
     <xsd:all>
-      <xsd:element name="GridX" type="xsd:int" default="-1"/>
-      <xsd:element name="GridY" type="xsd:int" default="-1"/>
-      <xsd:element name="GridWidth" type="xsd:int" default="-1"/>
-      <xsd:element name="GridHeight" type="xsd:int" default="-1"/>
-      <xsd:element name="Fill" type="tns:Fill" default="0"></xsd:element>
-      <xsd:element name="Anchor" type="xsd:int" default="10"></xsd:element>
-      <xsd:element name="WeightX" type="xsd:float" default="10"></xsd:element>
-      <xsd:element name="WeightY" type="xsd:float" default="0.0"></xsd:element>
-      <xsd:element name="Insets">
+      <xsd:element name="GridX" type="xsd:int" default="-1"  minOccurs="0"/>
+      <xsd:element name="GridY" type="xsd:int" default="-1"  minOccurs="0"/>
+      <xsd:element name="GridWidth" type="xsd:int" default="-1"  minOccurs="0"/>
+      <xsd:element name="GridHeight" type="xsd:int" default="-1"  minOccurs="0"/>
+      <xsd:element name="Fill" type="tns:GridBagLayoutFill" default="NONE"  minOccurs="0"></xsd:element>
+      <xsd:element name="IPadX" type="xsd:int" default="0"  minOccurs="0"/>
+      <xsd:element name="IPadY" type="xsd:int" default="0"  minOccurs="0"/>
+      <xsd:element name="Anchor" type="tns:GridBagLayoutAnchor" default="CENTER"></xsd:element>
+      <xsd:element name="WeightX" type="xsd:float" default="0.0" minOccurs="0"></xsd:element>
+      <xsd:element name="WeightY" type="xsd:float" default="0.0" minOccurs="0"></xsd:element>
+      <xsd:element name="Insets" minOccurs="0">
         <xsd:complexType>
-          <xsd:sequence maxOccurs="4">
-            <xsd:element name="InsetsValue"></xsd:element>
-          </xsd:sequence>
+            <xsd:all>
+                <xsd:element name="Top" type="xsd:int"></xsd:element>
+                <xsd:element name="Left" type="xsd:int"></xsd:element>
+                <xsd:element name="Bottom" type="xsd:int"></xsd:element>
+                <xsd:element name="Right" type="xsd:int"></xsd:element>
+            </xsd:all>
         </xsd:complexType>
       </xsd:element>
     </xsd:all>
   </xsd:complexType>
-  <xsd:simpleType name="Fill">
-    <xsd:restriction base="xsd:int">
-      <xsd:enumeration value="0" />
-      <xsd:enumeration value="2" />
-      <xsd:enumeration value="3"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:complexType name="SeekParameters">
     <xsd:choice>
       <xsd:element name="SeekType">
@@ -425,4 +423,165 @@
       <xsd:enumeration value="SHARING_LOCAL"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="GridBagLayoutAnchor">
+      <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="CENTER">
+              <xsd:annotation>
+                  <xsd:documentation>10</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="NORTH">
+              <xsd:annotation>
+                  <xsd:documentation>11</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="NORTHEAST">
+              <xsd:annotation>
+                  <xsd:documentation>12</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="EAST">
+              <xsd:annotation>
+                  <xsd:documentation>13</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="SOUTHEAST">
+              <xsd:annotation>
+                  <xsd:documentation>14</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="SOUTH">
+              <xsd:annotation>
+                  <xsd:documentation>15</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="SOUTHWEST">
+              <xsd:annotation>
+                  <xsd:documentation>16</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="WEST">
+              <xsd:annotation>
+                  <xsd:documentation>17</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="NORTHWEST">
+              <xsd:annotation>
+                  <xsd:documentation>18</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="PAGE_START">
+              <xsd:annotation>
+                  <xsd:documentation>19</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="PAGE_END">
+              <xsd:annotation>
+                  <xsd:documentation>20</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="LINE_START">
+              <xsd:annotation>
+                  <xsd:documentation>21</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="LINE_END">
+              <xsd:annotation>
+                  <xsd:documentation>22</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="FIRST_LINE_START">
+              <xsd:annotation>
+                  <xsd:documentation>23</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="FIRST_LINE_END">
+              <xsd:annotation>
+                  <xsd:documentation>24</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="LAST_LINE_START">
+              <xsd:annotation>
+                  <xsd:documentation>25</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="LAST_LINE_END">
+              <xsd:annotation>
+                  <xsd:documentation>26</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="BASELINE">
+              <xsd:annotation>
+                  <xsd:documentation>0x100</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="BASELINE_LEADING">
+              <xsd:annotation>
+                  <xsd:documentation>0x200</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="BASELINE_TRAILING">
+              <xsd:annotation>
+                  <xsd:documentation>0x300</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="ABOVE_BASELINE">
+              <xsd:annotation>
+                  <xsd:documentation>0x400</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="ABOVE_BASELINE_LEADING">
+              <xsd:annotation>
+                  <xsd:documentation>0x500</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="ABOVE_BASELINE_TRAILING">
+              <xsd:annotation>
+                  <xsd:documentation>0x600</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="BELOW_BASELINE">
+              <xsd:annotation>
+                  <xsd:documentation>0x700</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="BELOW_BASELINE_LEADING">
+              <xsd:annotation>
+                  <xsd:documentation>0x800</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="BELOW_BASELINE_TRAILING">
+              <xsd:annotation>
+                  <xsd:documentation>0x900</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+      </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="GridBagLayoutFill">
+      <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="NONE">
+              <xsd:annotation>
+                  <xsd:documentation>0</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="BOTH">
+              <xsd:annotation>
+                  <xsd:documentation>1</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="HORIZONTAL">
+              <xsd:annotation>
+                  <xsd:documentation>2</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+          <xsd:enumeration value="VERTICAL">
+              <xsd:annotation>
+                  <xsd:documentation>3</xsd:documentation>
+              </xsd:annotation>
+          </xsd:enumeration>
+      </xsd:restriction>
+  </xsd:simpleType>
 </xsd:schema>
+
+
+
