@@ -65,7 +65,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
           entry.getKey().removePropertyChangeListener(queryChanged);
         }
-        ;
       }
     });
 
@@ -107,6 +106,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   }
   private JMenu filterMenuItem = new JMenu("Aktivni filtri");
 
+  @Override
   public JMenu getFilterMenuItem() {
     updateFilterMenuItem();
     return filterMenuItem;
@@ -135,6 +135,19 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   @Override
   public DataSourceFilters getActiveFilter() {
     return null;
+  }
+  private boolean removedComboboxFilters = false;
+
+  private void removeComboboxFilters() {
+    remove(jcbStolpec);
+    remove(jpFilterValues);
+    removedComboboxFilters = true;
+  }
+
+  private void addComboboxFilters() {
+    add(jcbStolpec, 1);
+    add(jpFilterValues, 2);
+    removedComboboxFilters = false;
   }
 
   private class ToggleFilter implements ActionListener {
@@ -171,277 +184,282 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     java.awt.GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
 
     documents.clear();
-    if (filters.size() > 0) {
-      for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
-        java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
 
-        for (int i = 0; i < seekTypeList.size(); i++) {
-          final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
-          final boolean addToPanel = item.getLayout() != null;
-          final SeekLayout layout = item.getLayout();
+    for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
+      java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
 
-          if (!item.isAutomatic()) {
-            documents.put(item, item.getDocuments());
-          } else {
-            if (!addToPanel) {
-              headers.add(item);
+      for (int i = 0; i < seekTypeList.size(); i++) {
+        final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
+        final boolean addToPanel = item.getLayout() != null;
+        final SeekLayout layout = item.getLayout();
+
+        if (!item.isAutomatic()) {
+          documents.put(item, item.getDocuments());
+        } else {
+          if (!addToPanel) {
+            headers.add(item);
+          }
+          if ((parentFilterPanel != null) && (parentFilterPanel.documents.containsKey(item))) {
+            documents.put(item, parentFilterPanel.documents.get(item));
+            if (parentFilterPanel.sifranti.containsKey(item)) {
+              sifranti.put(item, parentFilterPanel.sifranti.get(item));
             }
-            if ((parentFilterPanel != null) && (parentFilterPanel.documents.containsKey(item))) {
-              documents.put(item, parentFilterPanel.documents.get(item));
-              if (parentFilterPanel.sifranti.containsKey(item)) {
-                sifranti.put(item, parentFilterPanel.sifranti.get(item));
-              }
-            } else if (item instanceof DataSourceFilters.BetweenDateSeekType) {
-              javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
-              javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
+          } else if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+            javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
+            javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
 
-              item.setDocuments(entry.getKey(), new javax.swing.text.Document[]{from, to});
+            item.setDocuments(entry.getKey(), new javax.swing.text.Document[]{from, to});
 
-              documents.put(item, new javax.swing.text.Document[]{from, to});
-              if (addToPanel) {
-                JPanel jpHoldingPanel = new javax.swing.JPanel();
-                JLabel jlOd = new javax.swing.JLabel();
-                jlOd.setText(item.toString() + " od");
-                JLabel jlDo = new javax.swing.JLabel();
-                jlDo.setText("do");
-                JDbDateTextField jtfDateValueOd = new com.openitech.db.components.JDbDateTextField();
-                jtfDateValueOd.setSearchField(true);
-                JDbDateTextField jtfDateValueDo = new com.openitech.db.components.JDbDateTextField();
-                jtfDateValueDo.setSearchField(true);
+            documents.put(item, new javax.swing.text.Document[]{from, to});
+            if (addToPanel) {
+              JPanel jpHoldingPanel = new javax.swing.JPanel();
+              JLabel jlOd = new javax.swing.JLabel();
+              jlOd.setText(item.toString() + " od");
+              JLabel jlDo = new javax.swing.JLabel();
+              jlDo.setText("do");
+              JDbDateTextField jtfDateValueOd = new com.openitech.db.components.JDbDateTextField();
+              jtfDateValueOd.setSearchField(true);
+              JDbDateTextField jtfDateValueDo = new com.openitech.db.components.JDbDateTextField();
+              jtfDateValueDo.setSearchField(true);
 
-                jtfDateValueOd.setDocument(documents.get(item)[0]);
-                jtfDateValueDo.setDocument(documents.get(item)[1]);
+              jtfDateValueOd.setDocument(documents.get(item)[0]);
+              jtfDateValueDo.setDocument(documents.get(item)[1]);
 
-                JXDatePicker jXDatePicker = new org.jdesktop.swingx.JXDatePicker();
-                JXDatePicker jXDatePicker2 = new org.jdesktop.swingx.JXDatePicker();
-                jXDatePicker.setEditor(jtfDateValueOd);
-                jXDatePicker2.setEditor(jtfDateValueDo);
+              JXDatePicker jXDatePicker = new org.jdesktop.swingx.JXDatePicker();
+              JXDatePicker jXDatePicker2 = new org.jdesktop.swingx.JXDatePicker();
+              jXDatePicker.setEditor(jtfDateValueOd);
+              jXDatePicker2.setEditor(jtfDateValueDo);
 
-                jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+              jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
 
-                jpHoldingPanel.add(jlOd, new java.awt.GridBagConstraints());
-                jpHoldingPanel.add(jXDatePicker, new java.awt.GridBagConstraints());
+              jpHoldingPanel.add(jlOd, new java.awt.GridBagConstraints());
+              jpHoldingPanel.add(jXDatePicker, new java.awt.GridBagConstraints());
 
-                jpHoldingPanel.add(jlDo, new java.awt.GridBagConstraints());
+              jpHoldingPanel.add(jlDo, new java.awt.GridBagConstraints());
+              gridBagConstraints = new java.awt.GridBagConstraints();
+              gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+              jpHoldingPanel.add(jXDatePicker2, gridBagConstraints);
+
+              if (layout.getGridBagConstraints() == null) {
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                jpHoldingPanel.add(jXDatePicker2, gridBagConstraints);
-
-                if (layout.getGridBagConstraints() == null) {
-                  gridBagConstraints = new java.awt.GridBagConstraints();
-                  gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                  gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
-                  gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-                  gridBagConstraints.weightx = 1.0;
-                } else {
-                  gridBagConstraints = getCustomGridBagConstraints(layout);
-                }
-                customPanel.add(jpHoldingPanel, gridBagConstraints);
-
-
-              }
-            } else if (item instanceof DataSourceFilters.SifrantSeekType) {
-              javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
-              document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
-
-              documents.put(item, new javax.swing.text.Document[]{document});
-              sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
-
-              if (addToPanel) {
-
-
-                JPanel jpHoldingPanel = new javax.swing.JPanel();
-                JLabel jlOpis = new javax.swing.JLabel();
-                JDbTextField jtfSifra = new com.openitech.db.components.JDbTextField();
-                final JDbComboBox jcbSifrant = new com.openitech.db.components.JDbComboBox();
-
-                jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
-
-                jlOpis.setText(item.toString());
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-                jpHoldingPanel.add(jlOpis, gridBagConstraints);
-
-                jtfSifra.setColumns(4);
-                jtfSifra.setText("");
-                jtfSifra.setDocument(documents.get(item)[0]);
-                jpHoldingPanel.add(jtfSifra, new java.awt.GridBagConstraints());
-
-                jcbSifrant.setModel(sifranti.get(item));
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
                 gridBagConstraints.weightx = 1.0;
-                jpHoldingPanel.add(jcbSifrant, gridBagConstraints);
-
-                if (layout.getGridBagConstraints() == null) {
-                  gridBagConstraints = new java.awt.GridBagConstraints();
-                  gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                  gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
-                  gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-                  gridBagConstraints.weightx = 1.0;
-                } else {
-                  gridBagConstraints = getCustomGridBagConstraints(layout);
-                }
-                customPanel.add(jpHoldingPanel, gridBagConstraints);
-
-                document.addDocumentListener(new DocumentListener() {
-
-                  @Override
-                  public void insertUpdate(DocumentEvent e) {
-                    updateSifrant(e.getDocument(), jcbSifrant);
-                  }
-
-                  @Override
-                  public void removeUpdate(DocumentEvent e) {
-                    updateSifrant(e.getDocument(), jcbSifrant);
-                  }
-
-                  @Override
-                  public void changedUpdate(DocumentEvent e) {
-                    updateSifrant(e.getDocument(), jcbSifrant);
-                  }
-                });
-
               } else {
-                document.addDocumentListener(new DocumentListener() {
-
-                  @Override
-                  public void insertUpdate(DocumentEvent e) {
-                    updateSifrant(e.getDocument(), jcbSifrant);
-                  }
-
-                  @Override
-                  public void removeUpdate(DocumentEvent e) {
-                    updateSifrant(e.getDocument(), jcbSifrant);
-                  }
-
-                  @Override
-                  public void changedUpdate(DocumentEvent e) {
-                    updateSifrant(e.getDocument(), jcbSifrant);
-                  }
-                });
+                gridBagConstraints = getCustomGridBagConstraints(layout);
               }
-            } else if (item instanceof DataSourceFilters.IntegerSeekType) {
-              javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
-              document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
-              documents.put(item, new javax.swing.text.Document[]{document});
+              customPanel.add(jpHoldingPanel, gridBagConstraints);
 
-              if (addToPanel) {
-                final JPanel jpHoldingPanel = new javax.swing.JPanel();
-                final JLabel jlOpis = new javax.swing.JLabel();
-                final JComboBox jDbComboBox1 = new JComboBox();
-                final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
 
-                jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+            }
+          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
+            javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
+            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
 
-                jlOpis.setText(item.toString());
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-                jpHoldingPanel.add(jlOpis, gridBagConstraints);
+            documents.put(item, new javax.swing.text.Document[]{document});
+            sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
 
-                jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
-                jDbComboBox1.setFocusable(false);
-                jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            if (addToPanel) {
 
-                  @Override
-                  public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    if (!refreshing) {
-                      filters.getFilterFor(item).setSeekType(item, jDbComboBox1.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-                    }
-                  }
-                });
-                jpHoldingPanel.add(jDbComboBox1, new java.awt.GridBagConstraints());
 
-                jDbTextField1.setText("");
-                jDbTextField1.setSearchField(true);
-                jDbTextField1.setDocument(documents.get(item)[0]);
+              JPanel jpHoldingPanel = new javax.swing.JPanel();
+              JLabel jlOpis = new javax.swing.JLabel();
+              JDbTextField jtfSifra = new com.openitech.db.components.JDbTextField();
+              final JDbComboBox jcbSifrant = new com.openitech.db.components.JDbComboBox();
+
+              jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+
+              jlOpis.setText(item.toString());
+              gridBagConstraints = new java.awt.GridBagConstraints();
+              gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+              jpHoldingPanel.add(jlOpis, gridBagConstraints);
+
+              jtfSifra.setColumns(4);
+              jtfSifra.setText("");
+              jtfSifra.setDocument(documents.get(item)[0]);
+              jpHoldingPanel.add(jtfSifra, new java.awt.GridBagConstraints());
+
+              jcbSifrant.setModel(sifranti.get(item));
+              gridBagConstraints = new java.awt.GridBagConstraints();
+              gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+              gridBagConstraints.weightx = 1.0;
+              jpHoldingPanel.add(jcbSifrant, gridBagConstraints);
+
+              if (layout.getGridBagConstraints() == null) {
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
                 gridBagConstraints.weightx = 1.0;
-                jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
-
-                if (layout.getGridBagConstraints() == null) {
-                  gridBagConstraints = new java.awt.GridBagConstraints();
-                  gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                  gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
-                  gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-                  gridBagConstraints.weightx = 1.0;
-                } else {
-                  gridBagConstraints = getCustomGridBagConstraints(layout);
-                }
-                customPanel.add(jpHoldingPanel, gridBagConstraints);
-
-                if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
-                  item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-                }
-                jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-
+              } else {
+                gridBagConstraints = getCustomGridBagConstraints(layout);
               }
+              customPanel.add(jpHoldingPanel, gridBagConstraints);
+
+              document.addDocumentListener(new DocumentListener() {
+
+                @Override
+                public void insertUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument(), jcbSifrant);
+                }
+
+                @Override
+                public void removeUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument(), jcbSifrant);
+                }
+
+                @Override
+                public void changedUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument(), jcbSifrant);
+                }
+              });
+
             } else {
-              javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
-              document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
-              documents.put(item, new javax.swing.text.Document[]{document});
+              document.addDocumentListener(new DocumentListener() {
 
-              if (addToPanel) {
-                final JPanel jpHoldingPanel = new javax.swing.JPanel();
-                final JLabel jlOpis = new javax.swing.JLabel();
-                final JComboBox jDbComboBox1 = new JComboBox();
-                final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
+                @Override
+                public void insertUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument(), jcbSifrant);
+                }
 
-                jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+                @Override
+                public void removeUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument(), jcbSifrant);
+                }
 
-                jlOpis.setText(item.toString());
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-                jpHoldingPanel.add(jlOpis, gridBagConstraints);
+                @Override
+                public void changedUpdate(DocumentEvent e) {
+                  updateSifrant(e.getDocument(), jcbSifrant);
+                }
+              });
+            }
+          } else if (item instanceof DataSourceFilters.IntegerSeekType) {
+            javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
+            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+            documents.put(item, new javax.swing.text.Document[]{document});
 
-                jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
-                jDbComboBox1.setSelectedIndex(1);
-                jDbComboBox1.setFocusable(false);
-                jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            if (addToPanel) {
+              final JPanel jpHoldingPanel = new javax.swing.JPanel();
+              final JLabel jlOpis = new javax.swing.JLabel();
+              final JComboBox jDbComboBox1 = new JComboBox();
+              final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
 
-                  @Override
-                  public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    if (!refreshing) {
+              jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
 
-                      filters.getFilterFor(item).setSeekType(item, jDbComboBox1.getSelectedIndex());
-                    }
+              jlOpis.setText(item.toString());
+              gridBagConstraints = new java.awt.GridBagConstraints();
+              gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+              jpHoldingPanel.add(jlOpis, gridBagConstraints);
+
+              jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
+              jDbComboBox1.setFocusable(false);
+              jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
+
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                  if (!refreshing) {
+                    filters.getFilterFor(item).setSeekType(item, jDbComboBox1.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
                   }
-                });
-                jpHoldingPanel.add(jDbComboBox1, new java.awt.GridBagConstraints());
+                }
+              });
+              jpHoldingPanel.add(jDbComboBox1, new java.awt.GridBagConstraints());
 
-                jDbTextField1.setText("");
-                jDbTextField1.setSearchField(true);
-                jDbTextField1.setDocument(documents.get(item)[0]);
+              jDbTextField1.setText("");
+              jDbTextField1.setSearchField(true);
+              jDbTextField1.setDocument(documents.get(item)[0]);
+              gridBagConstraints = new java.awt.GridBagConstraints();
+              gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+              gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+              gridBagConstraints.weightx = 1.0;
+              jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
+
+              if (layout.getGridBagConstraints() == null) {
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
                 gridBagConstraints.weightx = 1.0;
-                jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
-
-                if (layout.getGridBagConstraints() == null) {
-                  gridBagConstraints = new java.awt.GridBagConstraints();
-                  gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                  gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
-                  gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-                  gridBagConstraints.weightx = 1.0;
-                } else {
-                  gridBagConstraints = getCustomGridBagConstraints(layout);
-                }
-                customPanel.add(jpHoldingPanel, gridBagConstraints);
+              } else {
+                gridBagConstraints = getCustomGridBagConstraints(layout);
               }
+              customPanel.add(jpHoldingPanel, gridBagConstraints);
+
+              if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+                item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+              }
+              jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+
+            }
+          } else {
+            javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
+            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+            documents.put(item, new javax.swing.text.Document[]{document});
+
+            if (addToPanel) {
+              final JPanel jpHoldingPanel = new javax.swing.JPanel();
+              final JLabel jlOpis = new javax.swing.JLabel();
+              final JComboBox jDbComboBox1 = new JComboBox();
+              final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
+
+              jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+
+              jlOpis.setText(item.toString());
+              gridBagConstraints = new java.awt.GridBagConstraints();
+              gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+              jpHoldingPanel.add(jlOpis, gridBagConstraints);
+
+              jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
+              jDbComboBox1.setSelectedIndex(1);
+              jDbComboBox1.setFocusable(false);
+              jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
+
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                  if (!refreshing) {
+
+                    filters.getFilterFor(item).setSeekType(item, jDbComboBox1.getSelectedIndex());
+                  }
+                }
+              });
+              jpHoldingPanel.add(jDbComboBox1, new java.awt.GridBagConstraints());
+
+              jDbTextField1.setText("");
+              jDbTextField1.setColumns(20);
+              jDbTextField1.setSearchField(true);
+              jDbTextField1.setDocument(documents.get(item)[0]);
+              gridBagConstraints = new java.awt.GridBagConstraints();
+              gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+              gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+              gridBagConstraints.weightx = 1.0;
+              jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
+
+              if (layout.getGridBagConstraints() == null) {
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+                gridBagConstraints.weightx = 1.0;
+              } else {
+                gridBagConstraints = getCustomGridBagConstraints(layout);
+              }
+              customPanel.add(jpHoldingPanel, gridBagConstraints);
             }
           }
         }
-
-        entry.getKey().addPropertyChangeListener("query", queryChanged);
       }
+
+      entry.getKey().addPropertyChangeListener("query", queryChanged);
     }
-    if (headers.size() == 0) {
+
+    if (headers.isEmpty()) {
       jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Ni doloèen"}));
+      removeComboboxFilters();
     } else {
       jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(headers));
+      if (removedComboboxFilters) {
+        addComboboxFilters();
+      }
     }
     jcbStolpec.setPreferredSize(new JComboBox(jcbStolpec.getModel()).getPreferredSize());
     updateFilterPane();
