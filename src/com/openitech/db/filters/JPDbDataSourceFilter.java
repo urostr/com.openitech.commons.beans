@@ -10,25 +10,29 @@
  */
 package com.openitech.db.filters;
 
+import com.openitech.db.components.JDbComboBox;
+import com.openitech.db.components.JDbDateTextField;
+import com.openitech.db.components.JDbTextField;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 import com.openitech.db.model.DbComboBoxModel;
-import com.openitech.text.FormatFactory;
 import com.openitech.util.Equals;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.text.ParseException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
+import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
+import org.jdesktop.swingx.JXDatePicker;
 
 /**
  *
@@ -162,6 +166,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
   private void updateColumns() {
     Vector<DataSourceFilters.AbstractSeekType<? extends Object>> headers = new Vector<DataSourceFilters.AbstractSeekType<? extends Object>>();
+    java.awt.GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
 
     documents.clear();
     if (filters.size() > 0) {
@@ -169,14 +174,15 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
 
         for (int i = 0; i < seekTypeList.size(); i++) {
-          DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
-
+          final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
+          boolean addToPanel = item.getLayout() != null;
 
           if (!item.isAutomatic()) {
             documents.put(item, item.getDocuments());
           } else {
-            headers.add(item);
-
+            if (!addToPanel) {
+              headers.add(item);
+            }
             if ((parentFilterPanel != null) && (parentFilterPanel.documents.containsKey(item))) {
               documents.put(item, parentFilterPanel.documents.get(item));
               if (parentFilterPanel.sifranti.containsKey(item)) {
@@ -186,9 +192,47 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               javax.swing.text.Document from = new com.openitech.db.components.JDbDateTextField().getDocument();
               javax.swing.text.Document to = new com.openitech.db.components.JDbDateTextField().getDocument();
 
-              item.setDocuments(entry.getKey(), new javax.swing.text.Document[] {from, to});
+              item.setDocuments(entry.getKey(), new javax.swing.text.Document[]{from, to});
 
               documents.put(item, new javax.swing.text.Document[]{from, to});
+              if (addToPanel) {
+                JPanel jpHoldingPanel = new javax.swing.JPanel();
+                JLabel jlOd = new javax.swing.JLabel();
+                jlOd.setText(item.toString() + " od");
+                JLabel jlDo = new javax.swing.JLabel();
+                jlDo.setText("do");
+                JDbDateTextField jtfDateValueOd = new com.openitech.db.components.JDbDateTextField();
+                jtfDateValueOd.setSearchField(true);
+                JDbDateTextField jtfDateValueDo = new com.openitech.db.components.JDbDateTextField();
+                jtfDateValueDo.setSearchField(true);
+
+                jtfDateValueOd.setDocument(documents.get(item)[0]);
+                jtfDateValueDo.setDocument(documents.get(item)[1]);
+
+                JXDatePicker jXDatePicker = new org.jdesktop.swingx.JXDatePicker();
+                JXDatePicker jXDatePicker2 = new org.jdesktop.swingx.JXDatePicker();
+                jXDatePicker.setEditor(jtfDateValueOd);
+                jXDatePicker2.setEditor(jtfDateValueDo);
+
+                jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+
+                jpHoldingPanel.add(jlOd, new java.awt.GridBagConstraints());
+                jpHoldingPanel.add(jXDatePicker, new java.awt.GridBagConstraints());
+
+                jpHoldingPanel.add(jlDo, new java.awt.GridBagConstraints());
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                jpHoldingPanel.add(jXDatePicker2, gridBagConstraints);
+
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+                gridBagConstraints.weightx = 1.0;
+                customPanel.add(jpHoldingPanel, gridBagConstraints);
+
+
+              }
             } else if (item instanceof DataSourceFilters.SifrantSeekType) {
               javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
               document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
@@ -211,10 +255,106 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               });
               documents.put(item, new javax.swing.text.Document[]{document});
               sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
+            } else if (item instanceof DataSourceFilters.IntegerSeekType) {
+              javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
+              document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+              documents.put(item, new javax.swing.text.Document[]{document});
+
+              if (addToPanel) {
+                final JPanel jpHoldingPanel = new javax.swing.JPanel();
+                final JLabel jlOpis = new javax.swing.JLabel();
+                final JComboBox jDbComboBox1 = new JComboBox();
+                final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
+
+                jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+
+                jlOpis.setText(item.toString());
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+                jpHoldingPanel.add(jlOpis, gridBagConstraints);
+
+                jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
+                jDbComboBox1.setFocusable(false);
+                jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
+
+                  @Override
+                  public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    if (!refreshing) {
+                      filters.getFilterFor(item).setSeekType(item, jDbComboBox1.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+                    }
+                  }
+                });
+                jpHoldingPanel.add(jDbComboBox1, new java.awt.GridBagConstraints());
+
+                jDbTextField1.setText("");
+                jDbTextField1.setSearchField(true);
+                jDbTextField1.setDocument(documents.get(item)[0]);
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.weightx = 1.0;
+                jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
+
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.weightx = 1.0;
+                customPanel.add(jpHoldingPanel, gridBagConstraints);
+
+                if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+                  item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+                }
+                jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+
+              }
             } else {
               javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
               document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
               documents.put(item, new javax.swing.text.Document[]{document});
+
+              if (addToPanel) {
+                final JPanel jpHoldingPanel = new javax.swing.JPanel();
+                final JLabel jlOpis = new javax.swing.JLabel();
+                final JComboBox jDbComboBox1 = new JComboBox();
+                final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
+
+                jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
+
+                jlOpis.setText(item.toString());
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+                jpHoldingPanel.add(jlOpis, gridBagConstraints);
+
+                jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
+                jDbComboBox1.setSelectedIndex(1);
+                jDbComboBox1.setFocusable(false);
+                jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
+
+                  @Override
+                  public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    if (!refreshing) {
+
+                      filters.getFilterFor(item).setSeekType(item, jDbComboBox1.getSelectedIndex());
+                    }
+                  }
+                });
+                jpHoldingPanel.add(jDbComboBox1, new java.awt.GridBagConstraints());
+
+                jDbTextField1.setText("");
+                jDbTextField1.setSearchField(true);
+                jDbTextField1.setDocument(documents.get(item)[0]);
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.weightx = 1.0;
+                jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
+
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.weightx = 1.0;
+                customPanel.add(jpHoldingPanel, gridBagConstraints);
+              }
             }
           }
         }
@@ -238,7 +378,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       try {
         final String text = com.openitech.text.Document.getText(doc);
         if (text.isEmpty()) {
-          if (jcbSifrant.getModel().getSize()>0) {
+          if (jcbSifrant.getModel().getSize() > 0) {
             jcbSifrant.setSelectedIndex(0);
           }
         } else {
@@ -262,36 +402,37 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       refreshing = true;
       if (jcbStolpec.getSelectedItem() instanceof DataSourceFilters.AbstractSeekType) {
         DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
-
-        if (item instanceof DataSourceFilters.BetweenDateSeekType) {
-          jtfDateValueOd.setDocument(documents.get(item)[0]);
-          jtfDateValueDo.setDocument(documents.get(item)[1]);
-          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "DATEFIELD_CARD");
-        } else if (item instanceof DataSourceFilters.SifrantSeekType) {
-          jtfSifrant.setDocument(documents.get(item)[0]);
-          jcbSifrant.setModel(sifranti.get(item));
-          updateSifrant(documents.get(item)[0]);
-          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
-        } else if (item.getSeekType() == com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
-          jtfPreformattedValue.setDocument(documents.get(item)[0]);
-          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "PREFORMATTED_CARD");
-        } else if (item instanceof DataSourceFilters.IntegerSeekType) {
-          if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
-            item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+        if (item.getLayout() == null) {
+          if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+            jtfDateValueOd.setDocument(documents.get(item)[0]);
+            jtfDateValueDo.setDocument(documents.get(item)[1]);
+            ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "DATEFIELD_CARD");
+          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
+            jtfSifrant.setDocument(documents.get(item)[0]);
+            jcbSifrant.setModel(sifranti.get(item));
+            updateSifrant(documents.get(item)[0]);
+            ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
+          } else if (item.getSeekType() == com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
+            jtfPreformattedValue.setDocument(documents.get(item)[0]);
+            ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "PREFORMATTED_CARD");
+          } else if (item instanceof DataSourceFilters.IntegerSeekType) {
+            if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+              item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+            }
+            jcbNumberType.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+            jtfNumberValue.setDocument(documents.get(item)[0]);
+            ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "NUMBERFIELD_CARD");
+          } else {
+            if (item.getSeekType() >= jcbType.getItemCount()) {
+              item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
+            }
+            jcbType.setSelectedIndex(item.getSeekType());
+            jtfValue.setDocument(documents.get(item)[0]);
+            ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "TEXTFIELD_CARD");
           }
-          jcbNumberType.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-          jtfNumberValue.setDocument(documents.get(item)[0]);
-          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "NUMBERFIELD_CARD");
-        } else {
-          if (item.getSeekType() >= jcbType.getItemCount()) {
-            item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
-          }
-          jcbType.setSelectedIndex(item.getSeekType());
-          jtfValue.setDocument(documents.get(item)[0]);
-          ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "TEXTFIELD_CARD");
+          invalidate();
+          repaint();
         }
-        invalidate();
-        repaint();
       }
     } finally {
       refreshing = false;
@@ -315,6 +456,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     } catch (java.sql.SQLException e1) {
       e1.printStackTrace();
     }
+    customPanel = new javax.swing.JPanel();
     jcbStolpec = new javax.swing.JComboBox();
     jpFilterValues = new javax.swing.JPanel();
     jpDateField = new javax.swing.JPanel();
@@ -333,12 +475,20 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpNumberField = new javax.swing.JPanel();
     jcbNumberType = new javax.swing.JComboBox();
     jtfNumberValue = new com.openitech.db.components.JDbTextField();
+    jPanel1 = new javax.swing.JPanel();
 
     jtfDateValueOd.setSearchField(true);
 
     jtfDateValueDo.setSearchField(true);
 
     setLayout(new java.awt.GridBagLayout());
+
+    customPanel.setLayout(new java.awt.GridBagLayout());
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.weightx = 1.0;
+    add(customPanel, gridBagConstraints);
 
     jcbStolpec.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Ni doloèen" }));
     jcbStolpec.setPreferredSize(jcbType.getPreferredSize());
@@ -372,17 +522,19 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(jLabel2)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addGap(110, 110, 110)
         .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(11, Short.MAX_VALUE))
+        .addContainerGap(47, Short.MAX_VALUE))
     );
     jpDateFieldLayout.setVerticalGroup(
       jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-        .addComponent(jLabel1)
-        .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addComponent(jLabel2)
-        .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+      .addGroup(jpDateFieldLayout.createSequentialGroup()
+        .addGroup(jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(jLabel1)
+          .addComponent(jXDatePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(jLabel2)
+          .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
     );
 
     jpFilterValues.add(jpDateField, "DATEFIELD_CARD");
@@ -406,7 +558,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpTextFieldLayout.createSequentialGroup()
         .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE))
+        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 317, Short.MAX_VALUE))
     );
     jpTextFieldLayout.setVerticalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -436,7 +588,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpSifrantPanelLayout.createSequentialGroup()
         .addComponent(jtfSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 345, Short.MAX_VALUE))
+        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 355, Short.MAX_VALUE))
     );
     jpSifrantPanelLayout.setVerticalGroup(
       jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -454,7 +606,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpPreformattedField.setLayout(jpPreformattedFieldLayout);
     jpPreformattedFieldLayout.setHorizontalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 447, Short.MAX_VALUE)
+      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 399, Short.MAX_VALUE)
     );
     jpPreformattedFieldLayout.setVerticalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -481,7 +633,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpNumberFieldLayout.createSequentialGroup()
         .addComponent(jcbNumberType, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE))
+        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE))
     );
     jpNumberFieldLayout.setVerticalGroup(
       jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -495,11 +647,29 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpFilterValues.add(jpNumberField, "NUMBERFIELD_CARD");
 
     gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
     gridBagConstraints.weightx = 1.0;
-    gridBagConstraints.weighty = 1.0;
     gridBagConstraints.insets = new java.awt.Insets(0, 2, 0, 0);
     add(jpFilterValues, gridBagConstraints);
+
+    javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+    jPanel1.setLayout(jPanel1Layout);
+    jPanel1Layout.setHorizontalGroup(
+      jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGap(0, 0, Short.MAX_VALUE)
+    );
+    jPanel1Layout.setVerticalGroup(
+      jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGap(0, 0, Short.MAX_VALUE)
+    );
+
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.weighty = 1.0;
+    add(jPanel1, gridBagConstraints);
   }// </editor-fold>//GEN-END:initComponents
 
     private void jcbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbTypeActionPerformed
@@ -545,8 +715,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       }
     }//GEN-LAST:event_jcbNumberTypeActionPerformed
   // Variables declaration - do not modify//GEN-BEGIN:variables
+  private javax.swing.JPanel customPanel;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
+  private javax.swing.JPanel jPanel1;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker1;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker2;
   private javax.swing.JComboBox jcbNumberType;
