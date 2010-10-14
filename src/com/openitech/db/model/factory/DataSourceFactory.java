@@ -30,6 +30,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -69,7 +70,6 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         dataSource.setSelectSql(dataSource.getSelectSql() + '\n' + dataSourceXML.getDataSource().getQueryHints());
       }
 
-      dataSource.setName("DS:FACTORY:" + this.getOpis());
       createEventColumns();
       suspendDataSource();
       limitDataSource();
@@ -240,6 +240,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         }
       }
     }
+    dataSource.setName("DS:FACTORY:" + this.getOpis());
     return dataSource;
   }
 
