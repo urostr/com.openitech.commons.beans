@@ -261,11 +261,39 @@
       </xsd:element>
     </xsd:all>
   </xsd:complexType>
-    <xsd:complexType name="SeekLayout">
+  <xsd:complexType name="SeekLayout">
     <xsd:all>
       <xsd:element name="DisplayInPanel" type="xsd:boolean"/>
+      <xsd:element name="DocumentName" type="xsd:string" minOccurs="0"></xsd:element>
+      <xsd:element name="GridBagConstraints" type="tns:GridBagConstraints" minOccurs="0"></xsd:element>
     </xsd:all>
   </xsd:complexType>
+  <xsd:complexType name="GridBagConstraints">
+    <xsd:all>
+      <xsd:element name="GridX" type="xsd:int" default="-1"/>
+      <xsd:element name="GridY" type="xsd:int" default="-1"/>
+      <xsd:element name="GridWidth" type="xsd:int" default="-1"/>
+      <xsd:element name="GridHeight" type="xsd:int" default="-1"/>
+      <xsd:element name="Fill" type="tns:Fill" default="0"></xsd:element>
+      <xsd:element name="Anchor" type="xsd:int" default="10"></xsd:element>
+      <xsd:element name="WeightX" type="xsd:int" default="10"></xsd:element>
+      <xsd:element name="WeightY" type="xsd:float" default="0.0"></xsd:element>
+      <xsd:element name="Insets">
+        <xsd:complexType>
+          <xsd:sequence maxOccurs="4">
+            <xsd:element name="InsetsValue"></xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:all>
+  </xsd:complexType>
+  <xsd:simpleType name="Fill">
+    <xsd:restriction base="xsd:int">
+      <xsd:enumeration value="0" />
+      <xsd:enumeration value="2" />
+      <xsd:enumeration value="3"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:complexType name="SeekParameters">
     <xsd:choice>
       <xsd:element name="SeekType">
