@@ -255,8 +255,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
               JPanel jpHoldingPanel = new javax.swing.JPanel();
               JLabel jlOpis = new javax.swing.JLabel();
-              JDbTextField jtfSifra = new com.openitech.db.components.JDbTextField();
-              final JDbComboBox jcbSifrant = new com.openitech.db.components.JDbComboBox();
+              JDbTextField jtfSifraOnPanel = new com.openitech.db.components.JDbTextField();
+              final JDbComboBox jcbSifrantOnPanel = new com.openitech.db.components.JDbComboBox();
 
               jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
 
@@ -265,16 +265,16 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
               jpHoldingPanel.add(jlOpis, gridBagConstraints);
 
-              jtfSifra.setColumns(4);
-              jtfSifra.setText("");
-              jtfSifra.setDocument(documents.get(item)[0]);
-              jpHoldingPanel.add(jtfSifra, new java.awt.GridBagConstraints());
+              jtfSifraOnPanel.setColumns(4);
+              jtfSifraOnPanel.setText("");
+              jtfSifraOnPanel.setDocument(documents.get(item)[0]);
+              jpHoldingPanel.add(jtfSifraOnPanel, new java.awt.GridBagConstraints());
 
-              jcbSifrant.setModel(sifranti.get(item));
+              jcbSifrantOnPanel.setModel(sifranti.get(item));
               gridBagConstraints = new java.awt.GridBagConstraints();
               gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
               gridBagConstraints.weightx = 1.0;
-              jpHoldingPanel.add(jcbSifrant, gridBagConstraints);
+              jpHoldingPanel.add(jcbSifrantOnPanel, gridBagConstraints);
 
               customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
 
@@ -282,17 +282,17 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
                 @Override
                 public void insertUpdate(DocumentEvent e) {
-                  updateSifrant(e.getDocument(), jcbSifrant);
+                  updateSifrant(e.getDocument(), jcbSifrantOnPanel);
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                  updateSifrant(e.getDocument(), jcbSifrant);
+                  updateSifrant(e.getDocument(), jcbSifrantOnPanel);
                 }
 
                 @Override
                 public void changedUpdate(DocumentEvent e) {
-                  updateSifrant(e.getDocument(), jcbSifrant);
+                  updateSifrant(e.getDocument(), jcbSifrantOnPanel);
                 }
               });
 
