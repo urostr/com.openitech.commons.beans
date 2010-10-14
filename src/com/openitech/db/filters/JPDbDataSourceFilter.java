@@ -16,6 +16,7 @@ import com.openitech.db.components.JDbTextField;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.xml.config.GridBagConstraints;
+import com.openitech.db.model.xml.config.GridBagLayoutFill;
 import com.openitech.db.model.xml.config.SeekLayout;
 import com.openitech.util.Equals;
 import java.awt.CardLayout;
@@ -240,18 +241,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
               jpHoldingPanel.add(jXDatePicker2, gridBagConstraints);
 
-              if (layout.getGridBagConstraints() == null) {
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
-                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-                gridBagConstraints.weightx = 1.0;
-              } else {
-                gridBagConstraints = getCustomGridBagConstraints(layout);
-              }
-              customPanel.add(jpHoldingPanel, gridBagConstraints);
-
-
+              customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
             }
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             javax.swing.text.Document document = new com.openitech.db.components.JDbTextField().getDocument();
@@ -286,16 +276,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               gridBagConstraints.weightx = 1.0;
               jpHoldingPanel.add(jcbSifrant, gridBagConstraints);
 
-              if (layout.getGridBagConstraints() == null) {
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
-                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-                gridBagConstraints.weightx = 1.0;
-              } else {
-                gridBagConstraints = getCustomGridBagConstraints(layout);
-              }
-              customPanel.add(jpHoldingPanel, gridBagConstraints);
+              customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
 
               document.addDocumentListener(new DocumentListener() {
 
@@ -374,16 +355,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               gridBagConstraints.weightx = 1.0;
               jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
 
-              if (layout.getGridBagConstraints() == null) {
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
-                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-                gridBagConstraints.weightx = 1.0;
-              } else {
-                gridBagConstraints = getCustomGridBagConstraints(layout);
-              }
-              customPanel.add(jpHoldingPanel, gridBagConstraints);
+              customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
 
               if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
                 item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
@@ -434,16 +406,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               gridBagConstraints.weightx = 1.0;
               jpHoldingPanel.add(jDbTextField1, gridBagConstraints);
 
-              if (layout.getGridBagConstraints() == null) {
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-                gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
-                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-                gridBagConstraints.weightx = 1.0;
-              } else {
-                gridBagConstraints = getCustomGridBagConstraints(layout);
-              }
-              customPanel.add(jpHoldingPanel, gridBagConstraints);
+              customPanel.add(jpHoldingPanel, getCustomGridBagConstraints(layout));
             }
           }
         }
@@ -466,25 +429,136 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   }
 
   private java.awt.GridBagConstraints getCustomGridBagConstraints(SeekLayout layout) {
-    GridBagConstraints customGridBagConstraints = layout.getGridBagConstraints();
+    java.awt.GridBagConstraints gridBagConstraints;
+    if (layout.getGridBagConstraints() == null) {
+      gridBagConstraints = new java.awt.GridBagConstraints();
+      gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+      gridBagConstraints.gridheight = java.awt.GridBagConstraints.RELATIVE;
+      gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+      gridBagConstraints.weightx = 1.0;
+    } else {
+      gridBagConstraints = getCustomGridBagConstraints(layout.getGridBagConstraints());
+    }
+    return gridBagConstraints;
+  }
+
+  private java.awt.GridBagConstraints getCustomGridBagConstraints(final GridBagConstraints customGridBagConstraints) {
     java.awt.GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = customGridBagConstraints.getGridX();
-    gridBagConstraints.gridy = customGridBagConstraints.getGridY();
-    gridBagConstraints.gridwidth = customGridBagConstraints.getGridWidth();
-    gridBagConstraints.gridwidth = customGridBagConstraints.getGridWidth();
-    gridBagConstraints.fill = customGridBagConstraints.getFill();
-    gridBagConstraints.anchor = customGridBagConstraints.getAnchor();
+    if (customGridBagConstraints.getGridX() != null) {
+      gridBagConstraints.gridx = customGridBagConstraints.getGridX();
+    }
+    if (customGridBagConstraints.getGridY() != null) {
+      gridBagConstraints.gridy = customGridBagConstraints.getGridY();
+    }
+    if (customGridBagConstraints.getGridWidth() != null) {
+      gridBagConstraints.gridwidth = customGridBagConstraints.getGridWidth();
+    }
+    if (customGridBagConstraints.getGridHeight() != null) {
+      gridBagConstraints.gridheight = customGridBagConstraints.getGridHeight();
+    }
+    if (customGridBagConstraints.getFill() != null) {
+      switch (customGridBagConstraints.getFill()) {
+        case NONE:
+          gridBagConstraints.fill = java.awt.GridBagConstraints.NONE;
+          break;
+        case BOTH:
+          gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+          break;
+        case HORIZONTAL:
+          gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+          break;
+        case VERTICAL:
+          gridBagConstraints.fill = java.awt.GridBagConstraints.VERTICAL;
+          break;
+      }
+    }
+    if (customGridBagConstraints.getAnchor() != null) {
+      switch (customGridBagConstraints.getAnchor()) {
+        case CENTER:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.CENTER;
+          break;
+        case NORTH:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
+          break;
+        case NORTHEAST:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+          break;
+        case EAST:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+          break;
+        case SOUTHEAST:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHEAST;
+          break;
+        case SOUTH:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTH;
+          break;
+        case SOUTHWEST:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
+          break;
+        case WEST:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+          break;
+        case NORTHWEST:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+          break;
+        case PAGE_START:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.PAGE_START;
+          break;
+        case PAGE_END:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.PAGE_END;
+          break;
+        case LINE_START:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+          break;
+        case LINE_END:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
+          break;
+        case FIRST_LINE_START:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
+          break;
+        case FIRST_LINE_END:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_END;
+          break;
+        case LAST_LINE_START:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.LAST_LINE_START;
+          break;
+        case LAST_LINE_END:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.LAST_LINE_END;
+          break;
+        case BASELINE:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE;
+          break;
+        case BASELINE_LEADING:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
+          break;
+        case BASELINE_TRAILING:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_TRAILING;
+          break;
+        case ABOVE_BASELINE:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.ABOVE_BASELINE;
+          break;
+        case ABOVE_BASELINE_LEADING:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.ABOVE_BASELINE_LEADING;
+          break;
+        case ABOVE_BASELINE_TRAILING:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.ABOVE_BASELINE_TRAILING;
+          break;
+        case BELOW_BASELINE:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.BELOW_BASELINE;
+          break;
+        case BELOW_BASELINE_LEADING:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.BELOW_BASELINE_LEADING;
+          break;
+        case BELOW_BASELINE_TRAILING:
+          gridBagConstraints.anchor = java.awt.GridBagConstraints.BELOW_BASELINE_TRAILING;
+          break;
+      }
+    }
     gridBagConstraints.weightx = customGridBagConstraints.getWeightX();
     gridBagConstraints.weighty = customGridBagConstraints.getWeightY();
-    try {
-      if (customGridBagConstraints.getInsets() != null) {
-        List<Object> insetsValue = customGridBagConstraints.getInsets().getInsetsValue();
-        if (insetsValue != null) {
-          gridBagConstraints.insets = new java.awt.Insets((Integer) insetsValue.get(0), (Integer) insetsValue.get(1), (Integer) insetsValue.get(2), (Integer) insetsValue.get(3));
-        }
-      }
-    } catch (Exception ex) {
-      Logger.getLogger(this.getClass().getName()).log(Level.WARNING, null, ex);
+
+    if (customGridBagConstraints.getInsets() != null) {
+      gridBagConstraints.insets = new java.awt.Insets(customGridBagConstraints.getInsets().getTop(), customGridBagConstraints.getInsets().getLeft(), customGridBagConstraints.getInsets().getBottom(), customGridBagConstraints.getInsets().getRight());
     }
     return gridBagConstraints;
   }
