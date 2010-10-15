@@ -114,18 +114,18 @@ public final class RefreshDataSource extends DataSourceEvent {
   
   public void run() {
     if (isCanceled()) {
-      System.out.println(event.dataSource.getName()+" is canceled. Quitting.");
+      System.out.println(event.dataSource+" is canceled. Quitting.");
       return;
     }
     if (isSuspended()) {
       try {
         Thread.sleep(27);
       } catch (InterruptedException ex) {
-        Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
+        Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource+"]");
       }
     }
     if (isCanceled()) {
-     System.out.println(event.dataSource.getName()+" is canceled. Quitting.");
+     System.out.println(event.dataSource+" is canceled. Quitting.");
      return;
     }
     if (isSuspended()) { //re-queue
@@ -135,18 +135,18 @@ public final class RefreshDataSource extends DataSourceEvent {
         return;
       }
       try {
-        System.out.println("QUEUED DELAY:"+this.queuedDelay+"ms:"+event.dataSource.getName()+":"+(isSuspended()?"SUSPENDED":"ACTIVE"));
+        System.out.println("QUEUED DELAY:"+this.queuedDelay+"ms:"+event.dataSource+":"+(isSuspended()?"SUSPENDED":"ACTIVE"));
         Thread.sleep(this.queuedDelay);
       } catch (InterruptedException ex) {
-        Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
+        Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource+"]");
       }
       if (isCanceled()) {
-        System.out.println(event.dataSource.getName()+" is canceled. Quitting.");
+        System.out.println(event.dataSource+" is canceled. Quitting.");
         return;
       }
       if (timestamps.get(event).longValue()<=timestamp.longValue()) {
         if (event.isOnEventQueue()) {
-          System.out.println("trying to load on EQ:"+event.dataSource.getName());
+          System.out.println("trying to load on EQ:"+event.dataSource);
           try {
             EventQueue.invokeAndWait(new Runnable() {
               public void run() {
@@ -154,18 +154,17 @@ public final class RefreshDataSource extends DataSourceEvent {
               }
             });
           } catch (Exception ex) {
-            Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource.getName()+"]");
+            Logger.getLogger(Settings.LOGGER).info("Thread interrupted ["+event.dataSource+"]");
           }
         } else {
           load();
         }
       } else
-        Logger.getLogger(Settings.LOGGER).warning("Skipped loading ["+event.dataSource.getName().substring(0,27)+"...]");
+        Logger.getLogger(Settings.LOGGER).warning("Skipped loading ["+event.dataSource+"...]");
     }
   }
   
   private void resubmit() {
-    Logger.getLogger(Settings.LOGGER).warning("Resubmitting ["+event.dataSource.getName().substring(0,27)+"...]");
     DataSourceEvent.submit(this, false);
   }
   
@@ -178,14 +177,14 @@ public final class RefreshDataSource extends DataSourceEvent {
 //  }
   
   protected void load() {
-    System.out.println("LOADING:"+event.dataSource.getName());
+    System.out.println("LOADING:"+event.dataSource);
     event.dataSource.lock(true, true);
     try {
       if (filterChange)
         try {
           event.dataSource.filterChanged();
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting ["+event.dataSource.getName()+"]", ex);
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting ["+event.dataSource+"]", ex);
         }
       if (this.defaults!=null)
         event.dataSource.setDefaultValues(defaults);
@@ -204,12 +203,12 @@ public final class RefreshDataSource extends DataSourceEvent {
     } catch (SQLException ex) {
       event.dataSource.reload();
     } catch (IllegalStateException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource.getName()+"]:"+ex.getMessage());
+      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
       if (isLastInQueue()) {
         resubmit();
       }
     } catch (Throwable thw) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading ["+event.dataSource.getName()+"]", thw);
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading ["+event.dataSource+"]", thw);
     }
     setReady();
   }
