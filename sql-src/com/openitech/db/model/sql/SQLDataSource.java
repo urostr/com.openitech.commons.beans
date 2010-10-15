@@ -4128,6 +4128,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public int getRowCount() {
     int newCount = this.count;
+
     if (!isDataLoaded() && refreshPending) {
       return -1;
     } else {
@@ -4258,63 +4259,84 @@ public class SQLDataSource implements DbDataSourceImpl {
   private boolean loadData(boolean reload) {
     return loadData(reload, Integer.MIN_VALUE);
   }
+  private boolean loadingData = false;
 
   @Override
   public boolean loadData(boolean reload, int oldRow) {
-    boolean reloaded = false;
-    if (reload) {
-      owner.lock();
+    if (loadingData && (reload||currentResultSet == null)) {
       try {
-        if (!((currentResultSet == null) || owner.isShareResults())) {
-          currentResultSet.close();
+        long entryTime = System.currentTimeMillis();
+        while (loadingData && (System.currentTimeMillis() - entryTime) < 5000) {
+          Thread.sleep(54);
         }
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
-      } finally {
-        currentResultSet = null;
-        owner.unlock();
+      } catch (InterruptedException ex) {
+        Logger.getLogger(SQLDataSource.class.getName()).log(Level.SEVERE, null, ex);
+        return false;
       }
     }
-    if ((currentResultSet == null) && selectStatementReady) {
-      owner.lock();
+
+    if (!loadingData) {
+      loadingData = true;
       try {
-        owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
-        createCurrentResultSet();
-      } finally {
-        inserting = false;
-        count = -1;
-        storedUpdates.clear();
-        cache.clear();
-        pendingValuesCache.clear();
-        for (Object parameter : owner.getParameters()) {
-          if (parameter instanceof PendingSqlParameter) {
-            ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+        boolean reloaded = false;
+        if (reload) {
+          owner.lock();
+          try {
+            if (!((currentResultSet == null) || owner.isShareResults())) {
+              currentResultSet.close();
+            }
+          } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
+          } finally {
+            currentResultSet = null;
+            owner.unlock();
           }
         }
-        reloaded = true;
-        owner.unlock();
-        Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
-      }
-      if (oldRow > 0 && getRowCount() > 0) {
-        try {
-          currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+        if ((currentResultSet == null) && selectStatementReady) {
+          owner.lock();
+          try {
+            owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
+            createCurrentResultSet();
+          } finally {
+            inserting = false;
+            count = -1;
+            storedUpdates.clear();
+            cache.clear();
+            pendingValuesCache.clear();
+            for (Object parameter : owner.getParameters()) {
+              if (parameter instanceof PendingSqlParameter) {
+                ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+              }
+            }
+            reloaded = true;
+            owner.unlock();
+            Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+          }
+          if (oldRow > 0 && getRowCount() > 0) {
+            try {
+              currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
+            } catch (SQLException ex) {
+              Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+            }
+          }
+          owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
         }
-      }
-      owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
-    }
-    if (reloaded && currentResultSet != null) {
-      if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
-        events.run();
-      } else {
-        try {
-          EventQueue.invokeAndWait(events);
-        } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
+        if (reloaded && currentResultSet != null) {
+          if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
+            events.run();
+          } else {
+            try {
+              EventQueue.invokeAndWait(events);
+            } catch (Exception ex) {
+              Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
+            }
+          }
         }
+      } finally {
+        loadingData = false;
       }
     }
+
     return currentResultSet != null;
   }
 
@@ -4918,7 +4940,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       boolean isUpdating = inserting || storedUpdates.containsKey(row);
 
       final ResultSet openSelectResultSet = openSelectResultSet();
-      final Object resultSetValue =  (openSelectResultSet.getRow()==0)?null:openSelectResultSet.getObject(columnName);
+      final Object resultSetValue = (openSelectResultSet.getRow() == 0) ? null : openSelectResultSet.getObject(columnName);
 
       if (isUpdating || !Equals.equals(value, resultSetValue)) {
         Map<String, Object> columnValues;
@@ -5123,7 +5145,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         openSelectResultSet.absolute(row);
       }
 
-      if ((openSelectResultSet.getRow() == 0)&&SELECT_1.equalsIgnoreCase(preparedCountSql)) {
+      if ((openSelectResultSet.getRow() == 0) && SELECT_1.equalsIgnoreCase(preparedCountSql)) {
         storedResult[0] = true;
         return nullValue;
       }
