@@ -30,8 +30,6 @@ import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.EventPK;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.Clob;
@@ -1715,7 +1713,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public String getCreateTableSQL(String tableName, ResultSet rs) throws SQLException {
     ResultSetMetaData rsmd = rs.getMetaData();
     StringBuilder sb = new StringBuilder();
-    sb.append("CREATE TABLE [").append(tableName).append("] (\n");
+    sb.append("CREATE TABLE ").append(tableName).append(" (\n");
     sb.append("     [__RsID] bigint identity NOT NULL\n");
     for (int column = 1; column <= rsmd.getColumnCount(); column++) {
       //sb.append("    ").append(column == 1 ? ' ' : ',');
