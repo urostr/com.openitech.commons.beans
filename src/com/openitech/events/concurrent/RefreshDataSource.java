@@ -165,6 +165,7 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
   
   private void resubmit() {
+    Logger.getLogger(Settings.LOGGER).warning("Resubmitting ["+event.dataSource.getName().substring(0,27)+"...]");
     DataSourceEvent.submit(this, false);
   }
   
@@ -204,7 +205,9 @@ public final class RefreshDataSource extends DataSourceEvent {
       event.dataSource.reload();
     } catch (IllegalStateException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource.getName()+"]:"+ex.getMessage());
-      resubmit();
+      if (isLastInQueue()) {
+        resubmit();
+      }
     } catch (Throwable thw) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading ["+event.dataSource.getName()+"]", thw);
     }
@@ -217,6 +220,10 @@ public final class RefreshDataSource extends DataSourceEvent {
   
   public final Object clone() {
     return new RefreshDataSource(this);
+  }
+
+  private boolean isLastInQueue() {
+    return timestamps.get(event).longValue()==timestamp.longValue();
   }
   
 }
