@@ -10,6 +10,8 @@
  */
 package com.openitech.db.filters;
 
+import java.awt.Component;
+import java.awt.Container;
 import java.util.Map;
 import javax.swing.text.Document;
 
@@ -26,9 +28,13 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
    */
   public DefaultFilterPanel(Map<String, Document> namedDocuments,
           DataSourceFiltersMap filtersMap) {
-    this(namedDocuments, null, filtersMap);
+    this(namedDocuments, (JPDbDataSourceFilter) null, filtersMap);
   }
-  
+
+  public DefaultFilterPanel(Map<String, Document> documents, DefaultFilterPanel defaultFilterPanel, DataSourceFiltersMap filtersMap) {
+    this(documents, defaultFilterPanel.dbDataSourceFilter(), filtersMap);
+  }
+
   /**
    * Creates new form JPKadrovskaEvidencaFilterPanel
    */
@@ -37,14 +43,37 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     this.filtersMap = filtersMap;
     initComponents();
 
-    jPDbDataSourceFilter1.setNamedDocuments(namedDocuments);
-    jPDbDataSourceFilter1.setParentFilterPanel(parentFilterPanel);
-    jPDbDataSourceFilter1.getFilters().putAll(filtersMap);
+    dbDataSourceFilter.setNamedDocuments(namedDocuments);
+    dbDataSourceFilter.setParentFilterPanel(parentFilterPanel);
+    dbDataSourceFilter.getFilters().putAll(filtersMap);
+  }
+
+  public JPDbDataSourceFilter dbDataSourceFilter() {
+    return dbDataSourceFilter;
+  }
+
+  @Override
+  public void setEnabled(boolean enabled) {
+    setEnabled(this, enabled);
+  }
+
+  private void setEnabled(Container container, boolean enabled) {
+    if (this.equals(container)) {
+      super.setEnabled(enabled);
+    } else {
+      container.setEnabled(enabled);
+    }
+    for (Component component : container.getComponents()) {
+      component.setEnabled(enabled);
+      if (component instanceof Container) {
+        setEnabled((Container) component, enabled);
+      }
+    }
   }
 
   @Override
   public Object clone() {
-    return new DefaultFilterPanel(jPDbDataSourceFilter1.getNamedDocuments(), jPDbDataSourceFilter1, filtersMap);
+    return new DefaultFilterPanel(dbDataSourceFilter.getNamedDocuments(), dbDataSourceFilter, filtersMap);
   }
 
   /** This method is called from within the constructor to
@@ -57,7 +86,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
   private void initComponents() {
     java.awt.GridBagConstraints gridBagConstraints;
 
-    jPDbDataSourceFilter1 = new com.openitech.db.filters.JPDbDataSourceFilter();
+    dbDataSourceFilter = new com.openitech.db.filters.JPDbDataSourceFilter();
 
     setLayout(new java.awt.GridBagLayout());
     gridBagConstraints = new java.awt.GridBagConstraints();
@@ -66,9 +95,9 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
     gridBagConstraints.weightx = 1.0;
     gridBagConstraints.weighty = 1.0;
-    add(jPDbDataSourceFilter1, gridBagConstraints);
+    add(dbDataSourceFilter, gridBagConstraints);
   }// </editor-fold>//GEN-END:initComponents
   // Variables declaration - do not modify//GEN-BEGIN:variables
-  private com.openitech.db.filters.JPDbDataSourceFilter jPDbDataSourceFilter1;
+  private com.openitech.db.filters.JPDbDataSourceFilter dbDataSourceFilter;
   // End of variables declaration//GEN-END:variables
 }

@@ -284,7 +284,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         }
 
         if (addToPanel) {
-          final boolean group = layout.getLayout().getGroup() != null;
+          final boolean group = (layout.getLayout() == null) || (layout.getLayout() != null && layout.getLayout().getGroup() != null);
 
           final JPanel jpHoldingPanel = group ? new javax.swing.JPanel() : customPanel;
           if (group) {
@@ -312,7 +312,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             int index = 0;
 
             gridBagConstraints = new java.awt.GridBagConstraints();
-            jpHoldingPanel.add(jlOd, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
+            customPanel.add(jlOd, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
             jpHoldingPanel.add(jXDatePicker, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
             jpHoldingPanel.add(jlDo, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
@@ -327,7 +327,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            jpHoldingPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             gridBagConstraints = new java.awt.GridBagConstraints();
             jtfSifraOnPanel.setColumns(layout.getColumns()==null?4:layout.getColumns());
@@ -367,7 +367,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            jpHoldingPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
             jDbComboBox1.setFocusable(false);
@@ -404,7 +404,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            jpHoldingPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
             jDbComboBox1.setSelectedIndex(1);
@@ -469,9 +469,9 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
   private java.awt.GridBagConstraints getCustomGridBagConstraints(SeekLayout.Layout layout, int index) {
     java.awt.GridBagConstraints gridBagConstraints;
-    if (layout.getGroup() != null) {
+    if (layout != null && layout.getGroup() != null) {
       gridBagConstraints = getCustomGridBagConstraints(layout.getGroup());
-    } else if (layout.getConstraints() != null) {
+    } else if (layout != null && layout.getConstraints() != null) {
       if (index < layout.getConstraints().getGridBagConstraints().size()) {
         gridBagConstraints = getCustomGridBagConstraints(layout.getConstraints().getGridBagConstraints().get(index));
       } else {
