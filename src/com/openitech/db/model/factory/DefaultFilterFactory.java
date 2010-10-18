@@ -19,7 +19,7 @@ import org.jdesktop.swingx.JXTaskPane;
  *
  * @author uros
  */
-public class DefaultFilterFactory extends AbstractDataSourceParametersFactory {
+public class DefaultFilterFactory extends AbstractDataSourceParametersFactory implements ClassInstanceFactory.Custom {
 
   protected List<JXTaskPane> taskPanes = new ArrayList<JXTaskPane>();
   protected List<DbDataSource.SqlParameter> parameters = new ArrayList<DbDataSource.SqlParameter>();
