@@ -330,7 +330,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             gridBagConstraints = new java.awt.GridBagConstraints();
-            jtfSifraOnPanel.setColumns(layout.getColumns()==null?4:layout.getColumns());
+            jtfSifraOnPanel.setColumns(layout.getColumns() == null ? 4 : layout.getColumns());
             jtfSifraOnPanel.setDocument(documents.get(item)[0]);
             jpHoldingPanel.add(jtfSifraOnPanel, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
@@ -390,10 +390,14 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.weightx = 1.0;
             jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
-            if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
-              item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+            //kr neki
+            try {
+              if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+                item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+              }
+              jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+            } catch (Exception ex) {
             }
-            jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
           } else {
             final JLabel jlOpis = new javax.swing.JLabel();
             final JComboBox jDbComboBox1 = new JComboBox();
@@ -421,7 +425,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             });
             jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++));
 
-            jDbTextField1.setColumns(layout.getColumns()==null?20:layout.getColumns());
+            jDbTextField1.setColumns(layout.getColumns() == null ? 20 : layout.getColumns());
             jDbTextField1.setSearchField(true);
             jDbTextField1.setDocument(documents.get(item)[0]);
             gridBagConstraints = new java.awt.GridBagConstraints();
