@@ -202,11 +202,11 @@ public final class RefreshDataSource extends DataSourceEvent {
         event.dataSource.reload();
     } catch (SQLException ex) {
       event.dataSource.reload();
-    } catch (IllegalStateException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
-      if (isLastInQueue()) {
-        resubmit();
-      }
+//    } catch (IllegalStateException ex) {
+//      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
+//      if (isLastInQueue()) {
+//        resubmit();
+//      }
     } catch (Throwable thw) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading ["+event.dataSource+"]", thw);
     }
