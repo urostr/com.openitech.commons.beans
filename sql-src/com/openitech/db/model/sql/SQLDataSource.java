@@ -4263,21 +4263,21 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   @Override
   public boolean loadData(boolean reload, int oldRow) {
-    if (loadingData && (reload||currentResultSet == null)) {
-      try {
-        long entryTime = System.currentTimeMillis();
-        while (loadingData && (System.currentTimeMillis() - entryTime) < 5000) {
-          Thread.sleep(54);
-        }
-      } catch (InterruptedException ex) {
-        Logger.getLogger(SQLDataSource.class.getName()).log(Level.SEVERE, null, ex);
-        return false;
-      }
-    }
-
-    if (!loadingData) {
-      loadingData = true;
-      try {
+//    if (loadingData && (reload||currentResultSet == null)) {
+//      try {
+//        long entryTime = System.currentTimeMillis();
+//        while (loadingData && (System.currentTimeMillis() - entryTime) < 5000) {
+//          Thread.sleep(54);
+//        }
+//      } catch (InterruptedException ex) {
+//        Logger.getLogger(SQLDataSource.class.getName()).log(Level.SEVERE, null, ex);
+//        return false;
+//      }
+//    }
+//
+//    if (!loadingData) {
+//      loadingData = true;
+//      try {
         boolean reloaded = false;
         if (reload) {
           owner.lock();
@@ -4332,10 +4332,10 @@ public class SQLDataSource implements DbDataSourceImpl {
             }
           }
         }
-      } finally {
-        loadingData = false;
-      }
-    }
+//      } finally {
+//        loadingData = false;
+//      }
+//    }
 
     return currentResultSet != null;
   }
