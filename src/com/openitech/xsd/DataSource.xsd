@@ -361,7 +361,8 @@
                       </xsd:sequence>
                       <xsd:attribute name="SifrantSkupina" type="xsd:string"/>
                       <xsd:attribute name="SifrantOpis" type="xsd:string"/>
-                      <xsd:attribute name="TextNotDefined" type="xsd:string"/>
+                      <xsd:attribute name="TextNotDefined" type="xsd:string" default="Ni doloèen"/>
+                      <xsd:attribute name="DataBase" type="xsd:string" default=""/>
                     </xsd:complexType>
                   </xsd:element>
                   <xsd:element name="ComboBoxModel">

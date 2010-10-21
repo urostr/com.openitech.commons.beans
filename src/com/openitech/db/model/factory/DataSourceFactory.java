@@ -91,7 +91,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if (dataSourceXML.getDataEntryPanel() != null) {
         createDataEntryPanel();
       }
-    } catch (Exception ex) {
+    } catch (Throwable ex) {
       Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
     } finally {
       resumeDataSource();

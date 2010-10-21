@@ -45,7 +45,7 @@ public class DataSourceConfig<T extends DbDataModel> {
   }
 
   public static Document get(String documentName) {
-    return get(documentName, new javax.swing.text.PlainDocument());
+    return get(documentName, null);
   }
 
   public static Document get(String documentName, Document document) {
@@ -54,6 +54,9 @@ public class DataSourceConfig<T extends DbDataModel> {
     if (documents.containsKey(ci)) {
       result = documents.get(ci);
     } else {
+      if (document==null) {
+        document = new javax.swing.text.PlainDocument();
+      }
       documents.put(ci, document);
       result = document;
     }

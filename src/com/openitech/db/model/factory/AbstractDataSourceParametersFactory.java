@@ -272,21 +272,17 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                   String sifrantSkupina = lookup.getSifrantSkupina();
                   String sifrantOpis = lookup.getSifrantOpis();
                   String textNotDefined = lookup.getTextNotDefined();
+                  String dataBase = lookup.getDataBase();
                   List<String> allowedValues = lookup.getAllowedValues();
                   List<String> excludedValues = lookup.getExcludedValues();
 
-                  if ((allowedValues.size() > 0) || (excludedValues.size() > 0)) {
-                    sifrantSeekType = new DataSourceFilters.SifrantSeekType(
-                            new DataSourceFilters.SeekType(field, DataSourceFilters.SeekType.EQUALS, 1),
-                            sifrantSkupina,
-                            sifrantOpis,
-                            textNotDefined,
-                            (allowedValues.isEmpty() ? null : allowedValues), excludedValues.isEmpty() ? null : excludedValues);
-                  } else if (textNotDefined == null) {
-                    sifrantSeekType = new DataSourceFilters.SifrantSeekType(field, sifrantSkupina, sifrantOpis);
-                  } else {
-                    sifrantSeekType = new DataSourceFilters.SifrantSeekType(field, sifrantSkupina, sifrantOpis, textNotDefined);
-                  }
+                  sifrantSeekType = new DataSourceFilters.SifrantSeekType(
+                          new DataSourceFilters.SeekType(field, DataSourceFilters.SeekType.EQUALS, 1),
+                          sifrantSkupina,
+                          sifrantOpis,
+                          textNotDefined,
+                          dataBase,
+                          (allowedValues.isEmpty() ? null : allowedValues), excludedValues.isEmpty() ? null : excludedValues);
                 }
 
                 if (sifrantSeekType != null) {
