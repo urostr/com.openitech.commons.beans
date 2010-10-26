@@ -370,7 +370,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             //jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
-            jDbComboBox1.setModel(jcbNumberType.getModel());
+            jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "je enako", "je veèje ali enako od", "je manjše ali enako kot" }));
             jDbComboBox1.setFocusable(false);
             jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
 
@@ -413,7 +413,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             //jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
-            jDbComboBox1.setModel(jcbType.getModel());
+            jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "je enako", "se zaène z", "se konèa z", "vsebuje" }));
             jDbComboBox1.setSelectedIndex(1);
             jDbComboBox1.setFocusable(false);
             jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
