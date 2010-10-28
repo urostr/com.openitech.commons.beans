@@ -22,7 +22,8 @@
                 [ShowInTable] [bit] NULL,
                 [PrimaryKey] [bit] NOT NULL,
                 [UporabiPrivzetoVrednost] [bit] NULL,
-                
+                [OpisNadVnosom] [bit] NULL,
+                [OpisVNaslovu] [bit] NULL,
                 [Lookup] [bit] NULL,
                 [FieldActions] [varchar](max) NULL,
                 [SecondarySourceXML] [varchar](max) NULL,
@@ -113,6 +114,8 @@
                ,[ShowInTable]
                ,[PrimaryKey]
                ,[UporabiPrivzetoVrednost]
+               ,[OpisNadVnosom]
+               ,[OpisVNaslovu]
                ,[Lookup]
                ,[FieldActions]
                ,[SecondarySourceXML]
@@ -192,7 +195,16 @@
                 THEN ActivityEventsPolja.[UporabiPrivzetoVrednost]
                 ELSE SifrantiPolja.[UporabiPrivzetoVrednost]
               END AS [UporabiPrivzetoVrednost],
-              
+              CASE
+                WHEN ActivityEventsPolja.[OpisNadVnosom] IS NOT NULL
+                THEN ActivityEventsPolja.[OpisNadVnosom]
+                ELSE SifrantiPolja.[OpisNadVnosom]
+              END AS [OpisNadVnosom],
+              CASE
+                WHEN ActivityEventsPolja.[OpisVNaslovu] IS NOT NULL
+                THEN ActivityEventsPolja.[OpisVNaslovu]
+                ELSE SifrantiPolja.[OpisVNaslovu]
+              END AS [OpisVNaslovu],
               SifrantiPolja.[Lookup],
               CASE
                 WHEN ActivityEventsPolja.[FieldActions] IS NOT NULL
