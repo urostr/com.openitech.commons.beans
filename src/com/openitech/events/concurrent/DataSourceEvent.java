@@ -39,7 +39,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   protected DataSourceEvent(DataSourceEvent object) {
     this.event = object.event;
     this.suspend = object.suspend;
-    this.suspend = object.cancel;
+    this.cancel = object.cancel;
   }
 
   /**
