@@ -297,6 +297,12 @@
                          ActivityEvents.[IdSifre]
                  FROM &lt;%ChangeLog%&gt;.[dbo].[ActivityEvents]
                 )
+                UNION
+                (SELECT  ActivityEventsPolja.ActivityID,
+                         ActivityEventsPolja.[IdSifranta],
+                         ActivityEventsPolja.[IdSifre]
+                 FROM &lt;%ChangeLog%&gt;.[dbo].[ActivityEventsPolja]
+                )
             ) ActivityEvents) ActivityEvents
             ON
               ActivityEvents.IdSifranta = SifrantiPolja.[IdSifranta]
