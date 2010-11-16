@@ -236,7 +236,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   private String qFillTable;
   private PreparedStatement psFillTable = null;
   private String qEmptyTable;
-  private PreparedStatement psEmptyTable = null;
+  private List<PreparedStatement> psEmptyTable = new ArrayList<PreparedStatement>();
   private String qIsTableDataValidSql = null;
   private PreparedStatement psIsTableDataValidSql = null;
 
@@ -364,11 +364,15 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               String query = SQLDataSource.substParameters(emptyTableSql, qparams);
               if (!Equals.equals(this.connection, connection)
                       || !Equals.equals(this.qEmptyTable, query)) {
-                this.psEmptyTable = connection.prepareStatement(query,
-                        ResultSet.TYPE_SCROLL_INSENSITIVE,
-                        ResultSet.CONCUR_READ_ONLY,
-                        ResultSet.HOLD_CURSORS_OVER_COMMIT);
-                this.connection = connection;
+                String[] sqls = query.split(";");
+                for (String sql : sqls) {
+                  this.psEmptyTable.clear();
+                  this.psEmptyTable.add(connection.prepareStatement(sql,
+                          ResultSet.TYPE_SCROLL_INSENSITIVE,
+                          ResultSet.CONCUR_READ_ONLY,
+                          ResultSet.HOLD_CURSORS_OVER_COMMIT));
+                  this.connection = connection;
+                }
                 this.qEmptyTable = query;
               }
 
@@ -376,7 +380,13 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 System.out.println("##############");
                 System.out.println(this.qEmptyTable);
               }
-              SQLDataSource.executeUpdate(psEmptyTable, qparams);
+              int rowsDeleted = 0;
+              for (PreparedStatement preparedStatement : psEmptyTable) {
+                rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
+              }
+              if (DbDataSource.DUMP_SQL) {
+                System.out.println("Rows deleted:"+rowsDeleted);
+              }
             }
 
             String query = SQLDataSource.substParameters(fillTableSql, qparams);
@@ -394,7 +404,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               System.out.println("##############");
               System.out.println(this.qFillTable);
             }
-            SQLDataSource.executeUpdate(psFillTable, qparams);
+            System.out.println("Rows added:"+SQLDataSource.executeUpdate(psFillTable, qparams));
             if (cleanTableSqls != null) {
               for (String sql : cleanTableSqls) {
                 SQLDataSource.executeUpdate(connection.prepareStatement(SQLDataSource.substParameters(sql, qparams)), qparams);
