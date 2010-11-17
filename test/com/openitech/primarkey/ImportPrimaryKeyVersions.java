@@ -29,9 +29,9 @@ import net.sourceforge.jtds.jdbc.CachedResultSet;
  *
  * @author domenbasic
  */
-public class ImportPrimaryKey extends TestCase {
+public class ImportPrimaryKeyVersions extends TestCase {
 
-  public ImportPrimaryKey(String testName) {
+  public ImportPrimaryKeyVersions(String testName) {
     super(testName);
   }
 
@@ -59,8 +59,8 @@ public class ImportPrimaryKey extends TestCase {
       //prepare
 
       Connection connection = ConnectionManager.getInstance().getTxConnection();
-      PreparedStatement allEvents = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKey.class, "sql/events.sql", "cp1250"));
-      PreparedStatement eventValues = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKey.class, "sql/primaryKey.sql", "cp1250"));
+      PreparedStatement allEvents = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKeyVersions.class, "sql/events.sql", "cp1250"));
+      PreparedStatement eventValues = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKeyVersions.class, "sql/primaryKey.sql", "cp1250"));
 
 //      while (progress < 1000000)
       {
@@ -78,14 +78,20 @@ public class ImportPrimaryKey extends TestCase {
 
           while (rs_allEvents.next()) {
             int eventId = rs_allEvents.getInt("Id");
-            int idSIfranta = rs_allEvents.getInt("idSIfranta");
+            int idSifranta = rs_allEvents.getInt("idSIfranta");
             String idSifre = rs_allEvents.getString("IdSifre");
+            Integer versionId = rs_allEvents.getInt("versionId");
+           
+            if (rs_allEvents.wasNull()) {
+              versionId = null;
+            }
 
             //ustvari nov primarykey za shranjevanje
             EventPK eventPK = new EventPK();
             eventPK.setEventId(eventId);
-            eventPK.setIdSifranta(idSIfranta);
+            eventPK.setIdSifranta(idSifranta);
             eventPK.setIdSifre(idSifre);
+            eventPK.setVersionID(versionId);
 
             //najdi eventValues za doloèen eventId
             param = 1;
@@ -108,7 +114,7 @@ public class ImportPrimaryKey extends TestCase {
 
             try {
               //shrani PK
-              SqlUtilities.getInstance().storePrimaryKey(eventPK);
+              SqlUtilities.getInstance().storePrimaryKeyVersions(eventPK);
               commit = true;
             } catch (SQLPrimaryKeyException ex) {
               // <editor-fold defaultstate="collapsed" desc="uredi podvojene zapise">
@@ -125,7 +131,7 @@ public class ImportPrimaryKey extends TestCase {
               CachedRowSet rs_allEventValues = new CachedRowSetImpl();
               rs_allEventValues.populate(eventValues.executeQuery());
 
-              PreparedStatement oldEevntPK = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKey.class, "sql/findOldPK.sql", "cp1250"));
+              PreparedStatement oldEevntPK = connection.prepareStatement(ReadInputStream.getResourceAsString(ImportPrimaryKeyVersions.class, "sql/findOldPK.sql", "cp1250"));
               param = 1;
               oldEevntPK.clearParameters();
               oldEevntPK.setString(param++, eventPK.toHexString());
@@ -178,7 +184,7 @@ public class ImportPrimaryKey extends TestCase {
               commit = false;
             } finally {
             }
-            
+
 
           }
 
@@ -186,13 +192,13 @@ public class ImportPrimaryKey extends TestCase {
           try {
             SqlUtilities.getInstance().endTransaction(commit);
           } catch (SQLException ex1) {
-            Logger.getLogger(ImportPrimaryKey.class.getName()).log(Level.SEVERE, null, ex1);
+            Logger.getLogger(ImportPrimaryKeyVersions.class.getName()).log(Level.SEVERE, null, ex1);
           }
         }
         progress += korak;
       }
     } catch (SQLException ex) {
-      Logger.getLogger(ImportPrimaryKey.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(ImportPrimaryKeyVersions.class.getName()).log(Level.SEVERE, null, ex);
 
     } finally {
 
