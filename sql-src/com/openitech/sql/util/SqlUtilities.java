@@ -19,11 +19,11 @@ import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
 import com.openitech.util.Equals;
+import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
-import java.sql.Connection;
+import com.openitech.value.events.UpdateEventFields;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Savepoint;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,7 +43,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   private static final Map<String, Class<? extends SqlUtilities>> implementations = new HashMap<String, Class<? extends SqlUtilities>>();
   private static SqlUtilities instance;
-
   public static Properties DATABASES = new Properties();
   public static final String CHANGE_LOG_DB = "[ChangeLog]";
   public static final String RPP_DB = "[RPP]";
@@ -87,28 +86,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     return instance;
   }
 
-  public static SqlUtilities getInstance(Class clazz) {
-    if (!instances.containsKey(clazz)) {
-      Class implementation = clazz;
-      SqlUtilities instance = null;
-      if (implementation != null) {
-        try {
-          instance = (SqlUtilities) implementation.newInstance();
-          try {
-            instance.autocommit = ConnectionManager.getInstance().getConnection().getAutoCommit();
-          } catch (SQLException ex) {
-            //ignore it
-            instance.autocommit = true;
-          }
-        } catch (InstantiationException ex) {
-          Logger.getLogger(SqlUtilities.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-          Logger.getLogger(SqlUtilities.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        instances.put(clazz, instance);
-      }
-    }
-    return instances.get(clazz);
+  public static String getDataBase() {
+    return DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB);
   }
 
   public int executeUpdate(java.sql.PreparedStatement statement,
@@ -396,19 +375,32 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public Long updateEvent(Event newValues, Event oldValues) throws SQLException {
     boolean isTransaction = isTransaction();
     boolean commit = false;
+    boolean success = true;
     try {
       if (!isTransaction) {
         beginTransaction();
       }
 
-      List<Long> eventIds = new ArrayList<Long>();
-      Long eventId = updateEvent(newValues, oldValues, eventIds);
+      List<EventPK> eventPKs = new ArrayList<EventPK>();
+      Long eventId = updateEvent(newValues, oldValues, eventPKs);
 
+      success = success && eventId != null;
+
+      Integer versionId = null;
       if (newValues.isVersioned()) {
-        assignEventVersion(eventIds);
+        versionId = assignEventVersion(eventPKs);
+        success = success && versionId != null;
       }
 
-      commit = eventId != null;
+      for (EventPK eventPK : eventPKs) {
+        eventPK.setVersionID(versionId);
+        success = success && storePrimaryKeyVersions(eventPK);
+        success = success && storeEventLookUpKeys(eventPK);
+
+      }
+
+
+      commit = success;
       return eventId;
     } finally {
       if (!isTransaction) {
@@ -417,14 +409,18 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
   }
 
-  private Long updateEvent(Event newValues, Event oldValues, List<Long> eventIds) throws SQLException {
+  private Long updateEvent(Event newValues, Event oldValues, List<EventPK> eventIds) throws SQLException {
     Event find = findEvent(oldValues);
     if (find != null) {
       newValues.setId(find.getId());
       newValues.setEventSource(find.getEventSource());
     }
     if (eventIds == null) {
-      eventIds = new ArrayList<Long>();
+      eventIds = new ArrayList<EventPK>();
+    }
+
+    for (UpdateEventFields updateEventFields : newValues.getUpdateEventFields()) {
+      updateEventFields.updateEventFields(newValues, oldValues);
     }
 
     for (Event childEvent : newValues.getChildren()) {
@@ -434,23 +430,25 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
         addIngoredEventIds(childEvent, eventIds);
       }
     }
-    Long eventId = storeEvent(newValues, find);
+    EventPK eventPK = storeEvent(newValues, find);
 
-    eventIds.add(eventId);
 
-    return eventId;
+    if (eventPK.getEventOperation() != Event.EventOperation.DELETE) {
+      eventIds.add(eventPK);
+    }
+    return eventPK.getEventId();
   }
 
-  private void addIngoredEventIds(Event newValues, List<Long> eventIds) {
+  private void addIngoredEventIds(Event newValues, List<EventPK> eventIds) {
     if ((newValues.getId() != null) && (newValues.getId() > 0)) {
-      eventIds.add(newValues.getId());
+      eventIds.add(newValues.getEventPK());
       for (Event childEvent : newValues.getChildren()) {
         addIngoredEventIds(childEvent, eventIds);
       }
     }
   }
 
-  protected abstract Long assignEventVersion(List<Long> eventIds) throws SQLException;
+  protected abstract Integer assignEventVersion(List<EventPK> eventIds) throws SQLException;
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
@@ -458,11 +456,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract FieldValue getParentIdentity(Field field) throws SQLException;
 
-  public Long storeEvent(Event event) throws SQLException {
+  protected EventPK storeEvent(Event event) throws SQLException {
     return storeEvent(event, null);
   }
 
-  public abstract Long storeEvent(Event event, Event oldEvent) throws SQLException;
+  protected abstract EventPK storeEvent(Event event, Event oldEvent) throws SQLException;
 
   public CachedRowSet getGeneratedFields(int idSifranta, String idSifre) throws SQLException {
     return getGeneratedFields(idSifranta, idSifre, false);
@@ -479,6 +477,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   }
 
   public abstract Long storeValue(ValueType valueType, final Object value) throws SQLException;
+
+  public abstract VariousValue findValue(long valueId) throws SQLException;
 
   public abstract DbNaslovDataModel.Naslov storeAddress(DbNaslovDataModel.Naslov address) throws SQLException;
 
@@ -515,9 +515,19 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract boolean storePrimaryKey(EventPK eventPK) throws SQLException;
 
+  public abstract boolean storePrimaryKeyVersions(EventPK eventPK) throws SQLException;
+
+  public abstract boolean storeEventLookUpKeys(EventPK eventPK) throws SQLException;
+
   public abstract EventPK findEventPK(long eventId) throws SQLException;
 
+  public abstract EventPK findEventPKVersions(long eventId, Integer versionId) throws SQLException;
+
   public abstract boolean deleteEvent(long eventId) throws SQLException;
+
+  public abstract Integer findVersion(Long eventId) throws SQLException;
+
+  public abstract EventPK findEventPKVersions(Integer versionId, Integer idSifranta, String idSifre, String primaryKey) throws SQLException;
 
   public static enum Operation {
 

@@ -50,7 +50,6 @@
                 [UporabiSifrantPonudb] [bit] NULL,
                 [UporabiSifrantXML] [varchar](max) NULL,
                 [UporabiWorkAreaId] [int] NULL,
-                [UporabiStarModel]  [bit] NULL,
                 [Opombe] [varchar](max) NULL,
                 [SifrantiPoljaChanged] [binary](8) NOT NULL,
                 [ActivityEventsChanged] [binary](8) NULL,
@@ -143,7 +142,6 @@
                ,[UporabiSifrantPonudb]
                ,[UporabiSifrantXML]
                ,[UporabiWorkAreaId]
-               ,[UporabiStarModel]
                ,[Opombe]
                ,[SifrantiPoljaChanged]
                ,[ActivityEventsChanged]
@@ -266,7 +264,6 @@
               SifrantVnosnihPolj.[UporabiSifrantPonudb],
               SifrantVnosnihPolj.[UporabiSifrantXML],
               SifrantVnosnihPolj.[UporabiWorkAreaId],
-              SifrantiPolja.[UporabiStarModel],
               SifrantVnosnihPolj.[Opombe],
               SifrantiPolja.[Changed],
               ActivityEventsPolja.[Changed],

@@ -4278,60 +4278,60 @@ public class SQLDataSource implements DbDataSourceImpl {
 //    if (!loadingData) {
 //      loadingData = true;
 //      try {
-        boolean reloaded = false;
-        if (reload) {
-          owner.lock();
-          try {
-            if (!((currentResultSet == null) || owner.isShareResults())) {
-              currentResultSet.close();
-            }
-          } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
-          } finally {
-            currentResultSet = null;
-            owner.unlock();
+    boolean reloaded = false;
+    if (reload) {
+      owner.lock();
+      try {
+        if (!((currentResultSet == null) || owner.isShareResults())) {
+          currentResultSet.close();
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
+      } finally {
+        currentResultSet = null;
+        owner.unlock();
+      }
+    }
+    if ((currentResultSet == null) && selectStatementReady) {
+      owner.lock();
+      try {
+        owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
+        createCurrentResultSet();
+      } finally {
+        inserting = false;
+        count = -1;
+        storedUpdates.clear();
+        cache.clear();
+        pendingValuesCache.clear();
+        for (Object parameter : owner.getParameters()) {
+          if (parameter instanceof PendingSqlParameter) {
+            ((PendingSqlParameter) parameter).emptyPendingValuesCache();
           }
         }
-        if ((currentResultSet == null) && selectStatementReady) {
-          owner.lock();
-          try {
-            owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
-            createCurrentResultSet();
-          } finally {
-            inserting = false;
-            count = -1;
-            storedUpdates.clear();
-            cache.clear();
-            pendingValuesCache.clear();
-            for (Object parameter : owner.getParameters()) {
-              if (parameter instanceof PendingSqlParameter) {
-                ((PendingSqlParameter) parameter).emptyPendingValuesCache();
-              }
-            }
-            reloaded = true;
-            owner.unlock();
-            Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
-          }
-          if (oldRow > 0 && getRowCount() > 0) {
-            try {
-              currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
-            } catch (SQLException ex) {
-              Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
-            }
-          }
-          owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
+        reloaded = true;
+        owner.unlock();
+        Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+      }
+      if (oldRow > 0 && getRowCount() > 0) {
+        try {
+          currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
         }
-        if (reloaded && currentResultSet != null) {
-          if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
-            events.run();
-          } else {
-            try {
-              EventQueue.invokeAndWait(events);
-            } catch (Exception ex) {
-              Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
-            }
-          }
+      }
+      owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
+    }
+    if (reloaded && currentResultSet != null) {
+      if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
+        events.run();
+      } else {
+        try {
+          EventQueue.invokeAndWait(events);
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
         }
+      }
+    }
 //      } finally {
 //        loadingData = false;
 //      }
@@ -5139,15 +5139,15 @@ public class SQLDataSource implements DbDataSourceImpl {
       storedResult[0] = false;
       final ResultSet openSelectResultSet = openSelectResultSet();
 
+      if ((openSelectResultSet.getRow() == 0) && SELECT_1.equalsIgnoreCase(preparedCountSql)) {
+        storedResult[0] = true;
+        return nullValue;
+      }
+
       int oldrow = openSelectResultSet.getRow();
 
       if (oldrow != row) {
         openSelectResultSet.absolute(row);
-      }
-
-      if ((openSelectResultSet.getRow() == 0) && SELECT_1.equalsIgnoreCase(preparedCountSql)) {
-        storedResult[0] = true;
-        return nullValue;
       }
 
       int columnIndex = getColumnIndex(columnName);
@@ -5320,6 +5320,14 @@ public class SQLDataSource implements DbDataSourceImpl {
                 openSelectResultSet.next();
               }
             }
+          }
+        }
+
+        if (owner.isGoToLastOnInsert() && insert && positioned) {
+          try{
+          openSelectResultSet.last();
+          }catch(Exception ex){
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, null, ex);
           }
         }
 
