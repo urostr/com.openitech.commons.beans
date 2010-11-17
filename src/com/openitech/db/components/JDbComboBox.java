@@ -9,6 +9,7 @@
 package com.openitech.db.components;
 
 import com.openitech.Settings;
+import com.openitech.db.model.DbComboBoxModel.DbComboBoxEntry;
 import com.openitech.swing.autocomplete.AutoCompleteDocument;
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
@@ -141,7 +142,16 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     actionWeakListener.setEnabled(false);
     try {
       if (getModel() instanceof DbComboBoxModel) {
-        this.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(dbFieldObserver.getValue(), null, null));
+        final DbComboBoxEntry<Object, Object> dbComboBoxEntry = new DbComboBoxModel.DbComboBoxEntry<Object, Object>(dbFieldObserver.getValue(), null, null);
+        if (((DbComboBoxModel) getModel()).isValidEntry(dbComboBoxEntry)) {
+          this.setSelectedItem(dbComboBoxEntry);
+        } else {
+          try {
+            dbFieldObserver.updateValue((Object) null);
+          } catch (SQLException ex) {
+            Logger.getLogger(JDbComboBox.class.getName()).log(Level.SEVERE, null, ex);
+          }
+        }
       } else {
         if (getModel().getSize() > 0) {
           final int valueAsInt = dbFieldObserver.getValueAsInt();
@@ -244,7 +254,7 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     }
     try {
       super.setModel(aModel);
-      if (decorate&&(aModel instanceof DbComboBoxModel)) {
+      if (decorate && (aModel instanceof DbComboBoxModel)) {
         com.openitech.swing.autocomplete.AutoCompleteDecorator.decorate(this);
       }
     } finally {

@@ -221,6 +221,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       this.p_count = p_count;
     }
 
+    public String getField() {
+      return field;
+    }
+
     public abstract boolean setValue(E value);
 
     public E getValue() {

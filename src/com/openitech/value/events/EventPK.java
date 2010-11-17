@@ -22,12 +22,15 @@ public class EventPK {
   public EventPK() {
   }
 
-  
-  public EventPK(long eventId, int idSifranta, String idSifre, String primaryKey) {
+  public EventPK(long eventId, int idSifranta, String idSifre) {
+    this(eventId, idSifranta, idSifre, null);
+  }
+
+  public EventPK(long eventId, int idSifranta, String idSifre, Integer versionID) {
     this.eventId = eventId;
     this.idSifranta = idSifranta;
     this.idSifre = idSifre;
-    this.primaryKey = primaryKey;
+    this.versionID = versionID;
   }
 
   /**
@@ -85,7 +88,6 @@ public class EventPK {
   public void setIdSifre(String idSifre) {
     this.idSifre = idSifre;
   }
-  private String primaryKey;
 
   /**
    * Get the value of primaryKey
@@ -93,24 +95,15 @@ public class EventPK {
    * @return the value of primaryKey
    */
   public String getPrimaryKey() {
-    return primaryKey;
-  }
-
-  /**
-   * Set the value of primaryKey
-   *
-   * @param primaryKey new value of primaryKey
-   */
-  public void setPrimaryKey(String primaryKey) {
-    this.primaryKey = primaryKey;
+    return toHexString();
   }
   private List<FieldValue> fields = new ArrayList<FieldValue>();
 
-  public void addField(FieldValue field) {
+  public void addPrimaryKeyField(FieldValue field) {
     fields.add(field);
   }
 
-  public List<FieldValue> getFields() {
+  public List<FieldValue> getPrimaryKeyFields() {
     //TODO potrebno implementirat: primaryKeyToFields
     return fields;
   }
@@ -121,13 +114,24 @@ public class EventPK {
 
   public String toHexString() {
     StringBuilder result = new StringBuilder();
-
+    List<FieldValue> fieldValues = new ArrayList<FieldValue>();
     for (FieldValue fieldValue : fields) {
-      result.append("{");
-      result.append(Integer.toHexString(fieldValue.getIdPolja())).append(";");
-      result.append(Integer.toHexString(fieldValue.getFieldIndex())).append(";");
-      result.append(((VariousValue) fieldValue.getValue()).getId() == null ? "null" : Long.toHexString(((VariousValue) fieldValue.getValue()).getId())).append(";");
-      result.append("}");
+      int insertIndex = 0;
+      for (FieldValue fieldValue1 : fieldValues) {
+        if(fieldValue.getIdPolja() > fieldValue1.getIdPolja() ){
+          insertIndex++;
+        }
+      }
+      fieldValues.add(insertIndex, fieldValue);
+    }
+    for (FieldValue fieldValue : fieldValues) {
+      if (fieldValue.getLookupType() == null) {
+        result.append("{");
+        result.append(Integer.toHexString(fieldValue.getIdPolja())).append(";");
+        result.append(Integer.toHexString(fieldValue.getFieldIndex())).append(";");
+        result.append(((VariousValue) fieldValue.getValue()).getId() == null ? "null" : Long.toHexString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+        result.append("}");
+      }
     }
     return result.toString();
   }
@@ -168,5 +172,24 @@ public class EventPK {
 
   public void setEventOperation(EventOperation eventOperation) {
     this.eventOperation = eventOperation;
+  }
+  protected Integer versionID = null;
+
+  /**
+   * Get the value of versionID
+   *
+   * @return the value of versionID
+   */
+  public Integer getVersionID() {
+    return versionID;
+  }
+
+  /**
+   * Set the value of versionID
+   *
+   * @param versionID new value of versionID
+   */
+  public void setVersionID(Integer versionID) {
+    this.versionID = versionID;
   }
 }

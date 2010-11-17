@@ -186,7 +186,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             }
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage(), ex);
           result = null;
         }
       }
@@ -430,7 +430,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
   }
 
   public void updateValue(Object value) throws SQLException {
-    if (dataSource != null && columnName != null) {
+    if (dataSource != null && columnName != null && dataSource.isDataLoaded()) {
       activeRowChangeWeakListener.setEnabled(false);
       try {
         if (value != null && (value instanceof java.util.Date)) {

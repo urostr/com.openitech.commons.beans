@@ -20,6 +20,8 @@ public class Field {
     String name;
     int type;
     int fieldIndex;
+
+  protected LookupType lookupType = null;
   protected FieldModel model = new FieldModel();
 
     /**
@@ -107,6 +109,9 @@ public class Field {
         if ((this.name == null) ? (other.name != null) : !this.name.equalsIgnoreCase(other.name)) {
             return false;
         }
+        if ((this.lookupType == null) ? (other.lookupType != null) : !this.lookupType.equals(other.lookupType)) {
+            return false;
+        }
         return true;
     }
 
@@ -143,10 +148,29 @@ public class Field {
         this.idPolja = idPolja;
     }
 
+  /**
+   * Get the value of lookupType
+   *
+   * @return the value of lookupType
+   */
+  public LookupType getLookupType() {
+    return lookupType;
+  }
+
+  /**
+   * Set the value of lookupType
+   *
+   * @param lookupType new value of lookupType
+   */
+  public void setLookupType(LookupType lookupType) {
+    this.lookupType = lookupType;
+  }
+
+
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 47 * hash + (this.name != null ? this.name.toUpperCase().hashCode() : 0) + fieldIndex;
+        hash = 23 * (hash + (this.lookupType != null ? this.lookupType.hashCode() : 0) + (this.name != null ? this.name.toUpperCase().hashCode() : 0) + fieldIndex);
         return hash;
     }
     protected PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
@@ -189,6 +213,13 @@ public class Field {
     } else {
       return new Field(this);
     }
+  }
+
+  public static enum LookupType {
+    PRIMARY_KEY,
+    VERSION_ID,
+    ID_SIFRANTA,
+    ID_SIFRE
   }
 
   public static class FieldModel {

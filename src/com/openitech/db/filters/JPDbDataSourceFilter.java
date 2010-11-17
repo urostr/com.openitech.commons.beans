@@ -213,6 +213,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       for (int i = 0; i < seekTypeList.size(); i++) {
         final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
         final boolean addToPanel = item.getLayout() != null && item.getLayout().isDisplayInPanel();
+        filtersInPanel += addToPanel ? 1 : 0;
         final SeekLayout layout = item.getLayout();
 
         if (!item.isAutomatic()) {
@@ -222,8 +223,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
           if (!addToPanel) {
             headers.add(item);
-          } else {
-            if (item.getLayout().getDocuments() != null) {
+          }
+          if (item.getLayout() != null && item.getLayout().getDocuments() != null) {
               for (String documentName : item.getLayout().getDocuments().getDocumentNames()) {
                 if (namedDocuments.containsKey(documentName)) {
                   docs.add(namedDocuments.get(documentName));
@@ -232,7 +233,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                 }
               }
             }
-          }
 
           if (docs.isEmpty()) {
             docs.add(new com.openitech.db.components.JDbDateTextField().getDocument());
@@ -370,7 +370,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             //jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
-            jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "je enako", "je veèje ali enako od", "je manjše ali enako kot" }));
+            jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
             jDbComboBox1.setFocusable(false);
             jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
 
@@ -413,7 +413,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             //jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
-            jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "je enako", "se zaène z", "se konèa z", "vsebuje" }));
+            jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
             jDbComboBox1.setSelectedIndex(1);
             jDbComboBox1.setFocusable(false);
             jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
@@ -691,6 +691,16 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     } finally {
       refreshing = false;
     }
+  }
+  protected int filtersInPanel = 0;
+
+  /**
+   * Get the value of filtersInPanel
+   *
+   * @return the value of filtersInPanel
+   */
+  public int getFiltersInPanel() {
+    return filtersInPanel;
   }
 
   /** This method is called from within the constructor to

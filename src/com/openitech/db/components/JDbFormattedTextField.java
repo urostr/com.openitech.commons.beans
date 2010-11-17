@@ -374,7 +374,11 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
             super.setBackground(java.awt.Color.yellow);
           }
           if (valid) {
-            dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : this.getValue());
+            try {
+              dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : ((getText() == null  || getText().equals("")) ? null : getFormatter().stringToValue(getText())));
+            } catch (ParseException ex) {
+              Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.SEVERE, null, ex);
+            }
           }
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
@@ -386,11 +390,12 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   }
 
   private void documentUpdated() {
-    if (getFormatter() == null) {
-      updateColumn();
-    } else if ((dbFieldObserver != null) && !dbFieldObserver.isUpdatingFieldValue()) {
-      dbFieldObserver.startUpdate();
-    }
+    updateColumn();
+//    if (getFormatter() == null) {
+//
+//    } else if ((dbFieldObserver != null) && !dbFieldObserver.isUpdatingFieldValue()) {
+//      dbFieldObserver.startUpdate();
+//    }
     /*else
     try {
     commitEdit();

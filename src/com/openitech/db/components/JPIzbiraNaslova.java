@@ -37,6 +37,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   FilterDocumentCaretListener flPosta;
   DbDataSource dataSource;
   ActionListener alDataSource;
+  private boolean addLabels = false;
 
   /**
    * Creates new form JPIzbiraNaslova
@@ -292,10 +293,15 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     foPostnaStevilka = new com.openitech.db.model.DbFieldObserver();
     foPosta = new com.openitech.db.model.DbFieldObserver();
     jPanel1 = new javax.swing.JPanel();
+    jlUlica = new javax.swing.JLabel();
     jtfUlice = new com.openitech.db.components.JDbTextField();
+    jlHS = new javax.swing.JLabel();
     jtfHisnaStevilka = new com.openitech.db.components.JDbTextField();
+    jlPostnaStevilka = new javax.swing.JLabel();
     jtfPostnaStevilka = new com.openitech.db.components.JDbTextField();
+    jlPosta = new javax.swing.JLabel();
     jtfPosta = new com.openitech.db.components.JDbTextField();
+    jlNaselje = new javax.swing.JLabel();
     jtfNaselja = new com.openitech.db.components.JDbTextField();
 
     cmUlice.setDataSource(dsUlice);
@@ -374,6 +380,13 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
     jPanel1.setLayout(new java.awt.GridBagLayout());
 
+    jlUlica.setText("Ulica");
+    if(addLabels){
+      gridBagConstraints = new java.awt.GridBagConstraints();
+      gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+      jPanel1.add(jlUlica, gridBagConstraints);
+    }
+
     jtfUlice.setAutoCompleteModel(cmUlice);
     jtfUlice.addFocusListener(new java.awt.event.FocusAdapter() {
       public void focusGained(java.awt.event.FocusEvent evt) {
@@ -387,6 +400,13 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.weightx = 1.0;
     jPanel1.add(jtfUlice, gridBagConstraints);
+
+    jlHS.setText("Hišna št.");
+    if(addLabels){
+      gridBagConstraints = new java.awt.GridBagConstraints();
+      gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+      jPanel1.add(jlHS, gridBagConstraints);
+    }
 
     jtfHisnaStevilka.setAutoCompleteModel(cmHisneStevilke);
     jtfHisnaStevilka.setColumns(3);
@@ -406,6 +426,13 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     gridBagConstraints.weightx = 1.0;
     add(jPanel1, gridBagConstraints);
 
+    jlPostnaStevilka.setText("Poštna št.");
+    if(addLabels){
+      gridBagConstraints = new java.awt.GridBagConstraints();
+      gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+      add(jlPostnaStevilka, gridBagConstraints);
+    }
+
     jtfPostnaStevilka.setAutoCompleteModel(cmPostneStevilke);
     jtfPostnaStevilka.setColumns(6);
     jtfPostnaStevilka.addItemListener(new java.awt.event.ItemListener() {
@@ -422,6 +449,13 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
       }
     });
     add(jtfPostnaStevilka, new java.awt.GridBagConstraints());
+
+    jlPosta.setText("Pošta");
+    if(addLabels){
+      gridBagConstraints = new java.awt.GridBagConstraints();
+      gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+      add(jlPosta, gridBagConstraints);
+    }
 
     jtfPosta.setAutoCompleteModel(cmPoste);
     jtfPosta.addItemListener(new java.awt.event.ItemListener() {
@@ -442,6 +476,13 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.weightx = 1.0;
     add(jtfPosta, gridBagConstraints);
+
+    jlNaselje.setText("Naselje");
+    if(addLabels){
+      gridBagConstraints = new java.awt.GridBagConstraints();
+      gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+      add(jlNaselje, gridBagConstraints);
+    }
 
     jtfNaselja.setAutoCompleteModel(cmNaselja);
     jtfNaselja.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -844,6 +885,11 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
   private com.openitech.db.model.DbFieldObserver foUlica;
   private com.openitech.db.model.DbFieldObserver foUlicaMID;
   private javax.swing.JPanel jPanel1;
+  private javax.swing.JLabel jlHS;
+  private javax.swing.JLabel jlNaselje;
+  private javax.swing.JLabel jlPosta;
+  private javax.swing.JLabel jlPostnaStevilka;
+  private javax.swing.JLabel jlUlica;
   public com.openitech.db.components.JDbTextField jtfHisnaStevilka;
   public com.openitech.db.components.JDbTextField jtfNaselja;
   public com.openitech.db.components.JDbTextField jtfPosta;
@@ -879,4 +925,10 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     //itd
     return result;
   }
+
+  public void setAddLabels(boolean addLabels) {
+    this.addLabels = addLabels;
+  }
+
+  
 }

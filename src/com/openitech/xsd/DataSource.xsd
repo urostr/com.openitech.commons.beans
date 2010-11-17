@@ -94,6 +94,7 @@
             <xsd:attribute name="Title" type="xsd:string"/>
           </xsd:complexType>
         </xsd:element>
+          <xsd:element name="LookupDataModel" type="tns:LookupModel"></xsd:element>
       </xsd:all>
       <xsd:attribute name="readOnly" type="xsd:boolean" default="false"/>
       <xsd:attribute name="CanExportData" type="xsd:boolean" default="true"/>
@@ -442,6 +443,13 @@
       <xsd:enumeration value="SHARING_LOCAL"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:complexType name="LookupModel">
+        <xsd:sequence>
+            <xsd:element name="SeekEventId" type="tns:SeekParameters"></xsd:element>
+            <xsd:element name="LookupValueFieldName" type="xsd:string"></xsd:element>
+            <xsd:element name="LookupPrikazFieldName" type="xsd:string"></xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
   <xsd:simpleType name="GridBagLayoutAnchor">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="CENTER">
@@ -601,8 +609,6 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
-
-
 
 
 

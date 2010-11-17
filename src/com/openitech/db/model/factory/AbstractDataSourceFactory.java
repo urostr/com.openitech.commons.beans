@@ -78,21 +78,21 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
     configure(opis, resource, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel));
   }
 
-  public void configure(String opis, Clob resource, com.openitech.db.model.factory.DataSourceConfig config) throws SQLException, JAXBException {
-    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
-    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(resource.getCharacterStream());
-    try {
-      configure(this, opis, config, workareaXML);
-    } catch (ClassNotFoundException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-    }
-  }
-
   public void configure(String opis, String xml) throws SQLException, JAXBException {
     Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
     com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(new StringReader(xml));
+    configure(opis, workareaXML, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel));
+  }
+
+  public void configure(String opis, Clob resource, com.openitech.db.model.factory.DataSourceConfig config) throws SQLException, JAXBException {
+    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
+    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(resource.getCharacterStream());
+    configure(opis, workareaXML, config);
+  }
+
+  public void configure(String opis, com.openitech.db.model.xml.config.Workarea workareaXML, com.openitech.db.model.factory.DataSourceConfig config) throws SQLException {
     try {
-      configure(this, opis, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel), workareaXML);
+      configure(this, opis, config, workareaXML);
     } catch (ClassNotFoundException ex) {
       Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
     }
@@ -257,7 +257,6 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
       return new ArrayList<JMenu>();
     }
   }
-  
   private java.util.List<JXTaskPane> taskPanes = new java.util.ArrayList<JXTaskPane>();
 
   @Override

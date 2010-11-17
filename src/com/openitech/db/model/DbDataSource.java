@@ -3493,7 +3493,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     return implementation.isPending(columnName, row);
   }
 
-  private void storeUpdates(boolean insert) throws SQLException {
+  public void storeUpdates(boolean insert) throws SQLException {
     implementation.storeUpdates(insert);
   }
 
@@ -5542,6 +5542,27 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   public void setSeekUpdatedRow(boolean seekUpdatedRow) {
     this.seekUpdatedRow = seekUpdatedRow;
   }
+
+  public boolean goToLastOnInsert = false;
+
+  /**
+   * Get the value of goToLastOnInsert
+   *
+   * @return the value of goToLastOnInsert
+   */
+  public boolean isGoToLastOnInsert() {
+    return goToLastOnInsert;
+  }
+
+  /**
+   * Set the value of goToLastOnInsert
+   *
+   * @param goToLastOnInsert new value of goToLastOnInsert
+   */
+  public void setGoToLastOnInsert(boolean goToLastOnInsert) {
+    this.goToLastOnInsert = goToLastOnInsert;
+  }
+
 
   @Override
   public DbDataSource getDataSource() {

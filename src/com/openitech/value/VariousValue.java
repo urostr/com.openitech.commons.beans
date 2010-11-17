@@ -2,10 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.openitech.value;
 
+import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.ValueType;
+import java.sql.SQLException;
 
 /**
  *
@@ -17,7 +18,7 @@ public class VariousValue {
 
   public VariousValue(Long valueId, int type, Object value) {
     this.id = valueId;
-    this.type = ValueType.getType(type);
+    this.type = ValueType.valueOf(type);
     this.value = value;
   }
 
@@ -38,7 +39,6 @@ public class VariousValue {
   public void setId(Long id) {
     this.id = id;
   }
-
   private ValueType type;
 
   /**
@@ -58,7 +58,6 @@ public class VariousValue {
   public void setType(ValueType type) {
     this.type = type;
   }
-
   private Object value;
 
   /**
@@ -79,4 +78,11 @@ public class VariousValue {
     this.value = value;
   }
 
+  public static VariousValue newVariousValue(ValueType type, Object value) throws SQLException {
+    return new VariousValue(SqlUtilities.getInstance().storeValue(type, value), type.getTypeIndex(), value);
+  }
+
+  public static VariousValue newVariousValue(long valueId) throws SQLException {
+    return SqlUtilities.getInstance().findValue(valueId);
+  }
 }

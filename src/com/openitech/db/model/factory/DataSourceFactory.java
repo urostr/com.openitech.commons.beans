@@ -139,6 +139,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
               AbstractDataSourceParametersFactory instance = (AbstractDataSourceParametersFactory) newInstance;
               instance.setDataSourceParametersFactory(dsf);
               instance.configure();
+              this.filtersMap = instance.getFiltersMap();
               this.filterPanel = instance.getFilterPanel();
               this.viewMenuItems.addAll(instance.getViewMenuItems());
               parameters.addAll(instance.getParameters());

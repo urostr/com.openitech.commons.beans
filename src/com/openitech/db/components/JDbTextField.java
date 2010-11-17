@@ -213,7 +213,11 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
           super.setBackground(java.awt.Color.yellow);
         }
         if (valid) {
-          dbFieldObserver.updateValue(this.getText());
+          String text = this.getText();
+          if (text != null && text.equals("")) {
+            text = null;
+          }
+          dbFieldObserver.updateValue(text);
         }
       } catch (SQLException ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
@@ -339,7 +343,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
 
   @Override
   protected boolean processKeyBinding(KeyStroke ks, KeyEvent e, int condition, boolean pressed) {
-    if ((autoCompleteModel!=null)&&(getDocument() instanceof AutoCompleteDocument)) {
+    if ((autoCompleteModel != null) && (getDocument() instanceof AutoCompleteDocument)) {
       AutoCompleteDocument document = (AutoCompleteDocument) getDocument();
 
       try {

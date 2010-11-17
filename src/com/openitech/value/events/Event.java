@@ -4,10 +4,14 @@
  */
 package com.openitech.value.events;
 
+import com.openitech.sql.util.SqlUtilities;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.util.Equals;
+import com.openitech.value.VariousValue;
 import com.openitech.value.fields.Field;
+import com.openitech.value.fields.Field.LookupType;
 import com.openitech.value.fields.FieldValue;
+import com.openitech.value.fields.ValueType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,6 +20,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -304,6 +310,40 @@ public class Event {
     }
     return children;
   }
+  protected List<UpdateEventFields> updateEventFields;
+
+  /**
+   * Get the value of updateEventFields
+   *
+   * @return the value of updateEventFields
+   */
+  public List<UpdateEventFields> getUpdateEventFields() {
+    if (updateEventFields == null) {
+      updateEventFields = new ArrayList<UpdateEventFields>();
+    }
+    return updateEventFields;
+  }
+
+  protected List<FieldValue> nullFields = new ArrayList<FieldValue>();
+
+  /**
+   * Get the value of nullFields
+   *
+   * @return the value of nullFields
+   */
+  public List<FieldValue> getNullFields() {
+    return nullFields;
+  }
+
+  /**
+   * Set the value of nullFields
+   *
+   * @param nullFields new value of nullFields
+   */
+  public void setNullFields(List<FieldValue> nullFields) {
+    this.nullFields = nullFields;
+  }
+
 
 //  @Override
 //  public boolean equals(Object obj) {
@@ -319,7 +359,6 @@ public class Event {
 //    }
 //    return true;
 //  }
-
   public boolean equalEventValues(Event other) {
     Map<Field, List<FieldValue>> a = getEventValues();
     Map<Field, List<FieldValue>> b = other.getEventValues();
@@ -393,6 +432,44 @@ public class Event {
   @Override
   public String toString() {
     return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id + ":" + operation;
+  }
+
+  public EventPK getEventPK() {
+    EventPK eventPK = null;
+    if (getId() != null) {
+      try {
+        eventPK = new EventPK(id, sifrant, sifra);
+        eventPK.setEventOperation(operation);
+        Map<CaseInsensitiveString, Field> preparedFields = SqlUtilities.getInstance().getPreparedFields();
+        for (Field field : eventValues.keySet()) {
+          List<FieldValue> fieldValues = eventValues.get(field);
+
+          for (int i = 0; i < fieldValues.size(); i++) {
+            FieldValue fieldValue = fieldValues.get(i);
+            String fieldNameWithIndex = field.getName();
+            int fieldValueIndex = field.getFieldIndex();
+            LookupType lookupType = field.getLookupType();
+            CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(field.getNonIndexedField().getName());
+            int idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : field.getIdPolja();
+
+            if (getPrimaryKey() != null && getPrimaryKey().length > 0) {
+              FieldValue fieldValuePK = new FieldValue(idPolja, fieldNameWithIndex, field.getType(), fieldValueIndex, VariousValue.newVariousValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
+              fieldValuePK.setLookupType(lookupType);
+              for (Field field1 : getPrimaryKey()) {
+                if (field1.equals(fieldValuePK)) {
+                  eventPK.addPrimaryKeyField(fieldValuePK);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+    return eventPK;
+
   }
 
   public static enum EventOperation {
