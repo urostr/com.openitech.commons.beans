@@ -26,6 +26,7 @@ import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
+import com.openitech.value.StringValue;
 import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.EventPK;
@@ -52,8 +53,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.JOptionPane;
 import javax.xml.bind.JAXBContext;
@@ -192,11 +191,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (versionId == null) {
         versionId = new Integer((int) storeVersion());
         //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je
+        List<Long> storedEventIds = new ArrayList<Long>();
         for (EventPK eventPK : eventPKs) {
-          storeEventVersion(versionId, eventPK);
-          eventPK.setVersionID(versionId);
-          storePrimaryKeyVersions(eventPK);
-          storeEventLookUpKeys(eventPK);
+          if (!storedEventIds.contains(eventPK.getEventId())) {
+            storedEventIds.add(eventPK.getEventId());
+            storeEventVersion(versionId, eventPK);
+            eventPK.setVersionID(versionId);
+            storePrimaryKeyVersions(eventPK);
+            storeEventLookUpKeys(eventPK);
+          }
 
         }
       }
@@ -254,6 +257,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     insertEventVersion.clearParameters();
     insertEventVersion.setLong(param++, versionId);
     insertEventVersion.setLong(param++, eventPK.getEventId());
+    System.out.println("versionId = " + versionId + ", eventId = " + eventPK.getEventId());
     insertEventVersion.executeUpdate();
 
   }
@@ -1286,7 +1290,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (update_eventPK_versions == null) {
       update_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK_versions.sql", "cp1250"));
     }
-    
+
     if (findEventPKVersions(eventId, versionId) != null) {
 //      param = 1;
 //      update_eventPK_versions.clearParameters();
@@ -1317,6 +1321,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       insert_eventPK_versions.setInt(param++, idSifranta);
       insert_eventPK_versions.setString(param++, idSifre);
       insert_eventPK_versions.setString(param++, primaryKey);
+      System.out.println(eventId + "," + versionId + "," + idSifranta + "," + idSifre + "," + primaryKey);
       success = success && insert_eventPK_versions.executeUpdate() > 0;
     }
 
@@ -1925,7 +1930,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           value.setValue(((Number) value.getValue()).longValue() + 1);
           break;
         case StringValue:
-          value.setValue(getNextSifra((String) value.getValue()));
+          value.setValue(StringValue.getNextSifra((String) value.getValue()));
           break;
         default:
           value = null;
@@ -1981,50 +1986,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
       return value;
     }
-  }
-  private final static Pattern numbers = Pattern.compile("(\\p{Space}*)(\\p{Alpha}*)(\\p{Digit}*)(\\p{Space}*)");
-
-  private String getNextSifra(String sifra) {
-    Matcher compare = numbers.matcher(sifra);
-    if (compare.matches()) {
-      String sdigit = compare.group(3);
-      String sstring = compare.group(2);
-      if (sdigit.length() > 0) {
-        String ndigit = Integer.toString(Integer.parseInt(sdigit) + 1);
-        if (ndigit.length() > sdigit.length() && sstring.length() > 0) {
-          ndigit = "1";
-          try {
-            sstring = getNextString(sstring);
-          } catch (UnsupportedEncodingException ex) {
-            sdigit = "0" + sdigit;
-            Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, null, ex);
-          }
-        }
-        ndigit = getZero(sdigit.length()) + ndigit;
-        sdigit = ndigit.substring(ndigit.length() - sdigit.length());
-      }
-      sifra = compare.group(1) + sstring + sdigit + compare.group(4);
-    }
-    return sifra;
-  }
-
-  private String getNextString(String sstring) throws UnsupportedEncodingException {
-    return getNextString(sstring, sstring.length() - 1);
-  }
-
-  private String getNextString(String sstring, int at) throws UnsupportedEncodingException {
-    byte[] bytes = sstring.substring(at).getBytes("UTF-8");
-    bytes[bytes.length - 1]++;
-    sstring = sstring.substring(0, sstring.length() - 1) + (new String(bytes, "UTF-8"));
-    return sstring;
-  }
-
-  private String getZero(int length) {
-    StringBuilder sb = new StringBuilder(length);
-    for (int i = 0; i < length; i++) {
-      sb.append("0");
-    }
-    return sb.toString();
   }
 
   @Override
