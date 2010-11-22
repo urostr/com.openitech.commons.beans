@@ -21,10 +21,10 @@ LEFT OUTER JOIN <%tb_seznam_sifrantov%> SeznamSifrantov ON (
     SeznamSifrantov.Id=Sifranti.IdSifranta
 )
 WHERE <%DbSifrantModelFilter%> AND <%ValuesConstraint%>
-    SeznamSifrantov.validFrom<=CURRENT_TIMESTAMP AND
-    (SeznamSifrantov.validTo IS NULL OR SeznamSifrantov.validTo>=CURRENT_TIMESTAMP) AND
-    Sifranti.validFrom<=CURRENT_TIMESTAMP AND
-    (Sifranti.validTo IS NULL OR Sifranti.validTo>=CURRENT_TIMESTAMP)
+    SeznamSifrantov.validFrom<=<%ValidDate%> AND
+    (SeznamSifrantov.validTo IS NULL OR SeznamSifrantov.validTo>=<%ValidDate%>) AND
+    Sifranti.validFrom<=<%ValidDate%> AND
+    (Sifranti.validTo IS NULL OR Sifranti.validTo>=<%ValidDate%>)
 
 ))  Sifranti
 ORDER BY OrderId,IdSifranta,ZapSt,IdSifre
