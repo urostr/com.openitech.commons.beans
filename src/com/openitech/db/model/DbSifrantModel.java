@@ -9,7 +9,11 @@
 package com.openitech.db.model;
 
 import com.openitech.sql.util.SqlUtilities;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import javax.swing.event.ListDataEvent;
 
@@ -21,6 +25,9 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
 
   private final DbSifrantModel.SifrantiDataSourceDescriptionFilter fNotDefined = new DbSifrantModel.SifrantiDataSourceDescriptionFilter();
   private final DbSifrantModel.SifrantiDataSourceFilters fGroup = new DbSifrantModel.SifrantiDataSourceFilters();
+  private final DbDataSource.SubstSqlParameter fValidDate = new DbDataSource.SubstSqlParameter("<%ValidDate%>");
+  private final DbDataSource.SqlParameter<java.sql.Date> validDate = new DbDataSource.SqlParameter<java.sql.Date>(java.sql.Types.DATE, new java.sql.Date(Calendar.getInstance().getTimeInMillis()));
+
   DbDataSource.SubstSqlParameter valuesConstraint = new DbDataSource.SubstSqlParameter("<%ValuesConstraint%>");
   private DbDataSource dsSifrant;
 
@@ -53,6 +60,10 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   }
 
   private void init() throws SQLException {
+    fValidDate.setType(com.openitech.db.model.Types.SUBST_ALL);
+    fValidDate.setValue("?");
+    fValidDate.addParameter(validDate);
+
     fGroup.setFilterRequired(true);
     fGroup.addRequired(fGroup.I_TYPE_OPIS_SIFRANTA, 2);
     fGroup.addRequired(fGroup.I_TYPE_SKUPINA_SIFRANTA, 2);
@@ -88,6 +99,14 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     }
 
     this.dsSifrant.setName("SIFRANT");
+
+    validDate.addPropertyChangeListener("value", new PropertyChangeListener() {
+
+      @Override
+      public void propertyChange(PropertyChangeEvent evt) {
+        dsSifrant.reload();
+      }
+    });
 
 //    fNotDefined.addDataSource(dsSifrant);
     fGroup.addDataSource(dsSifrant);
@@ -255,5 +274,25 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
    */
   public void setExcludedValues(String... excludedValues) {
     this.excludedValues = excludedValues;
+  }
+  protected Date datumVeljavnosti = Calendar.getInstance().getTime();
+
+  /**
+   * Get the value of datumVeljavnosti
+   *
+   * @return the value of datumVeljavnosti
+   */
+  public Date getDatumVeljavnosti() {
+    return datumVeljavnosti;
+  }
+
+  /**
+   * Set the value of datumVeljavnosti
+   *
+   * @param datumVeljavnosti new value of datumVeljavnosti
+   */
+  public void setDatumVeljavnosti(Date datumVeljavnosti) {
+    this.datumVeljavnosti = datumVeljavnosti;
+    this.validDate.setValue(new java.sql.Date(datumVeljavnosti.getTime()));
   }
 }
