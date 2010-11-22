@@ -118,7 +118,7 @@ public class EventPK {
     for (FieldValue fieldValue : fields) {
       int insertIndex = 0;
       for (FieldValue fieldValue1 : fieldValues) {
-        if(fieldValue.getIdPolja() > fieldValue1.getIdPolja() ){
+        if (fieldValue.getIdPolja() > fieldValue1.getIdPolja()) {
           insertIndex++;
         }
       }
