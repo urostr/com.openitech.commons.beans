@@ -441,7 +441,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   private void addIngoredEventIds(Event newValues, List<EventPK> eventIds) {
     if ((newValues.getId() != null) && (newValues.getId() > 0)) {
-      eventIds.add(newValues.getEventPK());
+        eventIds.add(newValues.getEventPK());
       for (Event childEvent : newValues.getChildren()) {
         addIngoredEventIds(childEvent, eventIds);
       }
