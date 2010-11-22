@@ -60,7 +60,6 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   }
 
   private void init() throws SQLException {
-    fValidDate.setType(com.openitech.db.model.Types.SUBST_ALL);
     fValidDate.setValue("?");
     fValidDate.addParameter(validDate);
 
@@ -91,6 +90,10 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     parameters.add(fNotDefined);
     parameters.add(fGroup);
     parameters.add(valuesConstraint);
+    parameters.add(fValidDate);
+    parameters.add(fValidDate);
+    parameters.add(fValidDate);
+    parameters.add(fValidDate);
 
     if (SqlUtilities.getInstance() == null) {
       this.dsSifrant = new DbDataSource();
