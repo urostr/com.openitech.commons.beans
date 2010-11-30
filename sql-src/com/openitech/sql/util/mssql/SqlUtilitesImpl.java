@@ -615,7 +615,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
             break;
           case ID_SIFRE:
             idSifre = (String) value;
-            numberOfValues++;
+            if (idSifre != null) {
+              numberOfValues++;
+            }
             break;
           case PRIMARY_KEY:
             primaryKey = (String) value;
