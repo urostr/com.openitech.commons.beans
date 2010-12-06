@@ -432,19 +432,26 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
 
   public boolean isValidEntry(DbComboBoxEntry entry) {
     boolean result = false;
-    for (DbComboBoxEntry<K, String> dbComboBoxEntry : entries) {
-      K key = dbComboBoxEntry.getKey();
-      if(key instanceof String){
-        String sifra = ((String)key);
-        if(entry.getKey() instanceof String){
-          if(sifra.startsWith((String)entry.getKey())){
-            return true;
+    try {
+      for (DbComboBoxEntry<K, String> dbComboBoxEntry : entries) {
+        if (dbComboBoxEntry != null) {
+          K key = dbComboBoxEntry.getKey();
+          if (key instanceof String) {
+            String sifra = ((String) key);
+            if (entry.getKey() instanceof String) {
+              if (sifra.startsWith((String) entry.getKey())) {
+                return true;
+              }
+            }
           }
         }
       }
-    }
 
-    if (entries.contains(entry)) {
+      if (entries.contains(entry)) {
+        result = true;
+      }
+    } catch (Exception ex) {
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, null, ex);
       result = true;
     }
     return result;
