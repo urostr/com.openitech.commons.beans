@@ -656,7 +656,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       refreshing = true;
       if (jcbStolpec.getSelectedItem() instanceof DataSourceFilters.AbstractSeekType) {
         DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
-        if (item.getLayout() == null) {
+        if (item.getLayout() == null || !item.getLayout().isDisplayInPanel()) {
           if (item instanceof DataSourceFilters.BetweenDateSeekType) {
             jtfDateValueOd.setDocument(documents.get(item)[0]);
             jtfDateValueDo.setDocument(documents.get(item)[1]);
