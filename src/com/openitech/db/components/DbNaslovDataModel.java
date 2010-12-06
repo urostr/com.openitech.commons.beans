@@ -616,6 +616,12 @@ public class DbNaslovDataModel {
     public static FieldValue[] splitHS_HD(Object hshd, FieldValue hs, FieldValue hd) {
       String text = hshd != null ? hshd.toString() : null;
 
+      if (hs == null) {
+        hs = new FieldValue("HS", java.sql.Types.INTEGER);
+      }
+      if (hd == null) {
+        hd = new FieldValue("HD", java.sql.Types.VARCHAR);
+      }
       Object hs_v = hs.getValue();
       Object hd_v = hd.getValue();
 
