@@ -324,41 +324,6 @@ public class Event {
     return updateEventFields;
   }
 
-  protected List<FieldValue> nullFields = new ArrayList<FieldValue>();
-
-  /**
-   * Get the value of nullFields
-   *
-   * @return the value of nullFields
-   */
-  public List<FieldValue> getNullFields() {
-    return nullFields;
-  }
-
-  /**
-   * Set the value of nullFields
-   *
-   * @param nullFields new value of nullFields
-   */
-  public void setNullFields(List<FieldValue> nullFields) {
-    this.nullFields = nullFields;
-  }
-
-
-//  @Override
-//  public boolean equals(Object obj) {
-//    if (obj == null) {
-//      return false;
-//    }
-//    if (getClass() != obj.getClass()) {
-//      return false;
-//    }
-//    final Event other = (Event) obj;
-//    if (this.id != other.id) {
-//      return false;
-//    }
-//    return true;
-//  }
   public boolean equalEventValues(Event other) {
     Map<Field, List<FieldValue>> a = getEventValues();
     Map<Field, List<FieldValue>> b = other.getEventValues();
