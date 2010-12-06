@@ -420,7 +420,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
 
     for (UpdateEventFields updateEventFields : newValues.getUpdateEventFields()) {
-      updateEventFields.updateEventFields(newValues, oldValues);
+      updateEventFields.updateEventFields(newValues, find);
     }
 
     for (Event childEvent : newValues.getChildren()) {
