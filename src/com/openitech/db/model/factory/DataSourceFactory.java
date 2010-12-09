@@ -339,7 +339,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         DbFieldObserver fieldObserver = new DbFieldObserver();
         fieldObserver.setColumnName(imePolja);
         fieldObserver.setDataSource(dataSource);
-        this.dataEntryValues.add(new FieldValueProxy(imePolja, tipPolja, fieldObserver));
+        this.dataEntryValues.add(new FieldValueProxy(imePolja, tipPolja, fieldObserver, dataSource.getObject(imePolja)));
       }
     }
   }
