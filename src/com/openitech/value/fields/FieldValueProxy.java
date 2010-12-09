@@ -15,6 +15,7 @@ import com.openitech.db.model.DbFieldObserver;
  */
 public class FieldValueProxy extends FieldValue implements ActiveRowChangeListener {
 
+  private DbFieldObserver fieldObserver;
   private ActiveRowChangeWeakListener listener = new ActiveRowChangeWeakListener(this);
 
   public FieldValueProxy(String name, int type) {
@@ -27,14 +28,18 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
   }
 
   public FieldValueProxy(String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver) {
-    this(-1, name, type, fieldValueIndex, fieldObserver);
+    this(-1, name, type, fieldValueIndex, fieldObserver, null);
   }
 
-  public FieldValueProxy(Integer idPolja, String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver) {
-    super(idPolja, name, type, fieldValueIndex, null);
+  public FieldValueProxy(String imePolja, int tipPolja, DbFieldObserver fieldObserver, Object value) {
+    this(-1, imePolja, tipPolja, 1, fieldObserver, value);
+
+  }
+
+  public FieldValueProxy(Integer idPolja, String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver, Object value) {
+    super(idPolja, name, type, fieldValueIndex, value);
     setFieldObserver(fieldObserver);
   }
-  private DbFieldObserver fieldObserver;
 
   /**
    * Get the value of fieldObserver
