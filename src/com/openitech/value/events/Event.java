@@ -323,6 +323,19 @@ public class Event {
     }
     return updateEventFields;
   }
+  protected List<AfterUpdateEvent> afterUpdateEvent;
+
+  /**
+   * Get the value of updateEventFields
+   *
+   * @return the value of updateEventFields
+   */
+  public List<AfterUpdateEvent> getAfterUpdateEvent() {
+    if (afterUpdateEvent == null) {
+      afterUpdateEvent = new ArrayList<AfterUpdateEvent>();
+    }
+    return afterUpdateEvent;
+  }
 
   public boolean equalEventValues(Event other) {
     Map<Field, List<FieldValue>> a = getEventValues();
@@ -435,6 +448,47 @@ public class Event {
     }
     return eventPK;
 
+  }
+
+  public static Object getValue(Event event, String imePolja, int type) {
+    Object result = null;
+    if (event != null && event.getEventValues().containsKey(new Field(imePolja, type))) {
+      Object value = event.getEventValues().get(new Field(imePolja, type)).get(0).getValue();
+
+      switch (type) {
+        case java.sql.Types.INTEGER:
+          if (value instanceof Number) {
+            result = ((Number) value).intValue();
+          } else if (value instanceof String && value != null) {
+            result = Integer.parseInt((String) value);
+          } else {
+            result = (Integer) null;
+          }
+          break;
+        case java.sql.Types.VARCHAR:
+          result = (String) value;
+          break;
+        case java.sql.Types.DATE:
+          if (value != null) {
+            result = new java.sql.Date(((java.util.Date) value).getTime());
+          } else {
+            result = (java.sql.Date) null;
+          }
+          break;
+        case java.sql.Types.BIT:
+          if (value != null) {
+            if (value instanceof Integer) {
+              result = ((Integer) value) > 0;
+            } else if (value instanceof Boolean) {
+              result = (Boolean) value;
+            }
+          } else {
+            result = (Boolean) null;
+          }
+          break;
+      }
+    }
+    return result;
   }
 
   public static enum EventOperation {
