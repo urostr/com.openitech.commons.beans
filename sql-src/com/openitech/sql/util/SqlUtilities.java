@@ -20,6 +20,7 @@ import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
 import com.openitech.util.Equals;
 import com.openitech.value.VariousValue;
+import com.openitech.value.events.AfterUpdateEvent;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.UpdateEventFields;
 import java.sql.ResultSetMetaData;
@@ -386,6 +387,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
       success = success && eventId != null;
 
+
+
       Integer versionId = null;
       if (newValues.isVersioned()) {
         versionId = assignEventVersion(eventPKs);
@@ -432,6 +435,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
     EventPK eventPK = storeEvent(newValues, find);
 
+    newValues.setId(eventPK.getEventId());
+    for (AfterUpdateEvent afterUpdateEvent : newValues.getAfterUpdateEvent()) {
+      afterUpdateEvent.afterUpdateEvent(newValues, find);
+    }
+
 
     if (eventPK.getEventOperation() != Event.EventOperation.DELETE) {
       eventIds.add(eventPK);
@@ -441,7 +449,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   private void addIngoredEventIds(Event newValues, List<EventPK> eventIds) {
     if ((newValues.getId() != null) && (newValues.getId() > 0)) {
-        eventIds.add(newValues.getEventPK());
+      eventIds.add(newValues.getEventPK());
       for (Event childEvent : newValues.getChildren()) {
         addIngoredEventIds(childEvent, eventIds);
       }

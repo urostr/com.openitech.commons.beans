@@ -22,6 +22,7 @@
                 [ShowInTable] [bit] NULL,
                 [PrimaryKey] [bit] NOT NULL,
                 [UporabiPrivzetoVrednost] [bit] NULL,
+                [UrejajPrivzetoVrednost] [bit] NULL,
                 [OpisNadVnosom] [bit] NULL,
                 [OpisVNaslovu] [bit] NULL,
                 [Lookup] [bit] NULL,
@@ -114,6 +115,7 @@
                ,[ShowInTable]
                ,[PrimaryKey]
                ,[UporabiPrivzetoVrednost]
+               ,[UrejajPrivzetoVrednost]
                ,[OpisNadVnosom]
                ,[OpisVNaslovu]
                ,[Lookup]
@@ -195,6 +197,7 @@
                 THEN ActivityEventsPolja.[UporabiPrivzetoVrednost]
                 ELSE SifrantiPolja.[UporabiPrivzetoVrednost]
               END AS [UporabiPrivzetoVrednost],
+              SifrantiPolja.[UrejajPrivzetoVrednost],
               CASE
                 WHEN ActivityEventsPolja.[OpisNadVnosom] IS NOT NULL
                 THEN ActivityEventsPolja.[OpisNadVnosom]

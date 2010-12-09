@@ -457,44 +457,46 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 }
 
                 if (valueId != null) {
+                  if (field.getLookupType() == null) {
 
-                  param = 1;
-                  findEventValue.clearParameters();
-                  findEventValue.setLong(param++, events_ID);
-                  findEventValue.setInt(param++, field_id);
-                  findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
-
-                  ResultSet rs = findEventValue.executeQuery();
-                  rs.next();
-
-                  if (rs.getInt(1) == 0) {
-                    //insertaj event value
                     param = 1;
-                    insertEventValues.clearParameters();
-                    insertEventValues.setLong(param++, events_ID);
-                    insertEventValues.setInt(param++, field_id);
-                    insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-                    if (valueId == null) {
-                      insertEventValues.setNull(param++, java.sql.Types.BIGINT);
-                    } else {
-                      insertEventValues.setLong(param++, valueId);
-                    }
+                    findEventValue.clearParameters();
+                    findEventValue.setLong(param++, events_ID);
+                    findEventValue.setInt(param++, field_id);
+                    findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
 
-                    success = success && insertEventValues.executeUpdate() > 0;
-                  } else {
-                    //updataj event value
-                    param = 1;
-                    updateEventValues.clearParameters();
-                    if (valueId == null) {
-                      updateEventValues.setNull(param++, java.sql.Types.BIGINT);
-                    } else {
-                      updateEventValues.setLong(param++, valueId);
-                    }
-                    updateEventValues.setLong(param++, events_ID);
-                    updateEventValues.setInt(param++, field_id);
-                    updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                    ResultSet rs = findEventValue.executeQuery();
+                    rs.next();
 
-                    success = success && updateEventValues.executeUpdate() > 0;
+                    if (rs.getInt(1) == 0) {
+                      //insertaj event value
+                      param = 1;
+                      insertEventValues.clearParameters();
+                      insertEventValues.setLong(param++, events_ID);
+                      insertEventValues.setInt(param++, field_id);
+                      insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                      if (valueId == null) {
+                        insertEventValues.setNull(param++, java.sql.Types.BIGINT);
+                      } else {
+                        insertEventValues.setLong(param++, valueId);
+                      }
+
+                      success = success && insertEventValues.executeUpdate() > 0;
+                    } else {
+                      //updataj event value
+                      param = 1;
+                      updateEventValues.clearParameters();
+                      if (valueId == null) {
+                        updateEventValues.setNull(param++, java.sql.Types.BIGINT);
+                      } else {
+                        updateEventValues.setLong(param++, valueId);
+                      }
+                      updateEventValues.setLong(param++, events_ID);
+                      updateEventValues.setInt(param++, field_id);
+                      updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+
+                      success = success && updateEventValues.executeUpdate() > 0;
+                    }
                   }
 
                   if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
@@ -1637,6 +1639,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
         if (seek) {
           String sql = SQLDataSource.substParameters(eq.getQuery(), eq.getParameters());
+          Logger.getLogger(getClass().getName()).log(Level.INFO, "Searching event : \n {0}", sql);
           PreparedStatement statement = ConnectionManager.getInstance().getTxConnection().prepareStatement(sql,
                   ResultSet.TYPE_SCROLL_INSENSITIVE,
                   ResultSet.CONCUR_READ_ONLY,
