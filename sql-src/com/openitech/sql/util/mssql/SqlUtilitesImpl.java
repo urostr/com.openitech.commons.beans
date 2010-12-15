@@ -1286,16 +1286,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
 
-    ///////////versions
-    if (insert_eventPK_versions == null) {
-      insert_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_eventPK_versions.sql", "cp1250"));
-    }
+    if (primaryKey != null && !primaryKey.equals("")) {
+      ///////////versions
+      if (insert_eventPK_versions == null) {
+        insert_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_eventPK_versions.sql", "cp1250"));
+      }
 
-    if (update_eventPK_versions == null) {
-      update_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK_versions.sql", "cp1250"));
-    }
+      if (update_eventPK_versions == null) {
+        update_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK_versions.sql", "cp1250"));
+      }
 
-    if (findEventPKVersions(eventId, versionId) != null) {
+      if (findEventPKVersions(eventId, versionId) != null) {
 //      param = 1;
 //      update_eventPK_versions.clearParameters();
 //      if (versionId == null) {
@@ -1310,25 +1311,25 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //
 //      update_eventPK_versions.executeUpdate();
 //      success = update_eventPK_versions.executeUpdate() > 0;
-    } else {
-
-      //insert
-      param = 1;
-
-      insert_eventPK_versions.clearParameters();
-      insert_eventPK_versions.setLong(param++, eventId);
-      if (versionId == null) {
-        insert_eventPK_versions.setNull(param++, java.sql.Types.INTEGER);
       } else {
-        insert_eventPK_versions.setInt(param++, versionId.intValue());
-      }
-      insert_eventPK_versions.setInt(param++, idSifranta);
-      insert_eventPK_versions.setString(param++, idSifre);
-      insert_eventPK_versions.setString(param++, primaryKey);
-      System.out.println(eventId + "," + versionId + "," + idSifranta + "," + idSifre + "," + primaryKey);
-      success = success && insert_eventPK_versions.executeUpdate() > 0;
-    }
 
+        //insert
+        param = 1;
+
+        insert_eventPK_versions.clearParameters();
+        insert_eventPK_versions.setLong(param++, eventId);
+        if (versionId == null) {
+          insert_eventPK_versions.setNull(param++, java.sql.Types.INTEGER);
+        } else {
+          insert_eventPK_versions.setInt(param++, versionId.intValue());
+        }
+        insert_eventPK_versions.setInt(param++, idSifranta);
+        insert_eventPK_versions.setString(param++, idSifre);
+        insert_eventPK_versions.setString(param++, primaryKey);
+        System.out.println(eventId + "," + versionId + "," + idSifranta + "," + idSifre + "," + primaryKey);
+        success = success && insert_eventPK_versions.executeUpdate() > 0;
+      }
+    }
     return success;
   }
 
