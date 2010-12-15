@@ -1242,7 +1242,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           param = 1;
           delete_eventPK.clearParameters();
           delete_eventPK.setLong(param++, eventId);
-          success = success && delete_eventPK.executeUpdate() > 0;
+          success = delete_eventPK.executeUpdate() > 0;
         } else {
           //update
           param = 1;
@@ -1286,7 +1286,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
 
-    if (primaryKey != null && !primaryKey.equals("")) {
+    if (primaryKey != null && primaryKey.length()>0) {
       ///////////versions
       if (insert_eventPK_versions == null) {
         insert_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_eventPK_versions.sql", "cp1250"));
