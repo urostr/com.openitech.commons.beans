@@ -1297,20 +1297,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       if (findEventPKVersions(eventId, versionId) != null) {
-//      param = 1;
-//      update_eventPK_versions.clearParameters();
-//      if (versionId == null) {
-//        update_eventPK_versions.setNull(param++, java.sql.Types.INTEGER);
-//      } else {
-//        update_eventPK_versions.setInt(param++, versionId.intValue());
-//      }
-//      update_eventPK_versions.setInt(param++, idSifranta);
-//      update_eventPK_versions.setString(param++, idSifre);
-//      update_eventPK_versions.setString(param++, primaryKey);
-//      update_eventPK_versions.setLong(param++, eventId);
-//
-//      update_eventPK_versions.executeUpdate();
-//      success = update_eventPK_versions.executeUpdate() > 0;
+        if (versionId==null) {
+          param = 1;
+          update_eventPK_versions.clearParameters();
+          if (versionId == null) {
+            update_eventPK_versions.setNull(param++, java.sql.Types.INTEGER);
+          } else {
+            update_eventPK_versions.setInt(param++, versionId.intValue());
+          }
+          update_eventPK_versions.setInt(param++, idSifranta);
+          update_eventPK_versions.setString(param++, idSifre);
+          update_eventPK_versions.setString(param++, primaryKey);
+          update_eventPK_versions.setLong(param++, eventId);
+
+          update_eventPK_versions.executeUpdate();
+          success = update_eventPK_versions.executeUpdate() > 0;
+        }
       } else {
 
         //insert
