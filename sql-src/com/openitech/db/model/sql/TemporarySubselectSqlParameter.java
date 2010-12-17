@@ -532,8 +532,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
 
     public boolean add(TemporarySubselectSqlParameter e) {
-      groups.put(e, this);
-      return ttp.add(e);
+      if (!groups.containsKey(e)) {
+        groups.put(e, this);
+        return ttp.add(e);
+      } else {
+        return groups.containsKey(e);
+      }
     }
 
     public boolean remove(TemporarySubselectSqlParameter e) {
