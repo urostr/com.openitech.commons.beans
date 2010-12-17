@@ -190,6 +190,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
     if (resume != null && resume && dataSource.isSuspended()) {
       DataSourceEvent.resume(dataSource);
+    }else{
+      DataSourceEvent.resume(dataSource);
     }
   }
 
