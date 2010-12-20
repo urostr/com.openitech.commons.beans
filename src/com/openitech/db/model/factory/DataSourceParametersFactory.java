@@ -44,8 +44,8 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
       final TemporarySubselectSqlParameter temporaryTable = createTemporaryTable(parameter.getTemporaryTable());
       result = temporaryTable;
     } if (parameter.getTemporaryTableGroup() != null) {
-      final java.util.List<TemporarySubselectSqlParameter> temporaryTable = createTemporaryTableGroup(parameter.getTemporaryTableGroup());
-      result = temporaryTable;
+      final java.util.List<TemporarySubselectSqlParameter> temporaryTables = createTemporaryTableGroup(parameter.getTemporaryTableGroup());
+      result = temporaryTables;
     } else if (parameter.getSubQuery() != null) {
       result = createSubQuery(parameter.getSubQuery());
     } else if (parameter.getSqlParameter() != null) {
