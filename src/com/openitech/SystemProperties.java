@@ -108,7 +108,9 @@ public class SystemProperties {
 
   public static void configure(String applicationName) {
     if (!System.getProperties().containsKey("netbeans.debug")) {
-      setOuputLog(applicationName);
+      if (!isMacOSX()) {
+        setOuputLog(applicationName);
+      }
     } else {
       com.openitech.db.model.DbDataSource.DUMP_SQL = true;
     }
