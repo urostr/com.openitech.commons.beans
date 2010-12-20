@@ -130,6 +130,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if (parameter.getTemporaryTable() != null) {
         temporaryTables.add((TemporarySubselectSqlParameter) queryParameter);
         parameters.add(queryParameter);
+      } else if (parameter.getTemporaryTableGroup() != null) {
+        temporaryTables.addAll((java.util.List<TemporarySubselectSqlParameter>) queryParameter);
+        parameters.addAll((java.util.List<TemporarySubselectSqlParameter>)queryParameter);
       } else if ((parameter.getDataSourceParametersFactory() != null) || (parameter.getDataSourceFilterFactory() != null)) {
         try {
           DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
