@@ -434,6 +434,7 @@
       <xsd:element name="SqlParameter" type="tns:SqlParameter"></xsd:element>
       <xsd:element name="SubQuery" type="tns:SubQuery"></xsd:element>
       <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
+        <xsd:element name="TemporaryTableGroup" type="tns:TemporaryTableGroup"></xsd:element>
     </xsd:choice>
   </xsd:complexType>
   <xsd:simpleType name="Sharing">
@@ -608,7 +609,13 @@
       </xsd:enumeration>
     </xsd:restriction>
   </xsd:simpleType>
+    <xsd:complexType name="TemporaryTableGroup">
+        <xsd:sequence maxOccurs="1">
+            <xsd:element name="TemporaryTable" type="tns:TemporaryTable" maxOccurs="unbounded"></xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
 </xsd:schema>
+
 
 
 

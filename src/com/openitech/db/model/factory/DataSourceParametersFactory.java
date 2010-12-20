@@ -16,11 +16,14 @@ import com.openitech.db.model.xml.config.DataSourceFilter;
 import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
+import com.openitech.db.model.xml.config.TemporaryTableGroup;
 import com.openitech.io.ReadInputStream;
 import com.openitech.sql.util.SqlUtilities;
 import groovy.lang.GroovyClassLoader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -42,6 +45,9 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     Object result = null;
     if (parameter.getTemporaryTable() != null) {
       final TemporarySubselectSqlParameter temporaryTable = createTemporaryTable(parameter.getTemporaryTable());
+      result = temporaryTable;
+    } if (parameter.getTemporaryTableGroup() != null) {
+      final java.util.List<TemporarySubselectSqlParameter> temporaryTable = createTemporaryTableGroup(parameter.getTemporaryTableGroup());
       result = temporaryTable;
     } else if (parameter.getSubQuery() != null) {
       result = createSubQuery(parameter.getSubQuery());
@@ -125,6 +131,26 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     }
     ttParameter.setDisabled(tt.isDisabled());
     return ttParameter;
+  }
+
+
+  protected List<TemporarySubselectSqlParameter> createTemporaryTableGroup(TemporaryTableGroup temporaryTableGroup) {
+    List<TemporarySubselectSqlParameter> result = new java.util.ArrayList<TemporarySubselectSqlParameter>(temporaryTableGroup.getTemporaryTable().size());
+
+    TemporarySubselectSqlParameter.TemporaryTableGroup group = null;
+
+    for (TemporaryTable temporaryTable : temporaryTableGroup.getTemporaryTable()) {
+      TemporarySubselectSqlParameter tt = createTemporaryTable(temporaryTable);
+      if (group==null) {
+        group = tt.getGroup();
+      } else {
+        group.add(tt);
+      }
+
+      result.add(tt);
+    }
+
+    return result;
   }
 
   public TemporaryTable getCachedTemporaryTable(TemporaryTable tt) {
