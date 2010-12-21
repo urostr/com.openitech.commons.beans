@@ -436,8 +436,13 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
       for (DbComboBoxEntry<K, String> dbComboBoxEntry : entries) {
         if (dbComboBoxEntry != null) {
           K key = dbComboBoxEntry.getKey();
+          String sifra = null;
           if (key instanceof String) {
-            String sifra = ((String) key);
+            sifra = ((String) key);
+          } else if (key instanceof Integer) {
+            sifra = ((Integer) key).toString();
+          }
+          if (sifra != null) {
             if (entry.getKey() instanceof String) {
               if (sifra.startsWith((String) entry.getKey())) {
                 return true;
