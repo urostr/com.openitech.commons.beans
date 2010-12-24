@@ -142,18 +142,7 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     actionWeakListener.setEnabled(false);
     try {
       if (getModel() instanceof DbComboBoxModel) {
-        final DbComboBoxEntry<Object, Object> dbComboBoxEntry = new DbComboBoxModel.DbComboBoxEntry<Object, Object>(dbFieldObserver.getValue(), null, null);
-        if (((DbComboBoxModel) getModel()).isValidEntry(dbComboBoxEntry)) {
-          this.setSelectedItem(dbComboBoxEntry);
-        } else {
-          try {
-            if (dbFieldObserver.getDataSource() != null && dbFieldObserver.getDataSource().isUpdating()) {
-              dbFieldObserver.updateValue((Object) null);
-            }
-          } catch (SQLException ex) {
-            Logger.getLogger(JDbComboBox.class.getName()).log(Level.SEVERE, null, ex);
-          }
-        }
+        this.setSelectedItem(new DbComboBoxModel.DbComboBoxEntry<Object, Object>(dbFieldObserver.getValue(), null, null));
       } else {
         if (getModel().getSize() > 0) {
           final int valueAsInt = dbFieldObserver.getValueAsInt();
