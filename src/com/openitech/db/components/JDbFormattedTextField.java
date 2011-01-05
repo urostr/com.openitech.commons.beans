@@ -340,7 +340,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
 //        } finally {
 //          documentWeakListener.setEnabled(true);
 //        }
-        if (dbFieldObserver.getDataSource()!=null) {
+        if (dbFieldObserver.getDataSource() != null) {
           EventQueue.invokeLater(new Runnable() {
 
             @Override
@@ -375,9 +375,18 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
           }
           if (valid) {
             try {
-              dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : ((getText() == null  || getText().equals("")) ? null : getFormatter().stringToValue(getText())));
+              dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : ((getText() == null || getText().equals("")) ? null : getFormatter().stringToValue(getText())));
             } catch (ParseException ex) {
-              Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.SEVERE, null, ex);
+              String extraInfo = "";
+              Object value = null;
+              AbstractFormatter formatter = getFormatter();
+              if (getText() == null || getText().equals("")) {
+                value = null;
+              } else {
+                value = getText();
+              }
+              extraInfo = "trying to format: [" + (value == null ? "null" : value) + "] with formater: " + formatter.toString();
+              Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.SEVERE, extraInfo, ex);
             }
           }
         } catch (SQLException ex) {
@@ -655,7 +664,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
 
   @Override
   protected boolean processKeyBinding(KeyStroke ks, KeyEvent e, int condition, boolean pressed) {
-    if ((autoCompleteModel!=null)&&(getDocument() instanceof AutoCompleteDocument)) {
+    if ((autoCompleteModel != null) && (getDocument() instanceof AutoCompleteDocument)) {
       AutoCompleteDocument document = (AutoCompleteDocument) getDocument();
 
       try {
@@ -668,6 +677,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       return super.processKeyBinding(ks, e, condition, pressed);
     }
   }
+
   /**
    * Adds a <code>PopupMenu</code> listener which will listen to notification
    * messages from the popup portion of the combo box.

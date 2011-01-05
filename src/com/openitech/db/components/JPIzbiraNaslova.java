@@ -39,10 +39,16 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   ActionListener alDataSource;
   private boolean addLabels = false;
 
+  public JPIzbiraNaslova() throws SQLException {
+    this(false);
+
+  }
+
   /**
    * Creates new form JPIzbiraNaslova
    */
-  public JPIzbiraNaslova() throws SQLException {
+  public JPIzbiraNaslova(boolean addLabels) throws SQLException {
+    this.addLabels = addLabels;
     boolean init = dbDataModel.initDataSources();
     initComponents();
 
@@ -925,10 +931,4 @@ private void foPostaFieldValueChanged(com.openitech.db.events.ActiveRowChangeEve
     //itd
     return result;
   }
-
-  public void setAddLabels(boolean addLabels) {
-    this.addLabels = addLabels;
-  }
-
-  
 }
