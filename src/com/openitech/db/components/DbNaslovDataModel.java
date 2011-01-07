@@ -99,6 +99,7 @@ public class DbNaslovDataModel {
       dsHisneStevilke.setReadOnly(true);
       dsHisneStevilke.setName("hisne_stevilke");
       dsHisneStevilke.setShareResults(true);
+
       parameters = new ArrayList();
       parameters.add(dsHisneStevilkeFilter);
       parameters.add(dsHisneStevilkeFilter);
@@ -119,6 +120,7 @@ public class DbNaslovDataModel {
       dsPoste.setReadOnly(true);
       dsPoste.setName("poste");
       dsPoste.setShareResults(true);
+
       parameters = new ArrayList();
       parameters.add(dsPosteFilter);
       parameters.add(dsPosteFilter);
@@ -148,6 +150,7 @@ public class DbNaslovDataModel {
       dsPostneStevilke.setFetchSize(108);
       //      dsPostneStevilke.setQueuedDelay(54);
       dsPostneStevilkeFilter.addDataSource(dsPostneStevilke);
+
       dsNaseljaFilter.setFilterRequired(true);
       dsNaseljaFilter.addRequired(dsNaseljaFilter.I_TYPE_UL_IME);
       dsNaseljaFilter.setOperator("and");
@@ -272,30 +275,36 @@ public class DbNaslovDataModel {
       }
 
       int param = 1;
-      findHS_MID_1.clearParameters();
-      findHS_MID_1.setString(param++, hs_hd);
-      findHS_MID_1.setString(param++, ul_ime);
-      timer = System.currentTimeMillis();
-      ResultSet rsHS_MID = findHS_MID_1.executeQuery();
-      System.out.println("izbiranaslova:findHS_MID_1: " + (System.currentTimeMillis() - timer) + "ms");
-      if (rsHS_MID.next() && rsHS_MID.isLast()) {
-        result = rsHS_MID.getInt(1);
-      }
-      rsHS_MID.close();
-      if (result == -1) {
+      if (pt_id == null) {
         param = 1;
-        findHS_MID_2.clearParameters();
-        findHS_MID_2.setString(param++, hs_hd);
-        findHS_MID_2.setString(param++, ul_ime);
-        findHS_MID_2.setObject(param++, pt_id, Types.INTEGER);
+        findHS_MID_1.clearParameters();
+        findHS_MID_1.setString(param++, hs_hd);
+        findHS_MID_1.setString(param++, ul_ime);
         timer = System.currentTimeMillis();
-        ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
-        System.out.println("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
-        if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
-          result = rsHS_MID_2.getInt(1);
+        ResultSet rsHS_MID = findHS_MID_1.executeQuery();
+        System.out.println("izbiranaslova:findHS_MID_1: " + (System.currentTimeMillis() - timer) + "ms");
+        if (rsHS_MID.next() && rsHS_MID.isLast()) {
+          result = rsHS_MID.getInt(1);
         }
-        rsHS_MID_2.close();
+        rsHS_MID.close();
       }
+      if (na_ime == null || na_ime.length() == 0) {
+        if (result == -1) {
+          param = 1;
+          findHS_MID_2.clearParameters();
+          findHS_MID_2.setString(param++, hs_hd);
+          findHS_MID_2.setString(param++, ul_ime);
+          findHS_MID_2.setObject(param++, pt_id, Types.INTEGER);
+          timer = System.currentTimeMillis();
+          ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
+          System.out.println("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
+          if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
+            result = rsHS_MID_2.getInt(1);
+          }
+          rsHS_MID_2.close();
+        }
+      }
+
       if (result == -1) {
         param = 1;
         findHS_MID_3.clearParameters();
