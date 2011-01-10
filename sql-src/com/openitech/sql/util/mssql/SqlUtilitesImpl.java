@@ -34,6 +34,7 @@ import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -105,6 +106,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement update_eventLookupKeys;
   PreparedStatement find_eventLookupKeys;
   PreparedStatement findValue;
+  CallableStatement callStoredValue;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -730,9 +732,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public Long storeValue(ValueType fieldType, final Object value) throws SQLException {
-    if (logValues == null) {
-      logValues = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_values.sql", "cp1250"));
-      logValues.setQueryTimeout(15);
+    if (callStoredValue == null) {
+      callStoredValue = ConnectionManager.getInstance().getTxConnection().prepareCall(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "callStoreValue.sql", "cp1250"));
+      callStoredValue.setQueryTimeout(15);
     }
 
     int pos = 0;
@@ -749,20 +751,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
           fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
-          if (find_intvalue == null) {
-            find_intvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_intvalue.sql", "cp1250"));
-          }
-
-          find_intvalue.setObject(1, value, java.sql.Types.BIGINT);
-          rs = find_intvalue.executeQuery();
-          try {
-            if (rs.next()) {
-              newValueId = rs.getLong(1);
-            }
-          } finally {
-            rs.close();
-          }
+          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
           break;
         case RealValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
@@ -770,20 +759,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
           fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
-          if (find_realvalue == null) {
-            find_realvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_realvalue.sql", "cp1250"));
-          }
-
-          find_realvalue.setObject(1, value, java.sql.Types.REAL);
-          rs = find_realvalue.executeQuery();
-          try {
-            if (rs.next()) {
-              newValueId = rs.getLong(1);
-            }
-          } finally {
-            rs.close();
-          }
+          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
           break;
         case StringValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
@@ -791,20 +767,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, value);
           fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
-          if (find_stringvalue == null) {
-            find_stringvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_stringvalue.sql", "cp1250"));
-          }
-
-          find_stringvalue.setObject(1, value, java.sql.Types.VARCHAR);
-          rs = find_stringvalue.executeQuery();
-          try {
-            if (rs.next()) {
-              newValueId = rs.getLong(1);
-            }
-          } finally {
-            rs.close();
-          }
+          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
           break;
         case DateTimeValue:
         case MonthValue:
@@ -815,20 +778,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
           fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, value);
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
-          if (find_datevalue == null) {
-            find_datevalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_datevalue.sql", "cp1250"));
-          }
-
-          find_datevalue.setObject(1, value, java.sql.Types.TIMESTAMP);
-          rs = find_datevalue.executeQuery();
-          try {
-            if (rs.next()) {
-              newValueId = rs.getLong(1);
-            }
-          } finally {
-            rs.close();
-          }
+          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
           break;
         case ObjectValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
@@ -836,7 +786,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
           fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, value);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.LONGVARBINARY, null);
+          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
           break;
         case ClobValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
@@ -845,26 +795,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
           fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
           fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, value);
-          if (find_clobvalue == null) {
-            find_clobvalue = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_clobvalue.sql", "cp1250"));
-          }
-
-          find_clobvalue.setObject(1, value, java.sql.Types.CLOB);
-          find_clobvalue.setObject(2, value, java.sql.Types.CLOB);
-          rs = find_clobvalue.executeQuery();
-          try {
-            if (rs.next()) {
-              newValueId = rs.getLong(1);
-            }
-          } finally {
-            rs.close();
-          }
-
           break;
       }
       if (newValueId == null) {
-        executeUpdate(logValues, fieldValues);
-        newValueId = getLastIdentity();
+        execute(callStoredValue, fieldValues);
+
+        ResultSet resultSet = callStoredValue.getResultSet();
+        if (resultSet != null) {
+          try {
+            if (resultSet.next()) {
+              newValueId = resultSet.getLong("Id");
+            }
+          } finally {
+            resultSet.close();
+          }
+        }
       }
     }
     return newValueId;
@@ -1286,7 +1231,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
 
-    if (primaryKey != null && primaryKey.length()>0) {
+    if (primaryKey != null && primaryKey.length() > 0) {
       ///////////versions
       if (insert_eventPK_versions == null) {
         insert_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_eventPK_versions.sql", "cp1250"));
@@ -1297,7 +1242,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       if (findEventPKVersions(eventId, versionId) != null) {
-        if (versionId==null) {
+        if (versionId == null) {
           param = 1;
           update_eventPK_versions.clearParameters();
           if (versionId == null) {

@@ -133,6 +133,62 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     return executeUpdate(statement, fieldValues);
   }
 
+  public boolean execute(java.sql.CallableStatement statement,
+          FieldValue... fieldValues) throws SQLException {
+    statement.clearParameters();
+    System.out.println("Setting parameters");
+    for (int pos = 1; pos <= fieldValues.length; pos++) {
+      FieldValue fieldValue = fieldValues[pos - 1];
+      final String fieldName = fieldValue.getName();
+      final int type = fieldValue.getType();
+      final Object value = fieldValue.getValue();
+      final boolean wasNull = fieldValue.isNull();
+
+
+      System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
+      if (wasNull) {
+        statement.setNull(pos, type);
+      } else {
+        switch (type) {
+          case Types.DECIMAL:
+          case Types.DOUBLE:
+          case Types.FLOAT:
+            if (value instanceof Number) {
+              statement.setDouble(pos, ((Number) value).doubleValue());
+            } else {
+              statement.setDouble(pos, Double.parseDouble(value.toString()));
+            }
+            break;
+          case Types.BIT:
+          case Types.INTEGER:
+            if (value instanceof Number) {
+              statement.setInt(pos, ((Number) value).intValue());
+              break;
+            } else {
+              statement.setInt(pos, Integer.parseInt(value.toString()));
+            }
+            break;
+          case Types.BOOLEAN:
+            if (value instanceof Number) {
+              statement.setBoolean(pos, Equals.equals(value, 1));
+            } else if (value instanceof String) {
+              String svalue = value.toString().trim().toUpperCase();
+              statement.setBoolean(pos, svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F")));
+            }
+            break;
+          case Types.CHAR:
+          case Types.VARCHAR:
+            statement.setString(pos, value.toString());
+            break;
+          default:
+            statement.setObject(pos, value, type);
+        }
+      }
+    }
+
+    return statement.execute();
+  }
+
   public int executeUpdate(java.sql.PreparedStatement statement,
           FieldValue... fieldValues) throws SQLException {
     statement.clearParameters();
