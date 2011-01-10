@@ -454,8 +454,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       for (EventPK eventPK : eventPKs) {
         eventPK.setVersionID(versionId);
         success = success && storePrimaryKeyVersions(eventPK);
-        success = success && storeEventLookUpKeys(eventPK);
-
       }
 
 
@@ -581,7 +579,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract boolean storePrimaryKeyVersions(EventPK eventPK) throws SQLException;
 
-  public abstract boolean storeEventLookUpKeys(EventPK eventPK) throws SQLException;
+  public abstract boolean storeEventLookUpKeys(Long eventId, List<FieldValue> fieldValues) throws SQLException;
 
   public abstract EventPK findEventPK(long eventId) throws SQLException;
 
