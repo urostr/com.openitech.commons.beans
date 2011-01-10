@@ -225,17 +225,17 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             headers.add(item);
           }
           if (item.getLayout() != null && item.getLayout().getDocuments() != null) {
-              for (String documentName : item.getLayout().getDocuments().getDocumentNames()) {
-                if (namedDocuments.containsKey(documentName)) {
-                  docs.add(namedDocuments.get(documentName));
-                } else {
-                  docs.add(new com.openitech.db.components.JDbDateTextField().getDocument());
-                }
+            for (String documentName : item.getLayout().getDocuments().getDocumentNames()) {
+              if (namedDocuments.containsKey(documentName)) {
+                docs.add(namedDocuments.get(documentName));
+              } else {
+                docs.add(new com.openitech.db.components.JDbTextField().getDocument());
               }
             }
+          }
 
           if (docs.isEmpty()) {
-            docs.add(new com.openitech.db.components.JDbDateTextField().getDocument());
+            docs.add(new com.openitech.db.components.JDbTextField().getDocument());
           }
 
           if ((parentFilterPanel != null) && (parentFilterPanel.documents.containsKey(item))) {
@@ -392,7 +392,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.weightx = 1.0;
             jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
-            //kr neki
+            //ker se za integer equals zaène z 4, zato vedno odštejem EQUALS, da dobim index v moboboxu
+            //èe pa je sluèajno index veèji kot je možnosti pa ponastavim na equals
             try {
               if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
                 item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
@@ -414,7 +415,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
             //jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
             jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
-            jDbComboBox1.setSelectedIndex(1);
+            jDbComboBox1.setSelectedIndex(item.getSeekType());
             jDbComboBox1.setFocusable(false);
             jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
 
