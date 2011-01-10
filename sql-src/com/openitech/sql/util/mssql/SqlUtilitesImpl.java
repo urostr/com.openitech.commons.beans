@@ -200,7 +200,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
             storeEventVersion(versionId, eventPK);
             eventPK.setVersionID(versionId);
             storePrimaryKeyVersions(eventPK);
-            storeEventLookUpKeys(eventPK);
           }
 
         }
@@ -425,6 +424,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           if (success) {
+            List<FieldValue> fieldValuesList = new ArrayList<FieldValue>(event.getEventValues().size());
+
             EventPK eventPK = new EventPK();
 
             Map<Field, List<FieldValue>> eventValues = event.getEventValues();
@@ -433,6 +434,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
               for (int i = 0; i < fieldValues.size(); i++) {
                 FieldValue value = fieldValues.get(i);
                 Long valueId = storeValue(value.getValueType(), value.getValue());
+
+                fieldValuesList.add(value);
 
                 String fieldName = field.getName();
                 String fieldNameWithIndex = field.getName();
@@ -530,6 +533,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
               eventPK.setEventOperation(event.getOperation());
               success = success && storePrimaryKey(eventPK);
             }
+
+            success = success && storeEventLookUpKeys(events_ID, fieldValuesList);
           }
 
           commit = success;
@@ -580,7 +585,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public boolean storeEventLookUpKeys(EventPK eventPK) throws SQLException {
+  public boolean storeEventLookUpKeys(Long eventId, List<FieldValue> fieldValues) throws SQLException {
     if (insert_eventLookupKeys == null) {
       insert_eventLookupKeys = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "insert_eventLookupKeys.sql", "cp1250"));
     }
@@ -589,9 +594,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     boolean success = true;
     int numberOfValues = 0;
-    List<FieldValue> primaryKeyFields = eventPK.getPrimaryKeyFields();
 
-    long eventId = eventPK.getEventId();
     Integer versionId = null;
     Integer idPolja = null;
     int fieldValueIndex = -1;
@@ -599,7 +602,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     String idSifre = null;
     String primaryKey = null;
 
-    for (FieldValue fieldValue : primaryKeyFields) {
+    for (FieldValue fieldValue : fieldValues) {
       if (fieldValue.getLookupType() != null) {
         idPolja = fieldValue.getIdPolja();
         fieldValueIndex = fieldValue.getFieldIndex();
@@ -633,7 +636,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     //vse vrednosti za lookup morajo biti izpolnjene
     if (idPolja != null && Field.LookupType.values().length == numberOfValues) {
-      if (findLookupKeys(idPolja, fieldValueIndex, eventPK)) {
+      if (findLookupKeys(idPolja, fieldValueIndex, eventId)) {
         int param = 1;
         update_eventLookupKeys.clearParameters();
 
@@ -675,14 +678,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return success;
   }
 
-  public boolean findLookupKeys(int idPolja, int fieldValueIndex, EventPK eventPK) throws SQLException {
+  public boolean findLookupKeys(int idPolja, int fieldValueIndex, Long eventId) throws SQLException {
     boolean result = false;
     if (find_eventLookupKeys == null) {
       find_eventLookupKeys = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "find_eventLookupKeys.sql", "cp1250"));
     }
     int param = 1;
     find_eventLookupKeys.clearParameters();
-    find_eventLookupKeys.setLong(param++, eventPK.getEventId());
+    find_eventLookupKeys.setLong(param++, eventId);
     find_eventLookupKeys.setInt(param++, idPolja);
     find_eventLookupKeys.setInt(param++, fieldValueIndex);
     ResultSet rs_find_eventLookupKeys = find_eventLookupKeys.executeQuery();
