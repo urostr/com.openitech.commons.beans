@@ -16,6 +16,7 @@ import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.db.model.DbDataSourceIndex;
 import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.sql.SQLDataSource;
+import com.openitech.db.model.sql.SQLNotificationException;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
@@ -592,19 +593,27 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (update_eventLookupKeys == null) {
       update_eventLookupKeys = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "update_eventLookupKeys.sql", "cp1250"));
     }
+    Map<Integer, List<FieldValue>> lookupFields = new HashMap<Integer, List<FieldValue>>();
+    for (FieldValue fieldValue : fieldValues) {
+      if (fieldValue.getLookupType() != null) {
+        Integer idPolja = fieldValue.getIdPolja();
+        if (!lookupFields.containsKey(idPolja)) {
+          lookupFields.put(idPolja, new ArrayList<FieldValue>());
+        }
+        lookupFields.get(idPolja).add(fieldValue);
+      }
+    }
     boolean success = true;
     int numberOfValues = 0;
 
     Integer versionId = null;
-    Integer idPolja = null;
     int fieldValueIndex = -1;
     Integer idSifranta = null;
     String idSifre = null;
     String primaryKey = null;
-
-    for (FieldValue fieldValue : fieldValues) {
-      if (fieldValue.getLookupType() != null) {
-        idPolja = fieldValue.getIdPolja();
+    for (Integer lookupIdPolja : lookupFields.keySet()) {
+      numberOfValues = 0;
+      for (FieldValue fieldValue : lookupFields.get(lookupIdPolja)) {
         fieldValueIndex = fieldValue.getFieldIndex();
 
         Object value = fieldValue.getValue();
@@ -631,48 +640,50 @@ public class SqlUtilitesImpl extends SqlUtilities {
             numberOfValues++;
             break;
         }
-
       }
-    }
-    //vse vrednosti za lookup morajo biti izpolnjene
-    if (idPolja != null && Field.LookupType.values().length == numberOfValues) {
-      if (findLookupKeys(idPolja, fieldValueIndex, eventId)) {
-        int param = 1;
-        update_eventLookupKeys.clearParameters();
 
-        if (versionId != null) {
-          update_eventLookupKeys.setInt(param++, versionId);
+      //vse vrednosti za lookup morajo biti izpolnjene
+      if (Field.LookupType.values().length == numberOfValues) {
+        if (findLookupKeys(lookupIdPolja, fieldValueIndex, eventId)) {
+          int param = 1;
+          update_eventLookupKeys.clearParameters();
+
+          if (versionId != null) {
+            update_eventLookupKeys.setInt(param++, versionId);
+          } else {
+            update_eventLookupKeys.setNull(param++, java.sql.Types.INTEGER);
+          }
+          update_eventLookupKeys.setInt(param++, idSifranta);
+          update_eventLookupKeys.setString(param++, idSifre);
+          update_eventLookupKeys.setString(param++, primaryKey);
+
+          update_eventLookupKeys.setLong(param++, eventId);
+          update_eventLookupKeys.setInt(param++, lookupIdPolja);
+          update_eventLookupKeys.setInt(param++, fieldValueIndex);
+
+          success = success && update_eventLookupKeys.executeUpdate() > 0;
         } else {
-          update_eventLookupKeys.setNull(param++, java.sql.Types.INTEGER);
+          //insert
+          int param = 1;
+          insert_eventLookupKeys.clearParameters();
+          insert_eventLookupKeys.setLong(param++, eventId);
+          insert_eventLookupKeys.setInt(param++, lookupIdPolja);
+          insert_eventLookupKeys.setInt(param++, fieldValueIndex);
+          if (versionId != null) {
+            insert_eventLookupKeys.setInt(param++, versionId);
+          } else {
+            insert_eventLookupKeys.setNull(param++, java.sql.Types.INTEGER);
+          }
+          insert_eventLookupKeys.setInt(param++, idSifranta);
+          insert_eventLookupKeys.setString(param++, idSifre);
+          insert_eventLookupKeys.setString(param++, primaryKey);
+
+          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, "Inserting lookupKeys: {0} , {1} , {2} , {3} , {4} , {5} , ", new Object[]{lookupIdPolja, fieldValueIndex, versionId, idSifranta, idSifre, primaryKey});
+
+          success = success && insert_eventLookupKeys.executeUpdate() > 0;
         }
-        update_eventLookupKeys.setInt(param++, idSifranta);
-        update_eventLookupKeys.setString(param++, idSifre);
-        update_eventLookupKeys.setString(param++, primaryKey);
-
-        update_eventLookupKeys.setLong(param++, eventId);
-        update_eventLookupKeys.setInt(param++, idPolja);
-        update_eventLookupKeys.setInt(param++, fieldValueIndex);
-
-        success = success && update_eventLookupKeys.executeUpdate() > 0;
       } else {
-        //insert
-        int param = 1;
-        insert_eventLookupKeys.clearParameters();
-        insert_eventLookupKeys.setLong(param++, eventId);
-        insert_eventLookupKeys.setInt(param++, idPolja);
-        insert_eventLookupKeys.setInt(param++, fieldValueIndex);
-        if (versionId != null) {
-          insert_eventLookupKeys.setInt(param++, versionId);
-        } else {
-          insert_eventLookupKeys.setNull(param++, java.sql.Types.INTEGER);
-        }
-        insert_eventLookupKeys.setInt(param++, idSifranta);
-        insert_eventLookupKeys.setString(param++, idSifre);
-        insert_eventLookupKeys.setString(param++, primaryKey);
-
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, "Inserting lookupKeys: {0} , {1} , {2} , {3} , {4} , {5} , ", new Object[]{idPolja, fieldValueIndex, versionId, idSifranta, idSifre, primaryKey});
-
-        success = success && insert_eventLookupKeys.executeUpdate() > 0;
+        throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
       }
     }
     return success;
