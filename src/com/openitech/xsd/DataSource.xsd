@@ -40,32 +40,38 @@
               <xsd:element name="Listeners" minOccurs="0" maxOccurs="unbounded">
                 <xsd:complexType>
                   <xsd:sequence maxOccurs="unbounded">
-                    <xsd:element name="ActionListener">
+                    <xsd:element name="Listener">
                       <xsd:complexType>
                         <xsd:choice>
-                          <xsd:element name="Listener" type="tns:Factory"></xsd:element>
-                          <xsd:element name="LoadData">
+                          <xsd:element name="ActionListener">
+                            <xsd:complexType>
+                              <xsd:choice>
+                                <xsd:element name="Listener" type="tns:Factory"></xsd:element>
+                                <xsd:element name="LoadData">
+                                  <xsd:complexType>
+                                    <xsd:all>
+                                      <xsd:element name="Query" type="tns:Query"/>
+                                    </xsd:all>
+                                  </xsd:complexType>
+                                </xsd:element>
+                              </xsd:choice>
+                            </xsd:complexType>
+                          </xsd:element>
+                          <xsd:element name="ActiveRowChangeListener">
                             <xsd:complexType>
                               <xsd:all>
-                                <xsd:element name="Query" type="tns:Query"/>
+                                <xsd:element name="Listener" type="tns:Factory"></xsd:element>
+                              </xsd:all>
+                            </xsd:complexType>
+                          </xsd:element>
+                          <xsd:element name="ListDataListener">
+                            <xsd:complexType>
+                              <xsd:all>
+                                <xsd:element name="Listener" type="tns:Factory"></xsd:element>
                               </xsd:all>
                             </xsd:complexType>
                           </xsd:element>
                         </xsd:choice>
-                      </xsd:complexType>
-                    </xsd:element>
-                    <xsd:element name="ActiveRowChangeListener">
-                      <xsd:complexType>
-                        <xsd:all>
-                          <xsd:element name="Listener" type="tns:Factory"></xsd:element>
-                        </xsd:all>
-                      </xsd:complexType>
-                    </xsd:element>
-                    <xsd:element name="ListDataListener">
-                      <xsd:complexType>
-                        <xsd:all>
-                          <xsd:element name="Listener" type="tns:Factory"></xsd:element>
-                        </xsd:all>
                       </xsd:complexType>
                     </xsd:element>
                   </xsd:sequence>
@@ -663,4 +669,5 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
+
 
