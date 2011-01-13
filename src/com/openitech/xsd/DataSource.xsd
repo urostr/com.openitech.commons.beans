@@ -43,22 +43,10 @@
                     <xsd:element name="Listener">
                       <xsd:complexType>
                         <xsd:choice>
-                          <xsd:element name="ActionListener">
-                            <xsd:complexType>
-                              <xsd:choice>
-                                <xsd:element name="Listener" type="tns:Factory"></xsd:element>
-                                <xsd:element name="LoadData">
-                                  <xsd:complexType>
-                                    <xsd:all>
-                                      <xsd:element name="Query" type="tns:Query"/>
-                                    </xsd:all>
-                                  </xsd:complexType>
-                                </xsd:element>
-                              </xsd:choice>
-                            </xsd:complexType>
-                          </xsd:element>
+                          <xsd:element name="ActionListener" type="tns:Factory"></xsd:element>
                           <xsd:element name="ActiveRowChangeListener" type="tns:Factory"></xsd:element>
                           <xsd:element name="ListDataListener" type="tns:Factory"></xsd:element>
+                          <xsd:element name="LoadDataListener" type="tns:Query"></xsd:element>
                         </xsd:choice>
                       </xsd:complexType>
                     </xsd:element>
