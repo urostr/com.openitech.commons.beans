@@ -37,6 +37,40 @@
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
+              <xsd:element name="Listeners" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:sequence maxOccurs="unbounded">
+                    <xsd:element name="ActionListener">
+                      <xsd:complexType>
+                        <xsd:choice>
+                          <xsd:element name="Listener" type="tns:Factory"></xsd:element>
+                          <xsd:element name="LoadData">
+                            <xsd:complexType>
+                              <xsd:all>
+                                <xsd:element name="Query" type="tns:Query"/>
+                              </xsd:all>
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:choice>
+                      </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="ActiveRowChangeListener">
+                      <xsd:complexType>
+                        <xsd:all>
+                          <xsd:element name="Listener" type="tns:Factory"></xsd:element>
+                        </xsd:all>
+                      </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="ListDataListener">
+                      <xsd:complexType>
+                        <xsd:all>
+                          <xsd:element name="Listener" type="tns:Factory"></xsd:element>
+                        </xsd:all>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
@@ -94,7 +128,7 @@
             <xsd:attribute name="Title" type="xsd:string"/>
           </xsd:complexType>
         </xsd:element>
-          <xsd:element name="LookupDataModel" type="tns:LookupModel"></xsd:element>
+        <xsd:element name="LookupDataModel" type="tns:LookupModel"></xsd:element>
       </xsd:all>
       <xsd:attribute name="readOnly" type="xsd:boolean" default="false"/>
       <xsd:attribute name="CanExportData" type="xsd:boolean" default="true"/>
@@ -434,7 +468,7 @@
       <xsd:element name="SqlParameter" type="tns:SqlParameter"></xsd:element>
       <xsd:element name="SubQuery" type="tns:SubQuery"></xsd:element>
       <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
-        <xsd:element name="TemporaryTableGroup" type="tns:TemporaryTableGroup"></xsd:element>
+      <xsd:element name="TemporaryTableGroup" type="tns:TemporaryTableGroup"></xsd:element>
     </xsd:choice>
   </xsd:complexType>
   <xsd:simpleType name="Sharing">
@@ -445,12 +479,12 @@
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:complexType name="LookupModel">
-        <xsd:sequence>
-            <xsd:element name="SeekEventId" type="tns:SeekParameters"></xsd:element>
-            <xsd:element name="LookupValueFieldName" type="xsd:string"></xsd:element>
-            <xsd:element name="LookupPrikazFieldName" type="xsd:string"></xsd:element>
-        </xsd:sequence>
-    </xsd:complexType>
+    <xsd:sequence>
+      <xsd:element name="SeekEventId" type="tns:SeekParameters"></xsd:element>
+      <xsd:element name="LookupValueFieldName" type="xsd:string"></xsd:element>
+      <xsd:element name="LookupPrikazFieldName" type="xsd:string"></xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
   <xsd:simpleType name="GridBagLayoutAnchor">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="CENTER">
@@ -609,16 +643,24 @@
       </xsd:enumeration>
     </xsd:restriction>
   </xsd:simpleType>
-    <xsd:complexType name="TemporaryTableGroup">
-        <xsd:sequence maxOccurs="1">
-            <xsd:element name="TemporaryTable" type="tns:TemporaryTable" maxOccurs="unbounded"></xsd:element>
-        </xsd:sequence>
-    </xsd:complexType>
+  <xsd:complexType name="TemporaryTableGroup">
+    <xsd:sequence maxOccurs="1">
+      <xsd:element name="TemporaryTable" type="tns:TemporaryTable" maxOccurs="unbounded"></xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="Query">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="QueryType" type="tns:QueryType"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <xsd:simpleType name="QueryType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="QUERY"/>
+      <xsd:enumeration value="UPDATE"/>
+      <xsd:enumeration value="CALL"/>
+    </xsd:restriction>
+  </xsd:simpleType>
 </xsd:schema>
-
-
-
-
-
-
 
