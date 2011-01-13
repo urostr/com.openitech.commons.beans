@@ -4,6 +4,7 @@
  */
 package com.openitech.db.model.factory;
 
+import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.filters.DataSourceLimit;
 import com.openitech.db.model.DbDataModel;
@@ -11,8 +12,12 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.db.model.DbTableModel;
+import com.openitech.db.model.xml.config.Factory;
+import com.openitech.db.model.xml.config.Query;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.TaskList.Tasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
+import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners;
+import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners.Listener;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.SQLMaterializedView;
 import com.openitech.db.model.sql.SQLOrderByParameter;
@@ -26,6 +31,7 @@ import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
+import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -33,6 +39,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.event.ListDataListener;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.jdesktop.swingx.JXTaskPane;
 
@@ -69,6 +76,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         dataSource.setCountSql(dataSource.getCountSql() + '\n' + dataSourceXML.getDataSource().getQueryHints());
         dataSource.setSelectSql(dataSource.getSelectSql() + '\n' + dataSourceXML.getDataSource().getQueryHints());
       }
+      addListeners();
 
       createEventColumns();
       suspendDataSource();
@@ -132,7 +140,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         parameters.add(queryParameter);
       } else if (parameter.getTemporaryTableGroup() != null) {
         temporaryTables.addAll((java.util.List<TemporarySubselectSqlParameter>) queryParameter);
-        parameters.addAll((java.util.List<TemporarySubselectSqlParameter>)queryParameter);
+        parameters.addAll((java.util.List<TemporarySubselectSqlParameter>) queryParameter);
       } else if ((parameter.getDataSourceParametersFactory() != null) || (parameter.getDataSourceFilterFactory() != null)) {
         try {
           DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
@@ -193,7 +201,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
     if (resume != null && resume && dataSource.isSuspended()) {
       DataSourceEvent.resume(dataSource);
-    }else{
+    } else {
       DataSourceEvent.resume(dataSource);
     }
   }
@@ -300,7 +308,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     for (com.openitech.db.model.xml.config.Workarea.Information.Panels panel : dataSourceXML.getInformation().getPanels()) {
       try {
         Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), panel.getGroovy(), panel.getClassName(), config.getClass()).newInstance(config);
-        
+
         if (newInstance instanceof java.awt.Component) {
           this.informationPanels.put(panel.getTitle(), (java.awt.Component) newInstance);
         } else {
@@ -367,8 +375,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if ((dataSourceXML.getAssociatedTasks() != null) && !dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
         for (TaskPanes taskPane : dataSourceXML.getAssociatedTasks().getTaskPanes()) {
           Object newInstance = null;
-          if ((taskPane.getGroovy() != null) ||
-              (taskPane.getClassName() != null)) {
+          if ((taskPane.getGroovy() != null)
+                  || (taskPane.getClassName() != null)) {
             ClassInstanceFactory.getInstance("wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis(), taskPane.getGroovy(), taskPane.getClassName(), config.getClass()).newInstance(config);
           } else if (taskPane.getTaskList() != null && !taskPane.getTaskList().getTasks().isEmpty()) {
             newInstance = new JXDataSourceTaskPane(config, dataSource);
@@ -421,6 +429,36 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     } catch (IllegalArgumentException ex) {
       Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
     } catch (InvocationTargetException ex) {
+      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+
+  private void addListeners() {
+    try {
+      List<Listeners> listeners = dataSourceXML.getDataSource().getListeners();
+      for (Listeners listener : listeners) {
+        for (Listener listener1 : listener.getListener()) {
+          Object value = null;
+          if (listener1.getActionListener() != null) {
+            Factory factory = listener1.getActionListener();
+            Class jcls = Class.forName(factory.getClassName());
+            value = jcls.newInstance();
+            dataSource.addActionListener((ActionListener) value);
+          } else if (listener1.getActiveRowChangeListener() != null) {
+            Factory factory = listener1.getActiveRowChangeListener();
+            Class jcls = Class.forName(factory.getClassName());
+            value = jcls.newInstance();
+            dataSource.addActiveRowChangeListener((ActiveRowChangeListener) value);
+          } else if (listener1.getListDataListener() != null) {
+            Factory factory = listener1.getListDataListener();
+            Class jcls = Class.forName(factory.getClassName());
+            value = jcls.newInstance();
+            dataSource.addListDataListener((ListDataListener) value);
+          }
+          ((DataSourceObserver) value).setDataSource(dataSource);
+        }
+      }
+    } catch (Exception ex) {
       Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
