@@ -51,6 +51,7 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.DateFormatter;
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
@@ -123,6 +124,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       } else {
         EventQueue.invokeLater(new Runnable() {
 
+          @Override
           public void run() {
             requestFocus();
           }
@@ -220,6 +222,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    */
   private class FocusLostHandler implements Runnable, Serializable {
 
+    @Override
     public void run() {
       this_focusLost();
     }
@@ -374,20 +377,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
             super.setBackground(java.awt.Color.yellow);
           }
           if (valid) {
-            try {
-              dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : ((getText() == null || getText().equals("")) ? null : getFormatter().stringToValue(getText())));
-            } catch (ParseException ex) {
-              String extraInfo = "";
-              Object value = null;
-              AbstractFormatter formatter = getFormatter();
-              if (getText() == null || getText().equals("")) {
-                value = null;
-              } else {
-                value = getText();
-              }
-              extraInfo = "trying to format: [" + (value == null ? "null" : value) + "] with formater: " + formatter.toString();
-              Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.SEVERE, extraInfo, ex);
-            }
+            dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : this.getValue());
           }
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
@@ -398,21 +388,25 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     }
   }
 
-  private void documentUpdated() {
-    updateColumn();
-//    if (getFormatter() == null) {
-//
-//    } else if ((dbFieldObserver != null) && !dbFieldObserver.isUpdatingFieldValue()) {
-//      dbFieldObserver.startUpdate();
-//    }
-    /*else
-    try {
-    commitEdit();
-    } catch (ParseException ex) {
-    Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't update the formatted value. ["+ex.getMessage()+"]");
-    }//*/
+  private void documentUpdated(DocumentEvent e) {
+    if (getFormatter() == null) {
+      updateColumn();
+    } else {
+      if ((dbFieldObserver != null) && !dbFieldObserver.isUpdatingFieldValue()) {
+        dbFieldObserver.startUpdate();
+      }
+      try {
+        getFormatter().stringToValue(com.openitech.text.Document.getText(e.getDocument()));
+        commitEdit();
+      } catch (BadLocationException ex) {
+        Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.WARNING, ex.getMessage());
+      } catch (ParseException ex) {
+        //ignore it
+      }
+    }
   }
 
+  @Override
   public void setValue(Object value) {
     if (!isAJXDataPickerSetEditorCall()) {
       documentWeakListener.setEnabled(false);
@@ -433,8 +427,9 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    *
    * @param e the document event
    */
+  @Override
   public void removeUpdate(DocumentEvent e) {
-    documentUpdated();
+    documentUpdated(e);
   }
 
   /**
@@ -444,8 +439,9 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    *
    * @param e the document event
    */
+  @Override
   public void insertUpdate(DocumentEvent e) {
-    documentUpdated();
+    documentUpdated(e);
   }
 
   /**
@@ -454,8 +450,9 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    *
    * @param e the document event
    */
+  @Override
   public void changedUpdate(DocumentEvent e) {
-    documentUpdated();
+    documentUpdated(e);
   }
 
   private boolean sameValues(Object oldValue, Object newValue) {
@@ -520,6 +517,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    * @throws ParseException if the <code>AbstractFormatter</code> is not able
    *         to format the current value
    */
+  @Override
   public void commitEdit() throws ParseException {
     try {
       super.commitEdit();
@@ -540,6 +538,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     }
   }
 
+  @Override
   protected void processFocusEvent(FocusEvent e) {
     boolean wasEnabled = documentWeakListener.isEnabled();
     try {
@@ -564,6 +563,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     return null;
   }
 
+  @Override
   public void setColumns(int columns) {
     super.setColumns(columns);
     setMinimumSize(new Dimension(Math.min(MINIMUM_SIZE.width * columns, MINIMUM_SIZE.width), MINIMUM_SIZE.height));
