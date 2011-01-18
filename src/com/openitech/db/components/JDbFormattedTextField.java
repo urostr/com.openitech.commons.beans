@@ -366,18 +366,22 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   private boolean disableColumnUpdates = false;
 
   private void updateColumn() {
+    updateColumn(getFormatter() == null ? this.getText() : this.getValue());
+  }
+
+  private void updateColumn(final Object value) {
     if (!disableColumnUpdates) {
       if (!dbFieldObserver.isUpdatingFieldValue()) {
         activeRowChangeWeakListener.setEnabled(false);
         try {
-          boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
+          boolean valid = isValid(value);
           if (valid && c_default_bg != null) {
             super.setBackground(c_default_bg);
           } else if (!valid) {
             super.setBackground(java.awt.Color.yellow);
           }
           if (valid) {
-            dbFieldObserver.updateValue(getFormatter() == null ? this.getText() : this.getValue());
+            dbFieldObserver.updateValue(value);
           }
         } catch (SQLException ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
@@ -396,8 +400,8 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
         dbFieldObserver.startUpdate();
       }
       try {
-        getFormatter().stringToValue(com.openitech.text.Document.getText(e.getDocument()));
-        commitEdit();
+        Object value = getFormatter().stringToValue(com.openitech.text.Document.getText(e.getDocument()));
+        updateColumn(value);
       } catch (BadLocationException ex) {
         Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.WARNING, ex.getMessage());
       } catch (ParseException ex) {
