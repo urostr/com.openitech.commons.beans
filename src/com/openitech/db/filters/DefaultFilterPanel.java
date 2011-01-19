@@ -32,7 +32,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
   }
 
   public DefaultFilterPanel(Map<String, Document> documents, DefaultFilterPanel defaultFilterPanel, DataSourceFiltersMap filtersMap) {
-    this(documents, defaultFilterPanel.dbDataSourceFilter(), filtersMap);
+    this(documents, defaultFilterPanel.getJPDbDataSourceFilter(), filtersMap);
   }
 
   /**
@@ -46,9 +46,11 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     dbDataSourceFilter.setNamedDocuments(namedDocuments);
     dbDataSourceFilter.setParentFilterPanel(parentFilterPanel);
     dbDataSourceFilter.getFilters().putAll(filtersMap);
+
+    invalidate();
   }
 
-  public JPDbDataSourceFilter dbDataSourceFilter() {
+  public JPDbDataSourceFilter getJPDbDataSourceFilter() {
     return dbDataSourceFilter;
   }
 
@@ -91,8 +93,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     setLayout(new java.awt.GridBagLayout());
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
     gridBagConstraints.weightx = 1.0;
     gridBagConstraints.weighty = 1.0;
     add(dbDataSourceFilter, gridBagConstraints);
