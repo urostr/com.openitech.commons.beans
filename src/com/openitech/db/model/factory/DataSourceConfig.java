@@ -10,6 +10,7 @@ package com.openitech.db.model.factory;
 
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.db.model.DbDataModel;
+import com.openitech.db.model.DbDataSource;
 import java.util.Collections;
 import javax.swing.text.Document;
 
@@ -42,6 +43,26 @@ public class DataSourceConfig<T extends DbDataModel> {
    */
   public void setDataModel(T dataModel) {
     this.dataModel = dataModel;
+  }
+
+  public DbDataSource rppDataSource;
+
+  /**
+   * Get the value of rppDataSource
+   *
+   * @return the value of rppDataSource
+   */
+  public DbDataSource getRppDataSource() {
+    return rppDataSource;
+  }
+
+  /**
+   * Set the value of rppDataSource
+   *
+   * @param rppDataSource new value of rppDataSource
+   */
+  public void setRppDataSource(DbDataSource rppDataSource) {
+    this.rppDataSource = rppDataSource;
   }
 
   public static Document get(String documentName) {
