@@ -1389,6 +1389,77 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return success;
   }
 
+  @Override
+  public String getPPJoinFields() {
+    String result = "";
+    try {
+      PreparedStatement findPPPolja = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "findPPPolja.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+      ResultSet rsFindPPPolja = findPPPolja.executeQuery();
+
+      StringBuilder sbSelect = new StringBuilder(200);
+      rsFindPPPolja.beforeFirst();
+      while (rsFindPPPolja.next()) {
+        int idPolja = rsFindPPPolja.getInt("IdPolja");
+        String imePolja = rsFindPPPolja.getString("ImePolja");
+        final String ev_alias = "[ev_" + imePolja + "]";
+        final String val_alias = "[val_" + imePolja + "]";
+        sbSelect.append("\nLEFT OUTER JOIN ").append(SqlUtilities.getDataBase()).append(".[dbo].[ValuesPP] ").append(ev_alias).append(" ON (");
+        sbSelect.append("PP.[PPID] = ").append(ev_alias).append(".[PPId]");
+        sbSelect.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(idPolja).append(")");
+        sbSelect.append("\nLEFT OUTER JOIN ").append(SqlUtilities.getDataBase()).append(".[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+        sbSelect.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
+      }
+      result = sbSelect.toString();
+    } catch (SQLException ex) {
+      Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+
+    }
+    return result;
+  }
+
+  @Override
+  public String getPPSelectFields() {
+    String result = "";
+    try {
+      StringBuilder sbresult = new StringBuilder(200);
+      PreparedStatement findPPPolja = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "findPPPolja.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+      ResultSet rsFindPPPolja = findPPPolja.executeQuery();
+      while (rsFindPPPolja.next()) {
+        String imePolja = rsFindPPPolja.getString("ImePolja");
+        final String val_alias = "[val_" + imePolja + "]";
+        int tipPolja = rsFindPPPolja.getInt("TipPolja");
+        switch (tipPolja) {
+          case 1:
+            sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(imePolja).append("]");
+            break;
+          case 2:
+            //Real
+            sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(imePolja).append("]");
+            break;
+          case 3:
+            //String
+            sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(imePolja).append("]");
+            break;
+          case 4:
+            //Date
+            sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(imePolja).append("]");
+            break;
+          case 6:
+            //Clob
+            sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(imePolja).append("]");
+            break;
+          case 7:
+            //Boolean
+            sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(imePolja).append("]");
+        }
+      }
+      result = sbresult.toString();
+    } catch (SQLException ex) {
+      Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+    }
+    return result;
+  }
+
   private static class EventQueryKey {
 
     public EventQueryKey(Event event) {
