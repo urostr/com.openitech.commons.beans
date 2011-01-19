@@ -1,9 +1,10 @@
 UPDATE
     <%ChangeLog%>.[dbo].[EventsPKVersions]
     SET
-    [VersionID] = ?,
+    
     [IdSifranta] = ?,
     [IdSifre]    = ?,
     [PrimaryKey] = ?
 WHERE
     EventId = ?
+   AND ([VersionID] = ? OR (1=? AND VersionID is null))

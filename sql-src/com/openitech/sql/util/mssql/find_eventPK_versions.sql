@@ -9,4 +9,4 @@ FROM
     <%ChangeLog%>.[dbo].[EventsPKVersions]
 WHERE
     EventId        = ?
-    AND (1=? OR VersionID  = ?)
+    AND ((VersionID is null AND 1=?) OR VersionID  = ?)
