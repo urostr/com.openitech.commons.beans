@@ -591,6 +591,10 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract EventPK findEventPKVersions(Integer versionId, Integer idSifranta, String idSifre, String primaryKey) throws SQLException;
 
+  public abstract String getPPSelectFields();
+
+  public abstract String getPPJoinFields();
+  
   public static enum Operation {
 
     INSERT,
