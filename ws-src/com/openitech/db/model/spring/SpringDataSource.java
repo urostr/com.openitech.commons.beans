@@ -10,7 +10,7 @@ import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.events.concurrent.DataSourceEvent;
-import com.openitech.db.proxy.ResultSetProxy;
+import com.openitech.sql.pool.proxool.ResultSetProxy;
 import com.openitech.awt.OwnerFrame;
 import com.openitech.db.model.sql.PendingSqlParameter;
 import com.openitech.db.model.sql.SQLDataSource;
