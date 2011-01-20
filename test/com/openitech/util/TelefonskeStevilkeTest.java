@@ -5,7 +5,6 @@
 
 package com.openitech.util;
 
-import com.openitech.util.TelefonskeStevilke.Telefon;
 import junit.framework.TestCase;
 
 /**
