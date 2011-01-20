@@ -17,7 +17,7 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.events.concurrent.DataSourceEvent;
-import com.openitech.db.proxy.ResultSetProxy;
+import com.openitech.sql.pool.proxool.ResultSetProxy;
 import com.openitech.text.FormatFactory;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
