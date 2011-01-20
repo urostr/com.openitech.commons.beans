@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.openitech.db.proxy;
+package com.openitech.sql.pool.proxool;
 
 import java.io.InputStream;
 import java.io.Reader;

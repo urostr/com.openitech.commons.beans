@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.openitech.db.proxy;
+package com.openitech.sql.pool.proxool;
 
 import java.beans.*;
 
@@ -16,7 +16,7 @@ public class PreparedStatementProxyBeanInfo extends SimpleBeanInfo {
     // Bean descriptor//GEN-FIRST:BeanDescriptor
     /*lazy BeanDescriptor*/
     private static BeanDescriptor getBdescriptor(){
-        BeanDescriptor beanDescriptor = new BeanDescriptor  ( com.openitech.db.proxy.PreparedStatementProxy.class , null ); // NOI18N//GEN-HEADEREND:BeanDescriptor
+        BeanDescriptor beanDescriptor = new BeanDescriptor  ( com.openitech.sql.pool.proxool.PreparedStatementProxy.class , null ); // NOI18N//GEN-HEADEREND:BeanDescriptor
 
     // Here you can add code for customizing the BeanDescriptor.
 
@@ -79,54 +79,54 @@ public class PreparedStatementProxyBeanInfo extends SimpleBeanInfo {
         PropertyDescriptor[] properties = new PropertyDescriptor[48];
     
         try {
-            properties[PROPERTY_array] = new IndexedPropertyDescriptor ( "array", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setArray" ); // NOI18N
-            properties[PROPERTY_asciiStream] = new IndexedPropertyDescriptor ( "asciiStream", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setAsciiStream" ); // NOI18N
-            properties[PROPERTY_bigDecimal] = new IndexedPropertyDescriptor ( "bigDecimal", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setBigDecimal" ); // NOI18N
-            properties[PROPERTY_binaryStream] = new IndexedPropertyDescriptor ( "binaryStream", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setBinaryStream" ); // NOI18N
-            properties[PROPERTY_blob] = new IndexedPropertyDescriptor ( "blob", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setBlob" ); // NOI18N
-            properties[PROPERTY_boolean] = new IndexedPropertyDescriptor ( "boolean", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setBoolean" ); // NOI18N
-            properties[PROPERTY_byte] = new IndexedPropertyDescriptor ( "byte", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setByte" ); // NOI18N
-            properties[PROPERTY_bytes] = new IndexedPropertyDescriptor ( "bytes", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setBytes" ); // NOI18N
-            properties[PROPERTY_characterStream] = new IndexedPropertyDescriptor ( "characterStream", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setCharacterStream" ); // NOI18N
-            properties[PROPERTY_clob] = new IndexedPropertyDescriptor ( "clob", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setClob" ); // NOI18N
-            properties[PROPERTY_closed] = new PropertyDescriptor ( "closed", com.openitech.db.proxy.PreparedStatementProxy.class, "isClosed", null ); // NOI18N
-            properties[PROPERTY_connection] = new PropertyDescriptor ( "connection", com.openitech.db.proxy.PreparedStatementProxy.class, "getConnection", null ); // NOI18N
-            properties[PROPERTY_cursorName] = new PropertyDescriptor ( "cursorName", com.openitech.db.proxy.PreparedStatementProxy.class, null, "setCursorName" ); // NOI18N
-            properties[PROPERTY_date] = new IndexedPropertyDescriptor ( "date", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setDate" ); // NOI18N
-            properties[PROPERTY_double] = new IndexedPropertyDescriptor ( "double", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setDouble" ); // NOI18N
-            properties[PROPERTY_escapeProcessing] = new PropertyDescriptor ( "escapeProcessing", com.openitech.db.proxy.PreparedStatementProxy.class, null, "setEscapeProcessing" ); // NOI18N
-            properties[PROPERTY_fetchDirection] = new PropertyDescriptor ( "fetchDirection", com.openitech.db.proxy.PreparedStatementProxy.class, "getFetchDirection", "setFetchDirection" ); // NOI18N
-            properties[PROPERTY_fetchSize] = new PropertyDescriptor ( "fetchSize", com.openitech.db.proxy.PreparedStatementProxy.class, "getFetchSize", "setFetchSize" ); // NOI18N
-            properties[PROPERTY_float] = new IndexedPropertyDescriptor ( "float", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setFloat" ); // NOI18N
-            properties[PROPERTY_generatedKeys] = new PropertyDescriptor ( "generatedKeys", com.openitech.db.proxy.PreparedStatementProxy.class, "getGeneratedKeys", null ); // NOI18N
-            properties[PROPERTY_int] = new IndexedPropertyDescriptor ( "int", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setInt" ); // NOI18N
-            properties[PROPERTY_long] = new IndexedPropertyDescriptor ( "long", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setLong" ); // NOI18N
-            properties[PROPERTY_maxFieldSize] = new PropertyDescriptor ( "maxFieldSize", com.openitech.db.proxy.PreparedStatementProxy.class, "getMaxFieldSize", "setMaxFieldSize" ); // NOI18N
-            properties[PROPERTY_maxRows] = new PropertyDescriptor ( "maxRows", com.openitech.db.proxy.PreparedStatementProxy.class, "getMaxRows", "setMaxRows" ); // NOI18N
-            properties[PROPERTY_metaData] = new PropertyDescriptor ( "metaData", com.openitech.db.proxy.PreparedStatementProxy.class, "getMetaData", null ); // NOI18N
-            properties[PROPERTY_moreResults] = new PropertyDescriptor ( "moreResults", com.openitech.db.proxy.PreparedStatementProxy.class, "getMoreResults", null ); // NOI18N
-            properties[PROPERTY_NCharacterStream] = new IndexedPropertyDescriptor ( "NCharacterStream", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setNCharacterStream" ); // NOI18N
-            properties[PROPERTY_NClob] = new IndexedPropertyDescriptor ( "NClob", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setNClob" ); // NOI18N
-            properties[PROPERTY_NString] = new IndexedPropertyDescriptor ( "NString", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setNString" ); // NOI18N
-            properties[PROPERTY_null] = new IndexedPropertyDescriptor ( "null", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setNull" ); // NOI18N
-            properties[PROPERTY_object] = new IndexedPropertyDescriptor ( "object", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setObject" ); // NOI18N
-            properties[PROPERTY_parameterMetaData] = new PropertyDescriptor ( "parameterMetaData", com.openitech.db.proxy.PreparedStatementProxy.class, "getParameterMetaData", null ); // NOI18N
-            properties[PROPERTY_poolable] = new PropertyDescriptor ( "poolable", com.openitech.db.proxy.PreparedStatementProxy.class, "isPoolable", "setPoolable" ); // NOI18N
-            properties[PROPERTY_queryTimeout] = new PropertyDescriptor ( "queryTimeout", com.openitech.db.proxy.PreparedStatementProxy.class, "getQueryTimeout", "setQueryTimeout" ); // NOI18N
-            properties[PROPERTY_ref] = new IndexedPropertyDescriptor ( "ref", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setRef" ); // NOI18N
-            properties[PROPERTY_resultSet] = new PropertyDescriptor ( "resultSet", com.openitech.db.proxy.PreparedStatementProxy.class, "getResultSet", null ); // NOI18N
-            properties[PROPERTY_resultSetConcurrency] = new PropertyDescriptor ( "resultSetConcurrency", com.openitech.db.proxy.PreparedStatementProxy.class, "getResultSetConcurrency", null ); // NOI18N
-            properties[PROPERTY_resultSetHoldability] = new PropertyDescriptor ( "resultSetHoldability", com.openitech.db.proxy.PreparedStatementProxy.class, "getResultSetHoldability", null ); // NOI18N
-            properties[PROPERTY_resultSetType] = new PropertyDescriptor ( "resultSetType", com.openitech.db.proxy.PreparedStatementProxy.class, "getResultSetType", null ); // NOI18N
-            properties[PROPERTY_rowId] = new IndexedPropertyDescriptor ( "rowId", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setRowId" ); // NOI18N
-            properties[PROPERTY_short] = new IndexedPropertyDescriptor ( "short", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setShort" ); // NOI18N
-            properties[PROPERTY_SQLXML] = new IndexedPropertyDescriptor ( "SQLXML", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setSQLXML" ); // NOI18N
-            properties[PROPERTY_string] = new IndexedPropertyDescriptor ( "string", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setString" ); // NOI18N
-            properties[PROPERTY_time] = new IndexedPropertyDescriptor ( "time", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setTime" ); // NOI18N
-            properties[PROPERTY_timestamp] = new IndexedPropertyDescriptor ( "timestamp", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setTimestamp" ); // NOI18N
-            properties[PROPERTY_updateCount] = new PropertyDescriptor ( "updateCount", com.openitech.db.proxy.PreparedStatementProxy.class, "getUpdateCount", null ); // NOI18N
-            properties[PROPERTY_URL] = new IndexedPropertyDescriptor ( "URL", com.openitech.db.proxy.PreparedStatementProxy.class, null, null, null, "setURL" ); // NOI18N
-            properties[PROPERTY_warnings] = new PropertyDescriptor ( "warnings", com.openitech.db.proxy.PreparedStatementProxy.class, "getWarnings", null ); // NOI18N
+            properties[PROPERTY_array] = new IndexedPropertyDescriptor ( "array", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setArray" ); // NOI18N
+            properties[PROPERTY_asciiStream] = new IndexedPropertyDescriptor ( "asciiStream", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setAsciiStream" ); // NOI18N
+            properties[PROPERTY_bigDecimal] = new IndexedPropertyDescriptor ( "bigDecimal", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setBigDecimal" ); // NOI18N
+            properties[PROPERTY_binaryStream] = new IndexedPropertyDescriptor ( "binaryStream", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setBinaryStream" ); // NOI18N
+            properties[PROPERTY_blob] = new IndexedPropertyDescriptor ( "blob", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setBlob" ); // NOI18N
+            properties[PROPERTY_boolean] = new IndexedPropertyDescriptor ( "boolean", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setBoolean" ); // NOI18N
+            properties[PROPERTY_byte] = new IndexedPropertyDescriptor ( "byte", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setByte" ); // NOI18N
+            properties[PROPERTY_bytes] = new IndexedPropertyDescriptor ( "bytes", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setBytes" ); // NOI18N
+            properties[PROPERTY_characterStream] = new IndexedPropertyDescriptor ( "characterStream", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setCharacterStream" ); // NOI18N
+            properties[PROPERTY_clob] = new IndexedPropertyDescriptor ( "clob", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setClob" ); // NOI18N
+            properties[PROPERTY_closed] = new PropertyDescriptor ( "closed", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "isClosed", null ); // NOI18N
+            properties[PROPERTY_connection] = new PropertyDescriptor ( "connection", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getConnection", null ); // NOI18N
+            properties[PROPERTY_cursorName] = new PropertyDescriptor ( "cursorName", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, "setCursorName" ); // NOI18N
+            properties[PROPERTY_date] = new IndexedPropertyDescriptor ( "date", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setDate" ); // NOI18N
+            properties[PROPERTY_double] = new IndexedPropertyDescriptor ( "double", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setDouble" ); // NOI18N
+            properties[PROPERTY_escapeProcessing] = new PropertyDescriptor ( "escapeProcessing", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, "setEscapeProcessing" ); // NOI18N
+            properties[PROPERTY_fetchDirection] = new PropertyDescriptor ( "fetchDirection", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getFetchDirection", "setFetchDirection" ); // NOI18N
+            properties[PROPERTY_fetchSize] = new PropertyDescriptor ( "fetchSize", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getFetchSize", "setFetchSize" ); // NOI18N
+            properties[PROPERTY_float] = new IndexedPropertyDescriptor ( "float", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setFloat" ); // NOI18N
+            properties[PROPERTY_generatedKeys] = new PropertyDescriptor ( "generatedKeys", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getGeneratedKeys", null ); // NOI18N
+            properties[PROPERTY_int] = new IndexedPropertyDescriptor ( "int", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setInt" ); // NOI18N
+            properties[PROPERTY_long] = new IndexedPropertyDescriptor ( "long", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setLong" ); // NOI18N
+            properties[PROPERTY_maxFieldSize] = new PropertyDescriptor ( "maxFieldSize", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getMaxFieldSize", "setMaxFieldSize" ); // NOI18N
+            properties[PROPERTY_maxRows] = new PropertyDescriptor ( "maxRows", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getMaxRows", "setMaxRows" ); // NOI18N
+            properties[PROPERTY_metaData] = new PropertyDescriptor ( "metaData", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getMetaData", null ); // NOI18N
+            properties[PROPERTY_moreResults] = new PropertyDescriptor ( "moreResults", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getMoreResults", null ); // NOI18N
+            properties[PROPERTY_NCharacterStream] = new IndexedPropertyDescriptor ( "NCharacterStream", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setNCharacterStream" ); // NOI18N
+            properties[PROPERTY_NClob] = new IndexedPropertyDescriptor ( "NClob", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setNClob" ); // NOI18N
+            properties[PROPERTY_NString] = new IndexedPropertyDescriptor ( "NString", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setNString" ); // NOI18N
+            properties[PROPERTY_null] = new IndexedPropertyDescriptor ( "null", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setNull" ); // NOI18N
+            properties[PROPERTY_object] = new IndexedPropertyDescriptor ( "object", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setObject" ); // NOI18N
+            properties[PROPERTY_parameterMetaData] = new PropertyDescriptor ( "parameterMetaData", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getParameterMetaData", null ); // NOI18N
+            properties[PROPERTY_poolable] = new PropertyDescriptor ( "poolable", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "isPoolable", "setPoolable" ); // NOI18N
+            properties[PROPERTY_queryTimeout] = new PropertyDescriptor ( "queryTimeout", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getQueryTimeout", "setQueryTimeout" ); // NOI18N
+            properties[PROPERTY_ref] = new IndexedPropertyDescriptor ( "ref", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setRef" ); // NOI18N
+            properties[PROPERTY_resultSet] = new PropertyDescriptor ( "resultSet", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getResultSet", null ); // NOI18N
+            properties[PROPERTY_resultSetConcurrency] = new PropertyDescriptor ( "resultSetConcurrency", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getResultSetConcurrency", null ); // NOI18N
+            properties[PROPERTY_resultSetHoldability] = new PropertyDescriptor ( "resultSetHoldability", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getResultSetHoldability", null ); // NOI18N
+            properties[PROPERTY_resultSetType] = new PropertyDescriptor ( "resultSetType", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getResultSetType", null ); // NOI18N
+            properties[PROPERTY_rowId] = new IndexedPropertyDescriptor ( "rowId", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setRowId" ); // NOI18N
+            properties[PROPERTY_short] = new IndexedPropertyDescriptor ( "short", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setShort" ); // NOI18N
+            properties[PROPERTY_SQLXML] = new IndexedPropertyDescriptor ( "SQLXML", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setSQLXML" ); // NOI18N
+            properties[PROPERTY_string] = new IndexedPropertyDescriptor ( "string", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setString" ); // NOI18N
+            properties[PROPERTY_time] = new IndexedPropertyDescriptor ( "time", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setTime" ); // NOI18N
+            properties[PROPERTY_timestamp] = new IndexedPropertyDescriptor ( "timestamp", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setTimestamp" ); // NOI18N
+            properties[PROPERTY_updateCount] = new PropertyDescriptor ( "updateCount", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getUpdateCount", null ); // NOI18N
+            properties[PROPERTY_URL] = new IndexedPropertyDescriptor ( "URL", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, null, null, null, "setURL" ); // NOI18N
+            properties[PROPERTY_warnings] = new PropertyDescriptor ( "warnings", com.openitech.sql.pool.proxool.PreparedStatementProxy.class, "getWarnings", null ); // NOI18N
         }
         catch(IntrospectionException e) {
             e.printStackTrace();
@@ -197,89 +197,89 @@ public class PreparedStatementProxyBeanInfo extends SimpleBeanInfo {
         MethodDescriptor[] methods = new MethodDescriptor[42];
     
         try {
-            methods[METHOD_addBatch0] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("addBatch", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_addBatch0] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("addBatch", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_addBatch0].setDisplayName ( "" );
-            methods[METHOD_addBatch1] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("addBatch", new Class[] {})); // NOI18N
+            methods[METHOD_addBatch1] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("addBatch", new Class[] {})); // NOI18N
             methods[METHOD_addBatch1].setDisplayName ( "" );
-            methods[METHOD_cancel2] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("cancel", new Class[] {})); // NOI18N
+            methods[METHOD_cancel2] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("cancel", new Class[] {})); // NOI18N
             methods[METHOD_cancel2].setDisplayName ( "" );
-            methods[METHOD_clearBatch3] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("clearBatch", new Class[] {})); // NOI18N
+            methods[METHOD_clearBatch3] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("clearBatch", new Class[] {})); // NOI18N
             methods[METHOD_clearBatch3].setDisplayName ( "" );
-            methods[METHOD_clearParameters4] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("clearParameters", new Class[] {})); // NOI18N
+            methods[METHOD_clearParameters4] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("clearParameters", new Class[] {})); // NOI18N
             methods[METHOD_clearParameters4].setDisplayName ( "" );
-            methods[METHOD_clearWarnings5] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("clearWarnings", new Class[] {})); // NOI18N
+            methods[METHOD_clearWarnings5] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("clearWarnings", new Class[] {})); // NOI18N
             methods[METHOD_clearWarnings5].setDisplayName ( "" );
-            methods[METHOD_close6] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("close", new Class[] {})); // NOI18N
+            methods[METHOD_close6] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("close", new Class[] {})); // NOI18N
             methods[METHOD_close6].setDisplayName ( "" );
-            methods[METHOD_execute7] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("execute", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_execute7] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("execute", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_execute7].setDisplayName ( "" );
-            methods[METHOD_execute8] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("execute", new Class[] {java.lang.String.class, int.class})); // NOI18N
+            methods[METHOD_execute8] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("execute", new Class[] {java.lang.String.class, int.class})); // NOI18N
             methods[METHOD_execute8].setDisplayName ( "" );
-            methods[METHOD_execute9] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("execute", new Class[] {java.lang.String.class, int[].class})); // NOI18N
+            methods[METHOD_execute9] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("execute", new Class[] {java.lang.String.class, int[].class})); // NOI18N
             methods[METHOD_execute9].setDisplayName ( "" );
-            methods[METHOD_execute10] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("execute", new Class[] {java.lang.String.class, java.lang.String[].class})); // NOI18N
+            methods[METHOD_execute10] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("execute", new Class[] {java.lang.String.class, java.lang.String[].class})); // NOI18N
             methods[METHOD_execute10].setDisplayName ( "" );
-            methods[METHOD_execute11] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("execute", new Class[] {})); // NOI18N
+            methods[METHOD_execute11] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("execute", new Class[] {})); // NOI18N
             methods[METHOD_execute11].setDisplayName ( "" );
-            methods[METHOD_executeBatch12] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("executeBatch", new Class[] {})); // NOI18N
+            methods[METHOD_executeBatch12] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("executeBatch", new Class[] {})); // NOI18N
             methods[METHOD_executeBatch12].setDisplayName ( "" );
-            methods[METHOD_executeQuery13] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("executeQuery", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_executeQuery13] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("executeQuery", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_executeQuery13].setDisplayName ( "" );
-            methods[METHOD_executeQuery14] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("executeQuery", new Class[] {})); // NOI18N
+            methods[METHOD_executeQuery14] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("executeQuery", new Class[] {})); // NOI18N
             methods[METHOD_executeQuery14].setDisplayName ( "" );
-            methods[METHOD_executeUpdate15] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("executeUpdate", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_executeUpdate15] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("executeUpdate", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_executeUpdate15].setDisplayName ( "" );
-            methods[METHOD_executeUpdate16] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("executeUpdate", new Class[] {java.lang.String.class, int.class})); // NOI18N
+            methods[METHOD_executeUpdate16] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("executeUpdate", new Class[] {java.lang.String.class, int.class})); // NOI18N
             methods[METHOD_executeUpdate16].setDisplayName ( "" );
-            methods[METHOD_executeUpdate17] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("executeUpdate", new Class[] {java.lang.String.class, int[].class})); // NOI18N
+            methods[METHOD_executeUpdate17] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("executeUpdate", new Class[] {java.lang.String.class, int[].class})); // NOI18N
             methods[METHOD_executeUpdate17].setDisplayName ( "" );
-            methods[METHOD_executeUpdate18] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("executeUpdate", new Class[] {java.lang.String.class, java.lang.String[].class})); // NOI18N
+            methods[METHOD_executeUpdate18] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("executeUpdate", new Class[] {java.lang.String.class, java.lang.String[].class})); // NOI18N
             methods[METHOD_executeUpdate18].setDisplayName ( "" );
-            methods[METHOD_executeUpdate19] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("executeUpdate", new Class[] {})); // NOI18N
+            methods[METHOD_executeUpdate19] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("executeUpdate", new Class[] {})); // NOI18N
             methods[METHOD_executeUpdate19].setDisplayName ( "" );
-            methods[METHOD_isWrapperFor20] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("isWrapperFor", new Class[] {java.lang.Class.class})); // NOI18N
+            methods[METHOD_isWrapperFor20] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("isWrapperFor", new Class[] {java.lang.Class.class})); // NOI18N
             methods[METHOD_isWrapperFor20].setDisplayName ( "" );
-            methods[METHOD_setAsciiStream21] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setAsciiStream", new Class[] {int.class, java.io.InputStream.class, int.class})); // NOI18N
+            methods[METHOD_setAsciiStream21] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setAsciiStream", new Class[] {int.class, java.io.InputStream.class, int.class})); // NOI18N
             methods[METHOD_setAsciiStream21].setDisplayName ( "" );
-            methods[METHOD_setAsciiStream22] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setAsciiStream", new Class[] {int.class, java.io.InputStream.class, long.class})); // NOI18N
+            methods[METHOD_setAsciiStream22] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setAsciiStream", new Class[] {int.class, java.io.InputStream.class, long.class})); // NOI18N
             methods[METHOD_setAsciiStream22].setDisplayName ( "" );
-            methods[METHOD_setBinaryStream23] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setBinaryStream", new Class[] {int.class, java.io.InputStream.class, int.class})); // NOI18N
+            methods[METHOD_setBinaryStream23] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setBinaryStream", new Class[] {int.class, java.io.InputStream.class, int.class})); // NOI18N
             methods[METHOD_setBinaryStream23].setDisplayName ( "" );
-            methods[METHOD_setBinaryStream24] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setBinaryStream", new Class[] {int.class, java.io.InputStream.class, long.class})); // NOI18N
+            methods[METHOD_setBinaryStream24] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setBinaryStream", new Class[] {int.class, java.io.InputStream.class, long.class})); // NOI18N
             methods[METHOD_setBinaryStream24].setDisplayName ( "" );
-            methods[METHOD_setBlob25] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setBlob", new Class[] {int.class, java.sql.Blob.class})); // NOI18N
+            methods[METHOD_setBlob25] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setBlob", new Class[] {int.class, java.sql.Blob.class})); // NOI18N
             methods[METHOD_setBlob25].setDisplayName ( "" );
-            methods[METHOD_setBlob26] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setBlob", new Class[] {int.class, java.io.InputStream.class, long.class})); // NOI18N
+            methods[METHOD_setBlob26] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setBlob", new Class[] {int.class, java.io.InputStream.class, long.class})); // NOI18N
             methods[METHOD_setBlob26].setDisplayName ( "" );
-            methods[METHOD_setCharacterStream27] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setCharacterStream", new Class[] {int.class, java.io.Reader.class, int.class})); // NOI18N
+            methods[METHOD_setCharacterStream27] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setCharacterStream", new Class[] {int.class, java.io.Reader.class, int.class})); // NOI18N
             methods[METHOD_setCharacterStream27].setDisplayName ( "" );
-            methods[METHOD_setCharacterStream28] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setCharacterStream", new Class[] {int.class, java.io.Reader.class, long.class})); // NOI18N
+            methods[METHOD_setCharacterStream28] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setCharacterStream", new Class[] {int.class, java.io.Reader.class, long.class})); // NOI18N
             methods[METHOD_setCharacterStream28].setDisplayName ( "" );
-            methods[METHOD_setClob29] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setClob", new Class[] {int.class, java.sql.Clob.class})); // NOI18N
+            methods[METHOD_setClob29] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setClob", new Class[] {int.class, java.sql.Clob.class})); // NOI18N
             methods[METHOD_setClob29].setDisplayName ( "" );
-            methods[METHOD_setClob30] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setClob", new Class[] {int.class, java.io.Reader.class, long.class})); // NOI18N
+            methods[METHOD_setClob30] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setClob", new Class[] {int.class, java.io.Reader.class, long.class})); // NOI18N
             methods[METHOD_setClob30].setDisplayName ( "" );
-            methods[METHOD_setDate31] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setDate", new Class[] {int.class, java.sql.Date.class, java.util.Calendar.class})); // NOI18N
+            methods[METHOD_setDate31] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setDate", new Class[] {int.class, java.sql.Date.class, java.util.Calendar.class})); // NOI18N
             methods[METHOD_setDate31].setDisplayName ( "" );
-            methods[METHOD_setNCharacterStream32] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setNCharacterStream", new Class[] {int.class, java.io.Reader.class, long.class})); // NOI18N
+            methods[METHOD_setNCharacterStream32] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setNCharacterStream", new Class[] {int.class, java.io.Reader.class, long.class})); // NOI18N
             methods[METHOD_setNCharacterStream32].setDisplayName ( "" );
-            methods[METHOD_setNClob33] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setNClob", new Class[] {int.class, java.sql.NClob.class})); // NOI18N
+            methods[METHOD_setNClob33] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setNClob", new Class[] {int.class, java.sql.NClob.class})); // NOI18N
             methods[METHOD_setNClob33].setDisplayName ( "" );
-            methods[METHOD_setNClob34] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setNClob", new Class[] {int.class, java.io.Reader.class, long.class})); // NOI18N
+            methods[METHOD_setNClob34] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setNClob", new Class[] {int.class, java.io.Reader.class, long.class})); // NOI18N
             methods[METHOD_setNClob34].setDisplayName ( "" );
-            methods[METHOD_setNull35] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setNull", new Class[] {int.class, int.class, java.lang.String.class})); // NOI18N
+            methods[METHOD_setNull35] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setNull", new Class[] {int.class, int.class, java.lang.String.class})); // NOI18N
             methods[METHOD_setNull35].setDisplayName ( "" );
-            methods[METHOD_setObject36] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setObject", new Class[] {int.class, java.lang.Object.class, int.class})); // NOI18N
+            methods[METHOD_setObject36] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setObject", new Class[] {int.class, java.lang.Object.class, int.class})); // NOI18N
             methods[METHOD_setObject36].setDisplayName ( "" );
-            methods[METHOD_setObject37] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setObject", new Class[] {int.class, java.lang.Object.class, int.class, int.class})); // NOI18N
+            methods[METHOD_setObject37] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setObject", new Class[] {int.class, java.lang.Object.class, int.class, int.class})); // NOI18N
             methods[METHOD_setObject37].setDisplayName ( "" );
-            methods[METHOD_setTime38] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setTime", new Class[] {int.class, java.sql.Time.class, java.util.Calendar.class})); // NOI18N
+            methods[METHOD_setTime38] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setTime", new Class[] {int.class, java.sql.Time.class, java.util.Calendar.class})); // NOI18N
             methods[METHOD_setTime38].setDisplayName ( "" );
-            methods[METHOD_setTimestamp39] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setTimestamp", new Class[] {int.class, java.sql.Timestamp.class, java.util.Calendar.class})); // NOI18N
+            methods[METHOD_setTimestamp39] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setTimestamp", new Class[] {int.class, java.sql.Timestamp.class, java.util.Calendar.class})); // NOI18N
             methods[METHOD_setTimestamp39].setDisplayName ( "" );
-            methods[METHOD_setUnicodeStream40] = new MethodDescriptor(com.openitech.db.proxy.PreparedStatementProxy.class.getMethod("setUnicodeStream", new Class[] {int.class, java.io.InputStream.class, int.class})); // NOI18N
+            methods[METHOD_setUnicodeStream40] = new MethodDescriptor(com.openitech.sql.pool.proxool.PreparedStatementProxy.class.getMethod("setUnicodeStream", new Class[] {int.class, java.io.InputStream.class, int.class})); // NOI18N
             methods[METHOD_setUnicodeStream40].setDisplayName ( "" );
-            methods[METHOD_unwrap41] = new MethodDescriptor(com.openitech.db.proxy.StatementProxy.class.getMethod("unwrap", new Class[] {java.lang.Class.class})); // NOI18N
+            methods[METHOD_unwrap41] = new MethodDescriptor(com.openitech.sql.pool.proxool.StatementProxy.class.getMethod("unwrap", new Class[] {java.lang.Class.class})); // NOI18N
             methods[METHOD_unwrap41].setDisplayName ( "" );
         }
         catch( Exception e) {}//GEN-HEADEREND:Methods

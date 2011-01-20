@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.openitech.db.proxy;
+package com.openitech.sql.pool.proxool;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
