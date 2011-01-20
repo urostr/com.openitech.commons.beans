@@ -9,7 +9,7 @@
 package com.openitech.db.connection;
 
 import com.openitech.Settings;
-import com.openitech.db.proxy.PooledConnection;
+import com.openitech.sql.pool.proxool.PooledConnection;
 import com.openitech.ref.WeakListenerList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
