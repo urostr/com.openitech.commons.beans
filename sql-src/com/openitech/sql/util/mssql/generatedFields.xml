@@ -10,6 +10,7 @@
                 [ActivityId] [bigint] NULL,
                 [IdSifranta] [int] NOT NULL,
                 [IdSifre] [varchar](15) NOT NULL,
+		[Veljavnost] [bigint] NULL,
                 [IdPolja] [int] NOT NULL,
                 [FieldValueIndex] [int] NOT NULL,
                 [Opis] [varchar](450) NULL,
@@ -104,6 +105,7 @@
                ,[ActivityId]
                ,[IdSifranta]
                ,[IdSifre]
+               ,[Veljavnost]
                ,[IdPolja]
                ,[FieldValueIndex]
                ,[Opis]
@@ -155,6 +157,9 @@
               ActivityEvents.[ActivityId],
               SifrantiPolja.[IdSifranta],
               SifrantiPolja.[IdSifre],
+              (SELECT Sifranti.Veljavnost FROM &lt;%ChangeLog%&gt;.[DBO].Sifranti
+               WHERE Sifranti.IdSifranta = SifrantiPolja.[IdSifranta]
+                 AND Sifranti.IdSifre = SifrantiPolja.[IdSifre]) AS Veljavnost,
               SifrantiPolja.[IdPolja],
               SifrantiPolja.FieldValueIndex,
               CASE
@@ -227,7 +232,7 @@
                 THEN ActivityEventsPolja.[FieldLayout]
                 ELSE SifrantiPolja.[FieldLayout]
               END AS [FieldLayout],
-              
+
               CASE
                 WHEN SifrantiPolja.[Persisted] = 0
                 THEN 1

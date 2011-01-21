@@ -108,6 +108,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement find_eventLookupKeys;
   PreparedStatement findValue;
   CallableStatement callStoredValue;
+  PreparedStatement insertScheduler;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -393,6 +394,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
             } else {
               throw new SQLException("Neuspešno dodajanje dogodka!");
             }
+
+
           } else {
             events_ID = event.getId();
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
@@ -422,6 +425,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
           if (success) {
             success = success && storeOpomba(events_ID, event.getOpomba());
+          }
+
+          if (success) {
+            if (event.getVeljavnost() != null) {
+              success = success && storeVeljavnost(events_ID, event.getVeljavnost());
+            }
           }
 
           if (success) {
@@ -1257,24 +1266,24 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       if (findEventPKVersions(eventId, versionId) != null) {
         //if (versionId == null) {
-          param = 1;
-          update_eventPK_versions.clearParameters();
-          
-          update_eventPK_versions.setInt(param++, idSifranta);
-          update_eventPK_versions.setString(param++, idSifre);
-          update_eventPK_versions.setString(param++, primaryKey);
-          update_eventPK_versions.setLong(param++, eventId);
-          if (versionId == null) {
-            update_eventPK_versions.setInt(param++, -1);
-            update_eventPK_versions.setInt(param++, 1);
+        param = 1;
+        update_eventPK_versions.clearParameters();
 
-          } else {
-            update_eventPK_versions.setInt(param++, versionId.intValue());
-            update_eventPK_versions.setInt(param++, 0);
-          }
-          update_eventPK_versions.executeUpdate();
-          success = update_eventPK_versions.executeUpdate() > 0;
-       // }
+        update_eventPK_versions.setInt(param++, idSifranta);
+        update_eventPK_versions.setString(param++, idSifre);
+        update_eventPK_versions.setString(param++, primaryKey);
+        update_eventPK_versions.setLong(param++, eventId);
+        if (versionId == null) {
+          update_eventPK_versions.setInt(param++, -1);
+          update_eventPK_versions.setInt(param++, 1);
+
+        } else {
+          update_eventPK_versions.setInt(param++, versionId.intValue());
+          update_eventPK_versions.setInt(param++, 0);
+        }
+        update_eventPK_versions.executeUpdate();
+        success = update_eventPK_versions.executeUpdate() > 0;
+        // }
       } else {
 
         //insert
@@ -1461,6 +1470,23 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
     }
     return result;
+  }
+
+  private boolean storeVeljavnost(Long events_ID, Long veljavnost) throws SQLException {
+    boolean success = true;
+
+    if (insertScheduler == null) {
+      insertScheduler = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "insertScheduler.sql", "cp1250"));
+    }
+
+    int param = 1;
+    insertScheduler.clearParameters();
+    
+    insertScheduler.setLong(param++, veljavnost);
+    insertScheduler.setLong(param++, events_ID);
+    success = success && insertScheduler.executeUpdate() > 0;
+
+    return success;
   }
 
   private static class EventQueryKey {
