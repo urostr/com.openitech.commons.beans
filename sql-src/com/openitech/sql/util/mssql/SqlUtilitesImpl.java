@@ -108,7 +108,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement find_eventLookupKeys;
   PreparedStatement findValue;
   CallableStatement callStoredValue;
-  CallableStatement callScheduledEventsInvalidation;
   PreparedStatement insertScheduler;
 
   @Override
@@ -1488,18 +1487,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     success = success && insertScheduler.executeUpdate() > 0;
 
     return success;
-  }
-
-  @Override
-  public void callScheduledEventsInvalidation(java.util.Date actionTime) throws SQLException {
-    if (callScheduledEventsInvalidation == null) {
-      callScheduledEventsInvalidation = ConnectionManager.getInstance().getTxConnection().prepareCall(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "callScheduledEventsInvalidation.sql", "cp1250"));
-      callScheduledEventsInvalidation.setQueryTimeout(15);
-    }
-    int param = 1;
-    callScheduledEventsInvalidation.clearParameters();
-    callScheduledEventsInvalidation.setTimestamp(param++, new java.sql.Timestamp(actionTime.getTime()));
-    callScheduledEventsInvalidation.execute();
   }
 
   private static class EventQueryKey {

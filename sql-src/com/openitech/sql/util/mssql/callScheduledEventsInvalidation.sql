@@ -1,1 +1,0 @@
-{CALL <%ChangeLog%>.[dbo].[ScheduledEventsInvalidation] (?)}
