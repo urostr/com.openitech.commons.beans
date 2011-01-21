@@ -52,25 +52,18 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
   }
 
   public static void submit(DataSourceEvent event) {
-    submit(event, true);
+    event.submit(event, true);
   }
 
-  protected static void submit(DataSourceEvent event, boolean log) {
-    if ((event instanceof RefreshDataSource)
-            && ((RefreshDataSource) event).getQueuedDelay() <= 0) {
-      if ((!((RefreshDataSource) event).isTryLock()) || (event.event.dataSource.canLock())) {
-        ((RefreshDataSource) event).load();
-      }
-    } else {
-      if (log) {
-        System.out.println("SUBMITTING:" + event.event.dataSource.getName() + ":" + (event.isSuspended() ? "SUSPENDED" : "ACTIVE"));
-      }
-      timestamps.remove(event.cancel);
-      timestamps.put(event.event, event.timestamp);
-      tasks.put(event.event, pool.submit(event));
-      if (event.event.type.equals(Event.Type.REFRESH)) {
-        event.event.dataSource.updateRefreshPending();
-      }
+  protected void submit(DataSourceEvent event, boolean log) {
+    if (log) {
+      System.out.println("SUBMITTING:" + event.event.dataSource.getName() + ":" + (event.isSuspended() ? "SUSPENDED" : "ACTIVE"));
+    }
+    timestamps.remove(event.cancel);
+    timestamps.put(event.event, event.timestamp);
+    tasks.put(event.event, pool.submit(event));
+    if (event.event.type.equals(Event.Type.REFRESH)) {
+      event.event.dataSource.updateRefreshPending();
     }
   }
 
@@ -123,6 +116,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
 
       ACTIVE_ROW_CHANGE_LISTENER,
       LIST_DATA_LISTENER,
+      TASK,
       REFRESH,
       SUSPEND,
       CANCEL;
