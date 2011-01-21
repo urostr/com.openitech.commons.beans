@@ -26,12 +26,10 @@ import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -319,10 +317,17 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
             customPanel.add(jlOd, gridBagConstraints);
-            jpHoldingPanel.add(jXDatePicker, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
-            jpHoldingPanel.add(jlDo, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
-            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+            jpHoldingPanel.add(jXDatePicker, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jlDo, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            //gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
             jpHoldingPanel.add(jXDatePicker2, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+
+            if (group) {
+              gridBagConstraints = new java.awt.GridBagConstraints();
+              gridBagConstraints.weightx = 1;
+              jpHoldingPanel.add(new JPanel(), gridBagConstraints);
+            }
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             JLabel jlOpis = new javax.swing.JLabel();
             JDbTextField jtfSifraOnPanel = new com.openitech.db.components.JDbTextField();
@@ -741,18 +746,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     }
     jPanel2 = new javax.swing.JPanel();
     customPanel = new javax.swing.JPanel();
-    jLabel3 = new javax.swing.JLabel();
-    jPanel3 = new javax.swing.JPanel();
-    jDbComboBox1 = new com.openitech.db.components.JDbComboBox();
-    jDbTextField1 = new com.openitech.db.components.JDbTextField();
-    jLabel4 = new javax.swing.JLabel();
-    jPanel4 = new javax.swing.JPanel();
-    jDbComboBox2 = new com.openitech.db.components.JDbComboBox();
-    jDbTextField2 = new com.openitech.db.components.JDbTextField();
-    jLabel5 = new javax.swing.JLabel();
-    jPanel5 = new javax.swing.JPanel();
-    jDbComboBox3 = new com.openitech.db.components.JDbComboBox();
-    jDbTextField3 = new com.openitech.db.components.JDbTextField();
     jcbStolpec = new javax.swing.JComboBox();
     jpFilterValues = new javax.swing.JPanel();
     jpDateField = new javax.swing.JPanel();
@@ -782,68 +775,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jPanel2.setLayout(new java.awt.GridBagLayout());
 
     customPanel.setLayout(new java.awt.GridBagLayout());
-
-    jLabel3.setText("jLabel3");
-    customPanel.add(jLabel3, new java.awt.GridBagConstraints());
-
-    jPanel3.setLayout(new java.awt.GridBagLayout());
-
-    jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-    jPanel3.add(jDbComboBox1, new java.awt.GridBagConstraints());
-
-    jDbTextField1.setColumns(10);
-    jDbTextField1.setText("jDbTextField1");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.weightx = 1.0;
-    jPanel3.add(jDbTextField1, gridBagConstraints);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.weightx = 0.5;
-    customPanel.add(jPanel3, gridBagConstraints);
-
-    jLabel4.setText("jLabel3");
-    customPanel.add(jLabel4, new java.awt.GridBagConstraints());
-
-    jPanel4.setLayout(new java.awt.GridBagLayout());
-
-    jDbComboBox2.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-    jPanel4.add(jDbComboBox2, new java.awt.GridBagConstraints());
-
-    jDbTextField2.setColumns(10);
-    jDbTextField2.setText("jDbTextField1");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.weightx = 1.0;
-    jPanel4.add(jDbTextField2, gridBagConstraints);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.weightx = 0.5;
-    customPanel.add(jPanel4, gridBagConstraints);
-
-    jLabel5.setText("jLabel3");
-    customPanel.add(jLabel5, new java.awt.GridBagConstraints());
-
-    jPanel5.setLayout(new java.awt.GridBagLayout());
-
-    jDbComboBox3.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-    jPanel5.add(jDbComboBox3, new java.awt.GridBagConstraints());
-
-    jDbTextField3.setColumns(10);
-    jDbTextField3.setText("jDbTextField1");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.weightx = 1.0;
-    jPanel5.add(jDbTextField3, gridBagConstraints);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    customPanel.add(jPanel5, gridBagConstraints);
-
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
@@ -891,7 +822,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         .addComponent(jLabel2)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(403, Short.MAX_VALUE))
+        .addContainerGap(63, Short.MAX_VALUE))
     );
     jpDateFieldLayout.setVerticalGroup(
       jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -923,7 +854,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpTextFieldLayout.createSequentialGroup()
         .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 567, Short.MAX_VALUE))
+        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE))
     );
     jpTextFieldLayout.setVerticalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -953,7 +884,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpSifrantPanelLayout.createSequentialGroup()
         .addComponent(jtfSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 605, Short.MAX_VALUE))
+        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 265, Short.MAX_VALUE))
     );
     jpSifrantPanelLayout.setVerticalGroup(
       jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -971,7 +902,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpPreformattedField.setLayout(jpPreformattedFieldLayout);
     jpPreformattedFieldLayout.setHorizontalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 649, Short.MAX_VALUE)
+      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 309, Short.MAX_VALUE)
     );
     jpPreformattedFieldLayout.setVerticalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -998,7 +929,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpNumberFieldLayout.createSequentialGroup()
         .addComponent(jcbNumberType, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 513, Short.MAX_VALUE))
+        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE))
     );
     jpNumberFieldLayout.setVerticalGroup(
       jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1081,22 +1012,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     }//GEN-LAST:event_jcbNumberTypeActionPerformed
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel customPanel;
-  private com.openitech.db.components.JDbComboBox jDbComboBox1;
-  private com.openitech.db.components.JDbComboBox jDbComboBox2;
-  private com.openitech.db.components.JDbComboBox jDbComboBox3;
-  private com.openitech.db.components.JDbTextField jDbTextField1;
-  private com.openitech.db.components.JDbTextField jDbTextField2;
-  private com.openitech.db.components.JDbTextField jDbTextField3;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
-  private javax.swing.JLabel jLabel3;
-  private javax.swing.JLabel jLabel4;
-  private javax.swing.JLabel jLabel5;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
-  private javax.swing.JPanel jPanel3;
-  private javax.swing.JPanel jPanel4;
-  private javax.swing.JPanel jPanel5;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker1;
   private org.jdesktop.swingx.JXDatePicker jXDatePicker2;
   private javax.swing.JComboBox jcbNumberType;
