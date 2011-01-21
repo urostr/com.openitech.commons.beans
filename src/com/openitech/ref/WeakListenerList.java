@@ -168,7 +168,7 @@ public final class WeakListenerList
   public boolean add(Object o) {
     int csize = this.size();
     this.add(csize, o);
-    return this.size()==csize;
+    return this.size()!=csize;
   }
 
   /**
@@ -217,7 +217,7 @@ public final class WeakListenerList
     for (Iterator i=cl.iterator(); i.hasNext(); index++)
       this.add(index, i.next());
 
-    return this.size()==csize;
+    return this.size()!=csize;
   }
 
   /**

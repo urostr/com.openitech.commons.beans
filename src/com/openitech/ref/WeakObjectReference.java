@@ -23,6 +23,8 @@ public class WeakObjectReference<T> extends WeakReference<T> implements Referenc
   public WeakObjectReference(T referent, ReferenceQueue<? super T> q) {
     super(referent, q);
   }
+  
+  @Override
   public boolean isValid() {
     return this.get()!=null;
   }
@@ -32,6 +34,7 @@ public class WeakObjectReference<T> extends WeakReference<T> implements Referenc
    * @param obj the reference object with which to compare.
    * @return <code>true</code> if this object is the same as the obj argument; <code>false</code> otherwise.
    */
+  @Override
   public boolean equals(Object object) {
     Object referent = this.get();
     if (referent!=null) {
@@ -43,6 +46,16 @@ public class WeakObjectReference<T> extends WeakReference<T> implements Referenc
         return referent.equals(object);
     } else
       return super.equals(object);
+  }
+
+
+  @Override
+  public int hashCode() {
+    Object referent = this.get();
+    if (referent!=null) {
+      return referent.hashCode();
+    } else
+      return super.hashCode();
   }
 
   /**
