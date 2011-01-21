@@ -18,6 +18,7 @@ import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.db.model.sql.SQLNotificationException;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
+import com.openitech.events.concurrent.ObjectSemaphore;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
@@ -154,35 +155,43 @@ public class SqlUtilitesImpl extends SqlUtilities {
       logChangedValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_changed_values.sql", "cp1250"));
     }
 
-    FieldValue[] fieldValues = new FieldValue[]{
-      new FieldValue("application", java.sql.Types.VARCHAR, application),
-      new FieldValue("database", java.sql.Types.VARCHAR, database),
-      new FieldValue("tableName", java.sql.Types.VARCHAR, tableName),
-      new FieldValue("operation", java.sql.Types.VARCHAR, operation.toString())
-    };
+    try {
+      ObjectSemaphore.aquire(logChanges, logValues, logChangedValues);
 
-    executeUpdate(logChanges, fieldValues);
+      FieldValue[] fieldValues = new FieldValue[]{
+        new FieldValue("application", java.sql.Types.VARCHAR, application),
+        new FieldValue("database", java.sql.Types.VARCHAR, database),
+        new FieldValue("tableName", java.sql.Types.VARCHAR, tableName),
+        new FieldValue("operation", java.sql.Types.VARCHAR, operation.toString())
+      };
 
-    long changeId = getLastIdentity();
+      executeUpdate(logChanges, fieldValues);
 
-    for (int fieldno = 0; fieldno < newValues.size(); fieldno++) {
-      FieldValue newValue = newValues.get(fieldno);
-      FieldValue oldValue = oldValues.get(fieldno);
+      long changeId = getLastIdentity();
 
-      final Object value = newValue.getValue();
-      final int fieldType = newValue.getValueType().getTypeIndex();
+      for (int fieldno = 0; fieldno < newValues.size(); fieldno++) {
+        FieldValue newValue = newValues.get(fieldno);
+        FieldValue oldValue = oldValues.get(fieldno);
 
-      Long newValueId = storeValue(fieldType, value);
-      Long oldValueId = storeValue(fieldType, oldValue.getValue());
+        final Object value = newValue.getValue();
+        final int fieldType = newValue.getValueType().getTypeIndex();
 
-      fieldValues = new FieldValue[]{
-                new FieldValue("ChangeId", Types.BIGINT, changeId),
-                new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
-                new FieldValue("NewValueId", Types.BIGINT, newValueId),
-                new FieldValue("OldValueId", Types.BIGINT, oldValueId)
-              };
+        Long newValueId = storeValue(fieldType, value);
+        Long oldValueId = storeValue(fieldType, oldValue.getValue());
 
-      executeUpdate(logChangedValues, fieldValues);
+        fieldValues = new FieldValue[]{
+                  new FieldValue("ChangeId", Types.BIGINT, changeId),
+                  new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
+                  new FieldValue("NewValueId", Types.BIGINT, newValueId),
+                  new FieldValue("OldValueId", Types.BIGINT, oldValueId)
+                };
+
+        executeUpdate(logChangedValues, fieldValues);
+      }
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(logChanges, logValues, logChangedValues);
     }
   }
 
@@ -221,25 +230,34 @@ public class SqlUtilitesImpl extends SqlUtilities {
       getEventVersionSQL = com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getEventVersion.sql", "cp1250");
     }
 
-    StringBuilder sb = new StringBuilder();
+    try {
+      ObjectSemaphore.aquire(getEventVersionSQL);
 
-    List<Long> eventIds = new ArrayList<Long>(eventPKs.size());
-    for (EventPK eventPK : eventPKs) {
-      sb.append(sb.length() > 0 ? ", " : "").append("?");
-      eventIds.add(eventPK.getEventId());
+      StringBuilder sb = new StringBuilder();
+
+      List<Long> eventIds = new ArrayList<Long>(eventPKs.size());
+      for (EventPK eventPK : eventPKs) {
+        sb.append(sb.length() > 0 ? ", " : "").append("?");
+        eventIds.add(eventPK.getEventId());
+      }
+
+      CachedRowSet versions = new com.sun.rowset.CachedRowSetImpl();
+
+      versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())),
+              eventIds,
+              connection));
+
+      if ((versions.size() == 1) && (versions.first())) {
+        return versions.getInt(1);
+      } else {
+        return null;
+      }
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(getEventVersionSQL);
     }
-
-    CachedRowSet versions = new com.sun.rowset.CachedRowSetImpl();
-
-    versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())),
-            eventIds,
-            connection));
-
-    if ((versions.size() == 1) && (versions.first())) {
-      return versions.getInt(1);
-    } else {
-      return null;
-    }
+    return null;
   }
 
   private long storeVersion() throws SQLException {
@@ -247,7 +265,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (insertVersion == null) {
       insertVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertVersion.sql", "cp1250"));
     }
-    insertVersion.executeUpdate();
+    try {
+      ObjectSemaphore.aquire(insertVersion);
+
+      insertVersion.executeUpdate();
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(insertVersion);
+    }
     return getLastIdentity();
   }
 
@@ -256,13 +282,20 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (insertEventVersion == null) {
       insertEventVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEventVersion.sql", "cp1250"));
     }
-    int param = 1;
-    insertEventVersion.clearParameters();
-    insertEventVersion.setLong(param++, versionId);
-    insertEventVersion.setLong(param++, eventPK.getEventId());
-    System.out.println("versionId = " + versionId + ", eventId = " + eventPK.getEventId());
-    insertEventVersion.executeUpdate();
+    try {
+      ObjectSemaphore.aquire(insertEventVersion);
 
+      int param = 1;
+      insertEventVersion.clearParameters();
+      insertEventVersion.setLong(param++, versionId);
+      insertEventVersion.setLong(param++, eventPK.getEventId());
+      System.out.println("versionId = " + versionId + ", eventId = " + eventPK.getEventId());
+      insertEventVersion.executeUpdate();
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(insertEventVersion);
+    }
   }
 
   @Override
@@ -273,15 +306,23 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (findVersion == null) {
         findVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_version.sql", "cp1250"));
       }
-      int param = 1;
-      findVersion.clearParameters();
-      findVersion.setLong(param++, eventId);
-      ResultSet rs_findVersion = findVersion.executeQuery();
-      if (rs_findVersion.next()) {
-        result = rs_findVersion.getInt(1);
-        if (rs_findVersion.wasNull()) {
-          result = null;
+      try {
+        ObjectSemaphore.aquire(findVersion);
+
+        int param = 1;
+        findVersion.clearParameters();
+        findVersion.setLong(param++, eventId);
+        ResultSet rs_findVersion = findVersion.executeQuery();
+        if (rs_findVersion.next()) {
+          result = rs_findVersion.getInt(1);
+          if (rs_findVersion.wasNull()) {
+            result = null;
+          }
         }
+      } catch (InterruptedException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      } finally {
+        ObjectSemaphore.release(findVersion);
       }
     }
 
@@ -331,6 +372,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       connection.clearWarnings();
       Long events_ID = null;
       try {
+        ObjectSemaphore.aquire(insertEvents, updateEvents, findEventValue, insertEventValues, updateEventValues, deleteEventValues, get_field, delete_eventPK);
         if (!isTransaction) {
           beginTransaction();
         }
@@ -583,7 +625,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
         } else {
           events_ID = event.getId();
         }
+      } catch (InterruptedException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
       } finally {
+        ObjectSemaphore.release(insertEvents, updateEvents, findEventValue, insertEventValues, updateEventValues, deleteEventValues, get_field, delete_eventPK);
         if (!isTransaction) {
           endTransaction(commit);
         }
@@ -650,49 +695,56 @@ public class SqlUtilitesImpl extends SqlUtilities {
             break;
         }
       }
+      try {
+        ObjectSemaphore.aquire(insert_eventLookupKeys, update_eventLookupKeys);
 
-      //vse vrednosti za lookup morajo biti izpolnjene
-      if (Field.LookupType.values().length == numberOfValues) {
-        if (findLookupKeys(lookupIdPolja, fieldValueIndex, eventId)) {
-          int param = 1;
-          update_eventLookupKeys.clearParameters();
+        //vse vrednosti za lookup morajo biti izpolnjene
+        if (Field.LookupType.values().length == numberOfValues) {
+          if (findLookupKeys(lookupIdPolja, fieldValueIndex, eventId)) {
+            int param = 1;
+            update_eventLookupKeys.clearParameters();
 
-          if (versionId != null) {
-            update_eventLookupKeys.setInt(param++, versionId);
+            if (versionId != null) {
+              update_eventLookupKeys.setInt(param++, versionId);
+            } else {
+              update_eventLookupKeys.setNull(param++, java.sql.Types.INTEGER);
+            }
+            update_eventLookupKeys.setInt(param++, idSifranta);
+            update_eventLookupKeys.setString(param++, idSifre);
+            update_eventLookupKeys.setString(param++, primaryKey);
+
+            update_eventLookupKeys.setLong(param++, eventId);
+            update_eventLookupKeys.setInt(param++, lookupIdPolja);
+            update_eventLookupKeys.setInt(param++, fieldValueIndex);
+
+            success = success && update_eventLookupKeys.executeUpdate() > 0;
           } else {
-            update_eventLookupKeys.setNull(param++, java.sql.Types.INTEGER);
+            //insert
+            int param = 1;
+            insert_eventLookupKeys.clearParameters();
+            insert_eventLookupKeys.setLong(param++, eventId);
+            insert_eventLookupKeys.setInt(param++, lookupIdPolja);
+            insert_eventLookupKeys.setInt(param++, fieldValueIndex);
+            if (versionId != null) {
+              insert_eventLookupKeys.setInt(param++, versionId);
+            } else {
+              insert_eventLookupKeys.setNull(param++, java.sql.Types.INTEGER);
+            }
+            insert_eventLookupKeys.setInt(param++, idSifranta);
+            insert_eventLookupKeys.setString(param++, idSifre);
+            insert_eventLookupKeys.setString(param++, primaryKey);
+
+            Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, "Inserting lookupKeys: {0} , {1} , {2} , {3} , {4} , {5} , ", new Object[]{lookupIdPolja, fieldValueIndex, versionId, idSifranta, idSifre, primaryKey});
+
+            success = success && insert_eventLookupKeys.executeUpdate() > 0;
           }
-          update_eventLookupKeys.setInt(param++, idSifranta);
-          update_eventLookupKeys.setString(param++, idSifre);
-          update_eventLookupKeys.setString(param++, primaryKey);
-
-          update_eventLookupKeys.setLong(param++, eventId);
-          update_eventLookupKeys.setInt(param++, lookupIdPolja);
-          update_eventLookupKeys.setInt(param++, fieldValueIndex);
-
-          success = success && update_eventLookupKeys.executeUpdate() > 0;
         } else {
-          //insert
-          int param = 1;
-          insert_eventLookupKeys.clearParameters();
-          insert_eventLookupKeys.setLong(param++, eventId);
-          insert_eventLookupKeys.setInt(param++, lookupIdPolja);
-          insert_eventLookupKeys.setInt(param++, fieldValueIndex);
-          if (versionId != null) {
-            insert_eventLookupKeys.setInt(param++, versionId);
-          } else {
-            insert_eventLookupKeys.setNull(param++, java.sql.Types.INTEGER);
-          }
-          insert_eventLookupKeys.setInt(param++, idSifranta);
-          insert_eventLookupKeys.setString(param++, idSifre);
-          insert_eventLookupKeys.setString(param++, primaryKey);
-
-          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, "Inserting lookupKeys: {0} , {1} , {2} , {3} , {4} , {5} , ", new Object[]{lookupIdPolja, fieldValueIndex, versionId, idSifranta, idSifre, primaryKey});
-
-          success = success && insert_eventLookupKeys.executeUpdate() > 0;
+          throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
         }
-      } else {
-        throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
+      } catch (InterruptedException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      } finally {
+        ObjectSemaphore.release(insert_eventLookupKeys, update_eventLookupKeys);
       }
     }
     return success;
@@ -703,14 +755,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (find_eventLookupKeys == null) {
       find_eventLookupKeys = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "find_eventLookupKeys.sql", "cp1250"));
     }
-    int param = 1;
-    find_eventLookupKeys.clearParameters();
-    find_eventLookupKeys.setLong(param++, eventId);
-    find_eventLookupKeys.setInt(param++, idPolja);
-    find_eventLookupKeys.setInt(param++, fieldValueIndex);
-    ResultSet rs_find_eventLookupKeys = find_eventLookupKeys.executeQuery();
-    if (rs_find_eventLookupKeys.next()) {
-      result = true;
+    try {
+      ObjectSemaphore.aquire(find_eventLookupKeys);
+      int param = 1;
+      find_eventLookupKeys.clearParameters();
+      find_eventLookupKeys.setLong(param++, eventId);
+      find_eventLookupKeys.setInt(param++, idPolja);
+      find_eventLookupKeys.setInt(param++, fieldValueIndex);
+      ResultSet rs_find_eventLookupKeys = find_eventLookupKeys.executeQuery();
+      if (rs_find_eventLookupKeys.next()) {
+        result = true;
+      }
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(find_eventLookupKeys);
     }
     return result;
   }
@@ -721,34 +780,42 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (findValue == null) {
       findValue = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "findValue.sql", "cp1250"));
     }
-    int param = 1;
-    findValue.clearParameters();
-    findValue.setLong(param++, valueId);
-    ResultSet rs_findValue = findValue.executeQuery();
-    if (rs_findValue.next()) {
-      int fieldType = rs_findValue.getInt("FieldType");
-      ValueType type = ValueType.valueOf(fieldType);
-      switch (type) {
-        case IntValue:
-          int intValue = rs_findValue.getInt("IntValue");
-          result = new VariousValue(valueId, type.getTypeIndex(), new Integer(intValue));
-          break;
-        case RealValue:
-          double realValue = rs_findValue.getDouble("RealValue");
-          result = new VariousValue(valueId, type.getTypeIndex(), new Double(realValue));
-          break;
-        case StringValue:
-          String stringValue = rs_findValue.getString("StringValue");
-          result = new VariousValue(valueId, type.getTypeIndex(), stringValue);
-          break;
-        case DateValue:
-          Date dateValue = rs_findValue.getDate("DateValue");
-          result = new VariousValue(valueId, type.getTypeIndex(), dateValue);
-          break;
-        //TODO
-        //object, clob, cclob
-      }
+    try {
+      ObjectSemaphore.aquire(findValue);
 
+      int param = 1;
+      findValue.clearParameters();
+      findValue.setLong(param++, valueId);
+      ResultSet rs_findValue = findValue.executeQuery();
+      if (rs_findValue.next()) {
+        int fieldType = rs_findValue.getInt("FieldType");
+        ValueType type = ValueType.valueOf(fieldType);
+        switch (type) {
+          case IntValue:
+            int intValue = rs_findValue.getInt("IntValue");
+            result = new VariousValue(valueId, type.getTypeIndex(), new Integer(intValue));
+            break;
+          case RealValue:
+            double realValue = rs_findValue.getDouble("RealValue");
+            result = new VariousValue(valueId, type.getTypeIndex(), new Double(realValue));
+            break;
+          case StringValue:
+            String stringValue = rs_findValue.getString("StringValue");
+            result = new VariousValue(valueId, type.getTypeIndex(), stringValue);
+            break;
+          case DateValue:
+            Date dateValue = rs_findValue.getDate("DateValue");
+            result = new VariousValue(valueId, type.getTypeIndex(), dateValue);
+            break;
+          //TODO
+          //object, clob, cclob
+        }
+
+      }
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(findValue);
     }
     return result;
   }
@@ -821,17 +888,25 @@ public class SqlUtilitesImpl extends SqlUtilities {
           break;
       }
       if (newValueId == null) {
-        execute(callStoredValue, fieldValues);
+        try {
+          ObjectSemaphore.aquire(callStoredValue);
 
-        ResultSet resultSet = callStoredValue.getResultSet();
-        if (resultSet != null) {
-          try {
-            if (resultSet.next()) {
-              newValueId = resultSet.getLong("Id");
+          execute(callStoredValue, fieldValues);
+
+          ResultSet resultSet = callStoredValue.getResultSet();
+          if (resultSet != null) {
+            try {
+              if (resultSet.next()) {
+                newValueId = resultSet.getLong("Id");
+              }
+            } finally {
+              resultSet.close();
             }
-          } finally {
-            resultSet.close();
           }
+        } catch (InterruptedException ex) {
+          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+          ObjectSemaphore.release(callStoredValue);
         }
       }
     }
@@ -846,48 +921,56 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (findOpomba == null) {
       findOpomba = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_opomba.sql", "cp1250"));
     }
+
     int param = 1;
     boolean success = true;
     boolean saveOpomba = true;
 
-    param = 1;
-    findOpomba.clearParameters();
-    findOpomba.setLong(param++, eventId);
-    ResultSet rsFindOpomba = findOpomba.executeQuery();
-    if (rsFindOpomba.next()) {
-      Clob oldOpombaClob = rsFindOpomba.getClob("ClobValue");
-      if (oldOpombaClob != null) {
-        String oldOpomba = oldOpombaClob.getSubString(1L, (int) oldOpombaClob.length());
-        if (oldOpomba.equals(opomba)) {
-          //opomba se ni spemenila
-          saveOpomba = false;
-        } else {
-          //update event in opomba se je spremenila
+    try {
+      ObjectSemaphore.aquire(insertEventsOpombe, findOpomba);
+
+      param = 1;
+      findOpomba.clearParameters();
+      findOpomba.setLong(param++, eventId);
+      ResultSet rsFindOpomba = findOpomba.executeQuery();
+      if (rsFindOpomba.next()) {
+        Clob oldOpombaClob = rsFindOpomba.getClob("ClobValue");
+        if (oldOpombaClob != null) {
+          String oldOpomba = oldOpombaClob.getSubString(1L, (int) oldOpombaClob.length());
+          if (oldOpomba.equals(opomba)) {
+            //opomba se ni spemenila
+            saveOpomba = false;
+          } else {
+            //update event in opomba se je spremenila
+          }
         }
       }
-    }
 
-    if (saveOpomba) {
-      if (opomba == null) {
-        return true;
+      if (saveOpomba) {
+        if (opomba == null) {
+          return true;
+        }
+        Long opombaId = storeValue(ValueType.ClobValue, opomba);
+        param = 1;
+        insertEventsOpombe.clearParameters();
+        if (eventId == null) {
+          return false;
+        } else {
+          insertEventsOpombe.setLong(param++, eventId.longValue());
+        }
+        if (opombaId == null) {
+          //null ni dovoljeno, zato bo vrgel sql napako
+          return false;
+        } else {
+          insertEventsOpombe.setLong(param++, opombaId.longValue());
+        }
+        success = success && insertEventsOpombe.executeUpdate() > 0;
       }
-      Long opombaId = storeValue(ValueType.ClobValue, opomba);
-      param = 1;
-      insertEventsOpombe.clearParameters();
-      if (eventId == null) {
-        return false;
-      } else {
-        insertEventsOpombe.setLong(param++, eventId.longValue());
-      }
-      if (opombaId == null) {
-        //null ni dovoljeno, zato bo vrgel sql napako
-        return false;
-      } else {
-        insertEventsOpombe.setLong(param++, opombaId.longValue());
-      }
-      success = success && insertEventsOpombe.executeUpdate() > 0;
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(insertEventsOpombe, findOpomba);
     }
-
     return success;
   }
 
@@ -951,83 +1034,89 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //
 //
 //      findHsNeznanaId.executeQuery();
+      try {
+        ObjectSemaphore.aquire(findHsNeznanaId, insertNeznaniNaslov);
 
-      ResultSet rsFindHsNeznanaId = executeQuery(findHsNeznanaId,
-              address.getPostnaStevilka(),
-              address.getPosta(),
-              address.getNaselje(),
-              address.getUlica(),
-              address.getHisnaStevilka(),
-              address.getHisnaStevilkaDodatek());
+        ResultSet rsFindHsNeznanaId = executeQuery(findHsNeznanaId,
+                address.getPostnaStevilka(),
+                address.getPosta(),
+                address.getNaselje(),
+                address.getUlica(),
+                address.getHisnaStevilka(),
+                address.getHisnaStevilkaDodatek());
 
-      Long hs_neznana_id = null;
+        Long hs_neznana_id = null;
 
-      if (rsFindHsNeznanaId.next()) {
-        hs_neznana_id = rsFindHsNeznanaId.getLong(1);
-        if (rsFindHsNeznanaId.wasNull()) {
-          hs_neznana_id = null;
-        }
-      } else {
-        if (insertNeznaniNaslov == null) {
-          insertNeznaniNaslov = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertNeznaniNaslov.sql", "cp1250"));
-        }
-        boolean commit = false;
-        boolean isTransaction = isTransaction();
-        if (!isTransaction) {
-          sqlUtility.beginTransaction();
-        }
-        try {
-          param = 1;
-          insertNeznaniNaslov.clearParameters();
-
-
-          insertNeznaniNaslov.setObject(param++, address.getPostnaStevilkaMID().getValue(), java.sql.Types.INTEGER);
-          insertNeznaniNaslov.setObject(param++, address.getPostnaStevilka().getValue(), java.sql.Types.INTEGER);
-          insertNeznaniNaslov.setObject(param++, address.getPosta().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //pt_ime
-          insertNeznaniNaslov.setObject(param++, address.getPosta().getValue(), java.sql.Types.VARCHAR);  //pt_uime
-
-          insertNeznaniNaslov.setObject(param++, address.getNaseljeMID().getValue(), java.sql.Types.INTEGER);
-          if ((address.getNaselje() == null) || (address.getNaselje().getValue() == null)) {
-            insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
-            insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
-          } else {
-            insertNeznaniNaslov.setObject(param++, address.getNaselje().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //na_ime
-            insertNeznaniNaslov.setObject(param++, address.getNaselje().getValue(), java.sql.Types.VARCHAR); //na_uime
+        if (rsFindHsNeznanaId.next()) {
+          hs_neznana_id = rsFindHsNeznanaId.getLong(1);
+          if (rsFindHsNeznanaId.wasNull()) {
+            hs_neznana_id = null;
           }
-
-          insertNeznaniNaslov.setObject(param++, address.getUlicaMID().getValue(), java.sql.Types.INTEGER);
-          insertNeznaniNaslov.setObject(param++, address.getUlica().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //ul_ime
-          insertNeznaniNaslov.setObject(param++, address.getUlica().getValue(), java.sql.Types.VARCHAR); //ul_uime
-
-          if (address.getHisnaStevilka() == null) {
-            insertNeznaniNaslov.setNull(param++, java.sql.Types.INTEGER);
-          } else {
-            insertNeznaniNaslov.setObject(param++, address.getHisnaStevilka().getValue(), java.sql.Types.INTEGER); //ul_uime
+        } else {
+          if (insertNeznaniNaslov == null) {
+            insertNeznaniNaslov = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertNeznaniNaslov.sql", "cp1250"));
           }
-          if (address.getHisnaStevilkaDodatek() == null) {
-            insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
-          } else {
-            insertNeznaniNaslov.setObject(param++, address.getHisnaStevilkaDodatek().getValue(), java.sql.Types.VARCHAR); //ul_uime
+          boolean commit = false;
+          boolean isTransaction = isTransaction();
+          if (!isTransaction) {
+            sqlUtility.beginTransaction();
           }
-          insertNeznaniNaslov.setInt(param++, address.getIzvor());
+          try {
+            param = 1;
+            insertNeznaniNaslov.clearParameters();
 
 
-          commit = insertNeznaniNaslov.executeUpdate() > 0;
+            insertNeznaniNaslov.setObject(param++, address.getPostnaStevilkaMID().getValue(), java.sql.Types.INTEGER);
+            insertNeznaniNaslov.setObject(param++, address.getPostnaStevilka().getValue(), java.sql.Types.INTEGER);
+            insertNeznaniNaslov.setObject(param++, address.getPosta().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //pt_ime
+            insertNeznaniNaslov.setObject(param++, address.getPosta().getValue(), java.sql.Types.VARCHAR);  //pt_uime
 
-        } finally {
-          if (commit) {
-            if (isTransaction) {
-              sqlUtility.endTransaction(commit);
+            insertNeznaniNaslov.setObject(param++, address.getNaseljeMID().getValue(), java.sql.Types.INTEGER);
+            if ((address.getNaselje() == null) || (address.getNaselje().getValue() == null)) {
+              insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
+              insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
+            } else {
+              insertNeznaniNaslov.setObject(param++, address.getNaselje().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //na_ime
+              insertNeznaniNaslov.setObject(param++, address.getNaselje().getValue(), java.sql.Types.VARCHAR); //na_uime
             }
 
-            hs_neznana_id = sqlUtility.getLastIdentity();
-          } else {
-            JOptionPane.showMessageDialog(null, "Napaka pri shranjevanju neznanega naslova!", "Napaka", JOptionPane.ERROR_MESSAGE);
+            insertNeznaniNaslov.setObject(param++, address.getUlicaMID().getValue(), java.sql.Types.INTEGER);
+            insertNeznaniNaslov.setObject(param++, address.getUlica().getValue().toString().toUpperCase(), java.sql.Types.VARCHAR); //ul_ime
+            insertNeznaniNaslov.setObject(param++, address.getUlica().getValue(), java.sql.Types.VARCHAR); //ul_uime
+
+            if (address.getHisnaStevilka() == null) {
+              insertNeznaniNaslov.setNull(param++, java.sql.Types.INTEGER);
+            } else {
+              insertNeznaniNaslov.setObject(param++, address.getHisnaStevilka().getValue(), java.sql.Types.INTEGER); //ul_uime
+            }
+            if (address.getHisnaStevilkaDodatek() == null) {
+              insertNeznaniNaslov.setNull(param++, java.sql.Types.VARCHAR);
+            } else {
+              insertNeznaniNaslov.setObject(param++, address.getHisnaStevilkaDodatek().getValue(), java.sql.Types.VARCHAR); //ul_uime
+            }
+            insertNeznaniNaslov.setInt(param++, address.getIzvor());
+
+
+            commit = insertNeznaniNaslov.executeUpdate() > 0;
+
+          } finally {
+            if (commit) {
+              if (isTransaction) {
+                sqlUtility.endTransaction(commit);
+              }
+
+              hs_neznana_id = sqlUtility.getLastIdentity();
+            } else {
+              JOptionPane.showMessageDialog(null, "Napaka pri shranjevanju neznanega naslova!", "Napaka", JOptionPane.ERROR_MESSAGE);
+            }
           }
         }
+        address.setHsNeznanaMID(hs_neznana_id);
+      } catch (InterruptedException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      } finally {
+        ObjectSemaphore.release(findHsNeznanaId, insertNeznaniNaslov);
       }
-      address.setHsNeznanaMID(hs_neznana_id);
-
     }
 
     return address;
@@ -1037,76 +1126,86 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (findEventById == null) {
       findEventById = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_event_by_id.sql", "cp1250"));
     }
-    ResultSet rs = executeQuery(findEventById, new FieldValue("ID", java.sql.Types.BIGINT, eventId));
     try {
-      if (rs.next()) {
-        Event result = new Event(rs.getInt("IdSifranta"),
-                rs.getString("IdSifre"));
-        List<Field> primaryKey = new ArrayList<Field>();
-        result.setId(eventId);
-        result.setEventSource(rs.getInt("IdEventSource"));
-        result.setDatum(rs.getTimestamp("Datum"));
-        java.sql.Clob opomba = rs.getClob("Opomba");
-        if (!rs.wasNull()) {
-          if (opomba.length() > 0) {
-            result.setOpomba(opomba.getSubString(1L, (int) opomba.length()));
-          } else {
-            result.setOpomba(null);
+      ObjectSemaphore.aquire(findEventById);
+
+      ResultSet rs = executeQuery(findEventById, new FieldValue("ID", java.sql.Types.BIGINT, eventId));
+      try {
+        if (rs.next()) {
+          Event result = new Event(rs.getInt("IdSifranta"),
+                  rs.getString("IdSifre"));
+          List<Field> primaryKey = new ArrayList<Field>();
+          result.setId(eventId);
+          result.setEventSource(rs.getInt("IdEventSource"));
+          result.setDatum(rs.getTimestamp("Datum"));
+          java.sql.Clob opomba = rs.getClob("Opomba");
+          if (!rs.wasNull()) {
+            if (opomba.length() > 0) {
+              result.setOpomba(opomba.getSubString(1L, (int) opomba.length()));
+            } else {
+              result.setOpomba(null);
+            }
           }
+          do {
+            FieldValue fv = null;
+            switch (rs.getInt("FieldType")) {
+              case 1:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("FieldValueIndex"), rs.getInt("IntValue")));
+                break;
+              case 2:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getInt("FieldValueIndex"), rs.getDouble("RealValue")));
+                break;
+              case 3:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), rs.getString("StringValue")));
+                break;
+              case 4:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue")));
+                break;
+              case 5:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getInt("FieldValueIndex"), rs.getBlob("ObjectValue")));
+                break;
+              case 6:
+                java.sql.Clob value = rs.getClob("ClobValue");
+                if ((value != null) && (value.length() > 0)) {
+                  result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), value.getSubString(1L, (int) value.length())));
+                } else {
+                  result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), ""));
+                }
+                break;
+              case 7:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("FieldValueIndex"), rs.getInt("IntValue") != 0));
+                break;
+              case 8:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue")));
+                break;
+              case 9:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIME, rs.getInt("FieldValueIndex"), rs.getTime("DateValue")));
+                break;
+              case 10:
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DATE, rs.getInt("FieldValueIndex"), rs.getDate("DateValue")));
+                break;
+            }
+            if (fv != null && rs.getBoolean("PrimaryKey")) {
+              primaryKey.add(new Field(fv));
+            }
+          } while (rs.next());
+          if (primaryKey.size() > 0) {
+            result.setPrimaryKey(primaryKey.toArray(new Field[primaryKey.size()]));
+          }
+          return result;
+        } else {
+          return null;
         }
-        do {
-          FieldValue fv = null;
-          switch (rs.getInt("FieldType")) {
-            case 1:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("FieldValueIndex"), rs.getInt("IntValue")));
-              break;
-            case 2:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getInt("FieldValueIndex"), rs.getDouble("RealValue")));
-              break;
-            case 3:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), rs.getString("StringValue")));
-              break;
-            case 4:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue")));
-              break;
-            case 5:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getInt("FieldValueIndex"), rs.getBlob("ObjectValue")));
-              break;
-            case 6:
-              java.sql.Clob value = rs.getClob("ClobValue");
-              if ((value != null) && (value.length() > 0)) {
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), value.getSubString(1L, (int) value.length())));
-              } else {
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), ""));
-              }
-              break;
-            case 7:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("FieldValueIndex"), rs.getInt("IntValue") != 0));
-              break;
-            case 8:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue")));
-              break;
-            case 9:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIME, rs.getInt("FieldValueIndex"), rs.getTime("DateValue")));
-              break;
-            case 10:
-              result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DATE, rs.getInt("FieldValueIndex"), rs.getDate("DateValue")));
-              break;
-          }
-          if (fv != null && rs.getBoolean("PrimaryKey")) {
-            primaryKey.add(new Field(fv));
-          }
-        } while (rs.next());
-        if (primaryKey.size() > 0) {
-          result.setPrimaryKey(primaryKey.toArray(new Field[primaryKey.size()]));
-        }
-        return result;
-      } else {
-        return null;
+      } finally {
+        rs.close();
       }
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      return null;
     } finally {
-      rs.close();
+      ObjectSemaphore.release(findEventById);
     }
+
   }
 
   @Override
@@ -1170,9 +1269,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
           storeCachedTemporaryTable = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "storeCachedTemporaryTable.sql", "cp1250"));
         }
 
-        storeCachedTemporaryTable.setString(1, tt.getMaterializedView().getValue());
-        storeCachedTemporaryTable.setString(2, sw.toString());
-        storeCachedTemporaryTable.executeUpdate();
+        try {
+          ObjectSemaphore.aquire(storeCachedTemporaryTable);
+          storeCachedTemporaryTable.setString(1, tt.getMaterializedView().getValue());
+          storeCachedTemporaryTable.setString(2, sw.toString());
+          storeCachedTemporaryTable.executeUpdate();
+        } catch (InterruptedException ex) {
+          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+          ObjectSemaphore.release(storeCachedTemporaryTable);
+        }
       } catch (SQLException ex) {
         Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
       } catch (JAXBException ex) {
@@ -1203,39 +1309,46 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
 
-
     try {
-      if (findEventPK(eventId) != null) {
-        if (eventPK.getEventOperation().equals(Event.EventOperation.DELETE)) {
-          param = 1;
-          delete_eventPK.clearParameters();
-          delete_eventPK.setLong(param++, eventId);
-          success = delete_eventPK.executeUpdate() > 0;
+      ObjectSemaphore.aquire(insert_eventPK, update_eventPK, delete_eventPK);
+
+      try {
+        if (findEventPK(eventId) != null) {
+          if (eventPK.getEventOperation().equals(Event.EventOperation.DELETE)) {
+            param = 1;
+            delete_eventPK.clearParameters();
+            delete_eventPK.setLong(param++, eventId);
+            success = delete_eventPK.executeUpdate() > 0;
+          } else {
+            //update
+            param = 1;
+            update_eventPK.clearParameters();
+            update_eventPK.setInt(param++, idSifranta);
+            update_eventPK.setString(param++, idSifre);
+            update_eventPK.setString(param++, primaryKey);
+            update_eventPK.setLong(param++, eventId);
+
+            success = update_eventPK.executeUpdate() > 0;
+          }
         } else {
-          //update
+          //insert
           param = 1;
-          update_eventPK.clearParameters();
-          update_eventPK.setInt(param++, idSifranta);
-          update_eventPK.setString(param++, idSifre);
-          update_eventPK.setString(param++, primaryKey);
-          update_eventPK.setLong(param++, eventId);
 
-          success = update_eventPK.executeUpdate() > 0;
+          insert_eventPK.clearParameters();
+          insert_eventPK.setLong(param++, eventId);
+          insert_eventPK.setInt(param++, idSifranta);
+          insert_eventPK.setString(param++, idSifre);
+          insert_eventPK.setString(param++, primaryKey);
+          success = insert_eventPK.executeUpdate() > 0;
         }
-      } else {
-        //insert
-        param = 1;
-
-        insert_eventPK.clearParameters();
-        insert_eventPK.setLong(param++, eventId);
-        insert_eventPK.setInt(param++, idSifranta);
-        insert_eventPK.setString(param++, idSifre);
-        insert_eventPK.setString(param++, primaryKey);
-        success = insert_eventPK.executeUpdate() > 0;
+      } catch (SQLException ex) {
+        // System.out.println("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString());
+        throw new SQLPrimaryKeyException("Najden je podvojeni zapis za dogodek E:" + eventId + "-" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toHexString(), ex, eventPK);
       }
-    } catch (SQLException ex) {
-      // System.out.println("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString());
-      throw new SQLPrimaryKeyException("Najden je podvojeni zapis za dogodek E:" + eventId + "-" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toHexString(), ex, eventPK);
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(insert_eventPK, update_eventPK, delete_eventPK);
     }
     return success;
   }
@@ -1264,43 +1377,51 @@ public class SqlUtilitesImpl extends SqlUtilities {
         update_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK_versions.sql", "cp1250"));
       }
 
-      if (findEventPKVersions(eventId, versionId) != null) {
-        //if (versionId == null) {
-        param = 1;
-        update_eventPK_versions.clearParameters();
+      try {
+        ObjectSemaphore.aquire(insert_eventPK_versions, update_eventPK_versions);
 
-        update_eventPK_versions.setInt(param++, idSifranta);
-        update_eventPK_versions.setString(param++, idSifre);
-        update_eventPK_versions.setString(param++, primaryKey);
-        update_eventPK_versions.setLong(param++, eventId);
-        if (versionId == null) {
-          update_eventPK_versions.setInt(param++, -1);
-          update_eventPK_versions.setInt(param++, 1);
+        if (findEventPKVersions(eventId, versionId) != null) {
+          //if (versionId == null) {
+          param = 1;
+          update_eventPK_versions.clearParameters();
 
+          update_eventPK_versions.setInt(param++, idSifranta);
+          update_eventPK_versions.setString(param++, idSifre);
+          update_eventPK_versions.setString(param++, primaryKey);
+          update_eventPK_versions.setLong(param++, eventId);
+          if (versionId == null) {
+            update_eventPK_versions.setInt(param++, -1);
+            update_eventPK_versions.setInt(param++, 1);
+
+          } else {
+            update_eventPK_versions.setInt(param++, versionId.intValue());
+            update_eventPK_versions.setInt(param++, 0);
+          }
+          update_eventPK_versions.executeUpdate();
+          success = update_eventPK_versions.executeUpdate() > 0;
+          // }
         } else {
-          update_eventPK_versions.setInt(param++, versionId.intValue());
-          update_eventPK_versions.setInt(param++, 0);
-        }
-        update_eventPK_versions.executeUpdate();
-        success = update_eventPK_versions.executeUpdate() > 0;
-        // }
-      } else {
 
-        //insert
-        param = 1;
+          //insert
+          param = 1;
 
-        insert_eventPK_versions.clearParameters();
-        insert_eventPK_versions.setLong(param++, eventId);
-        if (versionId == null) {
-          insert_eventPK_versions.setNull(param++, java.sql.Types.INTEGER);
-        } else {
-          insert_eventPK_versions.setInt(param++, versionId.intValue());
+          insert_eventPK_versions.clearParameters();
+          insert_eventPK_versions.setLong(param++, eventId);
+          if (versionId == null) {
+            insert_eventPK_versions.setNull(param++, java.sql.Types.INTEGER);
+          } else {
+            insert_eventPK_versions.setInt(param++, versionId.intValue());
+          }
+          insert_eventPK_versions.setInt(param++, idSifranta);
+          insert_eventPK_versions.setString(param++, idSifre);
+          insert_eventPK_versions.setString(param++, primaryKey);
+          System.out.println(eventId + "," + versionId + "," + idSifranta + "," + idSifre + "," + primaryKey);
+          success = success && insert_eventPK_versions.executeUpdate() > 0;
         }
-        insert_eventPK_versions.setInt(param++, idSifranta);
-        insert_eventPK_versions.setString(param++, idSifre);
-        insert_eventPK_versions.setString(param++, primaryKey);
-        System.out.println(eventId + "," + versionId + "," + idSifranta + "," + idSifre + "," + primaryKey);
-        success = success && insert_eventPK_versions.executeUpdate() > 0;
+      } catch (InterruptedException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      } finally {
+        ObjectSemaphore.release(insert_eventPK_versions, update_eventPK_versions);
       }
     }
     return success;
@@ -1315,15 +1436,23 @@ public class SqlUtilitesImpl extends SqlUtilities {
       find_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventPK.sql", "cp1250"));
     }
 
-    int param = 1;
-    find_eventPK.clearParameters();
-    find_eventPK.setLong(param++, eventId);
-    ResultSet rs_findEventPK = find_eventPK.executeQuery();
-    if (rs_findEventPK.next()) {
-      int idSifranta = rs_findEventPK.getInt("IdSifranta");
-      String idSifre = rs_findEventPK.getString("IdSifre");
-      String primaryKey = rs_findEventPK.getString("PrimaryKey");
-      result = new SqlEventPK(eventId, idSifranta, idSifre, primaryKey);
+    try {
+      ObjectSemaphore.aquire(find_eventPK);
+
+      int param = 1;
+      find_eventPK.clearParameters();
+      find_eventPK.setLong(param++, eventId);
+      ResultSet rs_findEventPK = find_eventPK.executeQuery();
+      if (rs_findEventPK.next()) {
+        int idSifranta = rs_findEventPK.getInt("IdSifranta");
+        String idSifre = rs_findEventPK.getString("IdSifre");
+        String primaryKey = rs_findEventPK.getString("PrimaryKey");
+        result = new SqlEventPK(eventId, idSifranta, idSifre, primaryKey);
+      }
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(find_eventPK);
     }
     return result;
   }
@@ -1337,22 +1466,31 @@ public class SqlUtilitesImpl extends SqlUtilities {
       find_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventPK_versions.sql", "cp1250"));
     }
 
-    int param = 1;
-    find_eventPK_versions.clearParameters();
-    find_eventPK_versions.setLong(param++, eventId);
-    find_eventPK_versions.setInt(param++, versionId == null ? 1 : 0);
-    find_eventPK_versions.setInt(param++, versionId != null ? versionId.intValue() : -1);
-    ResultSet rs_findEventPK = find_eventPK_versions.executeQuery();
-    if (rs_findEventPK.next()) {
-      Integer eventsPK_versionId = rs_findEventPK.getInt("VersionId");
-      if (rs_findEventPK.wasNull()) {
-        eventsPK_versionId = null;
-      }
-      int eventsPK_idSifranta = rs_findEventPK.getInt("IdSifranta");
-      String eventsPK_idSifre = rs_findEventPK.getString("IdSifre");
-      String eventsPK_primaryKey = rs_findEventPK.getString("PrimaryKey");
+    try {
+      ObjectSemaphore.aquire(find_eventPK_versions);
 
-      result = new SqlEventPK(eventId, eventsPK_idSifranta, eventsPK_idSifre, eventsPK_primaryKey, eventsPK_versionId);
+
+      int param = 1;
+      find_eventPK_versions.clearParameters();
+      find_eventPK_versions.setLong(param++, eventId);
+      find_eventPK_versions.setInt(param++, versionId == null ? 1 : 0);
+      find_eventPK_versions.setInt(param++, versionId != null ? versionId.intValue() : -1);
+      ResultSet rs_findEventPK = find_eventPK_versions.executeQuery();
+      if (rs_findEventPK.next()) {
+        Integer eventsPK_versionId = rs_findEventPK.getInt("VersionId");
+        if (rs_findEventPK.wasNull()) {
+          eventsPK_versionId = null;
+        }
+        int eventsPK_idSifranta = rs_findEventPK.getInt("IdSifranta");
+        String eventsPK_idSifre = rs_findEventPK.getString("IdSifre");
+        String eventsPK_primaryKey = rs_findEventPK.getString("PrimaryKey");
+
+        result = new SqlEventPK(eventId, eventsPK_idSifranta, eventsPK_idSifre, eventsPK_primaryKey, eventsPK_versionId);
+      }
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(find_eventPK_versions);
     }
     return result;
   }
@@ -1365,23 +1503,30 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (find_eventPK_versions_byValues == null) {
       find_eventPK_versions_byValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventPK_versions_byValues.sql", "cp1250"));
     }
+    try {
+      ObjectSemaphore.aquire(find_eventPK_versions_byValues);
 
-    int param = 1;
-    find_eventPK_versions_byValues.clearParameters();
-    find_eventPK_versions_byValues.setInt(param++, versionId == null ? 1 : 0);
-    find_eventPK_versions_byValues.setInt(param++, versionId != null ? versionId.intValue() : -1);
-    find_eventPK_versions_byValues.setInt(param++, idSifranta);
-    find_eventPK_versions_byValues.setString(param++, idSifre);
-    find_eventPK_versions_byValues.setString(param++, primaryKey);
+      int param = 1;
+      find_eventPK_versions_byValues.clearParameters();
+      find_eventPK_versions_byValues.setInt(param++, versionId == null ? 1 : 0);
+      find_eventPK_versions_byValues.setInt(param++, versionId != null ? versionId.intValue() : -1);
+      find_eventPK_versions_byValues.setInt(param++, idSifranta);
+      find_eventPK_versions_byValues.setString(param++, idSifre);
+      find_eventPK_versions_byValues.setString(param++, primaryKey);
 
-    ResultSet rs_findEventPK = find_eventPK_versions_byValues.executeQuery();
-    if (rs_findEventPK.next()) {
-      Integer eventsPK_eventId = rs_findEventPK.getInt("EventId");
-      if (rs_findEventPK.wasNull()) {
-        eventsPK_eventId = null;
+      ResultSet rs_findEventPK = find_eventPK_versions_byValues.executeQuery();
+      if (rs_findEventPK.next()) {
+        Integer eventsPK_eventId = rs_findEventPK.getInt("EventId");
+        if (rs_findEventPK.wasNull()) {
+          eventsPK_eventId = null;
+        }
+
+        result = new SqlEventPK(eventsPK_eventId, idSifranta, idSifre, primaryKey, versionId);
       }
-
-      result = new SqlEventPK(eventsPK_eventId, idSifranta, idSifre, primaryKey, versionId);
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(find_eventPK_versions_byValues);
     }
     return result;
   }
@@ -1393,11 +1538,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (delete_event == null) {
       delete_event = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "delete_event.sql", "cp1250"));
     }
-    int param = 1;
-    delete_event.clearParameters();
-    delete_event.setLong(param++, eventId);
-    success = delete_event.executeUpdate() > 0;
+    try {
+      ObjectSemaphore.aquire(delete_event);
 
+      int param = 1;
+      delete_event.clearParameters();
+      delete_event.setLong(param++, eventId);
+      success = delete_event.executeUpdate() > 0;
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(delete_event);
+    }
     return success;
   }
 
@@ -1479,13 +1631,20 @@ public class SqlUtilitesImpl extends SqlUtilities {
       insertScheduler = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "insertScheduler.sql", "cp1250"));
     }
 
-    int param = 1;
-    insertScheduler.clearParameters();
+    try {
+      ObjectSemaphore.aquire(insertScheduler);
 
-    insertScheduler.setLong(param++, veljavnost);
-    insertScheduler.setLong(param++, events_ID);
-    success = success && insertScheduler.executeUpdate() > 0;
+      int param = 1;
+      insertScheduler.clearParameters();
 
+      insertScheduler.setLong(param++, veljavnost);
+      insertScheduler.setLong(param++, events_ID);
+      success = success && insertScheduler.executeUpdate() > 0;
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      ObjectSemaphore.release(insertScheduler);
+    }
     return success;
   }
 
@@ -2060,7 +2219,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     ResultSetMetaData rsmd = rs.getMetaData();
     StringBuilder sb = new StringBuilder();
     sb.append("CREATE TABLE ").append(tableName).append(" (\n");
-    sb.append("     [__RsID] bigint identity NOT NULL\n");
     for (int column = 1; column <= rsmd.getColumnCount(); column++) {
       //sb.append("    ").append(column == 1 ? ' ' : ',');
       sb.append("    ,");
@@ -2111,7 +2269,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
       sb.append('\n');
     }
-    sb.append("    ,CONSTRAINT [<%PK%>_<%TS%>] PRIMARY KEY CLUSTERED\n").append(" (\n").append("   [__RsID] ASC\n").append(")\n");
+    sb.append("    ,CONSTRAINT [<%PK%>_<%TS%>] PRIMARY KEY CLUSTERED\n").append(" (\n").append("   [ID] ASC\n").append(")\n");
     sb.append(")");
 
     return sb.toString();
@@ -2240,7 +2398,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
-    @Override
+  @Override
     public boolean hasVersionId() {
       return versionId.getValue() != null && (((Long) versionId.getValue()) > 0);
     }
@@ -2567,6 +2725,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
      *
      * @return the value of valuesSet
      */
+    @Override
     public int getValuesSet() {
       return valuesSet;
     }
@@ -2635,6 +2794,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
      *
      * @return the value of resultFields
      */
+    @Override
     public Set<Field> getResultFields() {
       return resultFields;
     }
@@ -2644,6 +2804,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
      *
      * @return the value of searchFields
      */
+    @Override
     public Set<Field> getSearchFields() {
       return searchFields;
     }
