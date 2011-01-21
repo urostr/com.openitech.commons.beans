@@ -7,7 +7,6 @@
  */
 package com.openitech.db.model.sql;
 
-import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.value.CollectionKey;
 import com.openitech.value.NamedValue;
 import com.openitech.db.model.*;
@@ -23,7 +22,6 @@ import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
 import com.openitech.awt.OwnerFrame;
 import com.openitech.io.ReadInputStream;
-import com.openitech.sql.util.SqlUtilities;
 import com.sun.rowset.CachedRowSetImpl;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -57,7 +55,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
