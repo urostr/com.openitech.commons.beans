@@ -595,8 +595,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract String getPPJoinFields();
 
-  public abstract void callScheduledEventsInvalidation(java.util.Date actionTime) throws SQLException;
-
   public static enum Operation {
 
     INSERT,
