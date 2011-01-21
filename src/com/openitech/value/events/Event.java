@@ -136,6 +136,25 @@ public class Event {
   public void setDatum(Date datum) {
     this.datum = datum;
   }
+  private Long veljavnost;
+
+  /**
+   * Get the value of veljavnost
+   *
+   * @return the value of veljavnost
+   */
+  public Long getVeljavnost() {
+    return veljavnost;
+  }
+
+  /**
+   * Set the value of veljavnost
+   *
+   * @param veljavnost new value of veljavnost
+   */
+  public void setVeljavnost(Long veljavnost) {
+    this.veljavnost = veljavnost;
+  }
   private String opomba;
 
   /**
