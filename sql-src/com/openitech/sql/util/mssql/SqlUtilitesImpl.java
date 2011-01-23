@@ -4,7 +4,6 @@
  */
 package com.openitech.sql.util.mssql;
 
-import com.openitech.db.model.sql.SQLPrimaryKeyException;
 import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
@@ -18,7 +17,6 @@ import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.db.model.sql.SQLNotificationException;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
-import com.openitech.events.concurrent.ObjectSemaphore;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
@@ -155,43 +153,35 @@ public class SqlUtilitesImpl extends SqlUtilities {
       logChangedValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_changed_values.sql", "cp1250"));
     }
 
-    try {
-      ObjectSemaphore.aquire(logChanges, logValues, logChangedValues);
+    FieldValue[] fieldValues = new FieldValue[]{
+      new FieldValue("application", java.sql.Types.VARCHAR, application),
+      new FieldValue("database", java.sql.Types.VARCHAR, database),
+      new FieldValue("tableName", java.sql.Types.VARCHAR, tableName),
+      new FieldValue("operation", java.sql.Types.VARCHAR, operation.toString())
+    };
 
-      FieldValue[] fieldValues = new FieldValue[]{
-        new FieldValue("application", java.sql.Types.VARCHAR, application),
-        new FieldValue("database", java.sql.Types.VARCHAR, database),
-        new FieldValue("tableName", java.sql.Types.VARCHAR, tableName),
-        new FieldValue("operation", java.sql.Types.VARCHAR, operation.toString())
-      };
+    executeUpdate(logChanges, fieldValues);
 
-      executeUpdate(logChanges, fieldValues);
+    long changeId = getLastIdentity();
 
-      long changeId = getLastIdentity();
+    for (int fieldno = 0; fieldno < newValues.size(); fieldno++) {
+      FieldValue newValue = newValues.get(fieldno);
+      FieldValue oldValue = oldValues.get(fieldno);
 
-      for (int fieldno = 0; fieldno < newValues.size(); fieldno++) {
-        FieldValue newValue = newValues.get(fieldno);
-        FieldValue oldValue = oldValues.get(fieldno);
+      final Object value = newValue.getValue();
+      final int fieldType = newValue.getValueType().getTypeIndex();
 
-        final Object value = newValue.getValue();
-        final int fieldType = newValue.getValueType().getTypeIndex();
+      Long newValueId = storeValue(fieldType, value);
+      Long oldValueId = storeValue(fieldType, oldValue.getValue());
 
-        Long newValueId = storeValue(fieldType, value);
-        Long oldValueId = storeValue(fieldType, oldValue.getValue());
+      fieldValues = new FieldValue[]{
+                new FieldValue("ChangeId", Types.BIGINT, changeId),
+                new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
+                new FieldValue("NewValueId", Types.BIGINT, newValueId),
+                new FieldValue("OldValueId", Types.BIGINT, oldValueId)
+              };
 
-        fieldValues = new FieldValue[]{
-                  new FieldValue("ChangeId", Types.BIGINT, changeId),
-                  new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
-                  new FieldValue("NewValueId", Types.BIGINT, newValueId),
-                  new FieldValue("OldValueId", Types.BIGINT, oldValueId)
-                };
-
-        executeUpdate(logChangedValues, fieldValues);
-      }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(logChanges, logValues, logChangedValues);
+      executeUpdate(logChangedValues, fieldValues);
     }
   }
 
@@ -230,34 +220,25 @@ public class SqlUtilitesImpl extends SqlUtilities {
       getEventVersionSQL = com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getEventVersion.sql", "cp1250");
     }
 
-    try {
-      ObjectSemaphore.aquire(getEventVersionSQL);
+    StringBuilder sb = new StringBuilder();
 
-      StringBuilder sb = new StringBuilder();
-
-      List<Long> eventIds = new ArrayList<Long>(eventPKs.size());
-      for (EventPK eventPK : eventPKs) {
-        sb.append(sb.length() > 0 ? ", " : "").append("?");
-        eventIds.add(eventPK.getEventId());
-      }
-
-      CachedRowSet versions = new com.sun.rowset.CachedRowSetImpl();
-
-      versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())),
-              eventIds,
-              connection));
-
-      if ((versions.size() == 1) && (versions.first())) {
-        return versions.getInt(1);
-      } else {
-        return null;
-      }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(getEventVersionSQL);
+    List<Long> eventIds = new ArrayList<Long>(eventPKs.size());
+    for (EventPK eventPK : eventPKs) {
+      sb.append(sb.length() > 0 ? ", " : "").append("?");
+      eventIds.add(eventPK.getEventId());
     }
-    return null;
+
+    CachedRowSet versions = new com.sun.rowset.CachedRowSetImpl();
+
+    versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())),
+            eventIds,
+            connection));
+
+    if ((versions.size() == 1) && (versions.first())) {
+      return versions.getInt(1);
+    } else {
+      return null;
+    }
   }
 
   private long storeVersion() throws SQLException {
@@ -265,16 +246,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (insertVersion == null) {
       insertVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertVersion.sql", "cp1250"));
     }
-    try {
-      ObjectSemaphore.aquire(insertVersion);
 
+    synchronized (insertVersion) {
       insertVersion.executeUpdate();
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(insertVersion);
+      return getLastIdentity();
     }
-    return getLastIdentity();
   }
 
   private void storeEventVersion(long versionId, EventPK eventPK) throws SQLException {
@@ -282,19 +258,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (insertEventVersion == null) {
       insertEventVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEventVersion.sql", "cp1250"));
     }
-    try {
-      ObjectSemaphore.aquire(insertEventVersion);
 
+    synchronized (insertEventVersion) {
       int param = 1;
       insertEventVersion.clearParameters();
       insertEventVersion.setLong(param++, versionId);
       insertEventVersion.setLong(param++, eventPK.getEventId());
       System.out.println("versionId = " + versionId + ", eventId = " + eventPK.getEventId());
       insertEventVersion.executeUpdate();
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(insertEventVersion);
     }
   }
 
@@ -306,9 +277,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (findVersion == null) {
         findVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_version.sql", "cp1250"));
       }
-      try {
-        ObjectSemaphore.aquire(findVersion);
-
+      synchronized (findVersion) {
         int param = 1;
         findVersion.clearParameters();
         findVersion.setLong(param++, eventId);
@@ -319,10 +288,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
             result = null;
           }
         }
-      } catch (InterruptedException ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-      } finally {
-        ObjectSemaphore.release(findVersion);
       }
     }
 
@@ -372,7 +337,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       connection.clearWarnings();
       Long events_ID = null;
       try {
-        ObjectSemaphore.aquire(insertEvents, updateEvents, findEventValue, insertEventValues, updateEventValues, deleteEventValues, get_field, delete_eventPK);
         if (!isTransaction) {
           beginTransaction();
         }
@@ -386,83 +350,89 @@ public class SqlUtilitesImpl extends SqlUtilities {
             if (event.isVersioned() && (oldEvent != null)) {
               //updataj stari event
               //oz.deletej valid = false
-              param = 1;
-              updateEvents.clearParameters();
-              updateEvents.setInt(param++, oldEvent.getSifrant());
-              updateEvents.setString(param++, oldEvent.getSifra());
-              if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
-                updateEvents.setNull(param++, java.sql.Types.INTEGER);
-              } else {
-                updateEvents.setInt(param++, oldEvent.getEventSource());
+              synchronized (updateEvents) {
+                param = 1;
+                updateEvents.clearParameters();
+                updateEvents.setInt(param++, oldEvent.getSifrant());
+                updateEvents.setString(param++, oldEvent.getSifra());
+                if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
+                  updateEvents.setNull(param++, java.sql.Types.INTEGER);
+                } else {
+                  updateEvents.setInt(param++, oldEvent.getEventSource());
+                }
+                updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
+                updateEvents.setString(param++, oldEvent.getOpomba());
+                updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+                updateEvents.setBoolean(param++, false);
+                updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
+                updateEvents.setLong(param++, oldEvent.getId());
+
+                success = success && updateEvents.executeUpdate() > 0;
               }
-              updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
-              updateEvents.setString(param++, oldEvent.getOpomba());
-              updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-              updateEvents.setBoolean(param++, false);
-              updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
-              updateEvents.setLong(param++, oldEvent.getId());
 
-              success = success && updateEvents.executeUpdate() > 0;
-
-              //
-              param = 1;
-              delete_eventPK.clearParameters();
-              delete_eventPK.setLong(param++, oldEvent.getId());
-              delete_eventPK.executeUpdate();
+              synchronized (delete_eventPK) {
+                param = 1;
+                delete_eventPK.clearParameters();
+                delete_eventPK.setLong(param++, oldEvent.getId());
+                delete_eventPK.executeUpdate();
+              }
               //success = success && delete_eventPK.executeUpdate() > 0;
             }
 
             //insertaj event
-            param = 1;
-            insertEvents.clearParameters();
-            insertEvents.setInt(param++, event.getSifrant());
-            insertEvents.setString(param++, event.getSifra());
-            if (event.getEventSource() == Integer.MIN_VALUE) {
-              insertEvents.setNull(param++, java.sql.Types.INTEGER);
-            } else {
-              insertEvents.setInt(param++, event.getEventSource());
-            }
-            Date eventDatum = event.getDatum();
-            if (eventDatum != null) {
-              insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-            } else {
-              insertEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-            }
-            insertEvents.setString(param++, event.getOpomba());
-            success = success && insertEvents.executeUpdate() > 0;
+            synchronized (insertEvents) {
+              param = 1;
+              insertEvents.clearParameters();
+              insertEvents.setInt(param++, event.getSifrant());
+              insertEvents.setString(param++, event.getSifra());
+              if (event.getEventSource() == Integer.MIN_VALUE) {
+                insertEvents.setNull(param++, java.sql.Types.INTEGER);
+              } else {
+                insertEvents.setInt(param++, event.getEventSource());
+              }
+              Date eventDatum = event.getDatum();
+              if (eventDatum != null) {
+                insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+              } else {
+                insertEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+              }
+              insertEvents.setString(param++, event.getOpomba());
+              success = success && insertEvents.executeUpdate() > 0;
 
-            if (success) {
-              events_ID = getLastIdentity();
-            } else {
-              throw new SQLException("Neuspešno dodajanje dogodka!");
+              if (success) {
+                events_ID = getLastIdentity();
+              } else {
+                throw new SQLException("Neuspešno dodajanje dogodka!");
+              }
             }
 
 
           } else {
             events_ID = event.getId();
 //        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
+            synchronized (updateEvents) {
+              param = 1;
+              updateEvents.clearParameters();
+              updateEvents.setInt(param++, event.getSifrant());
+              updateEvents.setString(param++, event.getSifra());
+              if (event.getEventSource() == Integer.MIN_VALUE) {
+                updateEvents.setNull(param++, java.sql.Types.INTEGER);
+              } else {
+                updateEvents.setInt(param++, event.getEventSource());
+              }
+              long time = System.currentTimeMillis();
+              if (event != null && event.getDatum() != null) {
+                time = event.getDatum().getTime();
+              }
+              updateEvents.setTimestamp(param++, new java.sql.Timestamp(time));
+              updateEvents.setString(param++, event.getOpomba());
+              updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+              updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
+              updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
+              updateEvents.setLong(param++, events_ID);
 
-            param = 1;
-            updateEvents.clearParameters();
-            updateEvents.setInt(param++, event.getSifrant());
-            updateEvents.setString(param++, event.getSifra());
-            if (event.getEventSource() == Integer.MIN_VALUE) {
-              updateEvents.setNull(param++, java.sql.Types.INTEGER);
-            } else {
-              updateEvents.setInt(param++, event.getEventSource());
+              success = success && updateEvents.executeUpdate() > 0;
             }
-            long time = System.currentTimeMillis();
-            if (event != null && event.getDatum() != null) {
-              time = event.getDatum().getTime();
-            }
-            updateEvents.setTimestamp(param++, new java.sql.Timestamp(time));
-            updateEvents.setString(param++, event.getOpomba());
-            updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-            updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
-            updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
-            updateEvents.setLong(param++, events_ID);
-
-            success = success && updateEvents.executeUpdate() > 0;
           }
 
           if (success) {
@@ -516,43 +486,45 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 if (valueId != null) {
                   if (field.getLookupType() == null) {
 
-                    param = 1;
-                    findEventValue.clearParameters();
-                    findEventValue.setLong(param++, events_ID);
-                    findEventValue.setInt(param++, field_id);
-                    findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
-
-                    ResultSet rs = findEventValue.executeQuery();
-                    rs.next();
-
-                    if (rs.getInt(1) == 0) {
-                      //insertaj event value
+                    synchronized (findEventValue) {
                       param = 1;
-                      insertEventValues.clearParameters();
-                      insertEventValues.setLong(param++, events_ID);
-                      insertEventValues.setInt(param++, field_id);
-                      insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-                      if (valueId == null) {
-                        insertEventValues.setNull(param++, java.sql.Types.BIGINT);
-                      } else {
-                        insertEventValues.setLong(param++, valueId);
-                      }
+                      findEventValue.clearParameters();
+                      findEventValue.setLong(param++, events_ID);
+                      findEventValue.setInt(param++, field_id);
+                      findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
 
-                      success = success && insertEventValues.executeUpdate() > 0;
-                    } else {
-                      //updataj event value
-                      param = 1;
-                      updateEventValues.clearParameters();
-                      if (valueId == null) {
-                        updateEventValues.setNull(param++, java.sql.Types.BIGINT);
-                      } else {
-                        updateEventValues.setLong(param++, valueId);
-                      }
-                      updateEventValues.setLong(param++, events_ID);
-                      updateEventValues.setInt(param++, field_id);
-                      updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                      ResultSet rs = findEventValue.executeQuery();
+                      rs.next();
 
-                      success = success && updateEventValues.executeUpdate() > 0;
+                      if (rs.getInt(1) == 0) {
+                        //insertaj event value
+                        param = 1;
+                        insertEventValues.clearParameters();
+                        insertEventValues.setLong(param++, events_ID);
+                        insertEventValues.setInt(param++, field_id);
+                        insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                        if (valueId == null) {
+                          insertEventValues.setNull(param++, java.sql.Types.BIGINT);
+                        } else {
+                          insertEventValues.setLong(param++, valueId);
+                        }
+
+                        success = success && insertEventValues.executeUpdate() > 0;
+                      } else {
+                        //updataj event value
+                        param = 1;
+                        updateEventValues.clearParameters();
+                        if (valueId == null) {
+                          updateEventValues.setNull(param++, java.sql.Types.BIGINT);
+                        } else {
+                          updateEventValues.setLong(param++, valueId);
+                        }
+                        updateEventValues.setLong(param++, events_ID);
+                        updateEventValues.setInt(param++, field_id);
+                        updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+
+                        success = success && updateEventValues.executeUpdate() > 0;
+                      }
                     }
                   }
 
@@ -568,12 +540,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 } else {
                   if (!event.isVersioned()) {
                     //delete eventValue
-                    param = 1;
-                    deleteEventValues.clearParameters();
-                    deleteEventValues.setLong(param++, events_ID);
-                    deleteEventValues.setInt(param++, field_id);
-                    deleteEventValues.setInt(param++, fieldValueIndex);
-                    deleteEventValues.executeUpdate();
+                    synchronized (deleteEventValues) {
+                      param = 1;
+                      deleteEventValues.clearParameters();
+                      deleteEventValues.setLong(param++, events_ID);
+                      deleteEventValues.setInt(param++, field_id);
+                      deleteEventValues.setInt(param++, fieldValueIndex);
+                      deleteEventValues.executeUpdate();
+                    }
                   }
                 }
               }
@@ -595,40 +569,41 @@ public class SqlUtilitesImpl extends SqlUtilities {
             events_ID = event.getId();
             //updataj stari event
             //oz.deletej valid = false
-            param = 1;
-            updateEvents.clearParameters();
-            updateEvents.setInt(param++, event.getSifrant());
-            updateEvents.setString(param++, event.getSifra());
-            if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
-              updateEvents.setNull(param++, java.sql.Types.INTEGER);
-            } else {
-              updateEvents.setInt(param++, event.getEventSource());
+            synchronized (updateEvents) {
+              param = 1;
+              updateEvents.clearParameters();
+              updateEvents.setInt(param++, event.getSifrant());
+              updateEvents.setString(param++, event.getSifra());
+              if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
+                updateEvents.setNull(param++, java.sql.Types.INTEGER);
+              } else {
+                updateEvents.setInt(param++, event.getEventSource());
+              }
+              updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
+              updateEvents.setString(param++, event.getOpomba());
+              updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+              updateEvents.setBoolean(param++, false);
+              updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
+              updateEvents.setLong(param++, event.getId());
+
+              success = success && updateEvents.executeUpdate() > 0;
             }
-            updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
-            updateEvents.setString(param++, event.getOpomba());
-            updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-            updateEvents.setBoolean(param++, false);
-            updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
-            updateEvents.setLong(param++, event.getId());
 
-            success = success && updateEvents.executeUpdate() > 0;
-
-            //
-            param = 1;
-            delete_eventPK.clearParameters();
-            delete_eventPK.setLong(param++, event.getId());
-            delete_eventPK.executeUpdate();
-            //success = success && delete_eventPK.executeUpdate() > 0;
+            synchronized (delete_eventPK) {
+              //
+              param = 1;
+              delete_eventPK.clearParameters();
+              delete_eventPK.setLong(param++, event.getId());
+              delete_eventPK.executeUpdate();
+              //success = success && delete_eventPK.executeUpdate() > 0;
+            }
 
             commit = success;
           }
         } else {
           events_ID = event.getId();
         }
-      } catch (InterruptedException ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
       } finally {
-        ObjectSemaphore.release(insertEvents, updateEvents, findEventValue, insertEventValues, updateEventValues, deleteEventValues, get_field, delete_eventPK);
         if (!isTransaction) {
           endTransaction(commit);
         }
@@ -695,12 +670,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
             break;
         }
       }
-      try {
-        ObjectSemaphore.aquire(insert_eventLookupKeys, update_eventLookupKeys);
-
-        //vse vrednosti za lookup morajo biti izpolnjene
-        if (Field.LookupType.values().length == numberOfValues) {
-          if (findLookupKeys(lookupIdPolja, fieldValueIndex, eventId)) {
+      //vse vrednosti za lookup morajo biti izpolnjene
+      if (Field.LookupType.values().length == numberOfValues) {
+        if (findLookupKeys(lookupIdPolja, fieldValueIndex, eventId)) {
+          synchronized (update_eventLookupKeys) {
             int param = 1;
             update_eventLookupKeys.clearParameters();
 
@@ -718,8 +691,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
             update_eventLookupKeys.setInt(param++, fieldValueIndex);
 
             success = success && update_eventLookupKeys.executeUpdate() > 0;
-          } else {
-            //insert
+          }
+        } else {
+          //insert
+          synchronized (insert_eventLookupKeys) {
             int param = 1;
             insert_eventLookupKeys.clearParameters();
             insert_eventLookupKeys.setLong(param++, eventId);
@@ -738,13 +713,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
             success = success && insert_eventLookupKeys.executeUpdate() > 0;
           }
-        } else {
-          throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
         }
-      } catch (InterruptedException ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-      } finally {
-        ObjectSemaphore.release(insert_eventLookupKeys, update_eventLookupKeys);
+      } else {
+        throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
       }
     }
     return success;
@@ -755,8 +726,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (find_eventLookupKeys == null) {
       find_eventLookupKeys = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "find_eventLookupKeys.sql", "cp1250"));
     }
-    try {
-      ObjectSemaphore.aquire(find_eventLookupKeys);
+    synchronized (find_eventLookupKeys) {
       int param = 1;
       find_eventLookupKeys.clearParameters();
       find_eventLookupKeys.setLong(param++, eventId);
@@ -766,10 +736,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (rs_find_eventLookupKeys.next()) {
         result = true;
       }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(find_eventLookupKeys);
     }
     return result;
   }
@@ -780,9 +746,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (findValue == null) {
       findValue = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "findValue.sql", "cp1250"));
     }
-    try {
-      ObjectSemaphore.aquire(findValue);
-
+    synchronized (findValue) {
       int param = 1;
       findValue.clearParameters();
       findValue.setLong(param++, valueId);
@@ -810,12 +774,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           //TODO
           //object, clob, cclob
         }
-
       }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(findValue);
     }
     return result;
   }
@@ -888,9 +847,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           break;
       }
       if (newValueId == null) {
-        try {
-          ObjectSemaphore.aquire(callStoredValue);
-
+        synchronized (callStoredValue) {
           execute(callStoredValue, fieldValues);
 
           ResultSet resultSet = callStoredValue.getResultSet();
@@ -903,10 +860,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
               resultSet.close();
             }
           }
-        } catch (InterruptedException ex) {
-          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-          ObjectSemaphore.release(callStoredValue);
         }
       }
     }
@@ -926,9 +879,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     boolean success = true;
     boolean saveOpomba = true;
 
-    try {
-      ObjectSemaphore.aquire(insertEventsOpombe, findOpomba);
-
+    synchronized (findOpomba) {
       param = 1;
       findOpomba.clearParameters();
       findOpomba.setLong(param++, eventId);
@@ -951,6 +902,25 @@ public class SqlUtilitesImpl extends SqlUtilities {
           return true;
         }
         Long opombaId = storeValue(ValueType.ClobValue, opomba);
+        synchronized (insertEventsOpombe) {
+          param = 1;
+          insertEventsOpombe.clearParameters();
+          if (eventId == null) {
+            return false;
+          } else {
+            insertEventsOpombe.setLong(param++, eventId.longValue());
+          }
+          if (opombaId == null) {
+            //null ni dovoljeno, zato bo vrgel sql napako
+            return false;
+          } else {
+            insertEventsOpombe.setLong(param++, opombaId.longValue());
+          }
+          success = success && insertEventsOpombe.executeUpdate() > 0;
+        }
+      }
+      Long opombaId = storeValue(ValueType.ClobValue, opomba);
+      synchronized (insertEventsOpombe) {
         param = 1;
         insertEventsOpombe.clearParameters();
         if (eventId == null) {
@@ -964,12 +934,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
         } else {
           insertEventsOpombe.setLong(param++, opombaId.longValue());
         }
+
         success = success && insertEventsOpombe.executeUpdate() > 0;
       }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(insertEventsOpombe, findOpomba);
     }
     return success;
   }
@@ -1024,44 +991,32 @@ public class SqlUtilitesImpl extends SqlUtilities {
         findHsNeznanaId = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findHsNeznanaId.sql", "cp1250"));
       }
 
-//      findHsNeznanaId.clearParameters();
-//      findHsNeznanaId.setInt(param++, (Integer.valueOf(address.getPostnaStevilka().getValue().toString())));
-//      findHsNeznanaId.setString(param++, (String) address.getPosta().getValue());
-//      findHsNeznanaId.setString(param++, (String) address.getNaselje().getValue());
-//      findHsNeznanaId.setString(param++, (String) address.getUlica().getValue());
-//      findHsNeznanaId.setInt(param++, (Integer.valueOf(address.getHisnaStevilka().getValue().toString())));
-//      findHsNeznanaId.setString(param++, (String) address.getHisnaStevilkaDodatek().getValue());
-//
-//
-//      findHsNeznanaId.executeQuery();
-      try {
-        ObjectSemaphore.aquire(findHsNeznanaId, insertNeznaniNaslov);
+      ResultSet rsFindHsNeznanaId = executeQuery(findHsNeznanaId,
+              address.getPostnaStevilka(),
+              address.getPosta(),
+              address.getNaselje(),
+              address.getUlica(),
+              address.getHisnaStevilka(),
+              address.getHisnaStevilkaDodatek());
 
-        ResultSet rsFindHsNeznanaId = executeQuery(findHsNeznanaId,
-                address.getPostnaStevilka(),
-                address.getPosta(),
-                address.getNaselje(),
-                address.getUlica(),
-                address.getHisnaStevilka(),
-                address.getHisnaStevilkaDodatek());
+      Long hs_neznana_id = null;
 
-        Long hs_neznana_id = null;
-
-        if (rsFindHsNeznanaId.next()) {
-          hs_neznana_id = rsFindHsNeznanaId.getLong(1);
-          if (rsFindHsNeznanaId.wasNull()) {
-            hs_neznana_id = null;
-          }
-        } else {
-          if (insertNeznaniNaslov == null) {
-            insertNeznaniNaslov = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertNeznaniNaslov.sql", "cp1250"));
-          }
-          boolean commit = false;
-          boolean isTransaction = isTransaction();
-          if (!isTransaction) {
-            sqlUtility.beginTransaction();
-          }
-          try {
+      if (rsFindHsNeznanaId.next()) {
+        hs_neznana_id = rsFindHsNeznanaId.getLong(1);
+        if (rsFindHsNeznanaId.wasNull()) {
+          hs_neznana_id = null;
+        }
+      } else {
+        if (insertNeznaniNaslov == null) {
+          insertNeznaniNaslov = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertNeznaniNaslov.sql", "cp1250"));
+        }
+        boolean commit = false;
+        boolean isTransaction = isTransaction();
+        if (!isTransaction) {
+          sqlUtility.beginTransaction();
+        }
+        try {
+          synchronized (insertNeznaniNaslov) {
             param = 1;
             insertNeznaniNaslov.clearParameters();
 
@@ -1096,27 +1051,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
             insertNeznaniNaslov.setInt(param++, address.getIzvor());
 
-
             commit = insertNeznaniNaslov.executeUpdate() > 0;
-
-          } finally {
-            if (commit) {
-              if (isTransaction) {
-                sqlUtility.endTransaction(commit);
-              }
-
-              hs_neznana_id = sqlUtility.getLastIdentity();
-            } else {
-              JOptionPane.showMessageDialog(null, "Napaka pri shranjevanju neznanega naslova!", "Napaka", JOptionPane.ERROR_MESSAGE);
+          }
+        } finally {
+          if (commit) {
+            if (isTransaction) {
+              sqlUtility.endTransaction(commit);
             }
+
+            hs_neznana_id = sqlUtility.getLastIdentity();
+          } else {
+            JOptionPane.showMessageDialog(null, "Napaka pri shranjevanju neznanega naslova!", "Napaka", JOptionPane.ERROR_MESSAGE);
           }
         }
-        address.setHsNeznanaMID(hs_neznana_id);
-      } catch (InterruptedException ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-      } finally {
-        ObjectSemaphore.release(findHsNeznanaId, insertNeznaniNaslov);
       }
+      address.setHsNeznanaMID(hs_neznana_id);
     }
 
     return address;
@@ -1126,9 +1075,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (findEventById == null) {
       findEventById = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_event_by_id.sql", "cp1250"));
     }
-    try {
-      ObjectSemaphore.aquire(findEventById);
-
+    synchronized (findEventById) {
       ResultSet rs = executeQuery(findEventById, new FieldValue("ID", java.sql.Types.BIGINT, eventId));
       try {
         if (rs.next()) {
@@ -1199,11 +1146,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       } finally {
         rs.close();
       }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-      return null;
-    } finally {
-      ObjectSemaphore.release(findEventById);
     }
 
   }
@@ -1226,22 +1168,26 @@ public class SqlUtilitesImpl extends SqlUtilities {
     Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();
     try {
       Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
-      ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
+      try {
+        ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
 
-      while (cachedObjects.next()) {
-        if (cachedObjects.getObject("CachedObjectXML") != null) {
-          String object = cachedObjects.getString("Object");
-          com.openitech.db.model.xml.config.CachedTemporaryTable temporaryTable;
+        while (cachedObjects.next()) {
+          if (cachedObjects.getObject("CachedObjectXML") != null) {
+            String object = cachedObjects.getString("Object");
+            com.openitech.db.model.xml.config.CachedTemporaryTable temporaryTable;
 
-          try {
-            Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
-            temporaryTable = (com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream());
+            try {
+              Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
+              temporaryTable = (com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream());
 
-            result.put(object, temporaryTable.getTemporaryTable());
-          } catch (JAXBException ex) {
-            Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
+              result.put(object, temporaryTable.getTemporaryTable());
+            } catch (JAXBException ex) {
+              Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
+            }
           }
         }
+      } finally {
+        statement.close();
       }
     } catch (SQLException ex) {
       Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -1269,15 +1215,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           storeCachedTemporaryTable = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "storeCachedTemporaryTable.sql", "cp1250"));
         }
 
-        try {
-          ObjectSemaphore.aquire(storeCachedTemporaryTable);
+        synchronized (storeCachedTemporaryTable) {
           storeCachedTemporaryTable.setString(1, tt.getMaterializedView().getValue());
           storeCachedTemporaryTable.setString(2, sw.toString());
           storeCachedTemporaryTable.executeUpdate();
-        } catch (InterruptedException ex) {
-          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-          ObjectSemaphore.release(storeCachedTemporaryTable);
         }
       } catch (SQLException ex) {
         Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -1309,47 +1250,41 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
 
-    try {
-      ObjectSemaphore.aquire(insert_eventPK, update_eventPK, delete_eventPK);
-
-      try {
-        if (findEventPK(eventId) != null) {
-          if (eventPK.getEventOperation().equals(Event.EventOperation.DELETE)) {
-            param = 1;
-            delete_eventPK.clearParameters();
-            delete_eventPK.setLong(param++, eventId);
-            success = delete_eventPK.executeUpdate() > 0;
-          } else {
-            //update
-            param = 1;
-            update_eventPK.clearParameters();
-            update_eventPK.setInt(param++, idSifranta);
-            update_eventPK.setString(param++, idSifre);
-            update_eventPK.setString(param++, primaryKey);
-            update_eventPK.setLong(param++, eventId);
-
-            success = update_eventPK.executeUpdate() > 0;
-          }
-        } else {
-          //insert
+    if (findEventPK(eventId) != null) {
+      if (eventPK.getEventOperation().equals(Event.EventOperation.DELETE)) {
+        synchronized (delete_eventPK) {
           param = 1;
-
-          insert_eventPK.clearParameters();
-          insert_eventPK.setLong(param++, eventId);
-          insert_eventPK.setInt(param++, idSifranta);
-          insert_eventPK.setString(param++, idSifre);
-          insert_eventPK.setString(param++, primaryKey);
-          success = insert_eventPK.executeUpdate() > 0;
+          delete_eventPK.clearParameters();
+          delete_eventPK.setLong(param++, eventId);
+          success = delete_eventPK.executeUpdate() > 0;
         }
-      } catch (SQLException ex) {
-        // System.out.println("Najden je podvojeni zapis za dogodek E:" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toNormalString());
-        throw new SQLPrimaryKeyException("Najden je podvojeni zapis za dogodek E:" + eventId + "-" + idSifranta + '-' + idSifre + ".\nShranjevanje neuspešno!\n\nPK:" + eventPK.toHexString(), ex, eventPK);
+      } else {
+        //insert
+        synchronized (update_eventPK) {
+          param = 1;
+          update_eventPK.clearParameters();
+          update_eventPK.setInt(param++, idSifranta);
+          update_eventPK.setString(param++, idSifre);
+          update_eventPK.setString(param++, primaryKey);
+          update_eventPK.setLong(param++, eventId);
+
+          success = update_eventPK.executeUpdate() > 0;
+        }
       }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(insert_eventPK, update_eventPK, delete_eventPK);
+    } else {
+      //insert
+      synchronized (insert_eventPK) {
+        param = 1;
+
+        insert_eventPK.clearParameters();
+        insert_eventPK.setLong(param++, eventId);
+        insert_eventPK.setInt(param++, idSifranta);
+        insert_eventPK.setString(param++, idSifre);
+        insert_eventPK.setString(param++, primaryKey);
+        success = insert_eventPK.executeUpdate() > 0;
+      }
     }
+
     return success;
   }
 
@@ -1377,11 +1312,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
         update_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK_versions.sql", "cp1250"));
       }
 
-      try {
-        ObjectSemaphore.aquire(insert_eventPK_versions, update_eventPK_versions);
-
-        if (findEventPKVersions(eventId, versionId) != null) {
-          //if (versionId == null) {
+      if (findEventPKVersions(eventId, versionId) != null) {
+        //if (versionId == null) {
+        synchronized (update_eventPK_versions) {
           param = 1;
           update_eventPK_versions.clearParameters();
 
@@ -1399,9 +1332,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
           update_eventPK_versions.executeUpdate();
           success = update_eventPK_versions.executeUpdate() > 0;
-          // }
-        } else {
-
+        }
+        // }
+      } else {
+        synchronized (insert_eventPK_versions) {
           //insert
           param = 1;
 
@@ -1418,10 +1352,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
           System.out.println(eventId + "," + versionId + "," + idSifranta + "," + idSifre + "," + primaryKey);
           success = success && insert_eventPK_versions.executeUpdate() > 0;
         }
-      } catch (InterruptedException ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-      } finally {
-        ObjectSemaphore.release(insert_eventPK_versions, update_eventPK_versions);
       }
     }
     return success;
@@ -1436,9 +1366,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       find_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventPK.sql", "cp1250"));
     }
 
-    try {
-      ObjectSemaphore.aquire(find_eventPK);
-
+    synchronized (find_eventPK) {
       int param = 1;
       find_eventPK.clearParameters();
       find_eventPK.setLong(param++, eventId);
@@ -1449,10 +1377,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
         String primaryKey = rs_findEventPK.getString("PrimaryKey");
         result = new SqlEventPK(eventId, idSifranta, idSifre, primaryKey);
       }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(find_eventPK);
     }
     return result;
   }
@@ -1466,10 +1390,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       find_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventPK_versions.sql", "cp1250"));
     }
 
-    try {
-      ObjectSemaphore.aquire(find_eventPK_versions);
-
-
+    synchronized (find_eventPK_versions) {
       int param = 1;
       find_eventPK_versions.clearParameters();
       find_eventPK_versions.setLong(param++, eventId);
@@ -1487,10 +1408,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
         result = new SqlEventPK(eventId, eventsPK_idSifranta, eventsPK_idSifre, eventsPK_primaryKey, eventsPK_versionId);
       }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(find_eventPK_versions);
     }
     return result;
   }
@@ -1503,9 +1420,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (find_eventPK_versions_byValues == null) {
       find_eventPK_versions_byValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_eventPK_versions_byValues.sql", "cp1250"));
     }
-    try {
-      ObjectSemaphore.aquire(find_eventPK_versions_byValues);
 
+    synchronized (find_eventPK_versions_byValues) {
       int param = 1;
       find_eventPK_versions_byValues.clearParameters();
       find_eventPK_versions_byValues.setInt(param++, versionId == null ? 1 : 0);
@@ -1523,10 +1439,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
         result = new SqlEventPK(eventsPK_eventId, idSifranta, idSifre, primaryKey, versionId);
       }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(find_eventPK_versions_byValues);
     }
     return result;
   }
@@ -1538,17 +1450,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (delete_event == null) {
       delete_event = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "delete_event.sql", "cp1250"));
     }
-    try {
-      ObjectSemaphore.aquire(delete_event);
-
+    synchronized (delete_event) {
       int param = 1;
       delete_event.clearParameters();
       delete_event.setLong(param++, eventId);
       success = delete_event.executeUpdate() > 0;
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(delete_event);
     }
     return success;
   }
@@ -1586,38 +1492,42 @@ public class SqlUtilitesImpl extends SqlUtilities {
     String result = "";
     try {
       StringBuilder sbresult = new StringBuilder(200);
-      PreparedStatement findPPPolja = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "findPPPolja.sql", "cp1250"), java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-      ResultSet rsFindPPPolja = findPPPolja.executeQuery();
-      while (rsFindPPPolja.next()) {
-        String imePolja = rsFindPPPolja.getString("ImePolja");
-        final String val_alias = "[val_" + imePolja + "]";
-        int tipPolja = rsFindPPPolja.getInt("TipPolja");
-        switch (tipPolja) {
-          case 1:
-            sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(imePolja).append("]");
-            break;
-          case 2:
-            //Real
-            sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(imePolja).append("]");
-            break;
-          case 3:
-            //String
-            sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(imePolja).append("]");
-            break;
-          case 4:
-            //Date
-            sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(imePolja).append("]");
-            break;
-          case 6:
-            //Clob
-            sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(imePolja).append("]");
-            break;
-          case 7:
-            //Boolean
-            sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(imePolja).append("]");
+      Statement findPPPolja = ConnectionManager.getInstance().getConnection().createStatement(java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+      try {
+        ResultSet rsFindPPPolja = findPPPolja.executeQuery(ReadInputStream.getResourceAsString(getClass(), "findPPPolja.sql", "cp1250"));
+        while (rsFindPPPolja.next()) {
+          String imePolja = rsFindPPPolja.getString("ImePolja");
+          final String val_alias = "[val_" + imePolja + "]";
+          int tipPolja = rsFindPPPolja.getInt("TipPolja");
+          switch (tipPolja) {
+            case 1:
+              sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(imePolja).append("]");
+              break;
+            case 2:
+              //Real
+              sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(imePolja).append("]");
+              break;
+            case 3:
+              //String
+              sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(imePolja).append("]");
+              break;
+            case 4:
+              //Date
+              sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(imePolja).append("]");
+              break;
+            case 6:
+              //Clob
+              sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(imePolja).append("]");
+              break;
+            case 7:
+              //Boolean
+              sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(imePolja).append("]");
+          }
         }
+        result = sbresult.toString();
+      } finally {
+        findPPPolja.close();
       }
-      result = sbresult.toString();
     } catch (SQLException ex) {
       Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
     }
@@ -1631,19 +1541,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
       insertScheduler = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "insertScheduler.sql", "cp1250"));
     }
 
-    try {
-      ObjectSemaphore.aquire(insertScheduler);
-
+    synchronized (insertScheduler) {
       int param = 1;
       insertScheduler.clearParameters();
 
       insertScheduler.setLong(param++, veljavnost);
       insertScheduler.setLong(param++, events_ID);
       success = success && insertScheduler.executeUpdate() > 0;
-    } catch (InterruptedException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
-      ObjectSemaphore.release(insertScheduler);
     }
     return success;
   }
@@ -1876,16 +1780,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       if (seek) {
-        ResultSet rs = eqk.executeQuery(event);
-        try {
-          if (rs.next()) {
-            event.setId(rs.getLong("Id"));
-            return findEvent(event.getId());
-          } else {
-            return null;
+        synchronized (eqk) {
+          ResultSet rs = eqk.executeQuery(event);
+          try {
+            if (rs.next()) {
+              event.setId(rs.getLong("Id"));
+              return findEvent(event.getId());
+            } else {
+              return null;
+            }
+          } finally {
+            rs.close();
           }
-        } finally {
-          rs.close();
         }
       } else {
         return null;
@@ -2171,50 +2077,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public FieldValue getParentIdentity(Field field) throws SQLException {
-    SYSTEM_IDENTITIES.setPrimaryKey(new Field[]{});
-    Event system = findEvent(SYSTEM_IDENTITIES);
-    system = system == null ? SYSTEM_IDENTITIES : system;
-    List<FieldValue> get = system.getEventValues().get(field);
-    if ((get == null) || (get.isEmpty())) {
-      ValueType type = ValueType.getType(field.getType());
-      FieldValue start = new FieldValue(field);
-
-      switch (type) {
-        case RealValue:
-        case IntValue:
-          start.setValue(1);
-          break;
-        case StringValue:
-          start.setValue("AAA000000001");
-          break;
-        default:
-          start = null;
-      }
-
-      return start;
-    } else {
-      FieldValue value = get.get(0);
-      ValueType type = ValueType.getType(value.getType());
-
-      switch (type) {
-        case RealValue:
-          value.setValue(((Number) value.getValue()).doubleValue());
-          break;
-        case IntValue:
-          value.setValue(((Number) value.getValue()).longValue());
-          break;
-        case StringValue:
-          value.setValue((String) value.getValue());
-          break;
-        default:
-          value = null;
-      }
-      return value;
-    }
-  }
-
-  @Override
   public String getCreateTableSQL(String tableName, ResultSet rs) throws SQLException {
     ResultSetMetaData rsmd = rs.getMetaData();
     StringBuilder sb = new StringBuilder();
@@ -2398,7 +2260,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
-  @Override
+    @Override
     public boolean hasVersionId() {
       return versionId.getValue() != null && (((Long) versionId.getValue()) > 0);
     }

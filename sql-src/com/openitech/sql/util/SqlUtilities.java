@@ -133,178 +133,184 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     return executeUpdate(statement, fieldValues);
   }
 
-  public boolean execute(java.sql.CallableStatement statement,
+  public boolean execute(final java.sql.CallableStatement statement,
           FieldValue... fieldValues) throws SQLException {
-    statement.clearParameters();
-    System.out.println("Setting parameters");
-    for (int pos = 1; pos <= fieldValues.length; pos++) {
-      FieldValue fieldValue = fieldValues[pos - 1];
-      final String fieldName = fieldValue.getName();
-      final int type = fieldValue.getType();
-      final Object value = fieldValue.getValue();
-      final boolean wasNull = fieldValue.isNull();
+    synchronized (statement) {
+      statement.clearParameters();
+      System.out.println("Setting parameters");
+      for (int pos = 1; pos <= fieldValues.length; pos++) {
+        FieldValue fieldValue = fieldValues[pos - 1];
+        final String fieldName = fieldValue.getName();
+        final int type = fieldValue.getType();
+        final Object value = fieldValue.getValue();
+        final boolean wasNull = fieldValue.isNull();
 
 
-      System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
-      if (wasNull) {
-        statement.setNull(pos, type);
-      } else {
-        switch (type) {
-          case Types.DECIMAL:
-          case Types.DOUBLE:
-          case Types.FLOAT:
-            if (value instanceof Number) {
-              statement.setDouble(pos, ((Number) value).doubleValue());
-            } else {
-              statement.setDouble(pos, Double.parseDouble(value.toString()));
-            }
-            break;
-          case Types.BIT:
-          case Types.INTEGER:
-            if (value instanceof Number) {
-              statement.setInt(pos, ((Number) value).intValue());
+        System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
+        if (wasNull) {
+          statement.setNull(pos, type);
+        } else {
+          switch (type) {
+            case Types.DECIMAL:
+            case Types.DOUBLE:
+            case Types.FLOAT:
+              if (value instanceof Number) {
+                statement.setDouble(pos, ((Number) value).doubleValue());
+              } else {
+                statement.setDouble(pos, Double.parseDouble(value.toString()));
+              }
               break;
-            } else {
-              statement.setInt(pos, Integer.parseInt(value.toString()));
-            }
-            break;
-          case Types.BOOLEAN:
-            if (value instanceof Number) {
-              statement.setBoolean(pos, Equals.equals(value, 1));
-            } else if (value instanceof String) {
-              String svalue = value.toString().trim().toUpperCase();
-              statement.setBoolean(pos, svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F")));
-            }
-            break;
-          case Types.CHAR:
-          case Types.VARCHAR:
-            statement.setString(pos, value.toString());
-            break;
-          default:
-            statement.setObject(pos, value, type);
+            case Types.BIT:
+            case Types.INTEGER:
+              if (value instanceof Number) {
+                statement.setInt(pos, ((Number) value).intValue());
+                break;
+              } else {
+                statement.setInt(pos, Integer.parseInt(value.toString()));
+              }
+              break;
+            case Types.BOOLEAN:
+              if (value instanceof Number) {
+                statement.setBoolean(pos, Equals.equals(value, 1));
+              } else if (value instanceof String) {
+                String svalue = value.toString().trim().toUpperCase();
+                statement.setBoolean(pos, svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F")));
+              }
+              break;
+            case Types.CHAR:
+            case Types.VARCHAR:
+              statement.setString(pos, value.toString());
+              break;
+            default:
+              statement.setObject(pos, value, type);
+          }
         }
       }
-    }
 
-    return statement.execute();
+      return statement.execute();
+    }
   }
 
-  public int executeUpdate(java.sql.PreparedStatement statement,
+  public int executeUpdate(final java.sql.PreparedStatement statement,
           FieldValue... fieldValues) throws SQLException {
-    statement.clearParameters();
-    System.out.println("Setting parameters");
-    for (int pos = 1; pos <= fieldValues.length; pos++) {
-      FieldValue fieldValue = fieldValues[pos - 1];
-      final String fieldName = fieldValue.getName();
-      final int type = fieldValue.getType();
-      final Object value = fieldValue.getValue();
-      final boolean wasNull = fieldValue.isNull();
+    synchronized (statement) {
+      statement.clearParameters();
+      System.out.println("Setting parameters");
+      for (int pos = 1; pos <= fieldValues.length; pos++) {
+        FieldValue fieldValue = fieldValues[pos - 1];
+        final String fieldName = fieldValue.getName();
+        final int type = fieldValue.getType();
+        final Object value = fieldValue.getValue();
+        final boolean wasNull = fieldValue.isNull();
 
 
-      System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
-      if (wasNull) {
-        statement.setNull(pos, type);
-      } else {
-        switch (type) {
-          case Types.DECIMAL:
-          case Types.DOUBLE:
-          case Types.FLOAT:
-            if (value instanceof Number) {
-              statement.setDouble(pos, ((Number) value).doubleValue());
-            } else {
-              statement.setDouble(pos, Double.parseDouble(value.toString()));
-            }
-            break;
-          case Types.BIT:
-          case Types.INTEGER:
-            if (value instanceof Number) {
-              statement.setInt(pos, ((Number) value).intValue());
+        System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
+        if (wasNull) {
+          statement.setNull(pos, type);
+        } else {
+          switch (type) {
+            case Types.DECIMAL:
+            case Types.DOUBLE:
+            case Types.FLOAT:
+              if (value instanceof Number) {
+                statement.setDouble(pos, ((Number) value).doubleValue());
+              } else {
+                statement.setDouble(pos, Double.parseDouble(value.toString()));
+              }
               break;
-            } else {
-              statement.setInt(pos, Integer.parseInt(value.toString()));
-            }
-            break;
-          case Types.BOOLEAN:
-            if (value instanceof Number) {
-              statement.setBoolean(pos, Equals.equals(value, 1));
-            } else if (value instanceof String) {
-              String svalue = value.toString().trim().toUpperCase();
-              statement.setBoolean(pos, svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F")));
-            }
-            break;
-          case Types.CHAR:
-          case Types.VARCHAR:
-            statement.setString(pos, value.toString());
-            break;
-          default:
-            statement.setObject(pos, value, type);
+            case Types.BIT:
+            case Types.INTEGER:
+              if (value instanceof Number) {
+                statement.setInt(pos, ((Number) value).intValue());
+                break;
+              } else {
+                statement.setInt(pos, Integer.parseInt(value.toString()));
+              }
+              break;
+            case Types.BOOLEAN:
+              if (value instanceof Number) {
+                statement.setBoolean(pos, Equals.equals(value, 1));
+              } else if (value instanceof String) {
+                String svalue = value.toString().trim().toUpperCase();
+                statement.setBoolean(pos, svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F")));
+              }
+              break;
+            case Types.CHAR:
+            case Types.VARCHAR:
+              statement.setString(pos, value.toString());
+              break;
+            default:
+              statement.setObject(pos, value, type);
+          }
         }
       }
-    }
 
-    return statement.executeUpdate();
+      return statement.executeUpdate();
+    }
   }
 
-  public java.sql.ResultSet executeQuery(java.sql.PreparedStatement statement,
+  public java.sql.ResultSet executeQuery(final java.sql.PreparedStatement statement,
           FieldValue... fieldValues) throws SQLException {
-    statement.clearParameters();
-    System.out.println("Setting parameters");
-    for (int pos = 1; pos <= fieldValues.length; pos++) {
-      FieldValue fieldValue = fieldValues[pos - 1];
-      final String fieldName = fieldValue.getName();
-      final int type = fieldValue.getType();
-      final Object value = fieldValue.getValue();
-      final boolean wasNull = fieldValue.isNull();
+    synchronized (statement) {
+      statement.clearParameters();
+      System.out.println("Setting parameters");
+      for (int pos = 1; pos <= fieldValues.length; pos++) {
+        FieldValue fieldValue = fieldValues[pos - 1];
+        final String fieldName = fieldValue.getName();
+        final int type = fieldValue.getType();
+        final Object value = fieldValue.getValue();
+        final boolean wasNull = fieldValue.isNull();
 
 
-      System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
-      if (wasNull) {
-        statement.setNull(pos, type);
-      } else {
-        switch (type) {
-          case Types.FLOAT:
-          case Types.REAL:
-          case Types.DOUBLE:
-          case Types.DECIMAL:
-          case Types.NUMERIC:
-            if (value instanceof Number) {
-              statement.setDouble(pos, ((Number) value).doubleValue());
-            } else {
-              statement.setDouble(pos, Double.parseDouble(value.toString()));
-            }
-            break;
-          case Types.BIT:
-          case Types.TINYINT:
-          case Types.SMALLINT:
-          case Types.BIGINT:
-          case Types.INTEGER:
-            if (value instanceof Number) {
-              statement.setInt(pos, ((Number) value).intValue());
+        System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
+        if (wasNull) {
+          statement.setNull(pos, type);
+        } else {
+          switch (type) {
+            case Types.FLOAT:
+            case Types.REAL:
+            case Types.DOUBLE:
+            case Types.DECIMAL:
+            case Types.NUMERIC:
+              if (value instanceof Number) {
+                statement.setDouble(pos, ((Number) value).doubleValue());
+              } else {
+                statement.setDouble(pos, Double.parseDouble(value.toString()));
+              }
               break;
-            } else {
-              statement.setInt(pos, Integer.parseInt(value.toString()));
-            }
-            break;
-          case Types.BOOLEAN:
-            if (value instanceof Number) {
-              statement.setBoolean(pos, Equals.equals(value, 1));
-            } else if (value instanceof String) {
-              String svalue = value.toString().trim().toUpperCase();
-              statement.setBoolean(pos, svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F")));
-            }
-            break;
-          case Types.CHAR:
-          case Types.VARCHAR:
-          case Types.LONGVARCHAR:
-            statement.setString(pos, value.toString());
-            break;
-          default:
-            statement.setObject(pos, value, type);
+            case Types.BIT:
+            case Types.TINYINT:
+            case Types.SMALLINT:
+            case Types.BIGINT:
+            case Types.INTEGER:
+              if (value instanceof Number) {
+                statement.setInt(pos, ((Number) value).intValue());
+                break;
+              } else {
+                statement.setInt(pos, Integer.parseInt(value.toString()));
+              }
+              break;
+            case Types.BOOLEAN:
+              if (value instanceof Number) {
+                statement.setBoolean(pos, Equals.equals(value, 1));
+              } else if (value instanceof String) {
+                String svalue = value.toString().trim().toUpperCase();
+                statement.setBoolean(pos, svalue.length() > 0 && !(svalue.equals("0") || svalue.startsWith("N") || svalue.startsWith("F")));
+              }
+              break;
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.LONGVARCHAR:
+              statement.setString(pos, value.toString());
+              break;
+            default:
+              statement.setObject(pos, value, type);
+          }
         }
       }
-    }
 
-    return statement.executeQuery();
+      return statement.executeQuery();
+    }
   }
 
   private java.util.List<String> getPrimaryKeys(java.sql.Connection connection, String tableName) throws SQLException {
@@ -515,8 +521,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
   public abstract FieldValue getNextIdentity(Field field) throws SQLException;
-
-  public abstract FieldValue getParentIdentity(Field field) throws SQLException;
 
   protected EventPK storeEvent(Event event) throws SQLException {
     return storeEvent(event, null);
