@@ -5,8 +5,8 @@
 package com.openitech.events.concurrent;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -15,7 +15,7 @@ import java.util.concurrent.Semaphore;
  */
 public class ObjectSemaphore {
 
-  private static Map<Object, Semaphore> semaphores = Collections.synchronizedMap(new HashMap<Object, Semaphore>());
+  private static Map<Object, Semaphore> semaphores = Collections.synchronizedMap(new WeakHashMap<Object, Semaphore>());
 
   private ObjectSemaphore() {
   }
@@ -32,7 +32,6 @@ public class ObjectSemaphore {
     }
 
     for (Semaphore semaphore : s) {
-      System.out.println("Acquireing: " + semaphore.toString());
       semaphore.acquire();
     }
   }
@@ -47,7 +46,6 @@ public class ObjectSemaphore {
 
     for (Semaphore semaphore : s) {
       if (semaphore != null) {
-        System.out.println("Releaseing: " + semaphore.toString());
         semaphore.release();
       }
     }
