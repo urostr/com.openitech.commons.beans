@@ -2063,6 +2063,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     ResultSetMetaData rsmd = rs.getMetaData();
     StringBuilder sb = new StringBuilder();
     sb.append("CREATE TABLE ").append(tableName).append(" (\n");
+    sb.append("     [__RsID] bigint identity NOT NULL\n");
     for (int column = 1; column <= rsmd.getColumnCount(); column++) {
       //sb.append("    ").append(column == 1 ? ' ' : ',');
       sb.append("    ,");
