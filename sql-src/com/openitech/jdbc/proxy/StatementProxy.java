@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.openitech.jdbc.proxy;
 
 import java.sql.Connection;
@@ -17,10 +16,10 @@ import java.util.List;
  * @author uros
  */
 public class StatementProxy implements java.sql.Statement {
+
   final int resultSetType;
   final int resultSetConcurrency;
   final java.sql.Connection connection;
-
   java.sql.Statement statement;
 
   protected StatementProxy(AbstractConnection connection, int resultSetType, int resultSetConcurrency) {
@@ -30,33 +29,33 @@ public class StatementProxy implements java.sql.Statement {
   }
 
   private java.sql.Statement getActiveStatement() throws SQLException {
-    if (statement==null||statement.isClosed()) {
+    if (statement == null || statement.isClosed()) {
       statement = connection.createStatement(resultSetType, resultSetConcurrency);
-      if (maxFieldSize!=null) {
+      if (maxFieldSize != null) {
         statement.setMaxFieldSize(maxFieldSize);
       }
-      if (maxRows!=null) {
+      if (maxRows != null) {
         statement.setMaxRows(maxRows);
       }
-      if (escapeProcessing!=null) {
+      if (escapeProcessing != null) {
         statement.setEscapeProcessing(escapeProcessing);
       }
-      if (queryTimeout!=null) {
+      if (queryTimeout != null) {
         statement.setQueryTimeout(queryTimeout);
       }
-      if (cursorName!=null) {
+      if (cursorName != null) {
         statement.setCursorName(cursorName);
       }
-      if (fetchDirection!=null) {
+      if (fetchDirection != null) {
         statement.setFetchDirection(fetchDirection);
       }
-      if (fetchSize!=null) {
+      if (fetchSize != null) {
         statement.setFetchSize(fetchSize);
       }
-      if (poolable!=null) {
+      if (poolable != null) {
         statement.setPoolable(poolable);
       }
-      if (batch!=null&&batch.size()>0) {
+      if (batch != null && batch.size() > 0) {
         for (String sql : batch) {
           statement.addBatch(sql);
         }
@@ -77,9 +76,11 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public void close() throws SQLException {
+    if (statement == null) {
+      statement = getActiveStatement();
+    }
     statement.close();
   }
-
   Integer maxFieldSize;
 
   @Override
@@ -90,9 +91,8 @@ public class StatementProxy implements java.sql.Statement {
   @Override
   public void setMaxFieldSize(int max) throws SQLException {
     getActiveStatement().setMaxFieldSize(max);
-    this.maxFieldSize = statement.getMaxFieldSize();
+    this.maxFieldSize = max;
   }
-
   Integer maxRows;
 
   @Override
@@ -103,17 +103,15 @@ public class StatementProxy implements java.sql.Statement {
   @Override
   public void setMaxRows(int max) throws SQLException {
     getActiveStatement().setMaxRows(max);
-    this.maxRows = statement.getMaxRows();
+    this.maxRows = max;
   }
-
   Boolean escapeProcessing;
 
   @Override
   public void setEscapeProcessing(boolean enable) throws SQLException {
     getActiveStatement().setEscapeProcessing(enable);
-    this.escapeProcessing  = enable;
+    this.escapeProcessing = enable;
   }
-
   Integer queryTimeout;
 
   @Override
@@ -129,7 +127,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public void cancel() throws SQLException {
-    if (statement!=null) {
+    if (statement != null) {
       statement.cancel();
     }
   }
@@ -143,7 +141,6 @@ public class StatementProxy implements java.sql.Statement {
   public void clearWarnings() throws SQLException {
     getActiveStatement().clearWarnings();
   }
-
   String cursorName;
 
   @Override
@@ -159,7 +156,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    if (statement==null) {
+    if (statement == null) {
       statement = getActiveStatement();
     }
     return statement.getResultSet();
@@ -167,7 +164,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public int getUpdateCount() throws SQLException {
-    if (statement==null) {
+    if (statement == null) {
       statement = getActiveStatement();
     }
     return statement.getUpdateCount();
@@ -175,12 +172,11 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public boolean getMoreResults() throws SQLException {
-    if (statement==null) {
+    if (statement == null) {
       statement = getActiveStatement();
     }
     return statement.getMoreResults();
   }
-
   Integer fetchDirection;
 
   @Override
@@ -193,7 +189,6 @@ public class StatementProxy implements java.sql.Statement {
   public int getFetchDirection() throws SQLException {
     return getActiveStatement().getFetchDirection();
   }
-
   Integer fetchSize;
 
   @Override
@@ -216,13 +211,12 @@ public class StatementProxy implements java.sql.Statement {
   public int getResultSetType() throws SQLException {
     return getActiveStatement().getResultSetType();
   }
-
   List<String> batch;
 
   @Override
   public void addBatch(String sql) throws SQLException {
     getActiveStatement().addBatch(sql);
-    if (batch==null) {
+    if (batch == null) {
       batch = new ArrayList<String>();
     }
     batch.add(sql);
@@ -231,7 +225,7 @@ public class StatementProxy implements java.sql.Statement {
   @Override
   public void clearBatch() throws SQLException {
     getActiveStatement().clearBatch();
-    if (batch!=null) {
+    if (batch != null) {
       batch.clear();
     }
   }
@@ -248,7 +242,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public boolean getMoreResults(int current) throws SQLException {
-    if (statement==null) {
+    if (statement == null) {
       statement = getActiveStatement();
     }
     return statement.getMoreResults(current);
@@ -296,12 +290,11 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public boolean isClosed() throws SQLException {
-    if (statement==null) {
+    if (statement == null) {
       statement = getActiveStatement();
     }
     return statement.isClosed();
   }
-
   Boolean poolable;
 
   @Override
@@ -324,5 +317,4 @@ public class StatementProxy implements java.sql.Statement {
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
     return getActiveStatement().isWrapperFor(iface);
   }
-
 }
