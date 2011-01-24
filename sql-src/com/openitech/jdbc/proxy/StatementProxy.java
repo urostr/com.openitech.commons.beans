@@ -22,44 +22,73 @@ public class StatementProxy implements java.sql.Statement {
   final java.sql.Connection connection;
   java.sql.Statement statement;
 
-  protected StatementProxy(AbstractConnection connection, int resultSetType, int resultSetConcurrency) {
+  protected StatementProxy(AbstractConnection connection, int resultSetType, int resultSetConcurrency) throws SQLException {
     this.connection = connection;
     this.resultSetType = resultSetType;
     this.resultSetConcurrency = resultSetConcurrency;
+    this.statement = createStatement();
+    try {
+      this.statement.isClosed();
+      canUseIsClosed = true;
+    } catch (Exception ex) {
+      //ignore it
+      canUseIsClosed = false;
+    }
+  }
+  boolean canUseIsClosed;
+
+  protected java.sql.Statement createStatement() throws SQLException {
+    return connection.createStatement(resultSetType, resultSetConcurrency);
+  }
+
+  protected void initStatement() throws SQLException {
+    if (maxFieldSize != null) {
+      statement.setMaxFieldSize(maxFieldSize);
+    }
+    if (maxRows != null) {
+      statement.setMaxRows(maxRows);
+    }
+    if (escapeProcessing != null) {
+      statement.setEscapeProcessing(escapeProcessing);
+    }
+    if (queryTimeout != null) {
+      statement.setQueryTimeout(queryTimeout);
+    }
+    if (cursorName != null) {
+      statement.setCursorName(cursorName);
+    }
+    if (fetchDirection != null) {
+      statement.setFetchDirection(fetchDirection);
+    }
+    if (fetchSize != null) {
+      statement.setFetchSize(fetchSize);
+    }
+    if (poolable != null) {
+      statement.setPoolable(poolable);
+    }
+    if (batch != null && batch.size() > 0) {
+      for (String sql : batch) {
+        statement.addBatch(sql);
+      }
+    }
+  }
+
+  protected boolean isStatementClosed() {
+    try {
+      if (canUseIsClosed) {
+        return statement == null || getConnection().isClosed() || statement.isClosed();
+      } else {
+        return statement == null || getConnection().isClosed();
+      }
+    } catch (SQLException ex) {
+      return true;
+    }
   }
 
   private java.sql.Statement getActiveStatement() throws SQLException {
-    if (statement == null || statement.isClosed()) {
-      statement = connection.createStatement(resultSetType, resultSetConcurrency);
-      if (maxFieldSize != null) {
-        statement.setMaxFieldSize(maxFieldSize);
-      }
-      if (maxRows != null) {
-        statement.setMaxRows(maxRows);
-      }
-      if (escapeProcessing != null) {
-        statement.setEscapeProcessing(escapeProcessing);
-      }
-      if (queryTimeout != null) {
-        statement.setQueryTimeout(queryTimeout);
-      }
-      if (cursorName != null) {
-        statement.setCursorName(cursorName);
-      }
-      if (fetchDirection != null) {
-        statement.setFetchDirection(fetchDirection);
-      }
-      if (fetchSize != null) {
-        statement.setFetchSize(fetchSize);
-      }
-      if (poolable != null) {
-        statement.setPoolable(poolable);
-      }
-      if (batch != null && batch.size() > 0) {
-        for (String sql : batch) {
-          statement.addBatch(sql);
-        }
-      }
+    if (isStatementClosed()) {
+      statement = createStatement();
+      initStatement();
     }
     return statement;
   }
@@ -80,6 +109,7 @@ public class StatementProxy implements java.sql.Statement {
       statement = getActiveStatement();
     }
     statement.close();
+    statement = null;
   }
   Integer maxFieldSize;
 
