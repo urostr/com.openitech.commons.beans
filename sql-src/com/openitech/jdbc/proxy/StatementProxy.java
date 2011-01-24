@@ -27,15 +27,19 @@ public class StatementProxy implements java.sql.Statement {
     this.resultSetType = resultSetType;
     this.resultSetConcurrency = resultSetConcurrency;
     this.statement = createStatement();
-    try {
-      this.statement.isClosed();
-      canUseIsClosed = true;
-    } catch (Exception ex) {
-      //ignore it
-      canUseIsClosed = false;
+
+    if (canUseIsClosed == null) {
+      try {
+        this.statement.isClosed();
+        canUseIsClosed = true;
+      } catch (Exception ex) {
+        //ignore it
+        canUseIsClosed = false;
+      }
     }
   }
-  boolean canUseIsClosed;
+  
+  private static Boolean canUseIsClosed;
 
   protected java.sql.Statement createStatement() throws SQLException {
     return connection.createStatement(resultSetType, resultSetConcurrency);
