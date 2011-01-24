@@ -2,9 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.openitech.jdbc.proxy;
 
+import com.openitech.jdbc.values.SQLValue;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -12,7 +12,6 @@ import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.Connection;
 import java.sql.Date;
 import java.sql.NClob;
 import java.sql.ParameterMetaData;
@@ -34,34 +33,26 @@ import java.util.List;
  *
  * @author uros
  */
-public class PreparedStatementProxy extends StatementProxy implements PreparedStatement{
+public class PreparedStatementProxy extends StatementProxy implements PreparedStatement {
+
   private final PreparedStatementFactory factory;
+
+  public PreparedStatementProxy(AbstractConnection connection, String sql) throws SQLException {
+    this(connection, sql, ResultSet.TYPE_FORWARD_ONLY);
+  }
+
+  public PreparedStatementProxy(AbstractConnection connection, String sql, String[] columnNames) throws SQLException {
+    super(connection, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+    this.factory = new PreparedStatementFactory.PreparedStatementType2(sql, columnNames);
+  }
+
+  public PreparedStatementProxy(AbstractConnection connection, String sql, int resultSetType) throws SQLException {
+    this(connection, sql, resultSetType, ResultSet.CONCUR_READ_ONLY);
+  }
 
   public PreparedStatementProxy(AbstractConnection connection, String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
     super(connection, resultSetType, resultSetConcurrency);
     this.factory = new PreparedStatementFactory.PreparedStatementType1(sql, resultSetType, resultSetConcurrency);
-  }
-
-  private static abstract class PreparedStatementFactory {
-    public abstract PreparedStatement createPreparedStatement(java.sql.Connection connection) throws SQLException;
-
-    private static class PreparedStatementType1 extends PreparedStatementFactory {
-      String sql;
-      int resultSetType;
-      int resultSetConcurrency;
-
-      PreparedStatementType1(String sql, int resultSetType, int resultSetConcurrency) {
-        this.sql = sql;
-        this.resultSetType = resultSetType;
-        this.resultSetConcurrency = resultSetConcurrency;
-      }
-
-      @Override
-      public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
-        return connection.prepareStatement(sql, resultSetType, resultSetConcurrency);
-      }
-
-    }
   }
 
   @Override
@@ -73,11 +64,10 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
   public int executeUpdate() throws SQLException {
     return ((PreparedStatement) getActiveStatement()).executeUpdate();
   }
-
   List<SQLValue> parameters = new ArrayList<SQLValue>();
 
   private void storeParameter(int parameterIndex, SQLValue value) {
-    if (parameters.size()<=parameterIndex) {
+    if (parameters.size() <= parameterIndex) {
       parameters.add(parameterIndex, value);
     } else {
       parameters.set(parameterIndex, value);
@@ -92,23 +82,23 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
   @Override
   protected void initStatement() throws SQLException {
     super.initStatement();
-    if (parameters.size()>0) {
+    if (parameters.size() > 0) {
       for (SQLValue sqlValue : parameters) {
         sqlValue.setParameter((PreparedStatement) statement);
       }
     }
   }
 
-
-
   @Override
   public void setNull(int parameterIndex, int sqlType) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setNull(parameterIndex, sqlType);
+    storeParameter(parameterIndex, new SQLValue.SQLNull(parameterIndex, sqlType));
   }
 
   @Override
   public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setBoolean(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLBoolean(parameterIndex, x));
   }
 
   @Override
@@ -123,22 +113,26 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setInt(int parameterIndex, int x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setInt(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLInteger(parameterIndex, x));
   }
 
   @Override
   public void setLong(int parameterIndex, long x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setLong(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLLong(parameterIndex, x));
   }
 
   @Override
   public void setFloat(int parameterIndex, float x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setFloat(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLFloat(parameterIndex, x));
   }
 
   @Override
   public void setDouble(int parameterIndex, double x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setDouble(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLDouble(parameterIndex, x));
   }
 
   @Override
@@ -148,7 +142,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setString(int parameterIndex, String x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setString(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLString(parameterIndex, x));
   }
 
   @Override
@@ -158,7 +153,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setDate(int parameterIndex, Date x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setDate(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLDate(parameterIndex, x));
   }
 
   @Override
@@ -168,7 +164,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) statement).setTimestamp(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLTimeStamp(parameterIndex, x));
   }
 
   @Override
@@ -199,7 +196,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setObject(int parameterIndex, Object x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) getActiveStatement()).setObject(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLObject(parameterIndex, x));
   }
 
   @Override
@@ -229,7 +227,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setClob(int parameterIndex, Clob x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) getActiveStatement()).setClob(parameterIndex, x);
+    storeParameter(parameterIndex, new SQLValue.SQLClob(parameterIndex, x));
   }
 
   @Override
@@ -239,7 +238,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((PreparedStatement) statement).getMetaData();
   }
 
   @Override
@@ -259,7 +258,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) getActiveStatement()).setNull(parameterIndex, sqlType);
+    storeParameter(parameterIndex, new SQLValue.SQLNull(parameterIndex, sqlType));
   }
 
   @Override
@@ -269,7 +269,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public ParameterMetaData getParameterMetaData() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((PreparedStatement) statement).getParameterMetaData();
   }
 
   @Override
@@ -367,115 +367,42 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
-  private static abstract class SQLValue<T> {
+  private static abstract class PreparedStatementFactory {
 
-    protected int parameterIndex;
+    public abstract PreparedStatement createPreparedStatement(java.sql.Connection connection) throws SQLException;
 
-    /**
-     * Get the value of parameterIndex
-     *
-     * @return the value of parameterIndex
-     */
-    public int getParameterIndex() {
-      return parameterIndex;
-    }
+    private static class PreparedStatementType1 extends PreparedStatementFactory {
 
-    /**
-     * Set the value of parameterIndex
-     *
-     * @param parameterIndex new value of parameterIndex
-     */
-    public void setParameterIndex(int parameterIndex) {
-      this.parameterIndex = parameterIndex;
-    }
+      private final String sql;
+      private final int resultSetType;
+      private final int resultSetConcurrency;
 
-    protected T value;
-
-    /**
-     * Get the value of value
-     *
-     * @return the value of value
-     */
-    public T getValue() {
-      return value;
-    }
-
-    /**
-     * Set the value of value
-     *
-     * @param value new value of value
-     */
-    public void setValue(T value) {
-      this.value = value;
-    }
-
-    public abstract void setParameter(PreparedStatement preparedStatement) throws SQLException;
-
-    private static class SQLObject extends SQLValue<java.lang.Object> {
-
-      private Integer scaleOrLength = null;
-      private Integer targetSqlType = null;
-
-      public SQLObject(int parameterIndex, java.lang.Object value) {
-        this(parameterIndex, value, null, null);
-      }
-
-      public SQLObject(int parameterIndex, java.lang.Object value, Integer targetSqlType) {
-        this(parameterIndex, value, targetSqlType, null);
-      }
-      
-      public SQLObject(int parameterIndex, java.lang.Object value, Integer targetSqlType, Integer scaleOrLength) {
-        this.parameterIndex = parameterIndex;
-        this.value = value;
-        this.targetSqlType = targetSqlType;
-        this.scaleOrLength = scaleOrLength;
-      }
-
-      /**
-       * Get the value of targetSqlType
-       *
-       * @return the value of targetSqlType
-       */
-      public Integer getTargetSqlType() {
-        return targetSqlType;
-      }
-
-      /**
-       * Set the value of targetSqlType
-       *
-       * @param targetSqlType new value of targetSqlType
-       */
-      public void setTargetSqlType(Integer targetSqlType) {
-        this.targetSqlType = targetSqlType;
-      }
-
-      /**
-       * Get the value of scaleOrLength
-       *
-       * @return the value of scaleOrLength
-       */
-      public Integer getScaleOrLength() {
-        return scaleOrLength;
-      }
-
-      /**
-       * Set the value of scaleOrLength
-       *
-       * @param scaleOrLength new value of scaleOrLength
-       */
-      public void setScaleOrLength(Integer scaleOrLength) {
-        this.scaleOrLength = scaleOrLength;
+      public PreparedStatementType1(String sql, int resultSetType, int resultSetConcurrency) {
+        this.sql = sql;
+        this.resultSetType = resultSetType;
+        this.resultSetConcurrency = resultSetConcurrency;
       }
 
       @Override
-      public void setParameter(PreparedStatement preparedStatement) throws SQLException {
-        if (targetSqlType==null) {
-          preparedStatement.setObject(parameterIndex, value);
-        } else if (scaleOrLength==null) {
-          preparedStatement.setObject(parameterIndex, value, targetSqlType);
-        } else {
-          preparedStatement.setObject(parameterIndex, value, targetSqlType, scaleOrLength);
-        }
+      public PreparedStatement createPreparedStatement(java.sql.Connection connection) throws SQLException {
+        return connection.prepareStatement(sql, resultSetType, resultSetConcurrency);
+      }
+    }
+
+    private static class PreparedStatementType2 extends PreparedStatementFactory {
+
+      String sql;
+      private final String[] columnNames;
+
+      public PreparedStatementType2(String sql, String[] columnNames) {
+        this.sql = sql;
+
+        this.columnNames = columnNames;
+      }
+
+      @Override
+      public PreparedStatement createPreparedStatement(java.sql.Connection connection) throws SQLException {
+        return connection.prepareStatement(sql, columnNames);
       }
     }
   }
