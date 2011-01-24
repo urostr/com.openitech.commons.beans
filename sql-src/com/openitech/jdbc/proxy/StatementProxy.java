@@ -85,7 +85,7 @@ public class StatementProxy implements java.sql.Statement {
     }
   }
 
-  private java.sql.Statement getActiveStatement() throws SQLException {
+  protected java.sql.Statement getActiveStatement() throws SQLException {
     if (isStatementClosed()) {
       statement = createStatement();
       initStatement();
