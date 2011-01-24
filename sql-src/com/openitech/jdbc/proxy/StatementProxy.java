@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -39,6 +41,26 @@ public class StatementProxy implements java.sql.Statement {
       if (escapeProcessing!=null) {
         statement.setEscapeProcessing(escapeProcessing);
       }
+      if (queryTimeout!=null) {
+        statement.setQueryTimeout(queryTimeout);
+      }
+      if (cursorName!=null) {
+        statement.setCursorName(cursorName);
+      }
+      if (fetchDirection!=null) {
+        statement.setFetchDirection(fetchDirection);
+      }
+      if (fetchSize!=null) {
+        statement.setFetchSize(fetchSize);
+      }
+      if (poolable!=null) {
+        statement.setPoolable(poolable);
+      }
+      if (batch!=null&&batch.size()>0) {
+        for (String sql : batch) {
+          statement.addBatch(sql);
+        }
+      }
     }
     return statement;
   }
@@ -56,7 +78,6 @@ public class StatementProxy implements java.sql.Statement {
   @Override
   public void close() throws SQLException {
     statement.close();
-    statement = null;
   }
 
   Integer maxFieldSize;
@@ -69,7 +90,7 @@ public class StatementProxy implements java.sql.Statement {
   @Override
   public void setMaxFieldSize(int max) throws SQLException {
     getActiveStatement().setMaxFieldSize(max);
-    maxFieldSize = statement.getMaxFieldSize();
+    this.maxFieldSize = statement.getMaxFieldSize();
   }
 
   Integer maxRows;
@@ -82,7 +103,7 @@ public class StatementProxy implements java.sql.Statement {
   @Override
   public void setMaxRows(int max) throws SQLException {
     getActiveStatement().setMaxRows(max);
-    maxRows = statement.getMaxRows();
+    this.maxRows = statement.getMaxRows();
   }
 
   Boolean escapeProcessing;
@@ -90,177 +111,218 @@ public class StatementProxy implements java.sql.Statement {
   @Override
   public void setEscapeProcessing(boolean enable) throws SQLException {
     getActiveStatement().setEscapeProcessing(enable);
-    escapeProcessing  = enable;
+    this.escapeProcessing  = enable;
   }
+
+  Integer queryTimeout;
 
   @Override
   public int getQueryTimeout() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getQueryTimeout();
   }
 
   @Override
   public void setQueryTimeout(int seconds) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    getActiveStatement().setQueryTimeout(seconds);
+    this.queryTimeout = statement.getQueryTimeout();
   }
 
   @Override
   public void cancel() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    if (statement!=null) {
+      statement.cancel();
+    }
   }
 
   @Override
   public SQLWarning getWarnings() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getWarnings();
   }
 
   @Override
   public void clearWarnings() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    getActiveStatement().clearWarnings();
   }
+
+  String cursorName;
 
   @Override
   public void setCursorName(String name) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    getActiveStatement().setCursorName(name);
+    this.cursorName = name;
   }
 
   @Override
   public boolean execute(String sql) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().execute(sql);
   }
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    if (statement==null) {
+      statement = getActiveStatement();
+    }
+    return statement.getResultSet();
   }
 
   @Override
   public int getUpdateCount() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    if (statement==null) {
+      statement = getActiveStatement();
+    }
+    return statement.getUpdateCount();
   }
 
   @Override
   public boolean getMoreResults() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    if (statement==null) {
+      statement = getActiveStatement();
+    }
+    return statement.getMoreResults();
   }
+
+  Integer fetchDirection;
 
   @Override
   public void setFetchDirection(int direction) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    getActiveStatement().setFetchDirection(direction);
+    this.fetchDirection = direction;
   }
 
   @Override
   public int getFetchDirection() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getFetchDirection();
   }
+
+  Integer fetchSize;
 
   @Override
   public void setFetchSize(int rows) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    getActiveStatement().setFetchSize(rows);
+    this.fetchSize = rows;
   }
 
   @Override
   public int getFetchSize() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getFetchSize();
   }
 
   @Override
   public int getResultSetConcurrency() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getResultSetConcurrency();
   }
 
   @Override
   public int getResultSetType() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getResultSetType();
   }
+
+  List<String> batch;
 
   @Override
   public void addBatch(String sql) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    getActiveStatement().addBatch(sql);
+    if (batch==null) {
+      batch = new ArrayList<String>();
+    }
+    batch.add(sql);
   }
 
   @Override
   public void clearBatch() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    getActiveStatement().clearBatch();
+    if (batch!=null) {
+      batch.clear();
+    }
   }
 
   @Override
   public int[] executeBatch() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().executeBatch();
   }
 
   @Override
   public Connection getConnection() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getConnection();
   }
 
   @Override
   public boolean getMoreResults(int current) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    if (statement==null) {
+      statement = getActiveStatement();
+    }
+    return statement.getMoreResults(current);
   }
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getGeneratedKeys();
   }
 
   @Override
   public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().executeUpdate(sql, autoGeneratedKeys);
   }
 
   @Override
   public int executeUpdate(String sql, int[] columnIndexes) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().executeUpdate(sql, columnIndexes);
   }
 
   @Override
   public int executeUpdate(String sql, String[] columnNames) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().executeUpdate(sql, columnNames);
   }
 
   @Override
   public boolean execute(String sql, int autoGeneratedKeys) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().execute(sql, autoGeneratedKeys);
   }
 
   @Override
   public boolean execute(String sql, int[] columnIndexes) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().execute(sql, columnIndexes);
   }
 
   @Override
   public boolean execute(String sql, String[] columnNames) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().execute(sql, columnNames);
   }
 
   @Override
   public int getResultSetHoldability() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().getResultSetHoldability();
   }
 
   @Override
   public boolean isClosed() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    if (statement==null) {
+      statement = getActiveStatement();
+    }
+    return statement.isClosed();
   }
+
+  Boolean poolable;
 
   @Override
   public void setPoolable(boolean poolable) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    getActiveStatement().setPoolable(poolable);
+    this.poolable = poolable;
   }
 
   @Override
   public boolean isPoolable() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().isPoolable();
   }
 
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().unwrap(iface);
   }
 
   @Override
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return getActiveStatement().isWrapperFor(iface);
   }
 
 }
