@@ -12,6 +12,7 @@ import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.NClob;
 import java.sql.ParameterMetaData;
@@ -22,29 +23,83 @@ import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  *
  * @author uros
  */
 public class PreparedStatementProxy extends StatementProxy implements PreparedStatement{
+  private final PreparedStatementFactory factory;
 
-  public PreparedStatementProxy(AbstractConnection connection, int resultSetType, int resultSetConcurrency) throws SQLException {
+  public PreparedStatementProxy(AbstractConnection connection, String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
     super(connection, resultSetType, resultSetConcurrency);
+    this.factory = new PreparedStatementFactory.PreparedStatementType1(sql, resultSetType, resultSetConcurrency);
+  }
+
+  private static abstract class PreparedStatementFactory {
+    public abstract PreparedStatement createPreparedStatement(java.sql.Connection connection) throws SQLException;
+
+    private static class PreparedStatementType1 extends PreparedStatementFactory {
+      String sql;
+      int resultSetType;
+      int resultSetConcurrency;
+
+      PreparedStatementType1(String sql, int resultSetType, int resultSetConcurrency) {
+        this.sql = sql;
+        this.resultSetType = resultSetType;
+        this.resultSetConcurrency = resultSetConcurrency;
+      }
+
+      @Override
+      public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+        return connection.prepareStatement(sql, resultSetType, resultSetConcurrency);
+      }
+
+    }
   }
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((PreparedStatement) getActiveStatement()).executeQuery();
   }
 
   @Override
   public int executeUpdate() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((PreparedStatement) getActiveStatement()).executeUpdate();
   }
+
+  List<SQLValue> parameters = new ArrayList<SQLValue>();
+
+  private void storeParameter(int parameterIndex, SQLValue value) {
+    if (parameters.size()<=parameterIndex) {
+      parameters.add(parameterIndex, value);
+    } else {
+      parameters.set(parameterIndex, value);
+    }
+  }
+
+  @Override
+  protected Statement createStatement() throws SQLException {
+    return factory.createPreparedStatement(connection);
+  }
+
+  @Override
+  protected void initStatement() throws SQLException {
+    super.initStatement();
+    if (parameters.size()>0) {
+      for (SQLValue sqlValue : parameters) {
+        sqlValue.setParameter((PreparedStatement) statement);
+      }
+    }
+  }
+
+
 
   @Override
   public void setNull(int parameterIndex, int sqlType) throws SQLException {
@@ -138,7 +193,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((PreparedStatement) getActiveStatement()).setObject(parameterIndex, x, targetSqlType);
+    storeParameter(parameterIndex, new SQLValue.SQLObject(parameterIndex, x, targetSqlType));
   }
 
   @Override
@@ -311,4 +367,116 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
+  private static abstract class SQLValue<T> {
+
+    protected int parameterIndex;
+
+    /**
+     * Get the value of parameterIndex
+     *
+     * @return the value of parameterIndex
+     */
+    public int getParameterIndex() {
+      return parameterIndex;
+    }
+
+    /**
+     * Set the value of parameterIndex
+     *
+     * @param parameterIndex new value of parameterIndex
+     */
+    public void setParameterIndex(int parameterIndex) {
+      this.parameterIndex = parameterIndex;
+    }
+
+    protected T value;
+
+    /**
+     * Get the value of value
+     *
+     * @return the value of value
+     */
+    public T getValue() {
+      return value;
+    }
+
+    /**
+     * Set the value of value
+     *
+     * @param value new value of value
+     */
+    public void setValue(T value) {
+      this.value = value;
+    }
+
+    public abstract void setParameter(PreparedStatement preparedStatement) throws SQLException;
+
+    private static class SQLObject extends SQLValue<java.lang.Object> {
+
+      private Integer scaleOrLength = null;
+      private Integer targetSqlType = null;
+
+      public SQLObject(int parameterIndex, java.lang.Object value) {
+        this(parameterIndex, value, null, null);
+      }
+
+      public SQLObject(int parameterIndex, java.lang.Object value, Integer targetSqlType) {
+        this(parameterIndex, value, targetSqlType, null);
+      }
+      
+      public SQLObject(int parameterIndex, java.lang.Object value, Integer targetSqlType, Integer scaleOrLength) {
+        this.parameterIndex = parameterIndex;
+        this.value = value;
+        this.targetSqlType = targetSqlType;
+        this.scaleOrLength = scaleOrLength;
+      }
+
+      /**
+       * Get the value of targetSqlType
+       *
+       * @return the value of targetSqlType
+       */
+      public Integer getTargetSqlType() {
+        return targetSqlType;
+      }
+
+      /**
+       * Set the value of targetSqlType
+       *
+       * @param targetSqlType new value of targetSqlType
+       */
+      public void setTargetSqlType(Integer targetSqlType) {
+        this.targetSqlType = targetSqlType;
+      }
+
+      /**
+       * Get the value of scaleOrLength
+       *
+       * @return the value of scaleOrLength
+       */
+      public Integer getScaleOrLength() {
+        return scaleOrLength;
+      }
+
+      /**
+       * Set the value of scaleOrLength
+       *
+       * @param scaleOrLength new value of scaleOrLength
+       */
+      public void setScaleOrLength(Integer scaleOrLength) {
+        this.scaleOrLength = scaleOrLength;
+      }
+
+      @Override
+      public void setParameter(PreparedStatement preparedStatement) throws SQLException {
+        if (targetSqlType==null) {
+          preparedStatement.setObject(parameterIndex, value);
+        } else if (scaleOrLength==null) {
+          preparedStatement.setObject(parameterIndex, value, targetSqlType);
+        } else {
+          preparedStatement.setObject(parameterIndex, value, targetSqlType, scaleOrLength);
+        }
+      }
+    }
+  }
 }
