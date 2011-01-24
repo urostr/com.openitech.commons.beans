@@ -13,6 +13,7 @@ import java.sql.Savepoint;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,7 +28,7 @@ public class TransactionManager {
   private final Connection connection;
   private final ReentrantLock lock = new ReentrantLock();
 
-  private static Map<Connection, TransactionManager> managers = Collections.synchronizedMap(new HashMap<Connection, TransactionManager>());
+  private static Map<Connection, TransactionManager> managers = Collections.synchronizedMap(new WeakHashMap<Connection, TransactionManager>());
 
   protected TransactionManager() {
     this(ConnectionManager.getInstance().getTxConnection());
