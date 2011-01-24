@@ -919,24 +919,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
           success = success && insertEventsOpombe.executeUpdate() > 0;
         }
       }
-      Long opombaId = storeValue(ValueType.ClobValue, opomba);
-      synchronized (insertEventsOpombe) {
-        param = 1;
-        insertEventsOpombe.clearParameters();
-        if (eventId == null) {
-          return false;
-        } else {
-          insertEventsOpombe.setLong(param++, eventId.longValue());
-        }
-        if (opombaId == null) {
-          //null ni dovoljeno, zato bo vrgel sql napako
-          return false;
-        } else {
-          insertEventsOpombe.setLong(param++, opombaId.longValue());
-        }
-
-        success = success && insertEventsOpombe.executeUpdate() > 0;
-      }
     }
     return success;
   }
