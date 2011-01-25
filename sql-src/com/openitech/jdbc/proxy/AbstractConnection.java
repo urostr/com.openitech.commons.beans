@@ -106,7 +106,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
     getActiveConnection().rollback();
   }
 
-  Boolean closed = Boolean.FALSE;
+  protected Boolean closed = Boolean.FALSE;
 
   @Override
   public void close() throws SQLException {
@@ -142,7 +142,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
   public boolean isReadOnly() throws SQLException {
     return getActiveConnection().isReadOnly();
   }
-  String catalog;
+  protected String catalog;
 
   @Override
   public void setCatalog(String catalog) throws SQLException {
@@ -205,7 +205,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
   public boolean isValid(int timeout) throws SQLException {
     return connection.isValid(timeout);
   }
-  Properties clientInfo;
+  protected Properties clientInfo;
 
   @Override
   public void setClientInfo(String name, String value) throws SQLClientInfoException {

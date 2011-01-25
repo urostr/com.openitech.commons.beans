@@ -7,6 +7,7 @@ package com.openitech.db.connection;
 import com.openitech.Settings;
 import com.openitech.jdbc.proxy.ConnectionProxy;
 import com.openitech.sql.datasource.DataSourceFactory;
+import com.openitech.sql.pool.ConnectionPool;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -32,6 +33,7 @@ public class ReconnectableSQLConnection implements DbConnection {
   private static final String fileSeparator = File.separatorChar == '\\' ? "\\\\" : File.separator;
   private static final String userDir = System.getProperty("user.dir").replaceAll(fileSeparator, fileSeparator + fileSeparator);
   private Process databaseProcess = null;
+  private ConnectionPool connectionPool;
   Boolean isCaseInsensitive = null;
   String dialect = null;
   String DB_URL = null;
@@ -100,15 +102,16 @@ public class ReconnectableSQLConnection implements DbConnection {
   @Override
   public Connection getTemporaryConnection() {
     try {
+      Connection result;
       if (dataSource == null) {
-        final Connection result = DriverManager.getConnection(DB_URL, connect);
-        fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
-        return result;
+        result = DriverManager.getConnection(DB_URL, connect);
+      } else if (connectionPool!=null) {
+        result = connectionPool.getConnection();
       } else {
-        final Connection result = new ConnectionProxy(this.dataSource);
-        fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
-        return result;
+        result = new ConnectionProxy(this.dataSource);
       }
+      fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
+      return result;
     } catch (SQLException ex) {
       Logger.getLogger(AbstractSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
     }
@@ -234,6 +237,7 @@ public class ReconnectableSQLConnection implements DbConnection {
           DataSource dataSource = DataSourceFactory.getDataSource(DB_URL, connect);
           if (dataSource != null) {
             this.dataSource = dataSource;
+            this.connectionPool = new ConnectionPool(dataSource);
             this.connection = new ConnectionProxy(dataSource);
           }
         }
