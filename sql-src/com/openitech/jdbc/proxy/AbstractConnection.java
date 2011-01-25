@@ -53,27 +53,29 @@ public abstract class AbstractConnection implements java.sql.Connection {
 
   protected java.sql.Connection getActiveConnection() throws SQLException {
     if (!isValid()) {
-      java.sql.Connection activeConnection = createConnection(dataSource);
-      if (autoCommit != null) {
-        activeConnection.setAutoCommit(autoCommit);
+      synchronized (this) {
+        java.sql.Connection activeConnection = createConnection(dataSource);
+        if (autoCommit != null) {
+          activeConnection.setAutoCommit(autoCommit);
+        }
+        if (readOnly != null) {
+          activeConnection.setReadOnly(readOnly);
+        }
+        if (catalog != null) {
+          activeConnection.setCatalog(catalog);
+        }
+        if (transactionIsolation != null) {
+          activeConnection.setTransactionIsolation(transactionIsolation);
+        }
+        if (typeMap != null) {
+          activeConnection.setTypeMap(typeMap);
+        }
+        if (clientInfo != null) {
+          activeConnection.setClientInfo(clientInfo);
+        }
+        this.connection = activeConnection;
+        Logger.getLogger(AbstractConnection.class.getName()).info("Connection reopened.");
       }
-      if (readOnly != null) {
-        activeConnection.setReadOnly(readOnly);
-      }
-      if (catalog != null) {
-        activeConnection.setCatalog(catalog);
-      }
-      if (transactionIsolation != null) {
-        activeConnection.setTransactionIsolation(transactionIsolation);
-      }
-      if (typeMap != null) {
-        activeConnection.setTypeMap(typeMap);
-      }
-      if (clientInfo != null) {
-        activeConnection.setClientInfo(clientInfo);
-      }
-      this.connection = activeConnection;
-      Logger.getLogger(AbstractConnection.class.getName()).info("Connection reopened.");
     }
     return this.connection;
   }
@@ -112,7 +114,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
       if (pooledConnection != null) {
         pooledConnection.close();
         pooledConnection = null;
-      } else if (connection!=null) {
+      } else if (connection != null) {
         connection.close();
       }
       connection = null;
