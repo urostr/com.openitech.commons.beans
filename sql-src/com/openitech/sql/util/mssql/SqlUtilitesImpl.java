@@ -1440,7 +1440,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     return success;
   }
-
+ /**
+  *
+  * @return
+  * @deprecated <p>Uporabi getPPSelectFields namesto tega!</p>
+  *  
+  */
   @Deprecated
   @Override
   public String getPPJoinFields() {
@@ -1467,7 +1472,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
 
     }
-    return "";
+    return result;
   }
 
   @Override
