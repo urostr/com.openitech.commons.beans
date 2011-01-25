@@ -4,6 +4,7 @@
  */
 package com.openitech.jdbc.proxy;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
@@ -13,7 +14,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.sql.PooledConnection;
+import javax.sql.ConnectionPoolDataSource;
+import javax.sql.DataSource;
 
 /**
  *
@@ -22,16 +24,35 @@ import javax.sql.PooledConnection;
 public abstract class AbstractConnection implements java.sql.Connection {
 
   protected java.sql.Connection connection;
-  protected final javax.sql.PooledConnection pooledConnection;
+  protected final javax.sql.DataSource dataSource;
 
-  public AbstractConnection(PooledConnection pooledConnection) throws SQLException {
-    this.pooledConnection = pooledConnection;
-    this.connection = pooledConnection.getConnection();
+  public AbstractConnection(DataSource dataSource) throws SQLException {
+    this.dataSource = dataSource;
+    this.connection = createConnection(dataSource);
+  }
+
+  private Connection createConnection(DataSource dataSource) throws SQLException {
+    return (dataSource instanceof ConnectionPoolDataSource) ? ((ConnectionPoolDataSource) dataSource).getPooledConnection().getConnection() : dataSource.getConnection();
+  }
+
+
+  protected boolean isValid() {
+    try {
+      if (this.connection.isClosed()) {
+        return false;
+      } else {
+        this.connection.getHoldability();
+        return true;
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(AbstractConnection.class.getName()).log(Level.WARNING, ex.getMessage());
+      return false;
+    }
   }
 
   protected java.sql.Connection getActiveConnection() throws SQLException {
-    if (this.connection.isClosed()) {
-      java.sql.Connection activeConnection = pooledConnection.getConnection();
+    if (!isValid()) {
+      java.sql.Connection activeConnection = createConnection(dataSource);
       if (autoCommit != null) {
         activeConnection.setAutoCommit(autoCommit);
       }

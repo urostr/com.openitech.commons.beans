@@ -15,7 +15,7 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
-import javax.sql.PooledConnection;
+import javax.sql.DataSource;
 
 /**
  *
@@ -23,8 +23,8 @@ import javax.sql.PooledConnection;
  */
 public class ConnectionProxy extends AbstractConnection {
 
-  public ConnectionProxy(PooledConnection pooledConnection) throws SQLException {
-    super(pooledConnection);
+  public ConnectionProxy(DataSource dataSource) throws SQLException {
+    super(dataSource);
   }
 
   @Override

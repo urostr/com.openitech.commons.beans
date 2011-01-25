@@ -37,7 +37,7 @@ public class ReconnectableSQLConnection implements DbConnection {
   String dialect = null;
   String DB_URL = null;
   Properties connect = new Properties();
-  ConnectionPoolDataSource connectionPoolDataSource;
+  DataSource dataSource;
   /**
    * Creates a new instance of AbstractSQLConnection
    */
@@ -101,12 +101,12 @@ public class ReconnectableSQLConnection implements DbConnection {
   @Override
   public Connection getTemporaryConnection() {
     try {
-      if (connectionPoolDataSource==null) {
+      if (dataSource==null) {
         final Connection result = DriverManager.getConnection(DB_URL, connect);
         fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
         return result;
       } else {
-        final Connection result = new ConnectionProxy(this.connectionPoolDataSource.getPooledConnection());
+        final Connection result = new ConnectionProxy(this.dataSource);
         fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
         return result;
       }
@@ -234,9 +234,9 @@ public class ReconnectableSQLConnection implements DbConnection {
 
         if (connection!=null) {
           DataSource dataSource = DataSourceFactory.getDataSource(DB_URL, connect);
-          if (dataSource!=null && dataSource instanceof ConnectionPoolDataSource) {
-            this.connectionPoolDataSource = (ConnectionPoolDataSource) dataSource;
-            this.connection = new ConnectionProxy(this.connectionPoolDataSource.getPooledConnection());
+          if (dataSource!=null) {
+            this.dataSource = dataSource;
+            this.connection = new ConnectionProxy(dataSource);
           }
         }
       } catch (Exception ex) {
