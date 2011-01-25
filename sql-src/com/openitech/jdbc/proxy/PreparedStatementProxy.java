@@ -289,8 +289,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
-    ((PreparedStatement) getActiveStatement()).setNull(parameterIndex, sqlType);
-    storeParameter(parameterIndex, new SQLValue.SQLNull(parameterIndex, sqlType));
+    ((PreparedStatement) getActiveStatement()).setNull(parameterIndex, sqlType, typeName);
+    storeParameter(parameterIndex, new SQLValue.SQLNull(parameterIndex, sqlType, typeName));
   }
 
   @Override
