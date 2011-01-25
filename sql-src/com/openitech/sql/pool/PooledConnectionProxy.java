@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.openitech.sql.pool;
 
 import com.openitech.jdbc.proxy.ConnectionProxy;
@@ -17,16 +16,16 @@ import javax.sql.DataSource;
  *
  * @author domenbasic
  */
-public class PooledConnectionProxy extends ConnectionProxy{
-  private Timer timer;
+public class PooledConnectionProxy extends ConnectionProxy {
 
+  private Timer timer;
 
   public PooledConnectionProxy(DataSource dataSource) throws SQLException {
     super(dataSource);
   }
 
-  protected void open() throws SQLException {
-    if (timer!=null) {
+  protected synchronized void open() throws SQLException {
+    if (timer != null) {
       timer.cancel();
       timer = null;
     }
@@ -36,38 +35,39 @@ public class PooledConnectionProxy extends ConnectionProxy{
   }
 
   @Override
-  public void close() throws SQLException {
-    if ((autoCommit != null)||
-        (readOnly != null)||
-        (catalog != null)||
-        (transactionIsolation != null)||
-        (typeMap != null)||
-        (clientInfo != null)) {
-      super.close();
-    } else {
-      closed = Boolean.TRUE;
-    }
-    
-    autoCommit = null;
-    readOnly = null;
-    catalog = null;
-    transactionIsolation = null;
-    typeMap = null;
-    clientInfo = null;
-
-    Logger.getLogger(PooledConnectionProxy.class.getName()).info("PooledConnection released.");
-
-    (timer = new Timer()).schedule(new TimerTask() {
-
-      @Override
-      public void run() {
-        try {
-          PooledConnectionProxy.super.close();
-        } catch (SQLException ex) {
-          Logger.getLogger(PooledConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
-        }
+  public synchronized void close() throws SQLException {
+    if (!closed) {
+      if ((autoCommit != null)
+              || (readOnly != null)
+              || (catalog != null)
+              || (transactionIsolation != null)
+              || (typeMap != null)
+              || (clientInfo != null)) {
+        super.close();
+      } else {
+        closed = Boolean.TRUE;
       }
-    },60000);
-  }
 
+      autoCommit = null;
+      readOnly = null;
+      catalog = null;
+      transactionIsolation = null;
+      typeMap = null;
+      clientInfo = null;
+
+      Logger.getLogger(PooledConnectionProxy.class.getName()).info("PooledConnection released.");
+
+      (timer = new Timer()).schedule(new TimerTask() {
+
+        @Override
+        public void run() {
+          try {
+            PooledConnectionProxy.super.close();
+          } catch (SQLException ex) {
+            Logger.getLogger(PooledConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
+          }
+        }
+      }, 60000);
+    }
+  }
 }
