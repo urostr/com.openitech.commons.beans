@@ -37,10 +37,9 @@ public abstract class AbstractConnection implements java.sql.Connection {
     return (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
   }
 
-
   protected boolean isValid() {
     try {
-      if (this.connection==null || this.connection.isClosed()) {
+      if (this.connection == null || this.connection.isClosed()) {
         return false;
       } else {
         this.connection.getWarnings();
@@ -105,20 +104,21 @@ public abstract class AbstractConnection implements java.sql.Connection {
   public void rollback() throws SQLException {
     getActiveConnection().rollback();
   }
-
   protected Boolean closed = Boolean.FALSE;
 
   @Override
-  public void close() throws SQLException {
-    if (pooledConnection!=null) {
-      pooledConnection.close();
-      pooledConnection = null;
-    } else {
-      connection.close();
+  public synchronized void close() throws SQLException {
+    if (!closed) {
+      if (pooledConnection != null) {
+        pooledConnection.close();
+        pooledConnection = null;
+      } else if (connection!=null) {
+        connection.close();
+      }
+      connection = null;
+      closed = Boolean.TRUE;
+      Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
     }
-    connection = null;
-    closed = Boolean.TRUE;
-    Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
   }
 
   @Override
