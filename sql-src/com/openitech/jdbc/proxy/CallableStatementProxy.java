@@ -42,6 +42,10 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
     return connection.prepareCall(cursorName, resultSetType, resultSetConcurrency);
   }
 
+  protected void storeParameter(String parameterName, SQLValue value) {
+    parametersMap.put(new CaseInsensitiveString(parameterName), value);
+  }
+
   @Override
   protected void initStatement() throws SQLException {
     super.initStatement();
@@ -49,7 +53,6 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
       sqlValue.setParameter((CallableStatement) this);
     }
   }
-
   protected Map<CaseInsensitiveString, SQLValue> parametersMap = new LinkedHashMap<CaseInsensitiveString, SQLValue>();
 
   @Override
@@ -206,134 +209,280 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
   public URL getURL(int parameterIndex) throws SQLException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
+////////////////////////////
+  /////////////////////////
 
   @Override
-  public void setURL(String parameterName, URL val) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+  public void setURL(String parameterName, URL x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setURL(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLUrl(parameterName, x));
   }
 
   @Override
   public void setNull(String parameterName, int sqlType) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setNull(parameterName, sqlType);
+    storeParameter(parameterName, new SQLValue.SQLNull(parameterName, sqlType));
   }
 
   @Override
   public void setBoolean(String parameterName, boolean x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setBoolean(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLBoolean(parameterName, x));
   }
 
   @Override
   public void setByte(String parameterName, byte x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setByte(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLByte(parameterName, x));
   }
 
   @Override
   public void setShort(String parameterName, short x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setShort(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLShort(parameterName, x));
   }
 
   @Override
   public void setInt(String parameterName, int x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setInt(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLInteger(parameterName, x));
   }
 
   @Override
   public void setLong(String parameterName, long x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setLong(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLLong(parameterName, x));
   }
 
   @Override
   public void setFloat(String parameterName, float x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setFloat(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLFloat(parameterName, x));
   }
 
   @Override
   public void setDouble(String parameterName, double x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setDouble(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLDouble(parameterName, x));
   }
 
   @Override
   public void setBigDecimal(String parameterName, BigDecimal x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setBigDecimal(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLBigDecimal(parameterName, x));
   }
 
   @Override
   public void setString(String parameterName, String x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setString(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLString(parameterName, x));
   }
 
   @Override
   public void setBytes(String parameterName, byte[] x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setBytes(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLBytes(parameterName, x));
   }
 
   @Override
   public void setDate(String parameterName, Date x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setDate(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLDate(parameterName, x));
   }
 
   @Override
   public void setTime(String parameterName, Time x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setTime(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLTime(parameterName, x));
   }
 
   @Override
   public void setTimestamp(String parameterName, Timestamp x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setTimestamp(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLTimeStamp(parameterName, x));
   }
 
   @Override
   public void setAsciiStream(String parameterName, InputStream x, int length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setAsciiStream(parameterName, x, length);
+    storeParameter(parameterName, new SQLValue.SQLAsciiStream(parameterName, x, (long) length));
   }
 
   @Override
   public void setBinaryStream(String parameterName, InputStream x, int length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setBinaryStream(parameterName, x, length);
+    storeParameter(parameterName, new SQLValue.SQLBinaryStream(parameterName, x, (long) length));
   }
 
   @Override
   public void setObject(String parameterName, Object x, int targetSqlType, int scale) throws SQLException {
     ((CallableStatement) getActiveStatement()).setObject(parameterName, x, targetSqlType, scale);
-    parametersMap.put(new CaseInsensitiveString(parameterName), new SQLValue.SQLObject(parameterName, x, targetSqlType, scale));
+    storeParameter(parameterName, new SQLValue.SQLObject(parameterName, x, targetSqlType, scale));
   }
 
   @Override
   public void setObject(String parameterName, Object x, int targetSqlType) throws SQLException {
     ((CallableStatement) getActiveStatement()).setObject(parameterName, x, targetSqlType);
-    parametersMap.put(new CaseInsensitiveString(parameterName), new SQLValue.SQLObject(parameterName, x, targetSqlType));
+    storeParameter(parameterName, new SQLValue.SQLObject(parameterName, x, targetSqlType));
   }
 
   @Override
   public void setObject(String parameterName, Object x) throws SQLException {
     ((CallableStatement) getActiveStatement()).setObject(parameterName, x);
-    parametersMap.put(new CaseInsensitiveString(parameterName), new SQLValue.SQLObject(parameterName, x));
+    storeParameter(parameterName, new SQLValue.SQLObject(parameterName, x));
   }
 
   @Override
-  public void setCharacterStream(String parameterName, Reader reader, int length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+  public void setCharacterStream(String parameterName, Reader x, int length) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setCharacterStream(parameterName, x, length);
+    storeParameter(parameterName, new SQLValue.SQLCharacterStream(parameterName, x, (long) length));
   }
 
   @Override
   public void setDate(String parameterName, Date x, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setDate(parameterName, x, cal);
+    storeParameter(parameterName, new SQLValue.SQLDate(parameterName, x, cal));
   }
 
   @Override
   public void setTime(String parameterName, Time x, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setTime(parameterName, x, cal);
+    storeParameter(parameterName, new SQLValue.SQLTime(parameterName, x, cal));
   }
 
   @Override
   public void setTimestamp(String parameterName, Timestamp x, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setTimestamp(parameterName, x, cal);
+    storeParameter(parameterName, new SQLValue.SQLTimeStamp(parameterName, x, cal));
   }
 
   @Override
   public void setNull(String parameterName, int sqlType, String typeName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).setNull(parameterName, sqlType, typeName);
+    storeParameter(parameterName, new SQLValue.SQLNull(parameterName, sqlType, typeName));
   }
+
+  @Override
+  public void setRowId(String parameterName, RowId x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setRowId(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLRowId(parameterName, x));
+  }
+
+  @Override
+  public void setNString(String parameterName, String x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setNString(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLNString(parameterName, x));
+  }
+
+  @Override
+  public void setNCharacterStream(String parameterName, Reader value, long length) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setNCharacterStream(parameterName, value, length);
+    storeParameter(parameterName, new SQLValue.SQLNCharacterStream(parameterName, value, length));
+  }
+
+  @Override
+  public void setNClob(String parameterName, NClob x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setNClob(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLNClob(parameterName, x));
+  }
+
+  @Override
+  public void setClob(String parameterName, Reader reader, long length) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setClob(parameterName, reader, length);
+    storeParameter(parameterName, new SQLValue.SQLClob(parameterName, reader, length));
+  }
+
+  @Override
+  public void setBlob(String parameterName, InputStream inputStream, long length) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setBlob(parameterName, inputStream, length);
+    storeParameter(parameterName, new SQLValue.SQLBlob(parameterName, inputStream, length));
+  }
+
+  @Override
+  public void setNClob(String parameterName, Reader reader, long length) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setNClob(parameterName, reader, length);
+    storeParameter(parameterName, new SQLValue.SQLNClob(parameterName, reader, length));
+  }
+
+  @Override
+  public void setSQLXML(String parameterName, SQLXML x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setSQLXML(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLSQLXML(parameterName, x));
+  }
+
+  @Override
+  public void setBlob(String parameterName, Blob x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setBlob(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLBlob(parameterName, x));
+  }
+
+  @Override
+  public void setClob(String parameterName, Clob x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setClob(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLClob(parameterName, x));
+  }
+
+  @Override
+  public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setAsciiStream(parameterName, x, length);
+    storeParameter(parameterName, new SQLValue.SQLAsciiStream(parameterName, x, length));
+  }
+
+  @Override
+  public void setBinaryStream(String parameterName, InputStream x, long length) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setBinaryStream(parameterName, x, length);
+    storeParameter(parameterName, new SQLValue.SQLBinaryStream(parameterName, x, length));
+  }
+
+  @Override
+  public void setCharacterStream(String parameterName, Reader x, long length) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setCharacterStream(parameterName, x, length);
+    storeParameter(parameterName, new SQLValue.SQLCharacterStream(parameterName, x, length));
+  }
+
+  @Override
+  public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setAsciiStream(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLAsciiStream(parameterName, x));
+  }
+
+  @Override
+  public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setBinaryStream(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLBinaryStream(parameterName, x));
+  }
+
+  @Override
+  public void setCharacterStream(String parameterName, Reader x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setCharacterStream(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLCharacterStream(parameterName, x));
+  }
+
+  @Override
+  public void setNCharacterStream(String parameterName, Reader x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setNCharacterStream(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLNCharacterStream(parameterName, x));
+  }
+
+  @Override
+  public void setClob(String parameterName, Reader x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setClob(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLClob(parameterName, x));
+  }
+
+  @Override
+  public void setBlob(String parameterName, InputStream x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setBlob(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLBlob(parameterName, x));
+  }
+
+  @Override
+  public void setNClob(String parameterName, Reader x) throws SQLException {
+    ((CallableStatement) getActiveStatement()).setNClob(parameterName, x);
+    storeParameter(parameterName, new SQLValue.SQLNClob(parameterName, x));
+  }
+  ////////////////////
+  ///////////////////
 
   @Override
   public String getString(String parameterName) throws SQLException {
@@ -461,52 +610,12 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
   }
 
   @Override
-  public void setRowId(String parameterName, RowId x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setNString(String parameterName, String value) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setNCharacterStream(String parameterName, Reader value, long length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setNClob(String parameterName, NClob value) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setClob(String parameterName, Reader reader, long length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setBlob(String parameterName, InputStream inputStream, long length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setNClob(String parameterName, Reader reader, long length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
   public NClob getNClob(int parameterIndex) throws SQLException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
   @Override
   public NClob getNClob(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setSQLXML(String parameterName, SQLXML xmlObject) throws SQLException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
@@ -547,66 +656,6 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
 
   @Override
   public Reader getCharacterStream(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setBlob(String parameterName, Blob x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setClob(String parameterName, Clob x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setBinaryStream(String parameterName, InputStream x, long length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setCharacterStream(String parameterName, Reader reader, long length) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setCharacterStream(String parameterName, Reader reader) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setNCharacterStream(String parameterName, Reader value) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setClob(String parameterName, Reader reader) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setBlob(String parameterName, InputStream inputStream) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setNClob(String parameterName, Reader reader) throws SQLException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 }
