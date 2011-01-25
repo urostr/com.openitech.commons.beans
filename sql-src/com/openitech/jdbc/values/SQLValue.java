@@ -37,6 +37,77 @@ public abstract class SQLValue<T> {
 
   public abstract void setParameter(CallableStatement preparedStatement) throws SQLException;
 
+  public static class SQLRegisteredParameter extends SQLValue<java.lang.Object> {
+
+    int sqlType;
+    Integer scale;
+    String typeName;
+
+    public SQLRegisteredParameter(String parameterName, int sqlType) {
+      this.parameterName = parameterName;
+      this.sqlType = sqlType;
+    }
+
+    public SQLRegisteredParameter(String parameterName, int sqlType, String typeName) {
+      this.parameterName = parameterName;
+      this.sqlType = sqlType;
+      this.typeName = typeName;
+    }
+
+    public SQLRegisteredParameter(String parameterName, int sqlType, int scale) {
+      this.parameterName = parameterName;
+      this.sqlType = sqlType;
+      this.scale = scale;
+    }
+
+    public SQLRegisteredParameter(int parameterIndex, int sqlType) {
+      this.parameterIndex = parameterIndex;
+      this.sqlType = sqlType;
+    }
+
+    public SQLRegisteredParameter(int parameterIndex, int sqlType, int scale) {
+      this.parameterIndex = parameterIndex;
+      this.sqlType = sqlType;
+      this.scale = scale;
+    }
+
+    public SQLRegisteredParameter(int parameterIndex, int sqlType, String typeName) {
+      this.parameterIndex = parameterIndex;
+      this.sqlType = sqlType;
+      this.typeName = typeName;
+    }
+
+    @Override
+    public void setParameter(PreparedStatement preparedStatement) throws SQLException {
+      throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    public void setParameter(CallableStatement callableStatement) throws SQLException {
+      throw new UnsupportedOperationException("Not supported.");
+    }
+
+    public void registerParameter(CallableStatement callableStatement) throws SQLException {
+      if (parameterName == null) {
+        if (scale != null) {
+          callableStatement.registerOutParameter(parameterIndex, sqlType, sqlType);
+        } else if (typeName != null) {
+          callableStatement.registerOutParameter(parameterIndex, sqlType, typeName);
+        } else {
+          callableStatement.registerOutParameter(parameterIndex, sqlType);
+        }
+      } else {
+        if (scale != null) {
+          callableStatement.registerOutParameter(parameterName, sqlType, sqlType);
+        } else if (typeName != null) {
+          callableStatement.registerOutParameter(parameterName, sqlType, typeName);
+        } else {
+          callableStatement.registerOutParameter(parameterName, sqlType);
+        }
+      }
+    }
+  }
+
   public static class SQLObject extends SQLValue<java.lang.Object> {
 
     private Integer scaleOrLength = null;

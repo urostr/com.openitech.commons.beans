@@ -23,8 +23,10 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,177 +44,374 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
     return connection.prepareCall(cursorName, resultSetType, resultSetConcurrency);
   }
 
+  @Override
+  protected void initStatement() throws SQLException {
+    super.initStatement();
+    for (SQLValue sqlValue : parametersMap.values()) {
+      sqlValue.setParameter((CallableStatement) statement);
+    }
+    for (SQLValue.SQLRegisteredParameter sqlRegisteredParameter : registeredValuesMap.values()) {
+      sqlRegisteredParameter.registerParameter((CallableStatement) statement);
+    }
+    for (SQLValue.SQLRegisteredParameter sqlRegisteredParameter : registeredValues) {
+      sqlRegisteredParameter.registerParameter((CallableStatement) statement);
+    }
+  }
+
+  protected Map<CaseInsensitiveString, SQLValue> parametersMap = new LinkedHashMap<CaseInsensitiveString, SQLValue>();
+  protected Map<CaseInsensitiveString, SQLValue.SQLRegisteredParameter> registeredValuesMap = new LinkedHashMap<CaseInsensitiveString, SQLValue.SQLRegisteredParameter>();
+  protected List<SQLValue.SQLRegisteredParameter> registeredValues = new ArrayList<SQLValue.SQLRegisteredParameter>();
+
+  protected  void registerParameter(int parameterIndex, SQLValue.SQLRegisteredParameter value) {
+    if (registeredValues.size() <= parameterIndex) {
+      registeredValues.add(parameterIndex, value);
+    } else {
+      registeredValues.set(parameterIndex, value);
+    }
+  }
+
   protected void storeParameter(String parameterName, SQLValue value) {
     parametersMap.put(new CaseInsensitiveString(parameterName), value);
   }
 
   @Override
-  protected void initStatement() throws SQLException {
-    super.initStatement();
-    for (SQLValue sqlValue : parametersMap.values()) {
-      sqlValue.setParameter((CallableStatement) this);
-    }
-  }
-  protected Map<CaseInsensitiveString, SQLValue> parametersMap = new LinkedHashMap<CaseInsensitiveString, SQLValue>();
-
-  @Override
   public void registerOutParameter(int parameterIndex, int sqlType) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).registerOutParameter(parameterIndex, sqlType);
+    registerParameter(parameterIndex, new SQLValue.SQLRegisteredParameter(parameterIndex, sqlType));
   }
 
   @Override
   public void registerOutParameter(int parameterIndex, int sqlType, int scale) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).registerOutParameter(parameterIndex, sqlType, scale);
+    registerParameter(parameterIndex, new SQLValue.SQLRegisteredParameter(parameterIndex, sqlType, scale));
   }
 
   @Override
   public boolean wasNull() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) statement).wasNull();
   }
 
   @Override
   public void registerOutParameter(int parameterIndex, int sqlType, String typeName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).registerOutParameter(parameterIndex, sqlType, typeName);
+    registerParameter(parameterIndex, new SQLValue.SQLRegisteredParameter(parameterIndex, sqlType, typeName));
+
   }
 
   @Override
   public void registerOutParameter(String parameterName, int sqlType) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).registerOutParameter(parameterName, sqlType);
+    registeredValuesMap.put(new CaseInsensitiveString(parameterName), new SQLValue.SQLRegisteredParameter(parameterName, sqlType));
   }
 
   @Override
   public void registerOutParameter(String parameterName, int sqlType, int scale) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).registerOutParameter(parameterName, sqlType, scale);
+    registeredValuesMap.put(new CaseInsensitiveString(parameterName), new SQLValue.SQLRegisteredParameter(parameterName, sqlType, scale));
   }
 
   @Override
   public void registerOutParameter(String parameterName, int sqlType, String typeName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    ((CallableStatement) getActiveStatement()).registerOutParameter(parameterName, sqlType, typeName);
+    registeredValuesMap.put(new CaseInsensitiveString(parameterName), new SQLValue.SQLRegisteredParameter(parameterName, sqlType, typeName));
   }
 
   @Override
   public String getString(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getString(parameterIndex);
   }
 
   @Override
   public boolean getBoolean(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getBoolean(parameterIndex);
   }
 
   @Override
   public byte getByte(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getByte(parameterIndex);
   }
 
   @Override
   public short getShort(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getShort(parameterIndex);
   }
 
   @Override
   public int getInt(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getInt(parameterIndex);
   }
 
   @Override
   public long getLong(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getLong(parameterIndex);
   }
 
   @Override
   public float getFloat(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getFloat(parameterIndex);
   }
 
   @Override
   public double getDouble(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getDouble(parameterIndex);
   }
 
   @Override
   public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getBigDecimal(parameterIndex, scale);
   }
 
   @Override
   public byte[] getBytes(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getBytes(parameterIndex);
   }
 
   @Override
   public Date getDate(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getDate(parameterIndex);
   }
 
   @Override
   public Time getTime(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getTime(parameterIndex);
   }
 
   @Override
   public Timestamp getTimestamp(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getTimestamp(parameterIndex);
   }
 
   @Override
   public Object getObject(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getObject(parameterIndex);
   }
 
   @Override
   public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getBigDecimal(parameterIndex);
   }
 
   @Override
   public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getObject(parameterIndex, map);
   }
 
   @Override
   public Ref getRef(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getRef(parameterIndex);
   }
 
   @Override
   public Blob getBlob(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getBlob(parameterIndex);
   }
 
   @Override
   public Clob getClob(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getClob(parameterIndex);
   }
 
   @Override
   public Array getArray(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getArray(parameterIndex);
   }
 
   @Override
   public Date getDate(int parameterIndex, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getDate(parameterIndex, cal);
   }
 
   @Override
   public Time getTime(int parameterIndex, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getTime(parameterIndex, cal);
   }
 
   @Override
   public Timestamp getTimestamp(int parameterIndex, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getTimestamp(parameterIndex, cal);
   }
 
   @Override
   public URL getURL(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
+    return ((CallableStatement) getActiveStatement()).getURL(parameterIndex);
   }
-////////////////////////////
-  /////////////////////////
 
   @Override
+  public String getString(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getString(parameterName);
+  }
+
+  @Override
+  public boolean getBoolean(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getBoolean(parameterName);
+  }
+
+  @Override
+  public byte getByte(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getByte(parameterName);
+  }
+
+  @Override
+  public short getShort(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getShort(parameterName);
+  }
+
+  @Override
+  public int getInt(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getInt(parameterName);
+  }
+
+  @Override
+  public long getLong(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getLong(parameterName);
+  }
+
+  @Override
+  public float getFloat(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getFloat(parameterName);
+  }
+
+  @Override
+  public double getDouble(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getDouble(parameterName);
+  }
+
+  @Override
+  public byte[] getBytes(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getBytes(parameterName);
+  }
+
+  @Override
+  public Date getDate(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getDate(parameterName);
+  }
+
+  @Override
+  public Time getTime(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getTime(parameterName);
+  }
+
+  @Override
+  public Timestamp getTimestamp(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getTimestamp(parameterName);
+  }
+
+  @Override
+  public Object getObject(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getObject(parameterName);
+  }
+
+  @Override
+  public BigDecimal getBigDecimal(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getBigDecimal(parameterName);
+  }
+
+  @Override
+  public Object getObject(String parameterName, Map<String, Class<?>> map) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getObject(parameterName, map);
+  }
+
+  @Override
+  public Ref getRef(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getRef(parameterName);
+  }
+
+  @Override
+  public Blob getBlob(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getBlob(parameterName);
+  }
+
+  @Override
+  public Clob getClob(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getClob(parameterName);
+  }
+
+  @Override
+  public Array getArray(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getArray(parameterName);
+  }
+
+  @Override
+  public Date getDate(String parameterName, Calendar cal) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getDate(parameterName, cal);
+  }
+
+  @Override
+  public Time getTime(String parameterName, Calendar cal) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getTime(parameterName, cal);
+  }
+
+  @Override
+  public Timestamp getTimestamp(String parameterName, Calendar cal) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getTimestamp(parameterName, cal);
+  }
+
+  @Override
+  public URL getURL(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getURL(parameterName);
+  }
+
+  @Override
+  public RowId getRowId(int parameterIndex) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getRowId(parameterIndex);
+  }
+
+  @Override
+  public RowId getRowId(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getRowId(parameterName);
+  }
+
+  @Override
+  public NClob getNClob(int parameterIndex) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getNClob(parameterIndex);
+  }
+
+  @Override
+  public NClob getNClob(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getNClob(parameterName);
+  }
+
+  @Override
+  public SQLXML getSQLXML(int parameterIndex) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getSQLXML(parameterIndex);
+  }
+
+  @Override
+  public SQLXML getSQLXML(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getSQLXML(parameterName);
+  }
+
+  @Override
+  public String getNString(int parameterIndex) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getNString(parameterIndex);
+  }
+
+  @Override
+  public String getNString(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getNString(parameterName);
+  }
+
+  @Override
+  public Reader getNCharacterStream(int parameterIndex) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getNCharacterStream(parameterIndex);
+  }
+
+  @Override
+  public Reader getNCharacterStream(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getNCharacterStream(parameterName);
+  }
+
+  @Override
+  public Reader getCharacterStream(int parameterIndex) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getCharacterStream(parameterIndex);
+  }
+
+  @Override
+  public Reader getCharacterStream(String parameterName) throws SQLException {
+    return ((CallableStatement) getActiveStatement()).getCharacterStream(parameterName);
+  }
+
+@Override
   public void setURL(String parameterName, URL x) throws SQLException {
     ((CallableStatement) getActiveStatement()).setURL(parameterName, x);
     storeParameter(parameterName, new SQLValue.SQLUrl(parameterName, x));
@@ -480,182 +679,5 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
   public void setNClob(String parameterName, Reader x) throws SQLException {
     ((CallableStatement) getActiveStatement()).setNClob(parameterName, x);
     storeParameter(parameterName, new SQLValue.SQLNClob(parameterName, x));
-  }
-  ////////////////////
-  ///////////////////
-
-  @Override
-  public String getString(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public boolean getBoolean(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public byte getByte(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public short getShort(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public int getInt(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public long getLong(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public float getFloat(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public double getDouble(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public byte[] getBytes(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Date getDate(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Time getTime(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Timestamp getTimestamp(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Object getObject(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public BigDecimal getBigDecimal(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Object getObject(String parameterName, Map<String, Class<?>> map) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Ref getRef(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Blob getBlob(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Clob getClob(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Array getArray(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Date getDate(String parameterName, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Time getTime(String parameterName, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Timestamp getTimestamp(String parameterName, Calendar cal) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public URL getURL(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public RowId getRowId(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public RowId getRowId(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public NClob getNClob(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public NClob getNClob(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public SQLXML getSQLXML(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public SQLXML getSQLXML(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public String getNString(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public String getNString(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Reader getNCharacterStream(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Reader getNCharacterStream(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Reader getCharacterStream(int parameterIndex) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public Reader getCharacterStream(String parameterName) throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
   }
 }
