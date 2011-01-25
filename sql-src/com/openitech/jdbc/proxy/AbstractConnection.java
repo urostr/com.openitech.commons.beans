@@ -38,7 +38,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
 
   protected boolean isValid() {
     try {
-      if (this.connection.isClosed()) {
+      if (this.connection==null || this.connection.isClosed()) {
         return false;
       } else {
         this.connection.getHoldability();
@@ -109,6 +109,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
   @Override
   public void close() throws SQLException {
     connection.close();
+    connection = null;
     closed = Boolean.TRUE;
     Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
   }
