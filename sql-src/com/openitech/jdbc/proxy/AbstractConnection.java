@@ -83,15 +83,18 @@ public abstract class AbstractConnection implements java.sql.Connection {
     getActiveConnection().rollback();
   }
 
+  Boolean closed = Boolean.FALSE;
+
   @Override
   public void close() throws SQLException {
     connection.close();
+    closed = Boolean.TRUE;
     Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
   }
 
   @Override
   public boolean isClosed() throws SQLException {
-    return connection.isClosed();
+    return closed;
   }
 
   @Override
