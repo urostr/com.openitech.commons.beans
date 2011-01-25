@@ -1441,6 +1441,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return success;
   }
 
+  @Deprecated
   @Override
   public String getPPJoinFields() {
     String result = "";
@@ -1466,7 +1467,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
 
     }
-    return result;
+    return "";
   }
 
   @Override
@@ -1480,31 +1481,35 @@ public class SqlUtilitesImpl extends SqlUtilities {
         while (rsFindPPPolja.next()) {
           String imePolja = rsFindPPPolja.getString("ImePolja");
           final String val_alias = "[val_" + imePolja + "]";
+          final String ev_alias = "[ev_" + imePolja + "]";
           int tipPolja = rsFindPPPolja.getInt("TipPolja");
+          int idPolja = rsFindPPPolja.getInt("IdPolja");
+          sbresult.append(",\n( SELECT (SELECT ");
           switch (tipPolja) {
             case 1:
-              sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(imePolja).append("]");
+              sbresult.append(val_alias).append(".IntValue AS [").append(imePolja).append("]");
               break;
             case 2:
               //Real
-              sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(imePolja).append("]");
+              sbresult.append(val_alias).append(".RealValue AS [").append(imePolja).append("]");
               break;
             case 3:
               //String
-              sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(imePolja).append("]");
+              sbresult.append(val_alias).append(".StringValue AS [").append(imePolja).append("]");
               break;
             case 4:
               //Date
-              sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(imePolja).append("]");
+              sbresult.append(val_alias).append(".DateValue AS [").append(imePolja).append("]");
               break;
             case 6:
               //Clob
-              sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(imePolja).append("]");
+              sbresult.append(val_alias).append(".ClobValue AS [").append(imePolja).append("]");
               break;
             case 7:
               //Boolean
-              sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(imePolja).append("]");
+              sbresult.append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(imePolja).append("]");
           }
+          sbresult.append(" FROM  [ChangeLog].[dbo].[VariousValues] AS ").append(val_alias).append(" WHERE  ").append(val_alias).append(".[Id] = ").append(ev_alias).append(".[ValueId]  ) AS [").append(imePolja).append("]  FROM  [ChangeLog].[dbo].[ValuesPP] ").append(ev_alias).append("  WHERE  ").append(ev_alias).append(".[IdPolja]  = ").append(idPolja).append(" AND ").append(ev_alias).append(".[PPId] = PP.[PPID]     ) AS [").append(imePolja).append("] ");
         }
         result = sbresult.toString();
       } finally {
