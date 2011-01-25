@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
@@ -25,10 +26,13 @@ import java.util.Calendar;
  */
 public abstract class SQLValue<T> {
 
+  protected String parameterName;
   protected int parameterIndex;
   protected T value;
 
   public abstract void setParameter(PreparedStatement preparedStatement) throws SQLException;
+
+  public abstract void setParameter(CallableStatement preparedStatement) throws SQLException;
 
   public static class SQLObject extends SQLValue<java.lang.Object> {
 
@@ -45,6 +49,21 @@ public abstract class SQLValue<T> {
 
     public SQLObject(int parameterIndex, java.lang.Object value, Integer targetSqlType, Integer scaleOrLength) {
       this.parameterIndex = parameterIndex;
+      this.value = value;
+      this.targetSqlType = targetSqlType;
+      this.scaleOrLength = scaleOrLength;
+    }
+
+    public SQLObject(String parameterName, java.lang.Object value) {
+      this(parameterName, value, null, null);
+    }
+
+    public SQLObject(String parameterName, java.lang.Object value, Integer targetSqlType) {
+      this(parameterName, value, targetSqlType, null);
+    }
+
+    public SQLObject(String parameterName, java.lang.Object value, Integer targetSqlType, Integer scaleOrLength) {
+      this.parameterName = parameterName;
       this.value = value;
       this.targetSqlType = targetSqlType;
       this.scaleOrLength = scaleOrLength;
@@ -96,6 +115,17 @@ public abstract class SQLValue<T> {
         preparedStatement.setObject(parameterIndex, value, targetSqlType, scaleOrLength);
       }
     }
+
+    @Override
+    public void setParameter(CallableStatement callableStatement) throws SQLException {
+      if (targetSqlType == null) {
+        callableStatement.setObject(parameterName, value);
+      } else if (scaleOrLength == null) {
+        callableStatement.setObject(parameterName, value, targetSqlType);
+      } else {
+        callableStatement.setObject(parameterName, value, targetSqlType, scaleOrLength);
+      }
+    }
   }
 
   public static class SQLInteger extends SQLValue<Integer> {
@@ -107,7 +137,7 @@ public abstract class SQLValue<T> {
 
     @Override
     public void setParameter(PreparedStatement preparedStatement) throws SQLException {
-      preparedStatement.setInt(parameterIndex, (int) value);
+      preparedStatement.setInt(parameterIndex, value);
     }
   }
 
@@ -120,11 +150,7 @@ public abstract class SQLValue<T> {
 
     @Override
     public void setParameter(PreparedStatement preparedStatement) throws SQLException {
-      if (value != null) {
-        preparedStatement.setString(parameterIndex, (String) value);
-      } else {
-        preparedStatement.setNull(parameterIndex, java.sql.Types.VARCHAR);
-      }
+      preparedStatement.setString(parameterIndex, value);
     }
   }
 
