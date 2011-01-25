@@ -269,7 +269,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public Connection getConnection() throws SQLException {
-    return getActiveStatement().getConnection();
+    return this.connection;
   }
 
   @Override
