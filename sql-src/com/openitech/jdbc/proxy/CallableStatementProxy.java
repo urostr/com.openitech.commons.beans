@@ -20,10 +20,11 @@ import java.sql.Ref;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -32,11 +33,24 @@ import java.util.Map;
  */
 public class CallableStatementProxy extends PreparedStatementProxy implements CallableStatement {
 
-  public CallableStatementProxy(AbstractConnection connection, String sql) throws SQLException {
-    super(connection, sql);
+  protected CallableStatementProxy(AbstractConnection connection, String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+    super(connection, sql, resultSetType, resultSetConcurrency, null);
   }
 
-  protected Map<CaseInsensitiveString, SQLValue> parametersMap = new HashMap<CaseInsensitiveString, SQLValue>();
+  @Override
+  protected Statement createStatement() throws SQLException {
+    return connection.prepareCall(cursorName, resultSetType, resultSetConcurrency);
+  }
+
+  @Override
+  protected void initStatement() throws SQLException {
+    super.initStatement();
+    for (SQLValue sqlValue : parametersMap.values()) {
+      sqlValue.setParameter((CallableStatement) this);
+    }
+  }
+
+  protected Map<CaseInsensitiveString, SQLValue> parametersMap = new LinkedHashMap<CaseInsensitiveString, SQLValue>();
 
   @Override
   public void registerOutParameter(int parameterIndex, int sqlType) throws SQLException {
