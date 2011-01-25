@@ -23,6 +23,7 @@ import javax.sql.DataSource;
  */
 public abstract class AbstractConnection implements java.sql.Connection {
 
+  protected javax.sql.PooledConnection pooledConnection;
   protected java.sql.Connection connection;
   protected final javax.sql.DataSource dataSource;
 
@@ -32,7 +33,8 @@ public abstract class AbstractConnection implements java.sql.Connection {
   }
 
   private Connection createConnection(DataSource dataSource) throws SQLException {
-    return (dataSource instanceof ConnectionPoolDataSource) ? ((ConnectionPoolDataSource) dataSource).getPooledConnection().getConnection() : dataSource.getConnection();
+    Logger.getLogger(AbstractConnection.class.getName()).info("Create connection.");
+    return (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
   }
 
 
@@ -41,7 +43,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
       if (this.connection==null || this.connection.isClosed()) {
         return false;
       } else {
-        this.connection.getHoldability();
+        this.connection.getWarnings();
         return true;
       }
     } catch (SQLException ex) {
@@ -108,7 +110,12 @@ public abstract class AbstractConnection implements java.sql.Connection {
 
   @Override
   public void close() throws SQLException {
-    connection.close();
+    if (pooledConnection!=null) {
+      pooledConnection.close();
+      pooledConnection = null;
+    } else {
+      connection.close();
+    }
     connection = null;
     closed = Boolean.TRUE;
     Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
