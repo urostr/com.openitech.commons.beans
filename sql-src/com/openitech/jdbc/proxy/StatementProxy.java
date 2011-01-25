@@ -28,25 +28,10 @@ public class StatementProxy implements java.sql.Statement {
     this.resultSetConcurrency = resultSetConcurrency;
   }
   
-  private static Boolean canUseIsClosed;
-
   protected java.sql.Statement createStatement() throws SQLException {
     return connection.getActiveConnection().createStatement(resultSetType, resultSetConcurrency);
   }
-
-  private boolean canUseIsClosed() {
-    if (canUseIsClosed == null) {
-      try {
-        this.statement.isClosed();
-        canUseIsClosed = true;
-      } catch (Throwable ex) {
-        //ignore it
-        canUseIsClosed = false;
-      }
-    }
-    return canUseIsClosed;
-  }
-
+  
   protected void initStatement() throws SQLException {
     if (maxFieldSize != null) {
       statement.setMaxFieldSize(maxFieldSize);
@@ -81,7 +66,7 @@ public class StatementProxy implements java.sql.Statement {
 
   protected boolean isStatementClosed() {
     try {
-      return statement == null || connection.connection==null || connection.connection.isClosed() || (canUseIsClosed()?statement.isClosed():false);
+      return statement == null || statement.getConnection().isClosed();
     } catch (SQLException ex) {
       return true;
     }
