@@ -40,7 +40,7 @@ public class JtdsDataSourceFactory implements DataSourceFactory.Implementation {
         if (propertyInfo.value != null) {
           for (PropertyDescriptor propertyDescriptor : jtdsDataSourceBeanInfo.getPropertyDescriptors()) {
             if (propertyDescriptor.getName().equalsIgnoreCase(propertyInfo.name)) {
-              System.out.println(propertyInfo.name+"="+propertyInfo.value);
+//              System.out.println(propertyInfo.name+"="+propertyInfo.value);
               Object value;
               if (int.class.equals(propertyDescriptor.getPropertyType())) {
                 value = Integer.parseInt(propertyInfo.value);

@@ -36,12 +36,7 @@ import java.util.Map;
 public class CallableStatementProxy extends PreparedStatementProxy implements CallableStatement {
 
   protected CallableStatementProxy(AbstractConnection connection, String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-    super(connection, sql, resultSetType, resultSetConcurrency, null);
-  }
-
-  @Override
-  protected Statement createStatement() throws SQLException {
-    return connection.prepareCall(cursorName, resultSetType, resultSetConcurrency);
+    super(connection, sql, resultSetType, resultSetConcurrency, new CallableStatementFactory(sql, resultSetType, resultSetConcurrency));
   }
 
   @Override
@@ -57,12 +52,12 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
       sqlRegisteredParameter.registerParameter((CallableStatement) statement);
     }
   }
-
   protected Map<CaseInsensitiveString, SQLValue> parametersMap = new LinkedHashMap<CaseInsensitiveString, SQLValue>();
   protected Map<CaseInsensitiveString, SQLValue.SQLRegisteredParameter> registeredValuesMap = new LinkedHashMap<CaseInsensitiveString, SQLValue.SQLRegisteredParameter>();
   protected List<SQLValue.SQLRegisteredParameter> registeredValues = new ArrayList<SQLValue.SQLRegisteredParameter>();
 
-  protected  void registerParameter(int parameterIndex, SQLValue.SQLRegisteredParameter value) {
+  protected void registerParameter(int parameterIndex, SQLValue.SQLRegisteredParameter value) {
+    parameterIndex--;
     if (registeredValues.size() <= parameterIndex) {
       registeredValues.add(parameterIndex, value);
     } else {
@@ -411,7 +406,7 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
     return ((CallableStatement) getActiveStatement()).getCharacterStream(parameterName);
   }
 
-@Override
+  @Override
   public void setURL(String parameterName, URL x) throws SQLException {
     ((CallableStatement) getActiveStatement()).setURL(parameterName, x);
     storeParameter(parameterName, new SQLValue.SQLUrl(parameterName, x));
@@ -679,5 +674,23 @@ public class CallableStatementProxy extends PreparedStatementProxy implements Ca
   public void setNClob(String parameterName, Reader x) throws SQLException {
     ((CallableStatement) getActiveStatement()).setNClob(parameterName, x);
     storeParameter(parameterName, new SQLValue.SQLNClob(parameterName, x));
+  }
+
+  protected static class CallableStatementFactory extends PreparedStatementFactory {
+
+    private final String sql;
+    private final int resultSetType;
+    private final int resultSetConcurrency;
+
+    public CallableStatementFactory(String sql, int resultSetType, int resultSetConcurrency) {
+      this.sql = sql;
+      this.resultSetType = resultSetType;
+      this.resultSetConcurrency = resultSetConcurrency;
+    }
+
+    @Override
+    public CallableStatement createPreparedStatement(java.sql.Connection connection) throws SQLException {
+      return connection.prepareCall(sql, resultSetType, resultSetConcurrency);
+    }
   }
 }

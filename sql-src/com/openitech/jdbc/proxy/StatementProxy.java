@@ -19,30 +19,32 @@ public class StatementProxy implements java.sql.Statement {
 
   final int resultSetType;
   final int resultSetConcurrency;
-  final java.sql.Connection connection;
+  final AbstractConnection connection;
   java.sql.Statement statement;
 
   protected StatementProxy(AbstractConnection connection, int resultSetType, int resultSetConcurrency) throws SQLException {
     this.connection = connection;
     this.resultSetType = resultSetType;
     this.resultSetConcurrency = resultSetConcurrency;
-    this.statement = createStatement();
-
-    if (canUseIsClosed == null) {
-      try {
-        this.statement.isClosed();
-        canUseIsClosed = true;
-      } catch (Exception ex) {
-        //ignore it
-        canUseIsClosed = false;
-      }
-    }
   }
   
   private static Boolean canUseIsClosed;
 
   protected java.sql.Statement createStatement() throws SQLException {
-    return connection.createStatement(resultSetType, resultSetConcurrency);
+    return connection.getActiveConnection().createStatement(resultSetType, resultSetConcurrency);
+  }
+
+  private boolean canUseIsClosed() {
+    if (canUseIsClosed == null) {
+      try {
+        this.statement.isClosed();
+        canUseIsClosed = true;
+      } catch (Throwable ex) {
+        //ignore it
+        canUseIsClosed = false;
+      }
+    }
+    return canUseIsClosed;
   }
 
   protected void initStatement() throws SQLException {
@@ -79,11 +81,7 @@ public class StatementProxy implements java.sql.Statement {
 
   protected boolean isStatementClosed() {
     try {
-      if (canUseIsClosed) {
-        return statement == null || getConnection().isClosed() || statement.isClosed();
-      } else {
-        return statement == null || getConnection().isClosed();
-      }
+      return statement == null || connection.isClosed() || (canUseIsClosed()?statement.isClosed():false);
     } catch (SQLException ex) {
       return true;
     }

@@ -78,6 +78,8 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
   List<SQLValue> parameters = new ArrayList<SQLValue>();
 
   protected  void storeParameter(int parameterIndex, SQLValue value) {
+    parameterIndex--;
+
     if (parameters.size() <= parameterIndex) {
       parameters.add(parameterIndex, value);
     } else {
@@ -87,7 +89,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   protected Statement createStatement() throws SQLException {
-    return factory.createPreparedStatement(connection);
+    return factory.createPreparedStatement(connection.getActiveConnection());
   }
 
   @Override
