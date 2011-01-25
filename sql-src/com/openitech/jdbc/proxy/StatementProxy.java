@@ -81,7 +81,7 @@ public class StatementProxy implements java.sql.Statement {
 
   protected boolean isStatementClosed() {
     try {
-      return statement == null || connection.isClosed() || (canUseIsClosed()?statement.isClosed():false);
+      return statement == null || connection.connection.isClosed() || (canUseIsClosed()?statement.isClosed():false);
     } catch (SQLException ex) {
       return true;
     }
