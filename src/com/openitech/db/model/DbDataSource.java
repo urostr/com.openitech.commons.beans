@@ -3184,9 +3184,9 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
       } else {
         if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
           if (fatal) {
-            throw new IllegalStateException("Can't obtain lock");
+            throw new IllegalStateException("Can't obtain lock on: " + toString());
           } else {
-            Logger.getLogger(DbDataSource.class.getName()).log(Level.WARNING, null, new IllegalStateException("Can't obtain lock"));
+            Logger.getLogger(DbDataSource.class.getName()).log(Level.WARNING, null, new IllegalStateException("Can't obtain lock on: " + toString()));
           }
         }
       }
