@@ -1530,7 +1530,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     boolean success = true;
 
     if (insertScheduler == null) {
-      insertScheduler = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "insertScheduler.sql", "cp1250"));
+      insertScheduler = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "insertScheduler.sql", "cp1250"));
     }
 
     synchronized (insertScheduler) {
