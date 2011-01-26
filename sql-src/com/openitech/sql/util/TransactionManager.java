@@ -134,14 +134,14 @@ public class TransactionManager {
 
   public void clearTransactions() throws SQLException {
     try {
-      connection.rollback();
+      endTransaction(false, true);
     } catch (SQLException ex) {
       //ignore it
        Logger.getLogger(SqlUtilities.class.getName()).info(ex.getSQLState()+":"+ex.getMessage());
+      activeSavepoints.clear();
+      connection.setAutoCommit(autocommit);
+      System.err.println("-- TRANSACTION CLEARED -- ");
     }
-    activeSavepoints.clear();
-    connection.setAutoCommit(autocommit);
-    System.err.println("-- TRANSACTION CLEARED -- ");
   }
 
   public boolean isTransaction() {
