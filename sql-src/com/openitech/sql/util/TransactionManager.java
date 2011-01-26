@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -131,6 +130,18 @@ public class TransactionManager {
     } else {
       return false;
     }
+  }
+
+  public void clearTransactions() throws SQLException {
+    try {
+      connection.rollback();
+    } catch (SQLException ex) {
+      //ignore it
+       Logger.getLogger(SqlUtilities.class.getName()).info(ex.getSQLState()+":"+ex.getMessage());
+    }
+    activeSavepoints.clear();
+    connection.setAutoCommit(autocommit);
+    System.err.println("-- TRANSACTION CLEARED -- ");
   }
 
   public boolean isTransaction() {
