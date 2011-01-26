@@ -102,12 +102,6 @@ public class ConnectionProxy extends AbstractConnection {
   }
 
   @Override
-  public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-    setHoldability(resultSetHoldability);
-    return createStatement(resultSetType, resultSetConcurrency);
-  }
-
-  @Override
   public Clob createClob() throws SQLException {
     return getActiveConnection().createClob();
   }

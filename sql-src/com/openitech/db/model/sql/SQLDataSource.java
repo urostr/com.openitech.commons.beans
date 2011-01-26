@@ -4512,11 +4512,13 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
-    List<Object> queryParameters = executeTemporarySelects(parameters, statement);
+    synchronized (statement.getConnection()) {
+      List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
-    setParameters(statement, queryParameters, 1, false);
+      setParameters(statement, queryParameters, 1, false);
 
-    return statement.executeQuery();
+      return statement.executeQuery();
+    }
   }
 
   public static boolean execute(String selectSQL, Object... parameters) throws SQLException {
@@ -4558,36 +4560,40 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
-    List<Object> queryParameters = executeTemporarySelects(parameters, statement);
+    synchronized (statement.getConnection()) {
+      List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
-    setParameters(statement, queryParameters, 1, false);
+      setParameters(statement, queryParameters, 1, false);
 
-    return statement.executeUpdate();
+      return statement.executeUpdate();
+    }
   }
 
   public static List<Object> executeTemporarySelects(List<?> parameters, Connection connection) throws SQLException {
-    List<Object> queryParameters = new java.util.ArrayList(parameters.size());
-    Set<TemporarySubselectSqlParameter.TemporaryTableGroup> temporarySubselectSqlParameters = new java.util.LinkedHashSet<TemporarySubselectSqlParameter.TemporaryTableGroup>(parameters.size());
-    for (Object parameter : parameters) {
-      if (parameter instanceof TemporarySubselectSqlParameter) {
-        TemporarySubselectSqlParameter tt = (TemporarySubselectSqlParameter) parameter;
-        temporarySubselectSqlParameters.add(tt.getGroup());
-        queryParameters.add(tt.getSubstSqlParameter());
-      } else {
-        queryParameters.add(parameter);
-      }
-    }
-
-    if (!temporarySubselectSqlParameters.isEmpty()) {
-      try {
-        for (TemporarySubselectSqlParameter.TemporaryTableGroup tempSubselect : temporarySubselectSqlParameters) {
-          tempSubselect.executeQuery(connection, queryParameters);
+    synchronized (connection) {
+      List<Object> queryParameters = new java.util.ArrayList(parameters.size());
+      Set<TemporarySubselectSqlParameter.TemporaryTableGroup> temporarySubselectSqlParameters = new java.util.LinkedHashSet<TemporarySubselectSqlParameter.TemporaryTableGroup>(parameters.size());
+      for (Object parameter : parameters) {
+        if (parameter instanceof TemporarySubselectSqlParameter) {
+          TemporarySubselectSqlParameter tt = (TemporarySubselectSqlParameter) parameter;
+          temporarySubselectSqlParameters.add(tt.getGroup());
+          queryParameters.add(tt.getSubstSqlParameter());
+        } else {
+          queryParameters.add(parameter);
         }
-      } catch (InterruptedException ex) {
-        throw new SQLException("Can't prepare the temporary tables", ex);
       }
+
+      if (!temporarySubselectSqlParameters.isEmpty()) {
+        try {
+          for (TemporarySubselectSqlParameter.TemporaryTableGroup tempSubselect : temporarySubselectSqlParameters) {
+            tempSubselect.executeQuery(connection, queryParameters);
+          }
+        } catch (InterruptedException ex) {
+          throw new SQLException("Can't prepare the temporary tables", ex);
+        }
+      }
+      return queryParameters;
     }
-    return queryParameters;
   }
 
   private static List<Object> executeTemporarySelects(List<?> parameters, PreparedStatement statement) throws SQLException {
@@ -5321,9 +5327,9 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
 
         if (owner.isGoToLastOnInsert() && insert && positioned) {
-          try{
-          openSelectResultSet.last();
-          }catch(Exception ex){
+          try {
+            openSelectResultSet.last();
+          } catch (Exception ex) {
             Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, null, ex);
           }
         }

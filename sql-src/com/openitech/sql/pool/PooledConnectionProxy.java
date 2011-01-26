@@ -5,11 +5,14 @@
 package com.openitech.sql.pool;
 
 import com.openitech.jdbc.proxy.ConnectionProxy;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.ConnectionPoolDataSource;
+
 import javax.sql.DataSource;
 
 /**
@@ -46,28 +49,25 @@ public class PooledConnectionProxy extends ConnectionProxy {
         super.close();
       } else {
         closed = Boolean.TRUE;
-      }
 
-      autoCommit = null;
-      readOnly = null;
-      catalog = null;
-      transactionIsolation = null;
-      typeMap = null;
-      clientInfo = null;
 
-      Logger.getLogger(PooledConnectionProxy.class.getName()).info("PooledConnection released.");
+        Logger.getLogger(PooledConnectionProxy.class.getName()).info("PooledConnection released.");
 
-      (timer = new Timer()).schedule(new TimerTask() {
-
-        @Override
-        public void run() {
-          try {
-            PooledConnectionProxy.super.close();
-          } catch (SQLException ex) {
-            Logger.getLogger(PooledConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
-          }
+        if (timer!=null) {
+          timer.cancel();
         }
-      }, 60000);
+        (timer = new Timer()).schedule(new TimerTask() {
+
+          @Override
+          public void run() {
+            try {
+              PooledConnectionProxy.super.close();
+            } catch (SQLException ex) {
+              Logger.getLogger(PooledConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
+            }
+          }
+        }, 60000);
+      }
     }
   }
 }

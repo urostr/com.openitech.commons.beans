@@ -8,9 +8,11 @@ import com.openitech.Settings;
 import com.openitech.jdbc.proxy.ConnectionProxy;
 import com.openitech.sql.datasource.DataSourceFactory;
 import com.openitech.sql.pool.ConnectionPool;
+import com.openitech.sql.pool.PooledConnectionProxy;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -33,6 +35,7 @@ public class ReconnectableSQLConnection implements DbConnection {
   private static final String fileSeparator = File.separatorChar == '\\' ? "\\\\" : File.separator;
   private static final String userDir = System.getProperty("user.dir").replaceAll(fileSeparator, fileSeparator + fileSeparator);
   private Process databaseProcess = null;
+  private ConnectionPool temporaryPool;
   private ConnectionPool connectionPool;
   Boolean isCaseInsensitive = null;
   String dialect = null;
@@ -105,8 +108,8 @@ public class ReconnectableSQLConnection implements DbConnection {
       Connection result;
       if (dataSource == null) {
         result = DriverManager.getConnection(DB_URL, connect);
-      } else if (connectionPool!=null) {
-        result = connectionPool.getConnection();
+      } else if (temporaryPool != null) {
+        result = temporaryPool.getConnection();
       } else {
         result = new ConnectionProxy(this.dataSource);
       }
@@ -120,7 +123,7 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   @Override
   public Connection getTxConnection() {
-    if (connection == null) {
+    if (!isValid()) {
       return getConnection();
     } else {
       return connection;
@@ -129,126 +132,123 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   @Override
   public java.sql.Connection getConnection() {
-    try {
-      if (connection == null || connection.isClosed()) {
-        String DB_USER = settings.getProperty(ConnectionManager.DB_USER);
-        String DB_PASS = settings.getProperty(ConnectionManager.DB_PASS);
+    if (!isValid()) {
+      try {
+        openConnection();
 
-        java.sql.Connection result = null;
-
-
-        if (server && settings.containsKey(ConnectionManager.DB_DRIVER_NET)) {
-          Class.forName(settings.getProperty(ConnectionManager.DB_DRIVER_NET));
-          DB_URL = settings.getProperty(ConnectionManager.DB_JDBC_NET);
-          try {
-            if (settings.containsKey("db.startup.net")) {
-              String dbStartupNetCommand = settings.getProperty("db.startup.net.command").
-                      replaceAll("\\{user.dir\\}", userDir).
-                      replaceAll("\\{file.separator\\}", fileSeparator).
-                      replaceAll("\\{path.separator\\}", System.getProperty("path.separator"));
-              String exec = MessageFormat.format(dbStartupNetCommand, settings.getProperty("db.jdbc.net.port"));
-              Logger.getLogger(Settings.LOGGER).info("Executing:\n" + exec);
-              databaseProcess = Runtime.getRuntime().exec(exec);
-              Thread.currentThread().sleep(3000);
-            }
-
-            Properties connect = new Properties();
-            if (DB_USER != null) {
-              connect.put("user", DB_USER);
-              connect.put("password", DB_PASS);
-            }
-
-            for (Iterator<Map.Entry<Object, Object>> s = settings.entrySet().iterator(); s.hasNext();) {
-              Map.Entry<Object, Object> entry = s.next();
-              if (((String) entry.getKey()).startsWith(DB_CONNECT_PREFIX)) {
-                connect.put(((String) entry.getKey()).substring(DB_CONNECT_PREFIX_LENGTH), entry.getValue());
-              }
-            }
-
-
-            this.connect.clear();
-            this.connect.putAll(connect);
-
-
-            result = DriverManager.getConnection(DB_URL, connect);
-
-            if (result != null) {
-              createSchema(result);
-            }
-
-            if (settings.containsKey("db.shutdown.net")) {
-              try {
-                Runtime.getRuntime().addShutdownHook((Thread) Class.forName(settings.getProperty(ConnectionManager.DB_SHUTDOWN_HOOK), true, this.getClass().getClassLoader()).newInstance());
-              } catch (Exception ex) {
-                Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't attach a shutdown hook", ex);
-              }
-            }
-          } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't get a connection to '" + DB_URL + "' [" + ex.getMessage() + "]");
-            result = null;
-            if (!settings.containsKey(ConnectionManager.DB_DRIVER_EMBEDDED)) {
-              throw (SQLException) (new SQLException("Neuspešna prijava na bazo").initCause(ex));
-            }
-          }
-        }
-        if (result == null) {
-          Class.forName(settings.getProperty(ConnectionManager.DB_DRIVER_EMBEDDED));
-          DB_URL = settings.getProperty(ConnectionManager.DB_JDBC_EMBEDDED);
-
-          Properties connect = new Properties();
-
-          if (DB_USER != null) {
-            connect.put("user", DB_USER);
-            connect.put("password", DB_PASS);
-          }
-
-          for (Iterator<Map.Entry<Object, Object>> s = settings.entrySet().iterator(); s.hasNext();) {
-            Map.Entry<Object, Object> entry = s.next();
-            if (((String) entry.getKey()).startsWith(DB_CONNECT_PREFIX)) {
-              connect.put(((String) entry.getKey()).substring(DB_CONNECT_PREFIX_LENGTH), entry.getValue());
-            }
-          }
-
-          this.connect.clear();
-          this.connect.putAll(connect);
-
-          result = DriverManager.getConnection(DB_URL, connect);
-
-          if (result != null) {
-            createSchema(result);
-            fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_CONNECTION));
-          }
-
-          if (settings.containsKey(ConnectionManager.DB_SHUTDOWN_HOOK)) {
-            try {
-              Runtime.getRuntime().addShutdownHook((Thread) Class.forName(settings.getProperty(ConnectionManager.DB_SHUTDOWN_HOOK), true, this.getClass().getClassLoader()).newInstance());
-            } catch (Exception ex) {
-              Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't attach a shutdown hook", ex);
-            }
-          }
-        }
-
-        result.setReadOnly(false);
-        result.setAutoCommit(Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")));
-
-        connection = result;
-
-        if (connection != null) {
-          DataSource dataSource = DataSourceFactory.getDataSource(DB_URL, connect);
-          if (dataSource != null) {
-            this.dataSource = dataSource;
-            this.connectionPool = new ConnectionPool(dataSource);
-            this.connection = new ConnectionProxy(dataSource);
-          }
-        }
+      } catch (Exception ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
+        connection = null;
       }
-    } catch (Exception ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
-      connection = null;
+
+      return connection;
+    } else {
+      try {
+        return getPooledConnection();
+      } catch (SQLException ex) {
+        Logger.getLogger(ReconnectableSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
+        return null;
+      }
     }
 
-    return connection;
+  }
 
+  private boolean isValid() {
+    try {
+      return connection != null && !connection.isClosed();
+    } catch (SQLException ex) {
+      Logger.getLogger(ReconnectableSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
+      return false;
+    }
+  }
+
+  private void openConnection() throws InterruptedException, ClassNotFoundException, SQLException, IOException {
+    String DB_USER = settings.getProperty(ConnectionManager.DB_USER);
+    String DB_PASS = settings.getProperty(ConnectionManager.DB_PASS);
+    java.sql.Connection result = null;
+    if (server && settings.containsKey(ConnectionManager.DB_DRIVER_NET)) {
+      Class.forName(settings.getProperty(ConnectionManager.DB_DRIVER_NET));
+      DB_URL = settings.getProperty(ConnectionManager.DB_JDBC_NET);
+      try {
+        if (settings.containsKey("db.startup.net")) {
+          String dbStartupNetCommand = settings.getProperty("db.startup.net.command").replaceAll("\\{user.dir\\}", userDir).replaceAll("\\{file.separator\\}", fileSeparator).replaceAll("\\{path.separator\\}", System.getProperty("path.separator"));
+          String exec = MessageFormat.format(dbStartupNetCommand, settings.getProperty("db.jdbc.net.port"));
+          Logger.getLogger(Settings.LOGGER).info("Executing:\n" + exec);
+          databaseProcess = Runtime.getRuntime().exec(exec);
+          Thread.currentThread().sleep(3000);
+        }
+        Properties connect = new Properties();
+        if (DB_USER != null) {
+          connect.put("user", DB_USER);
+          connect.put("password", DB_PASS);
+        }
+        for (Iterator<Map.Entry<Object, Object>> s = settings.entrySet().iterator(); s.hasNext();) {
+          Map.Entry<Object, Object> entry = s.next();
+          if (((String) entry.getKey()).startsWith(DB_CONNECT_PREFIX)) {
+            connect.put(((String) entry.getKey()).substring(DB_CONNECT_PREFIX_LENGTH), entry.getValue());
+          }
+        }
+        this.connect.clear();
+        this.connect.putAll(connect);
+        result = DriverManager.getConnection(DB_URL, connect);
+        if (result != null) {
+          createSchema(result);
+        }
+        if (settings.containsKey("db.shutdown.net")) {
+          try {
+            Runtime.getRuntime().addShutdownHook((Thread) Class.forName(settings.getProperty(ConnectionManager.DB_SHUTDOWN_HOOK), true, this.getClass().getClassLoader()).newInstance());
+          } catch (Exception ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't attach a shutdown hook", ex);
+          }
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't get a connection to '" + DB_URL + "' [" + ex.getMessage() + "]");
+        result = null;
+        if (!settings.containsKey(ConnectionManager.DB_DRIVER_EMBEDDED)) {
+          throw (SQLException) (new SQLException("Neuspešna prijava na bazo").initCause(ex));
+        }
+      }
+    }
+    if (result == null) {
+      Class.forName(settings.getProperty(ConnectionManager.DB_DRIVER_EMBEDDED));
+      DB_URL = settings.getProperty(ConnectionManager.DB_JDBC_EMBEDDED);
+      Properties connect = new Properties();
+      if (DB_USER != null) {
+        connect.put("user", DB_USER);
+        connect.put("password", DB_PASS);
+      }
+      for (Iterator<Map.Entry<Object, Object>> s = settings.entrySet().iterator(); s.hasNext();) {
+        Map.Entry<Object, Object> entry = s.next();
+        if (((String) entry.getKey()).startsWith(DB_CONNECT_PREFIX)) {
+          connect.put(((String) entry.getKey()).substring(DB_CONNECT_PREFIX_LENGTH), entry.getValue());
+        }
+      }
+      this.connect.clear();
+      this.connect.putAll(connect);
+      result = DriverManager.getConnection(DB_URL, connect);
+      if (result != null) {
+        createSchema(result);
+        fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_CONNECTION));
+      }
+      if (settings.containsKey(ConnectionManager.DB_SHUTDOWN_HOOK)) {
+        try {
+          Runtime.getRuntime().addShutdownHook((Thread) Class.forName(settings.getProperty(ConnectionManager.DB_SHUTDOWN_HOOK), true, this.getClass().getClassLoader()).newInstance());
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't attach a shutdown hook", ex);
+        }
+      }
+    }
+    result.setReadOnly(false);
+    result.setAutoCommit(Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")));
+    connection = result;
+    if (connection != null) {
+      DataSource dataSource = DataSourceFactory.getDataSource(DB_URL, connect);
+      if (dataSource != null) {
+        this.dataSource = dataSource;
+        this.temporaryPool = new ConnectionPool(dataSource);
+        this.connection = new ConnectionProxy(dataSource);
+      }
+    }
   }
 
   protected void createSchema(Connection conn) throws SQLException {
@@ -287,5 +287,13 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   public void fireActionPerformed(ActionEvent e) {
     owner.fireActionPerformed(e);
+  }
+
+  private Connection getPooledConnection() throws SQLException {
+    if (connectionPool == null) {
+      this.connectionPool = new ConnectionPool(dataSource, Integer.parseInt(settings.getProperty(DB_POOL_SIZE, "3")), Integer.parseInt(settings.getProperty(DB_MAX_POOL_SIZE, "9")));
+    }
+
+    return connectionPool.getConnection();
   }
 }

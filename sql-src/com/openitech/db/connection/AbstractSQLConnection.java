@@ -20,16 +20,20 @@ import java.util.Properties;
  * @author uros
  */
 public abstract class AbstractSQLConnection implements DbConnection {
-  private transient WeakListenerList actionListeners;
 
+  private transient WeakListenerList actionListeners;
   private final DbConnection implementation;
   protected final Properties settings = new Properties();
 
   public AbstractSQLConnection() {
     settings.putAll(loadProperites("connection.properties"));
     settings.putAll(System.getProperties());
-    implementation = new ReconnectableSQLConnection(this);
-//    implementation = new SingleSQLConnection(this);
+    if (Boolean.valueOf(settings.getProperty("db.connection.singleton", "false"))) {
+      implementation = new SingleSQLConnection(this);
+    } else {
+      implementation = new ReconnectableSQLConnection(this);
+    }
+
   }
 
   /**
@@ -133,5 +137,4 @@ public abstract class AbstractSQLConnection implements DbConnection {
       }
     }
   }
-
 }

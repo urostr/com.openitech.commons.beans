@@ -235,6 +235,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   private Connection connection = null;
   private String qFillTable;
   private PreparedStatement psFillTable = null;
+  private String qCheckTable;
+  private PreparedStatement psCheckTable = null;
   private String qEmptyTable;
   private List<PreparedStatement> psEmptyTable = new ArrayList<PreparedStatement>();
   private String qIsTableDataValidSql = null;
@@ -277,6 +279,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   }
 
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException, InterruptedException {
+   
     boolean fill = !isFillOnceOnly();
     long timer = System.currentTimeMillis();
 
@@ -305,132 +308,135 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
 
     try {
-      Statement statement = connection.createStatement();
-      try {
-        TransactionManager tm = TransactionManager.getInstance(connection);
+      synchronized (connection) {
 
-        boolean transaction = false;
-        boolean commit = false;
-
+        Statement statement = connection.createStatement();
         try {
+          TransactionManager tm = TransactionManager.getInstance(connection);
+
+          boolean transaction = false;
+          boolean commit = false;
+
+          try {
           if (checkTableSql != null) {
             statement.executeQuery(SQLDataSource.substParameters(checkTableSql, qparams));
-          }
-        } catch (SQLException ex) {
-          if (sqlMaterializedView != null) {
-            if (!tm.isTransaction()) {
-              transaction = true;
-              tm.beginTransaction();
-            }
-          }
-          if (!(lock.tryLock() || lock.tryLock(3, TimeUnit.SECONDS))) {
-            throw new SQLException("Can't lock " + sqlMaterializedView.getValue());
-          }
-
-          try {
-            for (String sql : createTableSqls) {
-              String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
-              statement.addBatch(createSQL);
-              if (DbDataSource.DUMP_SQL) {
-                System.out.println(createSQL + ";");
-                System.out.println("-- -- -- --");
+              }
+          } catch (SQLException ex) {
+            if (sqlMaterializedView != null) {
+              if (!tm.isTransaction()) {
+                transaction = true;
+                tm.beginTransaction();
               }
             }
-            statement.executeBatch();
-            fill = true;
-          } finally {
-            lock.unlock();
-          }
-        }
+            if (!(lock.tryLock() || lock.tryLock(3, TimeUnit.SECONDS))) {
+              throw new SQLException("Can't lock " + sqlMaterializedView.getValue());
+            }
 
-        qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
-
-        fill = fill || !isTableDataValidSql(connection, qparams);
-
-        if ((!fill) && (sqlMaterializedView != null)) {
-          fill = !sqlMaterializedView.isViewValid(connection, qparams);
-        }
-
-        if (fill && !disabled) {
-          if (sqlMaterializedView != null) {
-            if (!(transaction || tm.isTransaction())) {
-              transaction = true;
-              tm.beginTransaction();
+            try {
+              for (String sql : createTableSqls) {
+                String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
+                statement.addBatch(createSQL);
+                if (DbDataSource.DUMP_SQL) {
+                  System.out.println(createSQL + ";");
+                  System.out.println("-- -- -- --");
+                }
+              }
+              statement.executeBatch();
+              fill = true;
+            } finally {
+              lock.unlock();
             }
           }
 
-          try {
-            if (emptyTableSql.length() > 0) {
-              String query = SQLDataSource.substParameters(emptyTableSql, qparams);
-              if (!Equals.equals(this.connection, connection)
-                      || !Equals.equals(this.qEmptyTable, query)) {
-                String[] sqls = query.split(";");
-                this.psEmptyTable.clear();
-                for (String sql : sqls) {
-                  this.psEmptyTable.add(connection.prepareStatement(sql,
-                          ResultSet.TYPE_SCROLL_INSENSITIVE,
-                          ResultSet.CONCUR_READ_ONLY,
-                          ResultSet.HOLD_CURSORS_OVER_COMMIT));
-                  this.connection = connection;
+          qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+
+          fill = fill || !isTableDataValidSql(connection, qparams);
+
+          if ((!fill) && (sqlMaterializedView != null)) {
+            fill = !sqlMaterializedView.isViewValid(connection, qparams);
+          }
+
+          if (fill && !disabled) {
+            if (sqlMaterializedView != null) {
+              if (!(transaction || tm.isTransaction())) {
+                transaction = true;
+                tm.beginTransaction();
+              }
+            }
+
+            try {
+              if (emptyTableSql.length() > 0) {
+                String query = SQLDataSource.substParameters(emptyTableSql, qparams);
+                if (!Equals.equals(this.connection, connection)
+                        || !Equals.equals(this.qEmptyTable, query)) {
+                  String[] sqls = query.split(";");
+                  this.psEmptyTable.clear();
+                  for (String sql : sqls) {
+                    this.psEmptyTable.add(connection.prepareStatement(sql,
+                            ResultSet.TYPE_SCROLL_INSENSITIVE,
+                            ResultSet.CONCUR_READ_ONLY,
+                            ResultSet.HOLD_CURSORS_OVER_COMMIT));
+                    this.connection = connection;
+                  }
+                  this.qEmptyTable = query;
                 }
-                this.qEmptyTable = query;
+
+                if (DbDataSource.DUMP_SQL) {
+                  System.out.println("##############");
+                  System.out.println(this.qEmptyTable);
+                }
+                int rowsDeleted = 0;
+                for (PreparedStatement preparedStatement : psEmptyTable) {
+                  rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
+                }
+                if (DbDataSource.DUMP_SQL) {
+                  System.out.println("Rows deleted:" + rowsDeleted);
+                }
+              }
+
+              String query = SQLDataSource.substParameters(fillTableSql, qparams);
+              if (!Equals.equals(this.connection, connection)
+                      || !Equals.equals(this.qFillTable, query)) {
+                this.psFillTable = connection.prepareStatement(query,
+                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY,
+                        ResultSet.HOLD_CURSORS_OVER_COMMIT);
+                this.connection = connection;
+                this.qFillTable = query;
               }
 
               if (DbDataSource.DUMP_SQL) {
                 System.out.println("##############");
-                System.out.println(this.qEmptyTable);
+                System.out.println(this.qFillTable);
               }
-              int rowsDeleted = 0;
-              for (PreparedStatement preparedStatement : psEmptyTable) {
-                rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
+              System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+              if (cleanTableSqls != null) {
+                for (String sql : cleanTableSqls) {
+                  SQLDataSource.executeUpdate(connection.prepareStatement(SQLDataSource.substParameters(sql, qparams)), qparams);
+                }
+              }
+              if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
+                SQLDataSource.execute(connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams)), qparams);
               }
               if (DbDataSource.DUMP_SQL) {
-                System.out.println("Rows deleted:" + rowsDeleted);
+                System.out.println("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+                System.out.println("##############");
               }
-            }
 
-            String query = SQLDataSource.substParameters(fillTableSql, qparams);
-            if (!Equals.equals(this.connection, connection)
-                    || !Equals.equals(this.qFillTable, query)) {
-              this.psFillTable = connection.prepareStatement(query,
-                      ResultSet.TYPE_SCROLL_INSENSITIVE,
-                      ResultSet.CONCUR_READ_ONLY,
-                      ResultSet.HOLD_CURSORS_OVER_COMMIT);
-              this.connection = connection;
-              this.qFillTable = query;
-            }
-
-            if (DbDataSource.DUMP_SQL) {
-              System.out.println("##############");
-              System.out.println(this.qFillTable);
-            }
-            System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
-            if (cleanTableSqls != null) {
-              for (String sql : cleanTableSqls) {
-                SQLDataSource.executeUpdate(connection.prepareStatement(SQLDataSource.substParameters(sql, qparams)), qparams);
+                
+              commit = true;
+            } catch (SQLException ex) {
+              Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
+              throw new SQLException(ex);
+            } finally {
+              if (transaction) {
+                tm.endTransaction(commit);
               }
-            }
-            if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
-              SQLDataSource.execute(connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams)), qparams);
-            }
-            if (DbDataSource.DUMP_SQL) {
-              System.out.println("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
-              System.out.println("##############");
-            }
-
-
-            commit = true;
-          } catch (SQLException ex) {
-            Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
-            throw new SQLException(ex);
-          } finally {
-            if (transaction) {
-              tm.endTransaction(commit);
             }
           }
+        } finally {
+          statement.close();
         }
-      } finally {
-        statement.close();
       }
     } finally {
       if (locked) {

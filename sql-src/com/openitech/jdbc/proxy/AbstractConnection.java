@@ -29,10 +29,10 @@ public abstract class AbstractConnection implements java.sql.Connection {
 
   public AbstractConnection(DataSource dataSource) throws SQLException {
     this.dataSource = dataSource;
-    this.connection = createConnection(dataSource);
+    this.connection = openConnection();
   }
 
-  private Connection createConnection(DataSource dataSource) throws SQLException {
+  private Connection openConnection() throws SQLException {
     Logger.getLogger(AbstractConnection.class.getName()).info("Create connection.");
     return (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
   }
@@ -54,7 +54,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
   protected java.sql.Connection getActiveConnection() throws SQLException {
     if (!isValid()) {
       synchronized (this) {
-        java.sql.Connection activeConnection = createConnection(dataSource);
+        java.sql.Connection activeConnection = openConnection();
         if (autoCommit != null) {
           activeConnection.setAutoCommit(autoCommit);
         }
@@ -77,7 +77,19 @@ public abstract class AbstractConnection implements java.sql.Connection {
         Logger.getLogger(AbstractConnection.class.getName()).info("Connection reopened.");
       }
     }
+    timestamp = System.currentTimeMillis();
     return this.connection;
+  }
+
+  private long timestamp;
+
+  /**
+   * Get the value of timestamp
+   *
+   * @return the value of timestamp
+   */
+  public long getTimestamp() {
+    return timestamp;
   }
 
   @Override

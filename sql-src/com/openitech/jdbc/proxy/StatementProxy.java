@@ -26,6 +26,7 @@ public class StatementProxy implements java.sql.Statement {
     this.connection = connection;
     this.resultSetType = resultSetType;
     this.resultSetConcurrency = resultSetConcurrency;
+    connection.getActiveConnection();
   }
   
   protected java.sql.Statement createStatement() throws SQLException {
