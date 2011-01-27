@@ -7,7 +7,6 @@ package com.openitech.sql.pool;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -91,13 +90,12 @@ public class ConnectionPool {
         connections.add(result = new PooledConnectionProxy(dataSource, autoCommit, executeOnCreate));
       } else {
         result = connections.get(roundrobin++);
-
       }
     }
     if (result.isClosed()) {
       result.open();
     }
-    if (roundrobin >= connections.size()) {
+    if (roundrobin >= maxSize) {
       roundrobin = 0;
     }
     return result;
