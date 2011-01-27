@@ -16,6 +16,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.ConnectionPoolDataSource;
@@ -32,7 +33,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
   protected final javax.sql.DataSource dataSource;
   private final java.util.List<String> executeOnCreate = new ArrayList<String>();
   protected final java.util.List<Statement> activeStatemens = new WeakList<Statement>();
-  protected final java.util.List<ResultSet> activeResultSets = new WeakList<ResultSet>();
+  protected final java.util.Map<Statement,ResultSet> activeResultSets = new WeakHashMap<Statement,ResultSet>();
   protected final java.util.List<Savepoint> activeSavepoints = new WeakList<Savepoint>();
   protected boolean initAutoCommit = true;
 
@@ -70,11 +71,13 @@ public abstract class AbstractConnection implements java.sql.Connection {
   }
 
   protected boolean removeStatement(Statement statement) {
+    activeResultSets.remove(statement);
     return activeStatemens.remove(statement);
   }
 
-  protected ResultSet addResultSet(ResultSet resultSet) {
-    if (resultSet != null && activeResultSets.add(resultSet)) {
+  protected ResultSet addResultSet(Statement statement, ResultSet resultSet) {
+    if (resultSet != null) {
+      activeResultSets.put(statement, resultSet);
       return resultSet;
     } else {
       return null;
