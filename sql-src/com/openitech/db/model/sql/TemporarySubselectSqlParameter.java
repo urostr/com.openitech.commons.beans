@@ -370,6 +370,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 if (!Equals.equals(this.connection, connection)
                         || !Equals.equals(this.qEmptyTable, query)) {
                   String[] sqls = query.split(";");
+                  for (PreparedStatement preparedStatement : this.psEmptyTable) {
+                    preparedStatement.close();
+                  }
                   this.psEmptyTable.clear();
                   for (String sql : sqls) {
                     this.psEmptyTable.add(connection.prepareStatement(sql,
@@ -396,6 +399,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               String query = SQLDataSource.substParameters(fillTableSql, qparams);
               if (!Equals.equals(this.connection, connection)
                       || !Equals.equals(this.qFillTable, query)) {
+                if (this.psFillTable!=null) {
+                  this.psFillTable.close();
+                }
                 this.psFillTable = connection.prepareStatement(query,
                         ResultSet.TYPE_SCROLL_INSENSITIVE,
                         ResultSet.CONCUR_READ_ONLY,

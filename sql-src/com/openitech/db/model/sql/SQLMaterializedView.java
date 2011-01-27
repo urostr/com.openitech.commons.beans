@@ -110,6 +110,9 @@ public class SQLMaterializedView extends SubstSqlParameter {
       long timer = System.currentTimeMillis();
       if (!Equals.equals(this.connection, connection)) {
         this.qIsViewValid = SQLDataSource.substParameters(isViewValidSQL, parameters);
+        if (isViewValid!=null) {
+          isViewValid.close();
+        }
         isViewValid = connection.prepareStatement(this.qIsViewValid,
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY,
