@@ -1293,8 +1293,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (update_eventPK_versions == null) {
         update_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK_versions.sql", "cp1250"));
       }
+      EventPK findEventPKVersions;
 
-      if (findEventPKVersions(eventId, versionId) != null) {
+      if (versionId==null) {
+        findEventPKVersions = findEventPKVersions(versionId, idSifranta, idSifre, primaryKey);
+      } else {
+        findEventPKVersions = findEventPKVersions(eventId, versionId);
+      }
+
+      if (findEventPKVersions != null) {
         //if (versionId == null) {
         synchronized (update_eventPK_versions) {
           param = 1;

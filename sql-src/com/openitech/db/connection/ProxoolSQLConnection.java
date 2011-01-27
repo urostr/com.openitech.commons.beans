@@ -100,7 +100,7 @@ public class ProxoolSQLConnection implements DbConnection {
 
   @Override
   public boolean isCaseInsensitive() {
-    return isCaseInsensitive == null ? (isCaseInsensitive = Boolean.valueOf(settings.getProperty(DB_CASE_INSESITIVE, Boolean.toString("mssql".equals(getDialect()))))) : isCaseInsensitive;
+    return isCaseInsensitive == null ? (isCaseInsensitive = Boolean.valueOf(settings.getProperty(DB_CASE_INSENSITIVE, Boolean.toString("mssql".equals(getDialect()))))) : isCaseInsensitive;
   }
 
   @Override
