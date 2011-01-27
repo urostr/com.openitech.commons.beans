@@ -65,7 +65,7 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   @Override
   public boolean isConnectOnDemand() {
-    return Boolean.valueOf(settings.getProperty(DB_CONNECT_ON_DEMAND, "true"));
+    return Boolean.valueOf(settings.getProperty(DB_CONNECT_ON_DEMAND, "false"));
   }
 
   @Override
