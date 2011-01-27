@@ -4,12 +4,16 @@
  */
 package com.openitech.jdbc.proxy;
 
+import com.openitech.ref.WeakList;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.Savepoint;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -26,15 +30,73 @@ public abstract class AbstractConnection implements java.sql.Connection {
   protected javax.sql.PooledConnection pooledConnection;
   protected java.sql.Connection connection;
   protected final javax.sql.DataSource dataSource;
+  private final java.util.List<String> executeOnCreate = new ArrayList<String>();
+  protected final java.util.List<Statement> activeStatemens = new WeakList<Statement>();
+  protected final java.util.List<ResultSet> activeResultSets = new WeakList<ResultSet>();
+  protected final java.util.List<Savepoint> activeSavepoints = new WeakList<Savepoint>();
+  protected boolean initAutoCommit = true;
 
   public AbstractConnection(DataSource dataSource) throws SQLException {
+    this(dataSource, true, null);
+  }
+
+  public AbstractConnection(DataSource dataSource, boolean autoCommit, java.util.List<String> executeOnCreate) throws SQLException {
     this.dataSource = dataSource;
+    this.initAutoCommit = autoCommit;
+    if (executeOnCreate != null) {
+      this.executeOnCreate.addAll(executeOnCreate);
+    }
     this.connection = openConnection();
+    this.connection.setAutoCommit(initAutoCommit);
   }
 
   private Connection openConnection() throws SQLException {
     Logger.getLogger(AbstractConnection.class.getName()).info("Create connection.");
-    return (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
+    Connection result = (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
+    Statement initStatement = result.createStatement();
+    for (String sql : executeOnCreate) {
+      initStatement.execute(sql);
+    }
+    result.setAutoCommit(initAutoCommit);
+    return result;
+  }
+
+  protected Statement addStatement(Statement statement) {
+    if (activeStatemens.add(statement)) {
+      return statement;
+    } else {
+      return null;
+    }
+  }
+
+  protected boolean removeStatement(Statement statement) {
+    return activeStatemens.remove(statement);
+  }
+
+  protected ResultSet addResultSet(ResultSet resultSet) {
+    if (resultSet != null && activeResultSets.add(resultSet)) {
+      return resultSet;
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Get the value of initAutoCommit
+   *
+   * @return the value of initAutoCommit
+   */
+  public boolean isInitAutoCommit() {
+    return initAutoCommit;
+  }
+
+  /**
+   * Set the value of initAutoCommit
+   *
+   * @param initAutoCommit new value of initAutoCommit
+   */
+  public void setInitAutoCommit(boolean initAutoCommit) {
+    this.initAutoCommit = initAutoCommit;
   }
 
   protected boolean isValid() {
@@ -80,16 +142,19 @@ public abstract class AbstractConnection implements java.sql.Connection {
     timestamp = System.currentTimeMillis();
     return this.connection;
   }
-
-  private long timestamp;
+  private volatile long timestamp;
 
   /**
    * Get the value of timestamp
    *
    * @return the value of timestamp
    */
-  public long getTimestamp() {
+  public synchronized long getTimestamp() {
     return timestamp;
+  }
+
+  protected synchronized boolean isConnectionActive() {
+    return !(activeSavepoints.isEmpty()&&activeStatemens.isEmpty()&&activeResultSets.isEmpty());
   }
 
   @Override
@@ -101,6 +166,9 @@ public abstract class AbstractConnection implements java.sql.Connection {
   @Override
   public void setAutoCommit(boolean autoCommit) throws SQLException {
     getActiveConnection().setAutoCommit(autoCommit);
+    if (autoCommit) {
+      activeSavepoints.clear();
+    }
     this.autoCommit = autoCommit;
   }
 
@@ -111,11 +179,13 @@ public abstract class AbstractConnection implements java.sql.Connection {
 
   @Override
   public void commit() throws SQLException {
+    activeSavepoints.clear();
     getActiveConnection().commit();
   }
 
   @Override
   public void rollback() throws SQLException {
+    activeSavepoints.clear();
     getActiveConnection().rollback();
   }
   protected Boolean closed = Boolean.FALSE;
@@ -129,6 +199,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
       } else if (connection != null) {
         connection.close();
       }
+      activeSavepoints.clear();
       connection = null;
       closed = Boolean.TRUE;
       Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");

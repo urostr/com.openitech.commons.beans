@@ -279,7 +279,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   }
 
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException, InterruptedException {
-   
+
     boolean fill = !isFillOnceOnly();
     long timer = System.currentTimeMillis();
 
@@ -318,9 +318,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           boolean commit = false;
 
           try {
-          if (checkTableSql != null) {
-            statement.executeQuery(SQLDataSource.substParameters(checkTableSql, qparams));
-              }
+            if (checkTableSql != null) {
+              statement.executeQuery(SQLDataSource.substParameters(checkTableSql, qparams));
+            }
           } catch (SQLException ex) {
             if (sqlMaterializedView != null) {
               if (!tm.isTransaction()) {
@@ -376,7 +376,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                             ResultSet.TYPE_SCROLL_INSENSITIVE,
                             ResultSet.CONCUR_READ_ONLY,
                             ResultSet.HOLD_CURSORS_OVER_COMMIT));
-                    this.connection = connection;
                   }
                   this.qEmptyTable = query;
                 }
@@ -401,7 +400,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                         ResultSet.TYPE_SCROLL_INSENSITIVE,
                         ResultSet.CONCUR_READ_ONLY,
                         ResultSet.HOLD_CURSORS_OVER_COMMIT);
-                this.connection = connection;
                 this.qFillTable = query;
               }
 
@@ -423,7 +421,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 System.out.println("##############");
               }
 
-                
+
               commit = true;
             } catch (SQLException ex) {
               Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
@@ -437,6 +435,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         } finally {
           statement.close();
         }
+        this.connection = connection;
       }
     } finally {
       if (locked) {
@@ -560,17 +559,18 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       if (size() > 1) {
         lock.tryLock(1, TimeUnit.SECONDS);
         try {
-          TransactionManager tm = TransactionManager.getInstance(connection);
+          synchronized (connection) {
+            TransactionManager tm = TransactionManager.getInstance(connection);
 
-          boolean commit = false;
-          tm.beginTransaction();
-          try {
-            execute(connection, queryParameters);
-            commit = true;
-          } finally {
-            tm.endTransaction(commit);
+            boolean commit = false;
+            tm.beginTransaction();
+            try {
+              execute(connection, queryParameters);
+              commit = true;
+            } finally {
+              tm.endTransaction(commit);
+            }
           }
-
         } finally {
           lock.unlock();
         }

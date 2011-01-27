@@ -21,22 +21,27 @@ import javax.sql.DataSource;
  */
 public class ConnectionPool {
 
-  private final List<PooledConnectionProxy> connections = Collections.synchronizedList(new ArrayList<PooledConnectionProxy>());
+  private final List<PooledConnectionProxy> connections = new ArrayList<PooledConnectionProxy>();
+  private final java.util.List<String> executeOnCreate = new ArrayList<String>();
   private final DataSource dataSource;
   private final int maxSize;
   private int roundrobin = 0;
   private Timer cleanup = new Timer("Connection pool cleanup", true);
+  protected boolean autoCommit;
 
-  public ConnectionPool(DataSource dataSource) {
-    this(dataSource, 3, 9);
+
+  public ConnectionPool(DataSource dataSource, boolean autoCommit, java.util.List<String> executeOnCreate) {
+    this(dataSource, autoCommit, 0, 3, executeOnCreate);
   }
 
-  public ConnectionPool(DataSource dataSource, int initialSize, int maxSize) {
+  public ConnectionPool(DataSource dataSource, boolean autoCommit, int initialSize, int maxSize, java.util.List<String> executeOnCreate) {
     this.dataSource = dataSource;
     this.maxSize = maxSize;
+    this.autoCommit = autoCommit;
+    
     for (int i = 0; i < initialSize; i++) {
       try {
-        connections.add(new PooledConnectionProxy(dataSource));
+        connections.add(new PooledConnectionProxy(dataSource, autoCommit, executeOnCreate));
       } catch (SQLException ex) {
         Logger.getLogger(ConnectionPool.class.getName()).log(Level.SEVERE, null, ex);
       }
@@ -46,7 +51,7 @@ public class ConnectionPool {
       @Override
       public void run() {
         for (PooledConnectionProxy pooledConnectionProxy : connections) {
-          if (System.currentTimeMillis() - pooledConnectionProxy.getTimestamp() > 30000) {
+          if (!pooledConnectionProxy.isConnectionActive()) {
             try {
               pooledConnectionProxy.close();
             } catch (SQLException ex) {
@@ -58,13 +63,32 @@ public class ConnectionPool {
     }, 180000, 5000);
   }
 
-  public Connection getConnection() throws SQLException {
+  /**
+   * Get the value of autoCommit
+   *
+   * @return the value of autoCommit
+   */
+  public boolean isAutoCommit() {
+    return autoCommit;
+  }
+
+  /**
+   * Set the value of autoCommit
+   *
+   * @param autoCommit new value of autoCommit
+   */
+  public void setAutoCommit(boolean autoCommit) {
+    this.autoCommit = autoCommit;
+  }
+
+
+  public synchronized Connection getConnection() throws SQLException {
     PooledConnectionProxy result = null;
     if (roundrobin < connections.size()) {
       result = connections.get(roundrobin++);
     } else {
       if (connections.size() < maxSize) {
-        connections.add(result = new PooledConnectionProxy(dataSource));
+        connections.add(result = new PooledConnectionProxy(dataSource, autoCommit, executeOnCreate));
       } else {
         result = connections.get(roundrobin++);
 

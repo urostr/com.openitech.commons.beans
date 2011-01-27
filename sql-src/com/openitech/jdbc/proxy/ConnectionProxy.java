@@ -27,6 +27,10 @@ public class ConnectionProxy extends AbstractConnection {
     super(dataSource);
   }
 
+  public ConnectionProxy(DataSource dataSource, boolean autoCommit, java.util.List<String> executeOnCreate) throws SQLException {
+    super(dataSource, autoCommit, executeOnCreate);
+  }
+
   @Override
   public PreparedStatement prepareStatement(String sql) throws SQLException {
     return new PreparedStatementProxy(this, sql);
@@ -81,23 +85,32 @@ public class ConnectionProxy extends AbstractConnection {
     return new StatementProxy(this, resultSetType, resultSetConcurrency);
   }
 
+  private Savepoint addSavepoint(Savepoint savepoint) {
+    if (savepoint!=null) {
+      activeSavepoints.add(savepoint);
+    }
+    return savepoint;
+  }
+
   @Override
   public Savepoint setSavepoint() throws SQLException {
-    return connection.setSavepoint();
+    return addSavepoint(connection.setSavepoint());
   }
 
   @Override
   public Savepoint setSavepoint(String name) throws SQLException {
-    return connection.setSavepoint(name);
+    return addSavepoint(connection.setSavepoint(name));
   }
 
   @Override
   public void rollback(Savepoint savepoint) throws SQLException {
+    activeSavepoints.remove(savepoint);
     connection.rollback(savepoint);
   }
 
   @Override
   public void releaseSavepoint(Savepoint savepoint) throws SQLException {
+    activeSavepoints.remove(savepoint);
     connection.releaseSavepoint(savepoint);
   }
 

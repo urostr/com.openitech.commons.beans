@@ -28,12 +28,11 @@ public abstract class AbstractSQLConnection implements DbConnection {
   public AbstractSQLConnection() {
     settings.putAll(loadProperites("connection.properties"));
     settings.putAll(System.getProperties());
-    if (Boolean.valueOf(settings.getProperty("db.connection.singleton", "false"))) {
-      implementation = new SingleSQLConnection(this);
-    } else {
+    if (Boolean.valueOf(settings.getProperty(DB_USE_POOL, "false"))) {
       implementation = new ReconnectableSQLConnection(this);
+    } else {
+      implementation = new SingleSQLConnection(this);
     }
-
   }
 
   /**

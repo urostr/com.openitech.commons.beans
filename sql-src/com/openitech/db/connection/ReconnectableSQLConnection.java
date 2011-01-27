@@ -8,7 +8,6 @@ import com.openitech.Settings;
 import com.openitech.jdbc.proxy.ConnectionProxy;
 import com.openitech.sql.datasource.DataSourceFactory;
 import com.openitech.sql.pool.ConnectionPool;
-import com.openitech.sql.pool.PooledConnectionProxy;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -41,6 +40,7 @@ public class ReconnectableSQLConnection implements DbConnection {
   String dialect = null;
   String DB_URL = null;
   Properties connect = new Properties();
+  private final java.util.List<String> executeOnCreate = new java.util.ArrayList<String>();
   DataSource dataSource;
   /**
    * Creates a new instance of AbstractSQLConnection
@@ -147,7 +147,7 @@ public class ReconnectableSQLConnection implements DbConnection {
         return getPooledConnection();
       } catch (SQLException ex) {
         Logger.getLogger(ReconnectableSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
-        return null;
+        return connection;
       }
     }
 
@@ -241,11 +241,18 @@ public class ReconnectableSQLConnection implements DbConnection {
     result.setReadOnly(false);
     result.setAutoCommit(Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")));
     connection = result;
+
+    for (Map.Entry<Object, Object> entry : settings.entrySet()) {
+      if (entry.getKey().toString().startsWith(DB_POOL_EXECUTE_ON_CREATE)) {
+        executeOnCreate.add(entry.getValue().toString());
+      }
+    }
+    
     if (connection != null) {
       DataSource dataSource = DataSourceFactory.getDataSource(DB_URL, connect);
       if (dataSource != null) {
         this.dataSource = dataSource;
-        this.temporaryPool = new ConnectionPool(dataSource);
+        this.temporaryPool = new ConnectionPool(dataSource,Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")), executeOnCreate);
         this.connection = new ConnectionProxy(dataSource);
       }
     }
@@ -291,7 +298,7 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   private Connection getPooledConnection() throws SQLException {
     if (connectionPool == null) {
-      this.connectionPool = new ConnectionPool(dataSource, Integer.parseInt(settings.getProperty(DB_POOL_SIZE, "3")), Integer.parseInt(settings.getProperty(DB_MAX_POOL_SIZE, "9")));
+      this.connectionPool = new ConnectionPool(dataSource,Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")), Integer.parseInt(settings.getProperty(DB_POOL_SIZE, "3")), Integer.parseInt(settings.getProperty(DB_MAX_POOL_SIZE, "9")), executeOnCreate);
     }
 
     return connectionPool.getConnection();

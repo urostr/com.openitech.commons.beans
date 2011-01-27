@@ -5,13 +5,13 @@
 package com.openitech.sql.pool;
 
 import com.openitech.jdbc.proxy.ConnectionProxy;
-import java.sql.Connection;
+import com.openitech.util.Equals;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.sql.ConnectionPoolDataSource;
 
 import javax.sql.DataSource;
 
@@ -21,10 +21,29 @@ import javax.sql.DataSource;
  */
 public class PooledConnectionProxy extends ConnectionProxy {
 
+  private final java.util.Map<String,Object> defaults = new java.util.HashMap<String, Object>();
   private Timer timer;
 
   public PooledConnectionProxy(DataSource dataSource) throws SQLException {
-    super(dataSource);
+    this(dataSource, true, null);
+  }
+
+  public PooledConnectionProxy(DataSource dataSource, boolean autoCommit, java.util.List<String> executeOnCreate) throws SQLException {
+    super(dataSource, autoCommit, executeOnCreate);
+
+    this.defaults.put("autocommit", this.connection.getAutoCommit());
+    this.defaults.put("readOnly", this.connection.isReadOnly());
+    this.defaults.put("catalog", this.connection.getCatalog());
+    this.defaults.put("transactionIsolation", this.connection.getTransactionIsolation());
+  }
+
+  private boolean isDefault(String property, Object value) {
+    return Equals.equals(defaults.get(property), value);
+  }
+
+  @Override
+  protected synchronized boolean isConnectionActive() {
+    return (System.currentTimeMillis() - getTimestamp() < 30000) || super.isConnectionActive();
   }
 
   protected synchronized void open() throws SQLException {
@@ -39,13 +58,11 @@ public class PooledConnectionProxy extends ConnectionProxy {
 
   @Override
   public synchronized void close() throws SQLException {
-    if (!closed) {
-      if ((autoCommit != null)
-              || (readOnly != null)
-              || (catalog != null)
-              || (transactionIsolation != null)
-              || (typeMap != null)
-              || (clientInfo != null)) {
+    if (!closed&&!isConnectionActive()) {
+      if (!isDefault("autoCommit", getAutoCommit())
+              || !isDefault("readOnly", isReadOnly())
+              || !isDefault("catalog", getCatalog())
+              || !isDefault("transactionIsolation", getTransactionIsolation())) {
         super.close();
       } else {
         closed = Boolean.TRUE;
@@ -53,21 +70,24 @@ public class PooledConnectionProxy extends ConnectionProxy {
 
         Logger.getLogger(PooledConnectionProxy.class.getName()).info("PooledConnection released.");
 
-        if (timer!=null) {
+        if (timer != null) {
           timer.cancel();
         }
         (timer = new Timer()).schedule(new TimerTask() {
 
           @Override
           public void run() {
-            try {
-              PooledConnectionProxy.super.close();
-            } catch (SQLException ex) {
-              Logger.getLogger(PooledConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
+            if (!isConnectionActive()) {
+              try {
+                PooledConnectionProxy.super.close();
+              } catch (SQLException ex) {
+                Logger.getLogger(PooledConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
+              }
             }
           }
         }, 60000);
       }
     }
+
   }
 }

@@ -17,15 +17,16 @@ import java.util.List;
  */
 public class StatementProxy implements java.sql.Statement {
 
-  final int resultSetType;
-  final int resultSetConcurrency;
-  final AbstractConnection connection;
+  protected final int resultSetType;
+  protected final int resultSetConcurrency;
+  protected final AbstractConnection connection;
   java.sql.Statement statement;
 
   protected StatementProxy(AbstractConnection connection, int resultSetType, int resultSetConcurrency) throws SQLException {
     this.connection = connection;
     this.resultSetType = resultSetType;
     this.resultSetConcurrency = resultSetConcurrency;
+    connection.addStatement(this);
     connection.getActiveConnection();
   }
   
@@ -83,7 +84,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
-    return getActiveStatement().executeQuery(sql);
+    return connection.addResultSet(getActiveStatement().executeQuery(sql));
   }
 
   @Override
@@ -96,6 +97,7 @@ public class StatementProxy implements java.sql.Statement {
     if (statement == null) {
       statement = getActiveStatement();
     }
+    connection.removeStatement(this);
     statement.close();
     statement = null;
   }
@@ -177,7 +179,7 @@ public class StatementProxy implements java.sql.Statement {
     if (statement == null) {
       statement = getActiveStatement();
     }
-    return statement.getResultSet();
+    return connection.addResultSet(statement.getResultSet());
   }
 
   @Override
@@ -268,7 +270,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    return getActiveStatement().getGeneratedKeys();
+    return connection.addResultSet(getActiveStatement().getGeneratedKeys());
   }
 
   @Override

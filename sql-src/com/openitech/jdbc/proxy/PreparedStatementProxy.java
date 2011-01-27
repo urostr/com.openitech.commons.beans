@@ -68,7 +68,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return ((PreparedStatement) getActiveStatement()).executeQuery();
+    return connection.addResultSet(((PreparedStatement) getActiveStatement()).executeQuery());
   }
 
   @Override
