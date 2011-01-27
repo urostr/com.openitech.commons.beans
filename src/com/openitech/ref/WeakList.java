@@ -385,7 +385,7 @@ public class WeakList<E> extends AbstractList<E> implements java.util.List<E> {
       wr = (WeakObjectReference<E>) queue.poll();
     }
     if (count > 0) {
-      Logger.getLogger(WeakList.class.getName()).info(getName() + " " + Integer.toString(count) + " weak references removed");
+      Logger.getLogger(WeakList.class.getName()).fine(getName() + " " + Integer.toString(count) + " weak references removed");
     }
   }
   
