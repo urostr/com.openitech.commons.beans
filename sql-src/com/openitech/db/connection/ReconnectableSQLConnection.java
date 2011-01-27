@@ -28,7 +28,6 @@ public class ReconnectableSQLConnection implements DbConnection {
   private final AbstractSQLConnection owner;
 
   private DataSource dataSource;
-  private ConnectionPool temporaryPool;
   private ConnectionPool connectionPool;
   private Boolean isCaseInsensitive = null;
 
@@ -94,9 +93,10 @@ public class ReconnectableSQLConnection implements DbConnection {
       Connection result;
       if (dataSource == null) {
         result = DriverManager.getConnection(sqlConnectionInitializer.DB_URL, connect);
-      } else if (temporaryPool != null) {
-        result = temporaryPool.getConnection();
-      } else {
+      } else try {
+        result = getPooledConnection();
+      } catch (SQLException ex) {
+        Logger.getLogger(ReconnectableSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
         result = new ConnectionProxy(this.dataSource);
       }
       fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
@@ -155,7 +155,6 @@ public class ReconnectableSQLConnection implements DbConnection {
       DataSource ds = DataSourceFactory.getDataSource(sqlConnectionInitializer.DB_URL, connect);
       if (ds != null) {
         this.dataSource = ds;
-        this.temporaryPool = new ConnectionPool(ds, Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")), executeOnCreate);
         this.connection = new ConnectionProxy(ds);
       }
     }
