@@ -25,9 +25,8 @@ public class ConnectionPool {
   private final DataSource dataSource;
   private final int maxSize;
   private int roundrobin = 0;
-  private Timer cleanup = new Timer("Connection pool cleanup", true);
+  private Timer cleanup;
   protected boolean autoCommit;
-
 
   public ConnectionPool(DataSource dataSource, boolean autoCommit, java.util.List<String> executeOnCreate) {
     this(dataSource, autoCommit, 0, 3, executeOnCreate);
@@ -37,7 +36,7 @@ public class ConnectionPool {
     this.dataSource = dataSource;
     this.maxSize = maxSize;
     this.autoCommit = autoCommit;
-    
+
     for (int i = 0; i < initialSize; i++) {
       try {
         connections.add(new PooledConnectionProxy(dataSource, autoCommit, executeOnCreate));
@@ -45,21 +44,24 @@ public class ConnectionPool {
         Logger.getLogger(ConnectionPool.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
-    this.cleanup.scheduleAtFixedRate(new TimerTask() {
+    if (initialSize != maxSize) {
+      this.cleanup = new Timer("Connection pool cleanup", true);
+      this.cleanup.scheduleAtFixedRate(new TimerTask() {
 
-      @Override
-      public void run() {
-        for (PooledConnectionProxy pooledConnectionProxy : connections) {
-          if (!pooledConnectionProxy.isConnectionActive()) {
-            try {
-              pooledConnectionProxy.close();
-            } catch (SQLException ex) {
-              Logger.getLogger(ConnectionPool.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{ex.getSQLState(), ex.getMessage()});
+        @Override
+        public void run() {
+          for (PooledConnectionProxy pooledConnectionProxy : connections) {
+            if (!pooledConnectionProxy.isConnectionActive()) {
+              try {
+                pooledConnectionProxy.close();
+              } catch (SQLException ex) {
+                Logger.getLogger(ConnectionPool.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{ex.getSQLState(), ex.getMessage()});
+              }
             }
           }
         }
-      }
-    }, 180000, 5000);
+      }, 180000, 5000);
+    }
   }
 
   /**
@@ -79,7 +81,6 @@ public class ConnectionPool {
   public void setAutoCommit(boolean autoCommit) {
     this.autoCommit = autoCommit;
   }
-
 
   public synchronized Connection getConnection() throws SQLException {
     PooledConnectionProxy result = null;
