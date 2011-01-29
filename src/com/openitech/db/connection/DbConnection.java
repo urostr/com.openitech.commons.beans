@@ -37,6 +37,7 @@ public interface DbConnection {
   String DB_POOL_EXECUTE_ON_CREATE = "db.pool.execute.on.create";
   String DB_USE_RECONNECT="db.reconnect.use";
   String DB_USE_POOL="db.pool.use";
+  String DB_USE_TEMPORARY_POOL="db.pool.temporary.use";
   String DB_CASE_INSENSITIVE = "db.case.insensitive";
   String DB_USE_WEBROWSET = "db.useWebRowSet";
   String DB_USE_SECONDARY_WEBROWSET = "db.useSecondaryWebRowSet";
