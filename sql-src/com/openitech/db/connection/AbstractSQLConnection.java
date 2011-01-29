@@ -28,7 +28,7 @@ public abstract class AbstractSQLConnection implements DbConnection {
   public AbstractSQLConnection() {
     settings.putAll(loadProperites("connection.properties"));
     settings.putAll(System.getProperties());
-    if (Boolean.valueOf(settings.getProperty(DB_USE_POOL, "false"))) {
+    if (Boolean.valueOf(settings.getProperty(DB_USE_RECONNECT, "false"))) {
       implementation = new ReconnectableSQLConnection(this);
     } else {
       implementation = new SingleSQLConnection(this);

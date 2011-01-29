@@ -26,11 +26,9 @@ import javax.sql.DataSource;
 public class ReconnectableSQLConnection implements DbConnection {
 
   private final AbstractSQLConnection owner;
-
   private DataSource dataSource;
   private ConnectionPool connectionPool;
   private Boolean isCaseInsensitive = null;
-
   private final Properties connect;
   private final java.util.List<String> executeOnCreate;
   private final SQLConnectionInitializer sqlConnectionInitializer;
@@ -59,7 +57,7 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   @Override
   public boolean isPooled() {
-    return true;
+    return Boolean.valueOf(settings.getProperty(DB_USE_POOL, "false"));
   }
 
   @Override
@@ -93,10 +91,7 @@ public class ReconnectableSQLConnection implements DbConnection {
       Connection result;
       if (dataSource == null) {
         result = DriverManager.getConnection(sqlConnectionInitializer.DB_URL, connect);
-      } else try {
-        result = getPooledConnection();
-      } catch (SQLException ex) {
-        Logger.getLogger(ReconnectableSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
+      } else {
         result = new ConnectionProxy(this.dataSource);
       }
       fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
@@ -118,25 +113,27 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   @Override
   public java.sql.Connection getConnection() {
+    java.sql.Connection result = null;
     if (!isValid()) {
       try {
         openConnection();
-
       } catch (Exception ex) {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
         connection = null;
       }
-
-      return connection;
-    } else {
+    } else if (isPooled()) {
       try {
-        return getPooledConnection();
+        result = getPooledConnection();
       } catch (SQLException ex) {
         Logger.getLogger(ReconnectableSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
-        return connection;
       }
     }
 
+    if (result == null) {
+      result = connection;
+    }
+
+    return result;
   }
 
   private boolean isValid() {
