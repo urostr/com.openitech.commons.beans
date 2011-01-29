@@ -603,6 +603,37 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
+
+  public final static class BooleanSeekType extends AbstractSeekType<java.lang.Boolean> {
+
+    public BooleanSeekType(String field) {
+      this(field, EQUALS, 1);
+    }
+
+    public BooleanSeekType(String field, int i_type) {
+      this(field, i_type, 1);
+    }
+
+    public BooleanSeekType(String field, int i_type, int p_count) {
+      super(field, i_type, p_count);
+    }
+
+    @Override
+    public boolean setValue(java.lang.Boolean value) {
+      if (!Equals.equals(getValue(), value)) {
+        this.value = value;
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    @Override
+    public boolean hasValue() {
+      return value != null && value.booleanValue();
+    }
+  }
+
   public final static class IntegerSeekType extends AbstractSeekType<java.lang.Integer> {
 
     public IntegerSeekType(String field) {

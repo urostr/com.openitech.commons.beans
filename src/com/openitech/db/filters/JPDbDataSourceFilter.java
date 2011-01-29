@@ -21,11 +21,14 @@ import com.openitech.util.Equals;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -413,6 +416,32 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
             } catch (Exception ex) {
             }
+          } else if (item instanceof DataSourceFilters.BooleanSeekType) {
+            final JCheckBox jCheckBox = new JCheckBox();
+
+            int index = 0;
+            final Document document = documents.get(item)[0];
+            jCheckBox.setText(item.toString());
+            jCheckBox.addItemListener(new ItemListener() {
+
+              @Override
+              public void itemStateChanged(ItemEvent e) {
+                try {
+                  if (e.getStateChange() == ItemEvent.SELECTED) {
+                    com.openitech.text.Document.setText(document, Boolean.TRUE.toString());
+                  } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    com.openitech.text.Document.setText(document, Boolean.FALSE.toString());
+                  }
+                } catch (BadLocationException ex) {
+                  Logger.getLogger(JPDbDataSourceFilter.class.getName()).warning(ex.getMessage());
+                }
+              }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            gridBagConstraints.weightx = 1.0;
+            jpHoldingPanel.add(jCheckBox, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
           } else {
             final JLabel jlOpis = new javax.swing.JLabel();
             final JComboBox jDbComboBox1 = new JComboBox();
