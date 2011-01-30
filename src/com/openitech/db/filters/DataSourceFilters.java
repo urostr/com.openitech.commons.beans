@@ -630,7 +630,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     @Override
     public boolean hasValue() {
-      return value != null && value.booleanValue();
+      return value != null;
     }
   }
 
