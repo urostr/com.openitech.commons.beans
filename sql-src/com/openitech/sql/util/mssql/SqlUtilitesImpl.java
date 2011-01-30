@@ -1295,7 +1295,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
       EventPK findEventPKVersions;
 
-      if (versionId==null) {
+      if (versionId == null) {
         findEventPKVersions = findEventPKVersions(versionId, idSifranta, idSifre, primaryKey);
       } else {
         findEventPKVersions = findEventPKVersions(eventId, versionId);
@@ -1360,11 +1360,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
       find_eventPK.clearParameters();
       find_eventPK.setLong(param++, eventId);
       ResultSet rs_findEventPK = find_eventPK.executeQuery();
-      if (rs_findEventPK.next()) {
-        int idSifranta = rs_findEventPK.getInt("IdSifranta");
-        String idSifre = rs_findEventPK.getString("IdSifre");
-        String primaryKey = rs_findEventPK.getString("PrimaryKey");
-        result = new SqlEventPK(eventId, idSifranta, idSifre, primaryKey);
+      try {
+        if (rs_findEventPK.next()) {
+          int idSifranta = rs_findEventPK.getInt("IdSifranta");
+          String idSifre = rs_findEventPK.getString("IdSifre");
+          String primaryKey = rs_findEventPK.getString("PrimaryKey");
+          result = new SqlEventPK(eventId, idSifranta, idSifre, primaryKey);
+        }
+      } finally {
+        rs_findEventPK.close();
       }
     }
     return result;
@@ -1447,12 +1451,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     return success;
   }
- /**
-  *
-  * @return
-  * @deprecated <p>Uporabi getPPSelectFields namesto tega!</p>
-  *  
-  */
+
+  /**
+   *
+   * @return
+   * @deprecated <p>Uporabi getPPSelectFields namesto tega!</p>
+   *
+   */
   @Deprecated
   @Override
   public String getPPJoinFields() {
