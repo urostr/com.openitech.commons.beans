@@ -1390,16 +1390,20 @@ public class SqlUtilitesImpl extends SqlUtilities {
       find_eventPK_versions.setInt(param++, versionId == null ? 1 : 0);
       find_eventPK_versions.setInt(param++, versionId != null ? versionId.intValue() : -1);
       ResultSet rs_findEventPK = find_eventPK_versions.executeQuery();
-      if (rs_findEventPK.next()) {
-        Integer eventsPK_versionId = rs_findEventPK.getInt("VersionId");
-        if (rs_findEventPK.wasNull()) {
-          eventsPK_versionId = null;
-        }
-        int eventsPK_idSifranta = rs_findEventPK.getInt("IdSifranta");
-        String eventsPK_idSifre = rs_findEventPK.getString("IdSifre");
-        String eventsPK_primaryKey = rs_findEventPK.getString("PrimaryKey");
+      try {
+        if (rs_findEventPK.next()) {
+          Integer eventsPK_versionId = rs_findEventPK.getInt("VersionId");
+          if (rs_findEventPK.wasNull()) {
+            eventsPK_versionId = null;
+          }
+          int eventsPK_idSifranta = rs_findEventPK.getInt("IdSifranta");
+          String eventsPK_idSifre = rs_findEventPK.getString("IdSifre");
+          String eventsPK_primaryKey = rs_findEventPK.getString("PrimaryKey");
 
-        result = new SqlEventPK(eventId, eventsPK_idSifranta, eventsPK_idSifre, eventsPK_primaryKey, eventsPK_versionId);
+          result = new SqlEventPK(eventId, eventsPK_idSifranta, eventsPK_idSifre, eventsPK_primaryKey, eventsPK_versionId);
+        }
+      } finally {
+        rs_findEventPK.close();
       }
     }
     return result;
