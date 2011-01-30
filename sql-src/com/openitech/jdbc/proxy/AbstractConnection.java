@@ -33,7 +33,6 @@ public abstract class AbstractConnection implements java.sql.Connection {
   protected final javax.sql.DataSource dataSource;
   private final java.util.List<String> executeOnCreate = new ArrayList<String>();
   protected final java.util.List<Statement> activeStatemens = new WeakList<Statement>();
-  protected final java.util.Map<Statement,ResultSet> activeResultSets = new WeakHashMap<Statement,ResultSet>();
   protected final java.util.List<Savepoint> activeSavepoints = new WeakList<Savepoint>();
   protected boolean initAutoCommit = true;
 
@@ -71,17 +70,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
   }
 
   protected boolean removeStatement(Statement statement) {
-    activeResultSets.remove(statement);
     return activeStatemens.remove(statement);
-  }
-
-  protected ResultSet addResultSet(Statement statement, ResultSet resultSet) {
-    if (resultSet != null) {
-      activeResultSets.put(statement, resultSet);
-      return resultSet;
-    } else {
-      return null;
-    }
   }
 
   /**
@@ -157,7 +146,7 @@ public abstract class AbstractConnection implements java.sql.Connection {
   }
 
   protected synchronized boolean isConnectionActive() {
-    return !(activeSavepoints.isEmpty()&&activeStatemens.isEmpty()&&activeResultSets.isEmpty());
+    return !(activeSavepoints.isEmpty()&&activeStatemens.isEmpty());
   }
 
   @Override
@@ -203,7 +192,6 @@ public abstract class AbstractConnection implements java.sql.Connection {
         connection.close();
       }
       activeStatemens.clear();
-      activeResultSets.clear();
       activeSavepoints.clear();
       connection = null;
       closed = Boolean.TRUE;

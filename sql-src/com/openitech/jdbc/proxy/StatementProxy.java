@@ -84,7 +84,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
-    return connection.addResultSet(this, getActiveStatement().executeQuery(sql));
+    return getActiveStatement().executeQuery(sql);
   }
 
   @Override
@@ -179,7 +179,7 @@ public class StatementProxy implements java.sql.Statement {
     if (statement == null) {
       statement = getActiveStatement();
     }
-    return connection.addResultSet(this, statement.getResultSet());
+    return statement.getResultSet();
   }
 
   @Override
@@ -270,7 +270,7 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    return connection.addResultSet(this, getActiveStatement().getGeneratedKeys());
+    return getActiveStatement().getGeneratedKeys();
   }
 
   @Override
