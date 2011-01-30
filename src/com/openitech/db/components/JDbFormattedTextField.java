@@ -399,14 +399,14 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       if ((dbFieldObserver != null) && !dbFieldObserver.isUpdatingFieldValue()) {
         dbFieldObserver.startUpdate();
       }
-      try {
-        Object value = getFormatter().stringToValue(com.openitech.text.Document.getText(e.getDocument()));
-        updateColumn(value);
-      } catch (BadLocationException ex) {
-        Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.WARNING, ex.getMessage());
-      } catch (ParseException ex) {
-        //ignore it
-      }
+//      try {
+//        Object value = getFormatter().stringToValue(com.openitech.text.Document.getText(e.getDocument()));
+//        updateColumn(value);
+//      } catch (BadLocationException ex) {
+//        Logger.getLogger(JDbFormattedTextField.class.getName()).log(Level.WARNING, ex.getMessage());
+//      } catch (ParseException ex) {
+//        //ignore it
+//      }
     }
   }
 
