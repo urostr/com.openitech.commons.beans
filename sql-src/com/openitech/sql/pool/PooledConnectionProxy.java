@@ -7,6 +7,8 @@ package com.openitech.sql.pool;
 import com.openitech.jdbc.proxy.ConnectionProxy;
 import com.openitech.util.Equals;
 import java.sql.SQLException;
+import java.sql.Savepoint;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -58,13 +60,22 @@ public class PooledConnectionProxy extends ConnectionProxy {
 
   @Override
   public synchronized void close() throws SQLException {
-    if (!closed&&!isConnectionActive()) {
+    if (!closed) {
       if (!isDefault("autoCommit", getAutoCommit())
               || !isDefault("readOnly", isReadOnly())
               || !isDefault("catalog", getCatalog())
               || !isDefault("transactionIsolation", getTransactionIsolation())) {
         super.close();
       } else {
+        for (Statement statement : activeStatemens) {
+          statement.close();
+        }
+        for (Savepoint savepoint : activeSavepoints) {
+          connection.releaseSavepoint(savepoint);
+        }
+        activeStatemens.clear();
+        activeResultSets.clear();
+        activeSavepoints.clear();
         closed = Boolean.TRUE;
 
 

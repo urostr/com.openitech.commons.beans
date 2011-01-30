@@ -202,6 +202,8 @@ public abstract class AbstractConnection implements java.sql.Connection {
       } else if (connection != null) {
         connection.close();
       }
+      activeStatemens.clear();
+      activeResultSets.clear();
       activeSavepoints.clear();
       connection = null;
       closed = Boolean.TRUE;
