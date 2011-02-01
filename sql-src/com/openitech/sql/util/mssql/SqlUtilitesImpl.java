@@ -715,7 +715,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
         }
       } else {
-        throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
+        if (numberOfValues > 0) {
+         // throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
+        }
       }
     }
     return success;
