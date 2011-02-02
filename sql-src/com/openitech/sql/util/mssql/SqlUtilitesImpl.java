@@ -440,7 +440,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           if (success) {
-            if (event.getVeljavnost() != null) {
+            if (event.getVeljavnost() != null && event.getVeljavnost() > 0) {
               success = success && storeVeljavnost(events_ID, event.getVeljavnost());
             }
           }
