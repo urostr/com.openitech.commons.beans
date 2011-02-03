@@ -193,43 +193,43 @@ public final class RefreshDataSource extends DataSourceEvent {
 //    }
 //  }
   protected void load() {
-    System.out.println("LOADING:" + event.dataSource);
-    event.dataSource.lock(true, true);
-    try {
-      if (filterChange) {
-        try {
-          event.dataSource.filterChanged();
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting [" + event.dataSource + "]", ex);
-        }
+    final DbDataSource dataSource = event.dataSource.copy();
+    System.out.println("LOADING:" + dataSource);
+    if (filterChange) {
+      try {
+        dataSource.filterChanged();
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting [" + dataSource + "]", ex);
       }
-      if (this.defaults != null) {
-        event.dataSource.setDefaultValues(defaults);
-      }
-      if (this.parameters != null) {
-        event.dataSource.setParameters(parameters, false);
-      }
-    } finally {
-      event.dataSource.unlock();
     }
-    setBusy(event.dataSource.getBusyLabel());
+    if (this.defaults != null) {
+      dataSource.setDefaultValues(defaults);
+    }
+    if (this.parameters != null) {
+      dataSource.setParameters(parameters, false);
+    }
+    setBusy(dataSource.getBusyLabel());
     tasks.remove(event);
+    int row = 0;
     try {
-      if (event.dataSource.isDataLoaded()) {
-        event.dataSource.reload(event.dataSource.getRow());
+      if (dataSource.isDataLoaded()) {
+        dataSource.reload(dataSource.getRow());
       } else {
-        event.dataSource.reload();
+        dataSource.reload();
       }
+      row = dataSource.getRow();
     } catch (SQLException ex) {
-      event.dataSource.reload();
+      dataSource.reload();
 //    } catch (IllegalStateException ex) {
 //      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
 //      if (isLastInQueue()) {
 //        resubmit();
 //      }
+
     } catch (Throwable thw) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + event.dataSource + "]", thw);
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + dataSource + "]", thw);
     }
+    event.dataSource.loadData(dataSource, row);
     setReady();
   }
 

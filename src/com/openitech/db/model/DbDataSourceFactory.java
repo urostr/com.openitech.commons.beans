@@ -195,5 +195,9 @@ public class DbDataSourceFactory {
     public boolean fireEvents();
 
     public CachedRowSet getCachedRowSet() throws SQLException;
+
+    public DbDataSourceImpl copy(DbDataSource owner);
+
+    public void loadData(DbDataSourceImpl dataSource, int oldRow);
   }
 }

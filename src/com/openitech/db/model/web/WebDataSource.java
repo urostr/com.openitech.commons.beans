@@ -3979,6 +3979,16 @@ public class WebDataSource implements DbDataSourceImpl {
     return fireEvents;
   }
 
+  @Override
+  public DbDataSourceImpl copy(DbDataSource owner) {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void loadData(DbDataSourceImpl dataSource, int oldRow) {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
   private class CurrentResultSet {
 
     WebRowSet currentResultSet;

@@ -13,6 +13,7 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.events.StoreUpdatesListener;
+import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.events.concurrent.ConcurrentEvent;
 import com.openitech.events.concurrent.DataSourceActiveRowChangeEvent;
 import com.openitech.events.concurrent.DataSourceEvent;
@@ -157,10 +158,18 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
   }
 
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
+    init(DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass), countSql, selectSql);
+  }
+
+  private DbDataSource(final String selectSql, final String countSql, final DbDataSourceFactory.DbDataSourceImpl implementation) {
+    init(implementation, countSql, selectSql);
+  }
+
+  private void init(final DbDataSourceImpl implementation, final String countSql, final String selectSql) throws IllegalArgumentException {
     //TODO ko spreminaniš eno spremenljivko, npr. cacheRowSet, ne veš, kako druge vplivajo. Še vedno se lahko dela cache.
-    connectOnDemand = ConnectionManager.getInstance().isPooled() && ConnectionManager.getInstance().isConnectOnDemand();
-    cacheRowSet = ConnectionManager.getInstance().isCacheRowSet();
-    implementation = DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass);
+    this.connectOnDemand = ConnectionManager.getInstance().isPooled() && ConnectionManager.getInstance().isConnectOnDemand();
+    this.cacheRowSet = ConnectionManager.getInstance().isCacheRowSet();
+    this.implementation = implementation;
     try {
       if (countSql != null) {
         setCountSql(countSql);
@@ -4692,6 +4701,31 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
 
   public void setProvider(String providerClassName) {
     implementation.setProvider(providerClassName);
+  }
+
+  public DbDataSource copy() {
+    DbDataSource result = new DbDataSource();
+
+    result.autoInsert = this.autoInsert;
+    result.cacheRowSet = this.cacheRowSet;
+    result.cacheStatements = this.cacheStatements;
+    result.canAddRows = this.canAddRows;
+    result.canDeleteRows = this.canDeleteRows;
+    result.canExportData = this.canExportData;
+    result.name = this.name;
+    result.sharing = this.sharing;
+    result.safeMode = this.safeMode;
+
+    result.parameters.addAll(this.parameters);
+    result.defaultValues.putAll(this.defaultValues);
+
+    result.implementation = implementation.copy(result);
+
+    return result;
+  }
+
+  public void loadData(DbDataSource dataSource, int oldRow) {
+    implementation.loadData(dataSource.implementation, oldRow);
   }
 
   public static class SqlParameter<T> {
