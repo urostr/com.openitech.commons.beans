@@ -177,6 +177,39 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
   }
 
+  @Override
+  public DbDataSourceImpl copy(DbDataSource owner) {
+    SQLDataSource result = new SQLDataSource(owner);
+
+    result.selectSql = this.selectSql;
+    result.countSql = this.countSql;
+    result.preparedSelectSql = this.preparedCountSql;
+    result.preparedCountSql = this.preparedCountSql;
+    result.updateTableName = this.updateTableName;
+    if (this.primaryKeys != null) {
+      result.primaryKeys = new ArrayList<PrimaryKey>();
+      result.primaryKeys.addAll(this.primaryKeys);
+    }
+    result.count = this.count;
+    result.fetchSize = this.fetchSize;
+    result.columnMapping.putAll(this.columnMapping);
+    result.connection = this.connection;
+    result.selectStatementReady = this.selectStatementReady;
+    result.countStatementReady = this.countStatementReady;
+    result.selectStatement = this.selectStatement;
+    result.countStatement = this.countStatement;
+//    result.cachedStatements.putAll(this.cachedStatements);
+    result.sqlCache = this.sqlCache;
+    result.fireEvents = this.fireEvents;
+    result.uniqueID = this.uniqueID;
+    result.refreshPending = false;
+
+    result.updateColumnNames.addAll(this.updateColumnNames);
+    result.updateColumnNamesCS.addAll(this.updateColumnNamesCS);
+
+    return result;
+  }
+
   /**
    * Updates the designated column with a <code>float	</code> value.
    * The updater methods are used to update column values in the
@@ -4339,6 +4372,86 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public boolean loadData() {
     return loadData(false);
+  }
+
+  @Override
+  public void loadData(DbDataSourceImpl dataSource, int oldRow)  {
+    SQLDataSource sqlDataSource = (SQLDataSource) dataSource;
+
+    boolean reloaded = false;
+
+    owner.lock();
+    try {
+      owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
+      this.selectSql = sqlDataSource.selectSql;
+      this.countSql = sqlDataSource.countSql;
+      this.preparedSelectSql = sqlDataSource.preparedCountSql;
+      this.preparedCountSql = sqlDataSource.preparedCountSql;
+      this.updateTableName = sqlDataSource.updateTableName;
+      if (sqlDataSource.primaryKeys != null) {
+        this.primaryKeys = new ArrayList<PrimaryKey>();
+        this.primaryKeys.addAll(sqlDataSource.primaryKeys);
+      }
+      this.count = sqlDataSource.count;
+      this.fetchSize = sqlDataSource.fetchSize;
+
+      this.columnMapping.clear();
+      this.columnMapping.putAll(sqlDataSource.columnMapping);
+
+      this.connection = sqlDataSource.connection;
+      this.selectStatementReady = sqlDataSource.selectStatementReady;
+      this.countStatementReady = sqlDataSource.countStatementReady;
+      this.selectStatement = sqlDataSource.selectStatement;
+      this.countStatement = sqlDataSource.countStatement;
+
+//      this.cachedStatements.clear();
+//      this.cachedStatements.putAll(sqlDataSource.cachedStatements);
+      this.sqlCache = sqlDataSource.sqlCache;
+      this.fireEvents = sqlDataSource.fireEvents;
+      this.uniqueID = sqlDataSource.uniqueID;
+      this.refreshPending = false;
+
+      this.updateColumnNames.clear();
+      this.updateColumnNames.addAll(sqlDataSource.updateColumnNames);
+
+      this.updateColumnNamesCS.clear();
+      this.updateColumnNamesCS.addAll(sqlDataSource.updateColumnNamesCS);
+      this.currentResultSet = sqlDataSource.currentResultSet;
+    } finally {
+      inserting = false;
+      count = -1;
+      storedUpdates.clear();
+      cache.clear();
+      pendingValuesCache.clear();
+      for (Object parameter : owner.getParameters()) {
+        if (parameter instanceof PendingSqlParameter) {
+          ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+        }
+      }
+      reloaded = true;
+      owner.unlock();
+      Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+    }
+    if (oldRow > 0 && getRowCount() > 0) {
+      try {
+        currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
+      } catch (SQLException ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+      }
+    }
+    owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
+
+    if (reloaded && currentResultSet != null) {
+      if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
+        events.run();
+      } else {
+        try {
+          EventQueue.invokeAndWait(events);
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
+        }
+      }
+    }
   }
 
   public boolean reload() {
