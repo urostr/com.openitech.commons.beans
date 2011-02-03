@@ -399,7 +399,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               String query = SQLDataSource.substParameters(fillTableSql, qparams);
               if (!Equals.equals(this.connection, connection)
                       || !Equals.equals(this.qFillTable, query)) {
-                if (this.psFillTable!=null) {
+                if (this.psFillTable != null) {
                   this.psFillTable.close();
                 }
                 this.psFillTable = connection.prepareStatement(query,
@@ -563,7 +563,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
     public void executeQuery(Connection connection, List<Object> queryParameters) throws SQLException, InterruptedException {
       if (size() > 1) {
-        lock.tryLock(1, TimeUnit.SECONDS);
+        final boolean locked = lock.tryLock(1, TimeUnit.SECONDS);
         try {
           synchronized (connection) {
             TransactionManager tm = TransactionManager.getInstance(connection);
@@ -578,7 +578,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             }
           }
         } finally {
-          lock.unlock();
+          if (locked) {
+            lock.unlock();
+          }
         }
       } else {
         execute(connection, queryParameters);
