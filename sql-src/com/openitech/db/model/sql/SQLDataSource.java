@@ -192,7 +192,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
     result.count = this.count;
     result.fetchSize = this.fetchSize;
-//    result.columnMapping.putAll(this.columnMapping);
+    result.columnMapping.putAll(this.columnMapping);
     result.connection = this.connection;
     result.selectStatementReady = this.selectStatementReady;
     result.countStatementReady = this.countStatementReady;
