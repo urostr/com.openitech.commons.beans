@@ -302,8 +302,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       locks.put(table, lock);
     }
 
-    boolean locked = false;
-    if (!(locked = lock.tryLock() || lock.tryLock(3, TimeUnit.SECONDS))) {
+    if (!(lock.tryLock() || lock.tryLock(3, TimeUnit.SECONDS))) {
       throw new SQLException("Can't lock " + table);
     }
 
@@ -444,9 +443,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         this.connection = connection;
       }
     } finally {
-      if (locked) {
-        lock.unlock();
-      }
+      lock.unlock();
     }
   }
 
@@ -563,7 +560,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
     public void executeQuery(Connection connection, List<Object> queryParameters) throws SQLException, InterruptedException {
       if (size() > 1) {
-        final boolean locked = lock.tryLock(1, TimeUnit.SECONDS);
+        if (!(lock.tryLock() || lock.tryLock(3, TimeUnit.SECONDS))) {
+          throw new SQLException("Can't lock temporary parameters group");
+        }
         try {
           synchronized (connection) {
             TransactionManager tm = TransactionManager.getInstance(connection);
@@ -578,9 +577,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             }
           }
         } finally {
-          if (locked) {
-            lock.unlock();
-          }
+          lock.unlock();
         }
       } else {
         execute(connection, queryParameters);

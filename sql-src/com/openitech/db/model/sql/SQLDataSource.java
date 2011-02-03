@@ -192,7 +192,7 @@ public class SQLDataSource implements DbDataSourceImpl {
     }
     result.count = this.count;
     result.fetchSize = this.fetchSize;
-    result.columnMapping.putAll(this.columnMapping);
+//    result.columnMapping.putAll(this.columnMapping);
     result.connection = this.connection;
     result.selectStatementReady = this.selectStatementReady;
     result.countStatementReady = this.countStatementReady;
@@ -4395,8 +4395,8 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.count = sqlDataSource.count;
       this.fetchSize = sqlDataSource.fetchSize;
 
-      this.columnMapping.clear();
-      this.columnMapping.putAll(sqlDataSource.columnMapping);
+//      this.columnMapping.clear();
+//      this.columnMapping.putAll(sqlDataSource.columnMapping);
 
       this.connection = sqlDataSource.connection;
       this.selectStatementReady = sqlDataSource.selectStatementReady;
