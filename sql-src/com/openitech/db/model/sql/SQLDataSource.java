@@ -183,7 +183,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
     result.selectSql = this.selectSql;
     result.countSql = this.countSql;
-    result.preparedSelectSql = this.preparedCountSql;
+    result.preparedSelectSql = this.preparedSelectSql;
     result.preparedCountSql = this.preparedCountSql;
     result.updateTableName = this.updateTableName;
     if (this.primaryKeys != null) {
@@ -4385,7 +4385,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
       this.selectSql = sqlDataSource.selectSql;
       this.countSql = sqlDataSource.countSql;
-      this.preparedSelectSql = sqlDataSource.preparedCountSql;
+      this.preparedSelectSql = sqlDataSource.preparedSelectSql;
       this.preparedCountSql = sqlDataSource.preparedCountSql;
       this.updateTableName = sqlDataSource.updateTableName;
       if (sqlDataSource.primaryKeys != null) {
@@ -4396,7 +4396,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       this.fetchSize = sqlDataSource.fetchSize;
 
       this.columnMapping.clear();
-//      this.columnMapping.putAll(sqlDataSource.columnMapping);
+      this.columnMapping.putAll(sqlDataSource.columnMapping);
 
       this.connection = sqlDataSource.connection;
       this.selectStatementReady = sqlDataSource.selectStatementReady;
