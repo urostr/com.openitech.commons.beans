@@ -229,7 +229,9 @@ public final class RefreshDataSource extends DataSourceEvent {
     } catch (Throwable thw) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + dataSource + "]", thw);
     }
-    event.dataSource.loadData(dataSource, row);
+    if (isLastInQueue()) {
+      event.dataSource.loadData(dataSource, row);
+    }
     setReady();
   }
 
