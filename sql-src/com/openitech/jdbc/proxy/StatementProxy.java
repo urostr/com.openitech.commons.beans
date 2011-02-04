@@ -29,11 +29,11 @@ public class StatementProxy implements java.sql.Statement {
     connection.addStatement(this);
     connection.getActiveConnection();
   }
-  
+
   protected java.sql.Statement createStatement() throws SQLException {
     return connection.getActiveConnection().createStatement(resultSetType, resultSetConcurrency);
   }
-  
+
   protected void initStatement() throws SQLException {
     if (maxFieldSize != null) {
       statement.setMaxFieldSize(maxFieldSize);
@@ -94,13 +94,14 @@ public class StatementProxy implements java.sql.Statement {
 
   @Override
   public synchronized void close() throws SQLException {
-    if (statement == null) {
+    if (statement != null) {
       statement = getActiveStatement();
+      connection.removeStatement(this);
+      statement.close();
+      statement = null;
     }
-    connection.removeStatement(this);
-    statement.close();
-    statement = null;
   }
+  
   Integer maxFieldSize;
 
   @Override

@@ -4,10 +4,10 @@
  */
 package com.openitech.jdbc.proxy;
 
+import com.openitech.db.model.DbDataSource;
 import com.openitech.ref.WeakList;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -16,7 +16,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
-import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.ConnectionPoolDataSource;
@@ -26,7 +27,7 @@ import javax.sql.DataSource;
  *
  * @author uros
  */
-public abstract class AbstractConnection implements java.sql.Connection {
+public abstract class AbstractConnection implements java.sql.Connection, com.openitech.events.concurrent.Locking {
 
   protected javax.sql.PooledConnection pooledConnection;
   protected java.sql.Connection connection;
@@ -340,4 +341,59 @@ public abstract class AbstractConnection implements java.sql.Connection {
 
     return createStatement(type, concurrency);
   }
+
+  ReentrantLock available = new ReentrantLock(true);
+
+  @Override
+  public boolean lock() {
+    return lock(true);
+  }
+
+  @Override
+  public boolean canLock() {
+    boolean result = false;
+    try {
+      result = available.tryLock() || available.tryLock(10L, TimeUnit.MILLISECONDS);
+      if (result) {
+        available.unlock();
+      }
+    } catch (InterruptedException ex) {
+      //ignore it;
+    }
+    return result;
+  }
+
+  @Override
+  public boolean lock(boolean fatal) {
+    return lock(fatal, false);
+  }
+
+  @Override
+  public boolean lock(boolean fatal, boolean force) {
+    boolean result = false;
+    try {
+      if (force) {
+        available.lock();
+        result = true;
+      } else {
+        if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
+          if (fatal) {
+            throw new IllegalStateException("Can't obtain lock on: " + toString());
+          } else {
+            Logger.getLogger(DbDataSource.class.getName()).log(Level.WARNING, null, new IllegalStateException("Can't obtain lock on: " + toString()));
+          }
+        }
+      }
+    } catch (InterruptedException ex) {
+      throw (IllegalStateException) (new IllegalStateException("Can't obtain lock")).initCause(ex);
+    }
+    return result;
+  }
+
+  @Override
+  public void unlock() {
+    available.unlock();
+  }
+
+
 }
