@@ -21,6 +21,7 @@ import com.openitech.text.FormatFactory;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
 import com.openitech.awt.OwnerFrame;
+import com.openitech.events.concurrent.RefreshDataSource;
 import com.openitech.io.ReadInputStream;
 import com.sun.rowset.CachedRowSetImpl;
 import java.awt.EventQueue;
@@ -3147,6 +3148,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public int getRow() throws SQLException {
+    //TODO tukaj paše motoda isDataLodaded() in èe ni mogoèe load data oz. napaka
     if (loadData()) {
       if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
         return 1;
@@ -4323,6 +4325,7 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
     }
     if ((currentResultSet == null) && selectStatementReady) {
+      RefreshDataSource.setBusy();
       owner.lock();
       try {
         owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
@@ -4350,6 +4353,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
       owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
+      RefreshDataSource.setReady();
     }
     if (reloaded && currentResultSet != null) {
       if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
@@ -4366,7 +4370,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 //        loadingData = false;
 //      }
 //    }
-
+    
     return currentResultSet != null;
   }
 
@@ -4375,7 +4379,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   @Override
-  public void loadData(DbDataSourceImpl dataSource, int oldRow)  {
+  public void loadData(DbDataSourceImpl dataSource, int oldRow) {
     SQLDataSource sqlDataSource = (SQLDataSource) dataSource;
 
     boolean reloaded = false;
@@ -4625,13 +4629,15 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
+    ResultSet resultSet = null;
     synchronized (statement.getConnection()) {
       List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
       setParameters(statement, queryParameters, 1, false);
 
-      return statement.executeQuery();
+      resultSet = statement.executeQuery();
     }
+    return resultSet;
   }
 
   public static boolean execute(String selectSQL, Object... parameters) throws SQLException {
@@ -4673,16 +4679,19 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
+    int result = 0;
     synchronized (statement.getConnection()) {
       List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
       setParameters(statement, queryParameters, 1, false);
 
-      return statement.executeUpdate();
+      result = statement.executeUpdate();
     }
+    return result;
   }
 
   public static List<Object> executeTemporarySelects(List<?> parameters, Connection connection) throws SQLException {
+    List<Object> result = null;
     synchronized (connection) {
       List<Object> queryParameters = new java.util.ArrayList(parameters.size());
       Set<TemporarySubselectSqlParameter.TemporaryTableGroup> temporarySubselectSqlParameters = new java.util.LinkedHashSet<TemporarySubselectSqlParameter.TemporaryTableGroup>(parameters.size());
@@ -4705,8 +4714,9 @@ public class SQLDataSource implements DbDataSourceImpl {
           throw new SQLException("Can't prepare the temporary tables", ex);
         }
       }
-      return queryParameters;
+      result = queryParameters;
     }
+    return result;
   }
 
   private static List<Object> executeTemporarySelects(List<?> parameters, PreparedStatement statement) throws SQLException {
