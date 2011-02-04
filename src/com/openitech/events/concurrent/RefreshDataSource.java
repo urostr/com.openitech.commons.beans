@@ -90,13 +90,18 @@ public final class RefreshDataSource extends DataSourceEvent {
   public static void setBusy() {
     setBusy(null);
   }
+  private static int busyCount = 0;
 
-  private static void setBusy(final String label) {
+  private synchronized static void setBusy(final String label) {
+    if(busyCount >0){
+      System.out.println();
+    }
     if (busy != null) {
       EventQueue.invokeLater(new Runnable() {
 
         public void run() {
           busy.setBusy(true);
+          busyCount++;
           if (label != null && !label.equals("")) {
             busy.setText(label);
           } else {
@@ -108,17 +113,21 @@ public final class RefreshDataSource extends DataSourceEvent {
     System.out.println("Busy!");
   }
 
-  public static void setReady() {
+  public synchronized static void setReady() {
     if (busy != null) {
       EventQueue.invokeLater(new Runnable() {
 
         public void run() {
-          busy.setBusy(false);
-          busy.setText("Pripravljen...");
+          busyCount--;
+          //if (busyCount == 0) {
+            busy.setBusy(false);
+            busy.setText("Pripravljen...");
+            System.out.println("Ready!");
+         // }
         }
       });
     }
-    System.out.println("Ready!");
+    
   }
 
   public void run() {
@@ -203,7 +212,6 @@ public final class RefreshDataSource extends DataSourceEvent {
     if (!isLastInQueue()) {
       return;
     }
-    DbDataSource.DUMP_SQL = false;
     final DbDataSource dataSource = event.dataSource.copy();
     if (!isLastInQueue()) {
       return;
@@ -240,7 +248,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       }
     } catch (SQLException ex) {
       ex.printStackTrace();
-      setBusy();
+      setReady();
       resubmit();
       return;
 //      dataSource.reload();
