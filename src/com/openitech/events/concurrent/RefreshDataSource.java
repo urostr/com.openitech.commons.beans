@@ -200,14 +200,76 @@ public final class RefreshDataSource extends DataSourceEvent {
     }
   }
 
-//  private void lockAndLoad() {
-//    if (event.dataSource.canLock()) {
-//      load();
-//    } else {
-//      resubmit();
-//    }
-//  }
+  protected boolean shadowLoading = false;
+
+  /**
+   * Get the value of shadowLoading
+   *
+   * @return the value of shadowLoading
+   */
+  public boolean isShadowLoading() {
+    return shadowLoading;
+  }
+
+  /**
+   * Set the value of shadowLoading
+   *
+   * @param shadowLoading new value of shadowLoading
+   */
+  public void setShadowLoading(boolean shadowLoading) {
+    this.shadowLoading = shadowLoading;
+  }
+
   protected void load() {
+    if (isShadowLoading()) {
+      loadCopy();
+    } else {
+      loadOriginal();
+    }
+  }
+
+  protected void loadOriginal() {
+    System.out.println("LOADING:" + event.dataSource);
+    event.dataSource.lock(true, true);
+    try {
+      if (filterChange) {
+        try {
+          event.dataSource.filterChanged();
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting [" + event.dataSource + "]", ex);
+        }
+      }
+      if (this.defaults != null) {
+        event.dataSource.setDefaultValues(defaults);
+      }
+      if (this.parameters != null) {
+        event.dataSource.setParameters(parameters, false);
+      }
+    } finally {
+      event.dataSource.unlock();
+    }
+    setBusy(event.dataSource.getBusyLabel());
+    tasks.remove(event);
+    try {
+      if (event.dataSource.isDataLoaded()) {
+        event.dataSource.reload(event.dataSource.getRow());
+      } else {
+        event.dataSource.reload();
+      }
+    } catch (SQLException ex) {
+      event.dataSource.reload();
+//    } catch (IllegalStateException ex) {
+//      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
+//      if (isLastInQueue()) {
+//        resubmit();
+//      }
+    } catch (Throwable thw) {
+      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + event.dataSource + "]", thw);
+    }
+    setReady();
+  }
+  
+  protected void loadCopy() {
     setBusy();
     if (!isLastInQueue()) {
       return;
