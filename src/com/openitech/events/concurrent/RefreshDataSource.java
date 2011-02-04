@@ -87,13 +87,17 @@ public final class RefreshDataSource extends DataSourceEvent {
     this.tryLock = tryLock;
   }
 
-  private void setBusy(final String label) {
+  public static void setBusy() {
+    setBusy(null);
+  }
+
+  private static void setBusy(final String label) {
     if (busy != null) {
       EventQueue.invokeLater(new Runnable() {
 
         public void run() {
           busy.setBusy(true);
-          if (event.dataSource.getBusyLabel() != null) {
+          if (label != null && !label.equals("")) {
             busy.setText(label);
           } else {
             busy.setText("Osvežujem podatke ...");
@@ -101,9 +105,10 @@ public final class RefreshDataSource extends DataSourceEvent {
         }
       });
     }
+    System.out.println("Busy!");
   }
 
-  private void setReady() {
+  public static void setReady() {
     if (busy != null) {
       EventQueue.invokeLater(new Runnable() {
 
@@ -113,6 +118,7 @@ public final class RefreshDataSource extends DataSourceEvent {
         }
       });
     }
+    System.out.println("Ready!");
   }
 
   public void run() {
@@ -193,7 +199,15 @@ public final class RefreshDataSource extends DataSourceEvent {
 //    }
 //  }
   protected void load() {
+    setBusy();
+    if (!isLastInQueue()) {
+      return;
+    }
+    DbDataSource.DUMP_SQL = false;
     final DbDataSource dataSource = event.dataSource.copy();
+    if (!isLastInQueue()) {
+      return;
+    }
     System.out.println("LOADING:" + dataSource);
     if (filterChange) {
       try {
@@ -208,18 +222,28 @@ public final class RefreshDataSource extends DataSourceEvent {
     if (this.parameters != null) {
       dataSource.setParameters(parameters, false);
     }
-    setBusy(dataSource.getBusyLabel());
-    tasks.remove(event);
     int row = 0;
     try {
-      if (dataSource.isDataLoaded()) {
-        dataSource.reload(dataSource.getRow());
-      } else {
-        dataSource.reload();
+      if (!isLastInQueue()) {
+        return;
       }
-      row = dataSource.getRow();
+      boolean reload = false;
+      if (dataSource.isDataLoaded()) {
+        reload = dataSource.reload(dataSource.getRow());
+      } else {
+        reload = dataSource.reload();
+      }
+      if (reload) {
+        row = dataSource.getRow();
+      } else {
+        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error refreshing [" + dataSource + "]");
+      }
     } catch (SQLException ex) {
-      dataSource.reload();
+      ex.printStackTrace();
+      setBusy();
+      resubmit();
+      return;
+//      dataSource.reload();
 //    } catch (IllegalStateException ex) {
 //      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
 //      if (isLastInQueue()) {
@@ -233,6 +257,8 @@ public final class RefreshDataSource extends DataSourceEvent {
       event.dataSource.loadData(dataSource, row);
     }
     setReady();
+    tasks.remove(event);
+
   }
 
   public static void timestamp(DbDataSource dataSource) {
