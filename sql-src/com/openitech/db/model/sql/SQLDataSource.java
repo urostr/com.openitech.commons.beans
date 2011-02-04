@@ -4325,35 +4325,38 @@ public class SQLDataSource implements DbDataSourceImpl {
       }
     }
     if ((currentResultSet == null) && selectStatementReady) {
-      RefreshDataSource.setBusy();
-      owner.lock();
       try {
-        owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
-        createCurrentResultSet();
-      } finally {
-        inserting = false;
-        count = -1;
-        storedUpdates.clear();
-        cache.clear();
-        pendingValuesCache.clear();
-        for (Object parameter : owner.getParameters()) {
-          if (parameter instanceof PendingSqlParameter) {
-            ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+        RefreshDataSource.setBusy();
+        owner.lock();
+        try {
+          owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
+          createCurrentResultSet();
+        } finally {
+          inserting = false;
+          count = -1;
+          storedUpdates.clear();
+          cache.clear();
+          pendingValuesCache.clear();
+          for (Object parameter : owner.getParameters()) {
+            if (parameter instanceof PendingSqlParameter) {
+              ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+            }
+          }
+          reloaded = true;
+          owner.unlock();
+          Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+        }
+        if (oldRow > 0 && getRowCount() > 0) {
+          try {
+            currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
+          } catch (SQLException ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
           }
         }
-        reloaded = true;
-        owner.unlock();
-        Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+        owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
+      } finally {
+        RefreshDataSource.setReady();
       }
-      if (oldRow > 0 && getRowCount() > 0) {
-        try {
-          currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
-        } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
-        }
-      }
-      owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
-      RefreshDataSource.setReady();
     }
     if (reloaded && currentResultSet != null) {
       if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
@@ -4370,7 +4373,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 //        loadingData = false;
 //      }
 //    }
-    
+
     return currentResultSet != null;
   }
 
