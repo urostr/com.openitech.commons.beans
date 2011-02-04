@@ -21,6 +21,7 @@ import com.openitech.events.concurrent.DataSourceListDataEvent;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.ref.WeakListenerList;
 import com.openitech.db.model.sql.SQLNotificationException;
+import com.openitech.events.concurrent.Locking;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -74,7 +75,7 @@ import javax.swing.event.ListDataListener;
  *
  * @author uros
  */
-public class DbDataSource implements DbNavigatorDataSource, RowSet {
+public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
 
   public static boolean DUMP_SQL = false;
   /**
@@ -3156,6 +3157,7 @@ public class DbDataSource implements DbNavigatorDataSource, RowSet {
     return lock(true);
   }
 
+  @Override
   public boolean canLock() {
     boolean result = false;
     try {
