@@ -152,4 +152,14 @@ public class Telefon {
     hash = 97 * hash + (this.drzava != null ? this.drzava.toUpperCase().hashCode() : 0);
     return hash;
   }
+
+  @Override
+  public String toString() {
+    if ((this.omrezna!=null)&&(this.telefonska!=null)) {
+      return (this.drzava != null ? "("+this.drzava+")" : "") + this.omrezna+"/"+this.telefonska;
+    } else {
+      return super.toString();
+    }
+  }
+
 }
