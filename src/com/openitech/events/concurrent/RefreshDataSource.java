@@ -93,9 +93,6 @@ public final class RefreshDataSource extends DataSourceEvent {
   private static int busyCount = 0;
 
   private synchronized static void setBusy(final String label) {
-    if(busyCount >0){
-      System.out.println();
-    }
     if (busy != null) {
       EventQueue.invokeLater(new Runnable() {
 
@@ -119,15 +116,15 @@ public final class RefreshDataSource extends DataSourceEvent {
 
         public void run() {
           busyCount--;
-          //if (busyCount == 0) {
+          if (busyCount == 0) {
             busy.setBusy(false);
             busy.setText("Pripravljen...");
             System.out.println("Ready!");
-         // }
+          }
         }
       });
     }
-    
+
   }
 
   public void run() {
@@ -270,63 +267,58 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
   
   protected void loadCopy() {
-    setBusy();
-    if (!isLastInQueue()) {
-      return;
-    }
-    final DbDataSource dataSource = event.dataSource.copy();
-    if (!isLastInQueue()) {
-      return;
-    }
-    System.out.println("LOADING:" + dataSource);
-    if (filterChange) {
-      try {
-        dataSource.filterChanged();
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting [" + dataSource + "]", ex);
-      }
-    }
-    if (this.defaults != null) {
-      dataSource.setDefaultValues(defaults);
-    }
-    if (this.parameters != null) {
-      dataSource.setParameters(parameters, false);
-    }
-    int row = 0;
     try {
+      setBusy();
       if (!isLastInQueue()) {
         return;
       }
-      boolean reload = false;
-      if (dataSource.isDataLoaded()) {
-        reload = dataSource.reload(dataSource.getRow());
-      } else {
-        reload = dataSource.reload();
+      final DbDataSource dataSource = event.dataSource.copy();
+      if (!isLastInQueue()) {
+        return;
       }
-      if (reload) {
-        row = dataSource.getRow();
-      } else {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error refreshing [" + dataSource + "]");
+      System.out.println("LOADING:" + dataSource);
+      if (filterChange) {
+        try {
+          dataSource.filterChanged();
+        } catch (SQLException ex) {
+          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting [" + dataSource + "]", ex);
+        }
       }
-    } catch (SQLException ex) {
-      ex.printStackTrace();
+      if (this.defaults != null) {
+        dataSource.setDefaultValues(defaults);
+      }
+      if (this.parameters != null) {
+        dataSource.setParameters(parameters, false);
+      }
+      int row = 0;
+      try {
+        if (!isLastInQueue()) {
+          return;
+        }
+        boolean reload = false;
+        if (dataSource.isDataLoaded()) {
+          reload = dataSource.reload(dataSource.getRow());
+        } else {
+          reload = dataSource.reload();
+        }
+        if (reload) {
+          row = dataSource.getRow();
+        } else {
+          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error refreshing [" + dataSource + "]");
+        }
+      } catch (SQLException ex) {
+        ex.printStackTrace();
+        resubmit();
+        return;
+      } catch (Throwable thw) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + dataSource + "]", thw);
+      }
+      if (isLastInQueue()) {
+        event.dataSource.loadData(dataSource, row);
+      }
+    } finally {
       setReady();
-      resubmit();
-      return;
-//      dataSource.reload();
-//    } catch (IllegalStateException ex) {
-//      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
-//      if (isLastInQueue()) {
-//        resubmit();
-//      }
-
-    } catch (Throwable thw) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + dataSource + "]", thw);
     }
-    if (isLastInQueue()) {
-      event.dataSource.loadData(dataSource, row);
-    }
-    setReady();
     tasks.remove(event);
 
   }
