@@ -93,7 +93,7 @@ public class StatementProxy implements java.sql.Statement {
   }
 
   @Override
-  public void close() throws SQLException {
+  public synchronized void close() throws SQLException {
     if (statement == null) {
       statement = getActiveStatement();
     }
