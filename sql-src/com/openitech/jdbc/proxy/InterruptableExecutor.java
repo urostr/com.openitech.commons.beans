@@ -41,8 +41,12 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
 
   @Override
   public void interrupt() {
-    for (Map.Entry<Runnable, Thread> entry : tasks.entrySet()) {
-      entry.getValue().stop(new SQLException("SQL execution cancelled."));
+    purge();
+    for (Thread thread : tasks.values()) {
+      thread.interrupt();
+      if (!tasks.isEmpty()) {
+        thread.stop(new SQLException("SQL execution cancelled."));
+      }
     }
     tasks.clear();
   }
