@@ -14,6 +14,7 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -52,7 +53,7 @@ public class DataSourcePoolExecutor extends ThreadPoolExecutor {
               action = "connection interrupted";
             }
           } catch (Throwable ex) {
-            Logger.getLogger(DataSourcePoolExecutor.class.getName()).warning(ex.getMessage());
+            Logger.getLogger(DataSourcePoolExecutor.class.getName()).log(Level.WARNING, "Error while interrupting thread",ex.getMessage());
           }
 
           System.out.println(entry.getKey().event.dataSource + "...refresh thread " + action + ".");
