@@ -26,11 +26,12 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
 
-  private static final ExecutorService pool = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+  private static final ExecutorService pool = new DataSourcePoolExecutor(0, Integer.MAX_VALUE,
           30L, TimeUnit.SECONDS,
           new SynchronousQueue<Runnable>());
   protected static final Map<Event, Long> timestamps = new ConcurrentHashMap<Event, Long>();
   protected static final Map<Event, Future> tasks = new ConcurrentHashMap<Event, Future>();
+  
   protected final Long timestamp = new Long((new Date()).getTime());
   protected final Event event;
   protected Event suspend;

@@ -90,7 +90,7 @@ public final class RefreshDataSource extends DataSourceEvent {
   public static void setBusy() {
     setBusy(null);
   }
-  private static int busyCount = 0;
+  private static volatile int busyCount = 0;
 
   private synchronized static void setBusy(final String label) {
     if (busy != null) {
@@ -107,7 +107,7 @@ public final class RefreshDataSource extends DataSourceEvent {
         }
       });
     }
-    System.out.println("Busy!");
+//    System.out.println("Busy!");
   }
 
   public synchronized static void setReady() {
@@ -119,7 +119,7 @@ public final class RefreshDataSource extends DataSourceEvent {
           if (busyCount == 0) {
             busy.setBusy(false);
             busy.setText("Pripravljen...");
-            System.out.println("Ready!");
+//            System.out.println("Ready!");
           }
         }
       });
@@ -197,7 +197,7 @@ public final class RefreshDataSource extends DataSourceEvent {
     }
   }
 
-  protected boolean shadowLoading = false;
+  protected boolean shadowLoading = true;
 
   /**
    * Get the value of shadowLoading
@@ -216,6 +216,18 @@ public final class RefreshDataSource extends DataSourceEvent {
   public void setShadowLoading(boolean shadowLoading) {
     this.shadowLoading = shadowLoading;
   }
+
+  protected boolean loading = false;
+
+  /**
+   * Get the value of loading
+   *
+   * @return the value of loading
+   */
+  public boolean isLoading() {
+    return loading;
+  }
+
 
   protected void load() {
     if (isShadowLoading()) {
@@ -268,6 +280,7 @@ public final class RefreshDataSource extends DataSourceEvent {
   
   protected void loadCopy() {
     try {
+      loading = true;
       setBusy();
       final DbDataSource dataSource = event.dataSource.copy();
       System.out.println("LOADING:" + dataSource);
@@ -308,6 +321,7 @@ public final class RefreshDataSource extends DataSourceEvent {
         event.dataSource.loadData(dataSource, row);
       }
     } finally {
+      loading = false;
       setReady();
     }
     tasks.remove(event);
@@ -318,11 +332,12 @@ public final class RefreshDataSource extends DataSourceEvent {
     DataSourceEvent.timestamp(new Event(dataSource, Event.Type.REFRESH));
   }
 
+  @Override
   public final Object clone() {
     return new RefreshDataSource(this);
   }
 
-  private boolean isLastInQueue() {
+  protected boolean isLastInQueue() {
     return timestamps.get(event).longValue() == timestamp.longValue();
   }
 }
