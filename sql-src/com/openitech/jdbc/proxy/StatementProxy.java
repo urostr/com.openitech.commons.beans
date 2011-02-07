@@ -4,18 +4,21 @@
  */
 package com.openitech.jdbc.proxy;
 
+import com.openitech.events.concurrent.Interruptable;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author uros
  */
-public class StatementProxy implements java.sql.Statement {
+public class StatementProxy implements java.sql.Statement, Interruptable {
 
   protected final int resultSetType;
   protected final int resultSetConcurrency;
@@ -337,5 +340,15 @@ public class StatementProxy implements java.sql.Statement {
   @Override
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
     return getActiveStatement().isWrapperFor(iface);
+  }
+
+  @Override
+  public void interrupt() {
+    try {
+      statement.close();
+      statement = null;
+    } catch (SQLException ex) {
+      Logger.getLogger(StatementProxy.class.getName()).log(Level.SEVERE, null, ex);
+    }
   }
 }

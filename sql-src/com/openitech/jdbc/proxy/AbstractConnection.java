@@ -5,6 +5,8 @@
 package com.openitech.jdbc.proxy;
 
 import com.openitech.db.model.DbDataSource;
+import com.openitech.events.concurrent.Interruptable;
+import com.openitech.events.concurrent.Locking;
 import com.openitech.ref.WeakList;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -27,7 +29,7 @@ import javax.sql.DataSource;
  *
  * @author uros
  */
-public abstract class AbstractConnection implements java.sql.Connection, com.openitech.events.concurrent.Locking {
+public abstract class AbstractConnection implements java.sql.Connection, Locking, Interruptable {
 
   protected javax.sql.PooledConnection pooledConnection;
   protected java.sql.Connection connection;
@@ -147,7 +149,7 @@ public abstract class AbstractConnection implements java.sql.Connection, com.ope
   }
 
   protected synchronized boolean isConnectionActive() {
-    return !(activeSavepoints.isEmpty()&&activeStatemens.isEmpty());
+    return !(activeSavepoints.isEmpty() && activeStatemens.isEmpty());
   }
 
   @Override
@@ -341,7 +343,6 @@ public abstract class AbstractConnection implements java.sql.Connection, com.ope
 
     return createStatement(type, concurrency);
   }
-
   ReentrantLock available = new ReentrantLock(true);
 
   @Override
@@ -395,5 +396,19 @@ public abstract class AbstractConnection implements java.sql.Connection, com.ope
     available.unlock();
   }
 
-
+  @Override
+  public void interrupt() {
+    if (this.connection != null) {
+      try {
+        this.connection.close();
+        for (Statement statement : activeStatemens) {
+          ((Interruptable) statement).interrupt();
+        }
+        activeSavepoints.clear();
+        getActiveConnection();
+      } catch (SQLException ex) {
+        Logger.getLogger(AbstractConnection.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+  }
 }
