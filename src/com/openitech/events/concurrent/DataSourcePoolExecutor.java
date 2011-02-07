@@ -46,7 +46,6 @@ public class DataSourcePoolExecutor extends ThreadPoolExecutor {
           System.out.println(entry.getKey().event.dataSource + "...refresh thread interrupted.");
         }
       }
-      System.out.println(((RefreshDataSource) ((DataSourceFutureTask) r).getTask()).event.dataSource + "...refresh thread running.");
       tasks.put((RefreshDataSource) ((DataSourceFutureTask) r).getTask(), t);
     }
   }
@@ -54,7 +53,6 @@ public class DataSourcePoolExecutor extends ThreadPoolExecutor {
   @Override
   protected void afterExecute(Runnable r, Throwable t) {
     if ((r instanceof DataSourceFutureTask) && ((DataSourceFutureTask) r).getTask() instanceof RefreshDataSource) {
-      System.out.println(((RefreshDataSource) ((DataSourceFutureTask) r).getTask()).event.dataSource + "...refresh thread done.");
       tasks.remove((RefreshDataSource) ((DataSourceFutureTask) r).getTask());
     }
   }
