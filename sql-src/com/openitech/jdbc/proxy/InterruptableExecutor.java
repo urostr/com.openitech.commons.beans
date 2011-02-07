@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class InterruptableExecutor extends ThreadPoolExecutor implements Interruptable {
 
-  protected final Map<Runnable, Thread> tasks = new ConcurrentHashMap<Runnable, Thread>();
+  private final Map<Runnable, Thread> tasks = new ConcurrentHashMap<Runnable, Thread>();
 
   public InterruptableExecutor() {
     super(0, 1,
