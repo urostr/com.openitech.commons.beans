@@ -282,6 +282,9 @@ public final class RefreshDataSource extends DataSourceEvent {
       loading = true;
       setBusy();
       final DbDataSource dataSource = event.dataSource.copy();
+
+      dataSource.setSafeMode(false);
+      
       System.out.println("LOADING:" + dataSource);
       if (filterChange) {
         try {
@@ -310,12 +313,11 @@ public final class RefreshDataSource extends DataSourceEvent {
           //Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error refreshing [" + dataSource + "]");
         }
       } catch (SQLException ex) {
-        ex.printStackTrace();
-        resubmit();
-        return;
+        dataSource.reload();
       } catch (Throwable thw) {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + dataSource + "]", thw);
       }
+      loading = false;
       if (isLastInQueue()) {
         event.dataSource.loadData(dataSource, row);
       }
