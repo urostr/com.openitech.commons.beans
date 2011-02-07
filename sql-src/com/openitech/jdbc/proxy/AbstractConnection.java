@@ -400,12 +400,12 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   public void interrupt() {
     if (this.connection != null) {
       try {
+        this.connection.close();
         for (Statement statement : activeStatemens) {
           if (statement instanceof Interruptable) {
             ((Interruptable) statement).interrupt();
           }
         }
-        this.connection.close();
         activeSavepoints.clear();
         getActiveConnection();
       } catch (SQLException ex) {

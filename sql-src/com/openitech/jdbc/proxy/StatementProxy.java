@@ -355,7 +355,9 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
     if (statement != null) {
       try {
         executor.interrupt();
-        statement.close();
+        if (!statement.getConnection().isClosed()) {
+          statement.close();
+        }
         statement = null;
       } catch (SQLException ex) {
         Logger.getLogger(StatementProxy.class.getName()).log(Level.SEVERE, null, ex);
