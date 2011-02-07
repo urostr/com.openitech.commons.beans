@@ -60,7 +60,7 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
       return future.get();
 //      return task.call();
     } catch (Exception ex) {
-      throw new SQLException(ex);
+      throw new SQLException("SQL execution rejected");
     }
   }
 }
