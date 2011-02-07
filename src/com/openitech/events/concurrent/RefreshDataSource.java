@@ -269,13 +269,7 @@ public final class RefreshDataSource extends DataSourceEvent {
   protected void loadCopy() {
     try {
       setBusy();
-      if (!isLastInQueue()) {
-        return;
-      }
       final DbDataSource dataSource = event.dataSource.copy();
-      if (!isLastInQueue()) {
-        return;
-      }
       System.out.println("LOADING:" + dataSource);
       if (filterChange) {
         try {
@@ -292,9 +286,6 @@ public final class RefreshDataSource extends DataSourceEvent {
       }
       int row = 0;
       try {
-        if (!isLastInQueue()) {
-          return;
-        }
         boolean reload = false;
         if (dataSource.isDataLoaded()) {
           reload = dataSource.reload(dataSource.getRow());
@@ -304,7 +295,7 @@ public final class RefreshDataSource extends DataSourceEvent {
         if (reload) {
           row = dataSource.getRow();
         } else {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error refreshing [" + dataSource + "]");
+          //Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error refreshing [" + dataSource + "]");
         }
       } catch (SQLException ex) {
         ex.printStackTrace();
