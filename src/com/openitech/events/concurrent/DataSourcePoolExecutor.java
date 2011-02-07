@@ -14,6 +14,7 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.logging.Logger;
 
 /**
  *
@@ -43,11 +44,15 @@ public class DataSourcePoolExecutor extends ThreadPoolExecutor {
       for (Map.Entry<RefreshDataSource, Thread> entry : tasks.entrySet()) {
         String action = "interrupted";
         if (!entry.getKey().isLastInQueue() && entry.getKey().isLoading()) {
-          entry.getValue().interrupt();
-          if (entry.getKey().isLoading()
-                  && (entry.getKey().event.getDataSource().getConnection() instanceof Interruptable)) {
-            ((Interruptable) entry.getKey().event.getDataSource().getConnection()).interrupt();
-            action = "connection interrupted";
+          try {
+            entry.getValue().interrupt();
+            if (entry.getKey().isLoading()
+                    && (entry.getKey().event.getDataSource().getConnection() instanceof Interruptable)) {
+              ((Interruptable) entry.getKey().event.getDataSource().getConnection()).interrupt();
+              action = "connection interrupted";
+            }
+          } catch (Throwable ex) {
+            Logger.getLogger(DataSourcePoolExecutor.class.getName()).warning(ex.getMessage());
           }
 
           System.out.println(entry.getKey().event.dataSource + "...refresh thread " + action + ".");
