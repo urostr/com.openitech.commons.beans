@@ -104,7 +104,6 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
       statement = null;
     }
   }
-  
   Integer maxFieldSize;
 
   @Override
@@ -344,11 +343,13 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
 
   @Override
   public void interrupt() {
-    try {
-      statement.close();
-      statement = null;
-    } catch (SQLException ex) {
-      Logger.getLogger(StatementProxy.class.getName()).log(Level.SEVERE, null, ex);
+    if (statement != null) {
+      try {
+        statement.close();
+        statement = null;
+      } catch (SQLException ex) {
+        Logger.getLogger(StatementProxy.class.getName()).log(Level.SEVERE, null, ex);
+      }
     }
   }
 }
