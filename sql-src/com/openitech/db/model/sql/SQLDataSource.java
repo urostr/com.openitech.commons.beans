@@ -4633,13 +4633,13 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
     ResultSet resultSet = null;
-    synchronized (statement.getConnection()) {
+//    synchronized (statement.getConnection()) {
       List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
       setParameters(statement, queryParameters, 1, false);
 
       resultSet = statement.executeQuery();
-    }
+//    }
     return resultSet;
   }
 
@@ -4683,19 +4683,19 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
     int result = 0;
-    synchronized (statement.getConnection()) {
+//    synchronized (statement.getConnection()) {
       List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
       setParameters(statement, queryParameters, 1, false);
 
       result = statement.executeUpdate();
-    }
+//    }
     return result;
   }
 
   public static List<Object> executeTemporarySelects(List<?> parameters, Connection connection) throws SQLException {
     List<Object> result = null;
-    synchronized (connection) {
+//    synchronized (connection) {
       List<Object> queryParameters = new java.util.ArrayList(parameters.size());
       Set<TemporarySubselectSqlParameter.TemporaryTableGroup> temporarySubselectSqlParameters = new java.util.LinkedHashSet<TemporarySubselectSqlParameter.TemporaryTableGroup>(parameters.size());
       for (Object parameter : parameters) {
@@ -4718,7 +4718,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         }
       }
       result = queryParameters;
-    }
+//    }
     return result;
   }
 

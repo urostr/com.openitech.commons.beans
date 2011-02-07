@@ -307,7 +307,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
 
     try {
-      synchronized (connection) {
+//      synchronized (connection) {
 
         Statement statement = connection.createStatement();
         try {
@@ -441,7 +441,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           statement.close();
         }
         this.connection = connection;
-      }
+//      }
     } finally {
       lock.unlock();
     }

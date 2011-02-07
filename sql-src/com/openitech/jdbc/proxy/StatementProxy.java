@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +21,7 @@ import java.util.logging.Logger;
  */
 public class StatementProxy implements java.sql.Statement, Interruptable {
 
+  protected final InterruptableExecutor executor = new InterruptableExecutor();
   protected final int resultSetType;
   protected final int resultSetConcurrency;
   protected final AbstractConnection connection;
@@ -86,8 +88,15 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
   }
 
   @Override
-  public ResultSet executeQuery(String sql) throws SQLException {
-    return getActiveStatement().executeQuery(sql);
+  public ResultSet executeQuery(final String sql) throws SQLException {
+    Callable<ResultSet> callable = new Callable<ResultSet>() {
+
+      @Override
+      public ResultSet call() throws Exception {
+        return getActiveStatement().executeQuery(sql);
+      }
+    };
+    return executor.get(callable);
   }
 
   @Override
@@ -345,6 +354,7 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
   public void interrupt() {
     if (statement != null) {
       try {
+        executor.interrupt();
         statement.close();
         statement = null;
       } catch (SQLException ex) {
