@@ -53,7 +53,7 @@ public class DataSourcePoolExecutor extends ThreadPoolExecutor {
               action = "connection interrupted";
             }
           } catch (Throwable ex) {
-            Logger.getLogger(DataSourcePoolExecutor.class.getName()).log(Level.WARNING, "Error while interrupting thread",ex.getMessage());
+            Logger.getLogger(DataSourcePoolExecutor.class.getName()).log(Level.WARNING, "Exeption while interrupting the connection",ex.getMessage());
           }
 
           System.out.println(entry.getKey().event.dataSource + "...refresh thread " + action + ".");
