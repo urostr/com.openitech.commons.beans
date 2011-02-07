@@ -358,10 +358,10 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
         if (!isStatementClosed()) {
           statement.close();
         }
-        statement = null;
-      } catch (SQLException ex) {
-        Logger.getLogger(StatementProxy.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (Exception ex) {
+        Logger.getLogger(StatementProxy.class.getName()).log(Level.WARNING, "Exception while interrupting the statement", ex);
       }
+      statement = null;
     }
   }
 }
