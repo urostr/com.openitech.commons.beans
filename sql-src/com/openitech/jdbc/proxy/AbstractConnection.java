@@ -399,18 +399,18 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   @Override
   public void interrupt() {
     if (this.connection != null) {
-      try {
-        this.connection.close();
+//      try {
+//        this.connection.close();
         for (Statement statement : activeStatemens) {
           if (statement instanceof Interruptable) {
             ((Interruptable) statement).interrupt();
           }
         }
-        activeSavepoints.clear();
-        getActiveConnection();
-      } catch (SQLException ex) {
-        Logger.getLogger(AbstractConnection.class.getName()).log(Level.SEVERE, null, ex);
-      }
+//        activeSavepoints.clear();
+//        getActiveConnection();
+//      } catch (SQLException ex) {
+//        Logger.getLogger(AbstractConnection.class.getName()).log(Level.SEVERE, null, ex);
+//      }
     }
   }
 }
