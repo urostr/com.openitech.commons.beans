@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class InterruptableExecutor extends ThreadPoolExecutor implements Interruptable {
 
-  protected static final Map<Runnable, Thread> tasks = new ConcurrentHashMap<Runnable, Thread>();
+  protected final Map<Runnable, Thread> tasks = new ConcurrentHashMap<Runnable, Thread>();
 
   public InterruptableExecutor() {
     super(0, 1,
@@ -58,6 +58,7 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
     try {
       Future<V> future = super.submit(task);
       return future.get();
+//      return task.call();
     } catch (Exception ex) {
       throw new SQLException(ex);
     }
