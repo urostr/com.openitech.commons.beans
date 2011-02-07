@@ -115,7 +115,9 @@ public final class RefreshDataSource extends DataSourceEvent {
       EventQueue.invokeLater(new Runnable() {
 
         public void run() {
-          busyCount--;
+          if (busyCount > 0) {
+            busyCount--;
+          }
           if (busyCount == 0) {
             busy.setBusy(false);
             busy.setText("Pripravljen...");
@@ -196,7 +198,6 @@ public final class RefreshDataSource extends DataSourceEvent {
       super.submit(event, log);
     }
   }
-
   protected boolean shadowLoading = true;
 
   /**
@@ -216,7 +217,6 @@ public final class RefreshDataSource extends DataSourceEvent {
   public void setShadowLoading(boolean shadowLoading) {
     this.shadowLoading = shadowLoading;
   }
-
   protected boolean loading = false;
 
   /**
@@ -227,7 +227,6 @@ public final class RefreshDataSource extends DataSourceEvent {
   public boolean isLoading() {
     return loading;
   }
-
 
   protected void load() {
     if (isShadowLoading()) {
@@ -277,7 +276,7 @@ public final class RefreshDataSource extends DataSourceEvent {
     }
     setReady();
   }
-  
+
   protected void loadCopy() {
     try {
       loading = true;
