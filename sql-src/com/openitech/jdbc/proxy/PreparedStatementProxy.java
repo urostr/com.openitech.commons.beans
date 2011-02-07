@@ -28,6 +28,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  *
@@ -68,16 +69,42 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return ((PreparedStatement) getActiveStatement()).executeQuery();
+    Callable<ResultSet> callable = new Callable<ResultSet>() {
+
+      @Override
+      public ResultSet call() throws Exception {
+        return ((PreparedStatement) getActiveStatement()).executeQuery();
+      }
+    };
+    return executor.get(callable);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
-    return ((PreparedStatement) getActiveStatement()).executeUpdate();
+    Callable<Integer> callable = new Callable<Integer>() {
+
+      @Override
+      public Integer call() throws Exception {
+        return ((PreparedStatement) getActiveStatement()).executeUpdate();
+      }
+    };
+    return executor.get(callable);
+  }
+
+  @Override
+  public boolean execute() throws SQLException {
+    Callable<Boolean> callable = new Callable<Boolean>() {
+
+      @Override
+      public Boolean call() throws Exception {
+        return ((PreparedStatement) getActiveStatement()).execute();
+      }
+    };
+    return executor.get(callable);
   }
   List<SQLValue> parameters = new ArrayList<SQLValue>();
 
-  protected  void storeParameter(int parameterIndex, SQLValue value) {
+  protected void storeParameter(int parameterIndex, SQLValue value) {
     parameterIndex--;
 
     if (parameters.size() <= parameterIndex) {
@@ -220,11 +247,6 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
   public void setObject(int parameterIndex, Object x) throws SQLException {
     ((PreparedStatement) getActiveStatement()).setObject(parameterIndex, x);
     storeParameter(parameterIndex, new SQLValue.SQLObject(parameterIndex, x));
-  }
-
-  @Override
-  public boolean execute() throws SQLException {
-    return ((PreparedStatement) getActiveStatement()).execute();
   }
   private boolean addBatch;
 
