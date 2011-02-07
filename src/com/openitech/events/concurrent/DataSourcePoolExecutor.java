@@ -41,8 +41,13 @@ public class DataSourcePoolExecutor extends ThreadPoolExecutor {
   protected void beforeExecute(Thread t, Runnable r) {
     if ((r instanceof DataSourceFutureTask) && ((DataSourceFutureTask) r).getTask() instanceof RefreshDataSource) {
       for (Map.Entry<RefreshDataSource, Thread> entry : tasks.entrySet()) {
-        if (!entry.getKey().isLastInQueue()&&entry.getKey().isLoading()) {
+        if (!entry.getKey().isLastInQueue() && entry.getKey().isLoading()) {
           entry.getValue().interrupt();
+          if (entry.getKey().isLoading() &&
+             (entry.getKey().event.getDataSource().getConnection() instanceof Interruptable)) {
+            ((Interruptable) entry.getKey().event.getDataSource().getConnection()).interrupt();
+          }
+
           System.out.println(entry.getKey().event.dataSource + "...refresh thread interrupted.");
         }
       }
