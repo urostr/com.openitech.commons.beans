@@ -23,6 +23,7 @@ import com.openitech.value.VariousValue;
 import com.openitech.value.events.AfterUpdateEvent;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.UpdateEventFields;
+import java.sql.Clob;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.serial.SerialClob;
 
 /**
  *
@@ -179,7 +181,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
               break;
             case Types.CHAR:
             case Types.VARCHAR:
-              statement.setString(pos, value.toString());
+              if (value instanceof Clob || value instanceof SerialClob) {
+                statement.setString(pos, ((Clob) value).getSubString(1L, (int) ((Clob) value).length()));
+              } else {
+                statement.setString(pos, value.toString());
+              }
               break;
             default:
               statement.setObject(pos, value, type);
