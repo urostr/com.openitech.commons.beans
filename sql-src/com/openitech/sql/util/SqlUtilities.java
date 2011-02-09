@@ -501,7 +501,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
 
 
-    if (eventPK.getEventOperation() != Event.EventOperation.DELETE) {
+    if (eventPK.getEventOperation() == Event.EventOperation.UPDATE) {
       eventIds.add(eventPK);
     }
     return eventPK.getEventId();
@@ -593,7 +593,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Integer findVersion(Long eventId) throws SQLException;
 
-  public abstract EventPK findEventPKVersions(Integer versionId, Integer idSifranta, String idSifre, String primaryKey) throws SQLException;
+  public abstract EventPK findEventPKVersions(Integer idSifranta, String idSifre, Integer versionId, String primaryKey) throws SQLException;
 
   public abstract String getPPSelectFields();
 

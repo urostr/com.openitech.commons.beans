@@ -108,6 +108,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement findValue;
   CallableStatement callStoredValue;
   PreparedStatement insertScheduler;
+  PreparedStatement delete_eventPKVersions;
+  PreparedStatement update_eventPK_versions_byValue;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -328,6 +330,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (delete_eventPK == null) {
         delete_eventPK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "delete_eventPK.sql", "cp1250"));
       }
+      if (delete_eventPKVersions == null) {
+        delete_eventPKVersions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "delete_eventPKVersions.sql", "cp1250"));
+      }
       int param;
       boolean success = true;
       boolean commit = false;
@@ -375,6 +380,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 delete_eventPK.clearParameters();
                 delete_eventPK.setLong(param++, oldEvent.getId());
                 delete_eventPK.executeUpdate();
+              }
+
+              synchronized (delete_eventPKVersions) {
+                param = 1;
+                delete_eventPKVersions.clearParameters();
+                delete_eventPKVersions.setLong(param++, oldEvent.getId());
+                delete_eventPKVersions.executeUpdate();
               }
               //success = success && delete_eventPK.executeUpdate() > 0;
             }
@@ -598,6 +610,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
               //success = success && delete_eventPK.executeUpdate() > 0;
             }
 
+            synchronized (delete_eventPKVersions) {
+              //
+              param = 1;
+              delete_eventPKVersions.clearParameters();
+              delete_eventPKVersions.setLong(param++, event.getId());
+              delete_eventPKVersions.executeUpdate();
+              //success = success && delete_eventPK.executeUpdate() > 0;
+            }
+
             commit = success;
           }
         } else {
@@ -716,7 +737,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         }
       } else {
         if (numberOfValues > 0) {
-         // throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
+          // throw new SQLNotificationException("Napaka pri shranjevanju lookup polj! Niso vsa polja izpolnjena");
         }
       }
     }
@@ -1295,36 +1316,53 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (update_eventPK_versions == null) {
         update_eventPK_versions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK_versions.sql", "cp1250"));
       }
+
+      if (update_eventPK_versions_byValue == null) {
+        update_eventPK_versions_byValue = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "update_eventPK_versions_byValues.sql", "cp1250"));
+      }
       EventPK findEventPKVersions;
 
       if (versionId == null) {
-        findEventPKVersions = findEventPKVersions(versionId, idSifranta, idSifre, primaryKey);
+        findEventPKVersions = findEventPKVersions(idSifranta, idSifre, versionId, primaryKey);
       } else {
         findEventPKVersions = findEventPKVersions(eventId, versionId);
       }
 
       if (findEventPKVersions != null) {
-        //if (versionId == null) {
-        synchronized (update_eventPK_versions) {
-          param = 1;
-          update_eventPK_versions.clearParameters();
+        if (versionId == null) {
+          synchronized (update_eventPK_versions_byValue) {
+            param = 1;
+            update_eventPK_versions_byValue.clearParameters();
 
-          update_eventPK_versions.setInt(param++, idSifranta);
-          update_eventPK_versions.setString(param++, idSifre);
-          update_eventPK_versions.setString(param++, primaryKey);
-          update_eventPK_versions.setLong(param++, eventId);
-          if (versionId == null) {
-            update_eventPK_versions.setInt(param++, -1);
-            update_eventPK_versions.setInt(param++, 1);
+            update_eventPK_versions_byValue.setLong(param++, eventId);
+            update_eventPK_versions_byValue.setInt(param++, 1);
+            update_eventPK_versions_byValue.setNull(param++, java.sql.Types.INTEGER);
+            update_eventPK_versions_byValue.setInt(param++, idSifranta);
+            update_eventPK_versions_byValue.setString(param++, idSifre);
+            update_eventPK_versions_byValue.setString(param++, primaryKey);
 
-          } else {
-            update_eventPK_versions.setInt(param++, versionId.intValue());
-            update_eventPK_versions.setInt(param++, 0);
+            success = success && update_eventPK_versions_byValue.executeUpdate() > 0;
           }
-          update_eventPK_versions.executeUpdate();
-          success = update_eventPK_versions.executeUpdate() > 0;
+        } else {
+          synchronized (update_eventPK_versions) {
+            param = 1;
+            update_eventPK_versions.clearParameters();
+
+            update_eventPK_versions.setInt(param++, idSifranta);
+            update_eventPK_versions.setString(param++, idSifre);
+            update_eventPK_versions.setString(param++, primaryKey);
+            update_eventPK_versions.setLong(param++, eventId);
+            if (versionId == null) {
+              update_eventPK_versions.setInt(param++, -1);
+              update_eventPK_versions.setInt(param++, 1);
+
+            } else {
+              update_eventPK_versions.setInt(param++, versionId.intValue());
+              update_eventPK_versions.setInt(param++, 0);
+            }
+            success = success && update_eventPK_versions.executeUpdate() > 0;
+          }
         }
-        // }
       } else {
         synchronized (insert_eventPK_versions) {
           //insert
@@ -1389,8 +1427,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
       int param = 1;
       find_eventPK_versions.clearParameters();
       find_eventPK_versions.setLong(param++, eventId);
-      find_eventPK_versions.setInt(param++, versionId == null ? 1 : 0);
-      find_eventPK_versions.setInt(param++, versionId != null ? versionId.intValue() : -1);
+      if (versionId == null) {
+        find_eventPK_versions.setInt(param++, 1);
+        find_eventPK_versions.setNull(param++, java.sql.Types.INTEGER);
+      } else {
+        find_eventPK_versions.setInt(param++, 0);
+        find_eventPK_versions.setInt(param++, versionId.intValue());
+      }
       ResultSet rs_findEventPK = find_eventPK_versions.executeQuery();
       try {
         if (rs_findEventPK.next()) {
@@ -1412,7 +1455,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public EventPK findEventPKVersions(Integer versionId, Integer idSifranta, String idSifre, String primaryKey) throws SQLException {
+  public EventPK findEventPKVersions(Integer idSifranta, String idSifre, Integer versionId, String primaryKey) throws SQLException {
     EventPK result = null;
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
 
@@ -1423,8 +1466,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
     synchronized (find_eventPK_versions_byValues) {
       int param = 1;
       find_eventPK_versions_byValues.clearParameters();
-      find_eventPK_versions_byValues.setInt(param++, versionId == null ? 1 : 0);
-      find_eventPK_versions_byValues.setInt(param++, versionId != null ? versionId.intValue() : -1);
+      if (versionId == null) {
+        find_eventPK_versions_byValues.setInt(param++, 1);
+        find_eventPK_versions_byValues.setNull(param++, java.sql.Types.INTEGER);
+      } else {
+        find_eventPK_versions_byValues.setInt(param++, 0);
+        find_eventPK_versions_byValues.setInt(param++, versionId.intValue());
+      }
       find_eventPK_versions_byValues.setInt(param++, idSifranta);
       find_eventPK_versions_byValues.setString(param++, idSifre);
       find_eventPK_versions_byValues.setString(param++, primaryKey);
