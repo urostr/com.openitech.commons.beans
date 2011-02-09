@@ -43,20 +43,22 @@ public class DataSourcePoolExecutor extends ThreadPoolExecutor {
   protected void beforeExecute(Thread t, Runnable r) {
     if ((r instanceof DataSourceFutureTask) && ((DataSourceFutureTask) r).getTask() instanceof RefreshDataSource) {
       for (Map.Entry<RefreshDataSource, Thread> entry : tasks.entrySet()) {
-        String action = "interrupted";
-        if (!entry.getKey().isLastInQueue() && entry.getKey().isLoading()) {
-          try {
-            entry.getValue().interrupt();
-            if (entry.getKey().isLoading()
-                    && (entry.getKey().event.getDataSource().getConnection() instanceof Interruptable)) {
-              ((Interruptable) entry.getKey().event.getDataSource().getConnection()).interrupt();
-              action = "connection interrupted";
+        if (entry.getKey().isShadowLoading()) {
+          String action = "interrupted";
+          if (!entry.getKey().isLastInQueue() && entry.getKey().isLoading()) {
+            try {
+              entry.getValue().interrupt();
+              if (entry.getKey().isLoading()
+                      && (entry.getKey().event.getDataSource().getConnection() instanceof Interruptable)) {
+                ((Interruptable) entry.getKey().event.getDataSource().getConnection()).interrupt();
+                action = "connection interrupted";
+              }
+            } catch (Throwable ex) {
+              Logger.getLogger(DataSourcePoolExecutor.class.getName()).log(Level.WARNING, "Exeption while interrupting the connection", ex.getMessage());
             }
-          } catch (Throwable ex) {
-            Logger.getLogger(DataSourcePoolExecutor.class.getName()).log(Level.WARNING, "Exeption while interrupting the connection",ex.getMessage());
-          }
 
-          System.out.println(entry.getKey().event.dataSource + "...refresh thread " + action + ".");
+            System.out.println(entry.getKey().event.dataSource + "...refresh thread " + action + ".");
+          }
         }
       }
       tasks.put((RefreshDataSource) ((DataSourceFutureTask) r).getTask(), t);
