@@ -1,6 +1,8 @@
 package com.openitech.events.concurrent;
 
 import com.openitech.Settings;
+import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.connection.DbConnection;
 import com.openitech.swing.JXDimBusyLabel;
 import com.openitech.db.model.*;
 import java.awt.EventQueue;
@@ -198,7 +200,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       super.submit(event, log);
     }
   }
-  protected boolean shadowLoading = true;
+  protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
 
   /**
    * Get the value of shadowLoading

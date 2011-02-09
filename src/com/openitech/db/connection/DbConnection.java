@@ -41,6 +41,7 @@ public interface DbConnection {
   String DB_CASE_INSENSITIVE = "db.case.insensitive";
   String DB_USE_WEBROWSET = "db.useWebRowSet";
   String DB_USE_SECONDARY_WEBROWSET = "db.useSecondaryWebRowSet";
+  String DB_SHADOW_LOADING= "db.shadow.loading";
   
   String DB_ENTRY_SERVICE = "ws.entry";
   
