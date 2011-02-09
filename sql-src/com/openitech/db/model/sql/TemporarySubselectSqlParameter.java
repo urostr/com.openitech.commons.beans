@@ -307,7 +307,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
 
     try {
-//      synchronized (connection) {
+      synchronized (connection) {
 
         Statement statement = connection.createStatement();
         try {
@@ -323,28 +323,21 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           } catch (SQLException ex) {
             if (sqlMaterializedView != null) {
               if (!tm.isTransaction()) {
-                transaction = true;
                 tm.beginTransaction();
+                transaction = true;
               }
-            }
-            if (!(lock.tryLock() || lock.tryLock(1, TimeUnit.SECONDS))) {
-              throw new SQLException("Can't lock " + sqlMaterializedView.getValue());
             }
 
-            try {
-              for (String sql : createTableSqls) {
-                String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
-                statement.addBatch(createSQL);
-                if (DbDataSource.DUMP_SQL) {
-                  System.out.println(createSQL + ";");
-                  System.out.println("-- -- -- --");
-                }
+            for (String sql : createTableSqls) {
+              String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
+              statement.addBatch(createSQL);
+              if (DbDataSource.DUMP_SQL) {
+                System.out.println(createSQL + ";");
+                System.out.println("-- -- -- --");
               }
-              statement.executeBatch();
-              fill = true;
-            } finally {
-              lock.unlock();
             }
+            statement.executeBatch();
+            fill = true;
           }
 
           qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
@@ -358,8 +351,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           if (fill && !disabled) {
             if (sqlMaterializedView != null) {
               if (!(transaction || tm.isTransaction())) {
-                transaction = true;
                 tm.beginTransaction();
+                transaction = true;
               }
             }
 
@@ -441,7 +434,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           statement.close();
         }
         this.connection = connection;
-//      }
+      }
     } finally {
       lock.unlock();
     }
