@@ -298,7 +298,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public EventPK storeEvent(Event event, Event oldEvent) throws SQLException {
-    if ((oldEvent != null) && oldEvent.equalEventValues(event)) {
+    if ((oldEvent != null) && oldEvent.equalEventValues(event) && event.getOperation() != Event.EventOperation.DELETE) {
       return oldEvent.getEventPK();
     } else {
       final Connection connection = ConnectionManager.getInstance().getTxConnection();
