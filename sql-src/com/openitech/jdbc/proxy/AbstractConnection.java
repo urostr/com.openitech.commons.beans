@@ -4,6 +4,8 @@
  */
 package com.openitech.jdbc.proxy;
 
+import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.connection.DbConnection;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.events.concurrent.Interruptable;
 import com.openitech.events.concurrent.Locking;
@@ -38,6 +40,8 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   protected final java.util.List<Statement> activeStatemens = new WeakList<Statement>();
   protected final java.util.List<Savepoint> activeSavepoints = new WeakList<Savepoint>();
   protected boolean initAutoCommit = true;
+
+  protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
 
   public AbstractConnection(DataSource dataSource) throws SQLException {
     this(dataSource, true, null);
@@ -412,5 +416,14 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
 //        Logger.getLogger(AbstractConnection.class.getName()).log(Level.SEVERE, null, ex);
 //      }
     }
+  }
+
+  /**
+   * Get the value of shadowLoading
+   *
+   * @return the value of shadowLoading
+   */
+  public boolean isShadowLoading() {
+    return shadowLoading;
   }
 }

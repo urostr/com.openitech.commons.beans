@@ -89,14 +89,18 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
 
   @Override
   public ResultSet executeQuery(final String sql) throws SQLException {
-    Callable<ResultSet> callable = new Callable<ResultSet>() {
+    if (connection.isShadowLoading()) {
+      Callable<ResultSet> callable = new Callable<ResultSet>() {
 
-      @Override
-      public ResultSet call() throws Exception {
-        return getActiveStatement().executeQuery(sql);
-      }
-    };
-    return executor.get(callable);
+        @Override
+        public ResultSet call() throws Exception {
+          return getActiveStatement().executeQuery(sql);
+        }
+      };
+      return executor.get(callable);
+    } else {
+      return getActiveStatement().executeQuery(sql);
+    }
   }
 
   @Override

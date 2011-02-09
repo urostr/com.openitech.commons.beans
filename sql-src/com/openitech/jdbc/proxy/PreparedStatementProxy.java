@@ -69,38 +69,50 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    Callable<ResultSet> callable = new Callable<ResultSet>() {
+    if (connection.isShadowLoading()) {
+      Callable<ResultSet> callable = new Callable<ResultSet>() {
 
-      @Override
-      public ResultSet call() throws Exception {
-        return ((PreparedStatement) getActiveStatement()).executeQuery();
-      }
-    };
-    return executor.get(callable);
+        @Override
+        public ResultSet call() throws Exception {
+          return ((PreparedStatement) getActiveStatement()).executeQuery();
+        }
+      };
+      return executor.get(callable);
+    } else {
+      return ((PreparedStatement) getActiveStatement()).executeQuery();
+    }
   }
 
   @Override
   public int executeUpdate() throws SQLException {
-    Callable<Integer> callable = new Callable<Integer>() {
+    if (connection.isShadowLoading()) {
+      Callable<Integer> callable = new Callable<Integer>() {
 
-      @Override
-      public Integer call() throws Exception {
-        return ((PreparedStatement) getActiveStatement()).executeUpdate();
-      }
-    };
-    return executor.get(callable);
+        @Override
+        public Integer call() throws Exception {
+          return ((PreparedStatement) getActiveStatement()).executeUpdate();
+        }
+      };
+      return executor.get(callable);
+    } else {
+      return ((PreparedStatement) getActiveStatement()).executeUpdate();
+    }
   }
 
   @Override
   public boolean execute() throws SQLException {
-    Callable<Boolean> callable = new Callable<Boolean>() {
+    if (connection.isShadowLoading()) {
+      Callable<Boolean> callable = new Callable<Boolean>() {
 
-      @Override
-      public Boolean call() throws Exception {
-        return ((PreparedStatement) getActiveStatement()).execute();
-      }
-    };
-    return executor.get(callable);
+        @Override
+        public Boolean call() throws Exception {
+          return ((PreparedStatement) getActiveStatement()).execute();
+        }
+      };
+      return executor.get(callable);
+    } else {
+      return ((PreparedStatement) getActiveStatement()).execute();
+    }
   }
   List<SQLValue> parameters = new ArrayList<SQLValue>();
 
