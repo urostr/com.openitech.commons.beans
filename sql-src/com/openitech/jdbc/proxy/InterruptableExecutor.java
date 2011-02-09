@@ -4,6 +4,8 @@
  */
 package com.openitech.jdbc.proxy;
 
+import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.connection.DbConnection;
 import com.openitech.events.concurrent.Interruptable;
 import java.sql.SQLException;
 import java.util.Map;
@@ -14,6 +16,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -21,6 +25,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class InterruptableExecutor extends ThreadPoolExecutor implements Interruptable {
 
+  protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
   private final Map<Runnable, Thread> tasks = new ConcurrentHashMap<Runnable, Thread>();
 
   public InterruptableExecutor() {
@@ -55,12 +60,29 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
    * @throws CancellationException {@inheritDoc}
    */
   public <V> V get(Callable<V> task) throws SQLException {
-    try {
-      Future<V> future = super.submit(task);
-      return future.get();
+    if (isShadowLoading()) {
+      try {
+        Future<V> future = super.submit(task);
+        return future.get();
 //      return task.call();
-    } catch (Exception ex) {
-      throw new SQLException("SQL execution rejected");
+      } catch (Exception ex) {
+        throw new SQLException("SQL execution rejected");
+      }
+    } else {
+      try {
+        return task.call();
+      } catch (Exception ex) {
+        throw new SQLException("SQL execution failed", ex);
+      }
     }
+  }
+
+  /**
+   * Get the value of shadowLoading
+   *
+   * @return the value of shadowLoading
+   */
+  public boolean isShadowLoading() {
+    return shadowLoading;
   }
 }
