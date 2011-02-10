@@ -73,7 +73,11 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
 
   @Override
   public void fieldValueChanged(ActiveRowChangeEvent event) {
-    super.setValue(fieldObserver.getValue());
+    Object value = fieldObserver.getValue();
+    if (value!=null && (value instanceof java.sql.Clob)) {
+      value = fieldObserver.getValueAsText();
+    }
+    super.setValue(value);
   }
   private boolean identityField;
 
