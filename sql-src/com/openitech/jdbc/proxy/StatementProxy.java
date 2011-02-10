@@ -101,12 +101,12 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
     } else {
       return getActiveStatement().executeQuery(sql);
     }
-  }
+    }
 
   @Override
   public int executeUpdate(String sql) throws SQLException {
     return getActiveStatement().executeUpdate(sql);
-  }
+    }
 
   @Override
   public synchronized void close() throws SQLException {
