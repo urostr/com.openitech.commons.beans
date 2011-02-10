@@ -51,11 +51,17 @@ public class ConnectionPool {
         @Override
         public void run() {
           for (PooledConnectionProxy pooledConnectionProxy : connections) {
-            if (!pooledConnectionProxy.isConnectionActive()) {
+            if (pooledConnectionProxy.lock(false, false)) {
               try {
-                pooledConnectionProxy.close();
-              } catch (SQLException ex) {
-                Logger.getLogger(ConnectionPool.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{ex.getSQLState(), ex.getMessage()});
+                if (!pooledConnectionProxy.isConnectionActive()) {
+                  try {
+                    pooledConnectionProxy.close();
+                  } catch (SQLException ex) {
+                    Logger.getLogger(ConnectionPool.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{ex.getSQLState(), ex.getMessage()});
+                  }
+                }
+              } finally {
+                pooledConnectionProxy.unlock();
               }
             }
           }

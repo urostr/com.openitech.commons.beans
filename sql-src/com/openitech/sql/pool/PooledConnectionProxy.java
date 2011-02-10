@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.pool;
 
+import com.openitech.events.concurrent.Locking;
 import com.openitech.jdbc.proxy.ConnectionProxy;
 import com.openitech.util.Equals;
 import java.sql.SQLException;
@@ -23,7 +24,7 @@ import javax.sql.DataSource;
  */
 public class PooledConnectionProxy extends ConnectionProxy {
 
-  private final java.util.Map<String,Object> defaults = new java.util.HashMap<String, Object>();
+  private final java.util.Map<String, Object> defaults = new java.util.HashMap<String, Object>();
   private Timer timer;
 
   public PooledConnectionProxy(DataSource dataSource) throws SQLException {
@@ -44,60 +45,70 @@ public class PooledConnectionProxy extends ConnectionProxy {
   }
 
   @Override
-  protected synchronized boolean isConnectionActive() {
+  protected boolean isConnectionActive() {
     return (System.currentTimeMillis() - getTimestamp() < 30000) || super.isConnectionActive();
   }
 
-  protected synchronized void open() throws SQLException {
-    if (timer != null) {
-      timer.cancel();
-      timer = null;
-    }
+  protected void open() throws SQLException {
+    lock();
+    try {
+      if (timer != null) {
+        timer.cancel();
+        timer = null;
+      }
 
-    closed = Boolean.FALSE;
-    getActiveConnection();
+      closed = Boolean.FALSE;
+      getActiveConnection();
+    } finally {
+      unlock();
+    }
   }
 
   @Override
-  public synchronized void close() throws SQLException {
-    if (!closed) {
-      if (!isDefault("autoCommit", getAutoCommit())
-              || !isDefault("readOnly", isReadOnly())
-              || !isDefault("catalog", getCatalog())
-              || !isDefault("transactionIsolation", getTransactionIsolation())) {
-        super.close();
-      } else {
-        for (Statement statement : activeStatemens) {
-          statement.close();
-        }
-        for (Savepoint savepoint : activeSavepoints) {
-          connection.releaseSavepoint(savepoint);
-        }
-        activeStatemens.clear();
-        activeSavepoints.clear();
-        closed = Boolean.TRUE;
+  public void close() throws SQLException {
+    lock();
+    try {
+      if (!closed) {
+        if (!isDefault("autoCommit", getAutoCommit())
+                || !isDefault("readOnly", isReadOnly())
+                || !isDefault("catalog", getCatalog())
+                || !isDefault("transactionIsolation", getTransactionIsolation())) {
+          super.close();
+        } else {
+          for (Statement statement : activeStatemens) {
+            statement.close();
+          }
+          for (Savepoint savepoint : activeSavepoints) {
+            connection.releaseSavepoint(savepoint);
+          }
+          activeStatemens.clear();
+          activeSavepoints.clear();
+          closed = Boolean.TRUE;
 
 
-        Logger.getLogger(PooledConnectionProxy.class.getName()).info("PooledConnection released.");
+          Logger.getLogger(PooledConnectionProxy.class.getName()).info("PooledConnection released.");
 
-        if (timer != null) {
-          timer.cancel();
-        }
-        (timer = new Timer()).schedule(new TimerTask() {
+          if (timer != null) {
+            timer.cancel();
+          }
+          (timer = new Timer()).schedule(new TimerTask() {
 
-          @Override
-          public void run() {
-            if (!isConnectionActive()) {
-              try {
-                PooledConnectionProxy.super.close();
-              } catch (SQLException ex) {
-                Logger.getLogger(PooledConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
+            @Override
+            public void run() {
+              if (!isConnectionActive()) {
+                try {
+                  PooledConnectionProxy.super.close();
+                } catch (SQLException ex) {
+                  Logger.getLogger(PooledConnectionProxy.class.getName()).log(Level.SEVERE, null, ex);
+                }
               }
             }
-          }
-        }, 60000);
+          }, 60000);
+        }
       }
-    }
 
+    } finally {
+      unlock();
+    }
   }
 }
