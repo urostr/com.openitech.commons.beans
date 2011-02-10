@@ -40,7 +40,6 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   protected final java.util.List<Statement> activeStatemens = new WeakList<Statement>();
   protected final java.util.List<Savepoint> activeSavepoints = new WeakList<Savepoint>();
   protected boolean initAutoCommit = true;
-
   protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
 
   public AbstractConnection(DataSource dataSource) throws SQLException {
@@ -114,7 +113,8 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
 
   protected java.sql.Connection getActiveConnection() throws SQLException {
     if (!isValid()) {
-      synchronized (this) {
+      lock();
+      try {
         java.sql.Connection activeConnection = openConnection();
         if (autoCommit != null) {
           activeConnection.setAutoCommit(autoCommit);
@@ -136,6 +136,8 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
         }
         this.connection = activeConnection;
         Logger.getLogger(AbstractConnection.class.getName()).info("Connection reopened.");
+      } finally {
+        unlock();
       }
     }
     timestamp = System.currentTimeMillis();
@@ -148,11 +150,11 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
    *
    * @return the value of timestamp
    */
-  public synchronized long getTimestamp() {
+  public long getTimestamp() {
     return timestamp;
   }
 
-  protected synchronized boolean isConnectionActive() {
+  protected boolean isConnectionActive() {
     return !(activeSavepoints.isEmpty() && activeStatemens.isEmpty());
   }
 
@@ -190,19 +192,24 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   protected Boolean closed = Boolean.FALSE;
 
   @Override
-  public synchronized void close() throws SQLException {
-    if (!closed) {
-      if (pooledConnection != null) {
-        pooledConnection.close();
-        pooledConnection = null;
-      } else if (connection != null) {
-        connection.close();
+  public void close() throws SQLException {
+    lock();
+    try {
+      if (!closed) {
+        if (pooledConnection != null) {
+          pooledConnection.close();
+          pooledConnection = null;
+        } else if (connection != null) {
+          connection.close();
+        }
+        activeStatemens.clear();
+        activeSavepoints.clear();
+        connection = null;
+        closed = Boolean.TRUE;
+        Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
       }
-      activeStatemens.clear();
-      activeSavepoints.clear();
-      connection = null;
-      closed = Boolean.TRUE;
-      Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
+    } finally {
+      unlock();
     }
   }
 
@@ -351,7 +358,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
 
   @Override
   public boolean lock() {
-    return lock(true);
+    return lock(true, true);
   }
 
   @Override
@@ -381,7 +388,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
         available.lock();
         result = true;
       } else {
-        if (!(result = (available.tryLock() || available.tryLock(3L, TimeUnit.SECONDS)))) {
+        if (!(result = (available.tryLock() || available.tryLock(2L, TimeUnit.SECONDS)))) {
           if (fatal) {
             throw new IllegalStateException("Can't obtain lock on: " + toString());
           } else {
@@ -405,11 +412,11 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
     if (this.connection != null) {
 //      try {
 //        this.connection.close();
-        for (Statement statement : activeStatemens) {
-          if (statement instanceof Interruptable) {
-            ((Interruptable) statement).interrupt();
-          }
+      for (Statement statement : activeStatemens) {
+        if (statement instanceof Interruptable) {
+          ((Interruptable) statement).interrupt();
         }
+      }
 //        activeSavepoints.clear();
 //        getActiveConnection();
 //      } catch (SQLException ex) {
