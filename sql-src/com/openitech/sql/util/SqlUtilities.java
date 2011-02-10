@@ -180,6 +180,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
               }
               break;
             case Types.CHAR:
+            case Types.CLOB:
             case Types.VARCHAR:
               if (value instanceof Clob || value instanceof SerialClob) {
                 statement.setString(pos, ((Clob) value).getSubString(1L, (int) ((Clob) value).length()));
