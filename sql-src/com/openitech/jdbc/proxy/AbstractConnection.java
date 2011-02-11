@@ -58,12 +58,18 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
 
   private Connection openConnection() throws SQLException {
     Logger.getLogger(AbstractConnection.class.getName()).info("Create connection.");
-    Connection result = (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
-    Statement initStatement = result.createStatement();
-    for (String sql : executeOnCreate) {
-      initStatement.execute(sql);
+    lock();
+    Connection result = null;
+    try {
+      result = (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
+      Statement initStatement = result.createStatement();
+      for (String sql : executeOnCreate) {
+        initStatement.execute(sql);
+      }
+      result.setAutoCommit(initAutoCommit);
+    } finally {
+      unlock();
     }
-    result.setAutoCommit(initAutoCommit);
     return result;
   }
 
@@ -98,6 +104,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   }
 
   protected boolean isValid() {
+    lock();
     try {
       if (this.connection == null || this.connection.isClosed()) {
         return false;
@@ -108,6 +115,8 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
     } catch (SQLException ex) {
       Logger.getLogger(AbstractConnection.class.getName()).log(Level.WARNING, ex.getMessage());
       return false;
+    } finally {
+      unlock();
     }
   }
 
@@ -207,6 +216,12 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
         connection = null;
         closed = Boolean.TRUE;
         Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
+//        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+//
+//        System.out.println("StackTrace:::");
+//        for (StackTraceElement element : stackTrace) {
+//          System.out.println(element.toString());
+//        }
       }
     } finally {
       unlock();
