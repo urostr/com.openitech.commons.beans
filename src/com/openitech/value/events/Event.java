@@ -203,6 +203,28 @@ public class Event {
   public boolean isVersioned() {
     return versioned;
   }
+  protected Map<CaseInsensitiveString, Field> preparedFields;
+
+  /**
+   * Get the value of preparedFields
+   *
+   * @return the value of preparedFields
+   */
+  public Map<CaseInsensitiveString, Field> getPreparedFields() {
+    return preparedFields;
+  }
+
+  /**
+   * Set the value of preparedFields
+   *
+   * @param preparedFields new value of preparedFields
+   */
+  public void setPreparedFields(Map<CaseInsensitiveString, Field> preparedFields) {
+    this.preparedFields = preparedFields;
+    for (Event event : getChildren()) {
+      event.setPreparedFields(preparedFields);
+    }
+  }
 
   /**
    * Set the value of versioned
@@ -433,11 +455,20 @@ public class Event {
 
   public EventPK getEventPK() {
     EventPK eventPK = null;
+    try {
+      eventPK = getEventPK(this.preparedFields==null?SqlUtilities.getInstance().getPreparedFields():preparedFields);
+    } catch (SQLException ex) {
+      Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return eventPK;
+  }
+
+  public EventPK getEventPK(final Map<CaseInsensitiveString, Field> preparedFields) {
+    EventPK eventPK = null;
     if (getId() != null) {
       try {
         eventPK = new EventPK(id, sifrant, sifra);
         eventPK.setEventOperation(operation);
-        Map<CaseInsensitiveString, Field> preparedFields = SqlUtilities.getInstance().getPreparedFields();
         for (Field field : eventValues.keySet()) {
           List<FieldValue> fieldValues = eventValues.get(field);
 
