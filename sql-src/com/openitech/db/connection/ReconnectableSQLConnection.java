@@ -108,10 +108,14 @@ public class ReconnectableSQLConnection implements DbConnection {
   @Override
   public Connection getTxConnection() {
     if (!isValid()) {
-      return getConnection();
-    } else {
-      return connection;
+      try {
+        openConnection();
+      } catch (Exception ex) {
+        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
+        connection = null;
+      }
     }
+    return connection;
   }
 
   @Override
@@ -124,14 +128,14 @@ public class ReconnectableSQLConnection implements DbConnection {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
         connection = null;
       }
-    } else if (isPooled()) {
+    }
+    if (isPooled()) {
       try {
         result = getPooledConnection();
       } catch (SQLException ex) {
         Logger.getLogger(ReconnectableSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
-
     if (result == null) {
       result = connection;
     }
@@ -149,9 +153,9 @@ public class ReconnectableSQLConnection implements DbConnection {
   }
 
   private void openConnection() throws InterruptedException, ClassNotFoundException, SQLException, IOException {
-    connection = sqlConnectionInitializer.initConnection();
+    this.connection = sqlConnectionInitializer.initConnection();
 
-    if (connection != null) {
+    if (this.connection != null) {
       DataSource ds = DataSourceFactory.getDataSource(sqlConnectionInitializer.DB_URL, connect);
       if (ds != null) {
         this.dataSource = ds;
@@ -205,7 +209,11 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   private Connection getPooledConnection() throws SQLException {
     if (connectionPool == null) {
-      this.connectionPool = new ConnectionPool(dataSource, Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")), Integer.parseInt(settings.getProperty(DB_POOL_SIZE, "0")), Integer.parseInt(settings.getProperty(DB_MAX_POOL_SIZE, "3")), executeOnCreate);
+      try {
+        this.connectionPool = new ConnectionPool(dataSource, Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")), Integer.parseInt(settings.getProperty(DB_POOL_SIZE, "0")), Integer.parseInt(settings.getProperty(DB_MAX_POOL_SIZE, "3")), executeOnCreate);
+      } catch (Exception ex) {
+        ex.printStackTrace();
+      }
     }
 
     return connectionPool.getConnection();
