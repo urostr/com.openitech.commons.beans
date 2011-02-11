@@ -450,6 +450,9 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       if (!isTransaction) {
         beginTransaction();
       }
+      final Map<CaseInsensitiveString, Field> preparedFields = getPreparedFields();
+      newValues.setPreparedFields(preparedFields);
+      oldValues.setPreparedFields(preparedFields);
 
       List<EventPK> eventPKs = new ArrayList<EventPK>();
       Long eventId = updateEvent(newValues, oldValues, eventPKs);
