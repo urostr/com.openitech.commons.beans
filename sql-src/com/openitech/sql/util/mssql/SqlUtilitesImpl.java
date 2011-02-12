@@ -9,6 +9,7 @@ import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
+import com.openitech.db.connection.DbConnection;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SqlParameter;
@@ -110,6 +111,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement insertScheduler;
   PreparedStatement delete_eventPKVersions;
   PreparedStatement update_eventPK_versions_byValue;
+  Map<CaseInsensitiveString, Field> preparedFields;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -2210,21 +2212,29 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException {
-    if (get_fields == null) {
-      get_fields = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_fields.sql", "cp1250"));
-    }
-
     Map<CaseInsensitiveString, Field> result = new HashMap<CaseInsensitiveString, Field>();
-    ResultSet fields = get_fields.executeQuery();
-    try {
-      while (fields.next()) {
-        CaseInsensitiveString key = new CaseInsensitiveString(fields.getString("ImePolja"));
-        Field field = new Field(fields.getInt("Id"), key.toString(), ValueType.valueOf(fields.getInt("TipPolja")).getSqlType(), -1);
-
-        result.put(key, field);
+    if (preparedFields == null) {
+      if (get_fields == null) {
+        get_fields = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_fields.sql", "cp1250"));
       }
-    } finally {
-      fields.close();
+
+      ResultSet fields = get_fields.executeQuery();
+      try {
+        while (fields.next()) {
+          CaseInsensitiveString key = new CaseInsensitiveString(fields.getString("ImePolja"));
+          Field field = new Field(fields.getInt("Id"), key.toString(), ValueType.valueOf(fields.getInt("TipPolja")).getSqlType(), -1);
+
+          result.put(key, field);
+        }
+      } finally {
+        fields.close();
+      }
+
+      if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_CACHEFIELDS, "true"))) {
+        this.preparedFields = result;
+      }
+    } else {
+      result.putAll(preparedFields);
     }
 
     return result;
