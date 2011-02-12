@@ -73,7 +73,7 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
 
   protected boolean isStatementClosed() {
     try {
-      return statement == null || statement.getConnection().isClosed();
+      return statement == null || statement.getConnection()==null || statement.getConnection().isClosed();
     } catch (SQLException ex) {
       return true;
     }
