@@ -47,7 +47,7 @@ public class PooledConnectionProxy extends ConnectionProxy {
 
   @Override
   protected boolean isConnectionActive() {
-    return !closed;
+    return (System.currentTimeMillis() - getTimestamp() < 30000) || super.isConnectionActive();
   }
 
   @Override
