@@ -186,7 +186,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       super.submit(event, log);
     }
   }
-  protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
+  protected Boolean shadowLoading;
 
   /**
    * Get the value of shadowLoading
@@ -194,6 +194,9 @@ public final class RefreshDataSource extends DataSourceEvent {
    * @return the value of shadowLoading
    */
   public boolean isShadowLoading() {
+    if (shadowLoading==null) {
+      this.shadowLoading = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
+    }
     return shadowLoading;
   }
 
