@@ -7,6 +7,7 @@ package com.openitech.sql.pool;
 import com.openitech.events.concurrent.Locking;
 import com.openitech.jdbc.proxy.ConnectionProxy;
 import com.openitech.util.Equals;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
@@ -46,7 +47,20 @@ public class PooledConnectionProxy extends ConnectionProxy {
 
   @Override
   protected boolean isConnectionActive() {
-    return (System.currentTimeMillis() - getTimestamp() < 30000) || super.isConnectionActive();
+    return !closed;
+  }
+
+  @Override
+  protected Connection getActiveConnection() throws SQLException {
+    lock();
+    try {
+      if (closed) {
+        open();
+      }
+      return super.getActiveConnection();
+    } finally {
+      unlock();
+    }
   }
 
   protected void open() throws SQLException {
@@ -56,9 +70,7 @@ public class PooledConnectionProxy extends ConnectionProxy {
         timer.cancel();
         timer = null;
       }
-
       closed = Boolean.FALSE;
-      getActiveConnection();
     } finally {
       unlock();
     }
