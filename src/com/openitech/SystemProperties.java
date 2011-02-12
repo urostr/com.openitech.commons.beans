@@ -39,6 +39,11 @@ public class SystemProperties {
     }
   }
 
+  public static boolean isLinux() {
+    String osName = System.getProperty("os.name");
+    return osName.startsWith("Linux");
+  }
+
   public static boolean isMacOSX() {
     String osName = System.getProperty("os.name");
     return osName.startsWith("Mac OS X");
@@ -150,7 +155,7 @@ public class SystemProperties {
         //ignore it
       }
     }
-    if (!System.getProperties().containsKey("swing.defaultlaf")) {
+    if (!System.getProperties().containsKey("swing.defaultlaf")&&!isLinux()) {
       try {
         Class.forName("ch.randelshofer.quaqua.leopard.Quaqua15LeopardCrossPlatformLookAndFeel");
         System.setProperty("swing.defaultlaf", "ch.randelshofer.quaqua.leopard.Quaqua15LeopardCrossPlatformLookAndFeel");
