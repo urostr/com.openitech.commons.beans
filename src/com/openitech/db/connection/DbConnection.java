@@ -19,6 +19,7 @@ import java.sql.Connection;
 public interface DbConnection {
   String DB_AUTOCOMMIT = "db.autocommit";
   String DB_CACHEROWSET = "db.cache.rowset";
+  String DB_CACHEFIELDS = "db.cache.fields";
   String DB_TEST = "db.test";
   String DB_POOL_SIZE = "db.pool.size";
   String DB_POOL_NAME = "db.pool.name";

@@ -56,26 +56,32 @@ public class ConnectionManager implements DbConnection {
     return connection;
   }
 
+  @Override
   public void setServerConnect(boolean connecttoserver) {
     getDbConnection().setServerConnect(connecttoserver);
   }
 
+  @Override
   public java.sql.Connection getConnection() {
     return getDbConnection() == null ? null : getDbConnection().getConnection();
   }
 
+  @Override
   public String getProperty(String key) {
     return getDbConnection().getProperty(key);
   }
 
+  @Override
   public String getProperty(String key, String defaultValue) {
     return getDbConnection().getProperty(key, defaultValue);
   }
 
+  @Override
   public Object setProperty(String key, String value) {
     return getDbConnection().setProperty(key, value);
   }
 
+  @Override
   public boolean containsKey(String key) {
     return getDbConnection().containsKey(key);
   }
