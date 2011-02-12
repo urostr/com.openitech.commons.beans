@@ -164,21 +164,7 @@ public final class RefreshDataSource extends DataSourceEvent {
         return;
       }
       if (timestamps.get(event).longValue() <= timestamp.longValue()) {
-        if (event.isOnEventQueue()) {
-          System.out.println("trying to load on EQ:" + event.dataSource);
-          try {
-            EventQueue.invokeAndWait(new Runnable() {
-
-              public void run() {
-                load();
-              }
-            });
-          } catch (Exception ex) {
-            Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
-          }
-        } else {
-          load();
-        }
+        load();
       } else {
         Logger.getLogger(Settings.LOGGER).warning("Skipped loading [" + event.dataSource + "...]");
       }
@@ -234,7 +220,21 @@ public final class RefreshDataSource extends DataSourceEvent {
     if (isShadowLoading()) {
       loadCopy();
     } else {
-      loadOriginal();
+      if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
+        System.out.println("trying to load on EQ:" + event.dataSource);
+        try {
+          EventQueue.invokeAndWait(new Runnable() {
+
+            public void run() {
+              loadOriginal();
+            }
+          });
+        } catch (Exception ex) {
+          Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
+        }
+      } else {
+        loadOriginal();
+      }
     }
   }
 
@@ -286,7 +286,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       final DbDataSource dataSource = event.dataSource.copy();
 
       dataSource.setSafeMode(false);
-      
+
       System.out.println("LOADING:" + dataSource);
       if (filterChange) {
         try {
@@ -321,7 +321,22 @@ public final class RefreshDataSource extends DataSourceEvent {
       }
       loading = false;
       if (isLastInQueue()) {
-        event.dataSource.loadData(dataSource, row);
+        if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
+          final int r = row;
+          System.out.println("trying to load on EQ:" + event.dataSource);
+          try {
+            EventQueue.invokeAndWait(new Runnable() {
+
+              public void run() {
+                event.dataSource.loadData(dataSource, r);
+              }
+            });
+          } catch (Exception ex) {
+            Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
+          }
+        } else {
+          event.dataSource.loadData(dataSource, row);
+        }
       }
     } finally {
       loading = false;
