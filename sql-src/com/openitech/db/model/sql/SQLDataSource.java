@@ -4652,8 +4652,12 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static boolean execute(String selectSQL, List<?> parameters) throws SQLException {
+    return execute(selectSQL, parameters, ConnectionManager.getInstance().getConnection());
+  }
+
+  public static boolean execute(String selectSQL, List<?> parameters, final java.sql.Connection connection) throws SQLException {
     String sql = substParameters(selectSQL, parameters);
-    PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql);
+    PreparedStatement statement = connection.prepareStatement(sql);
 
     return execute(statement, parameters);
   }
@@ -4665,8 +4669,12 @@ public class SQLDataSource implements DbDataSourceImpl {
   }
 
   public static int executeUpdate(String selectSQL, List<?> parameters) throws SQLException {
+    return executeUpdate(selectSQL, parameters, ConnectionManager.getInstance().getConnection());
+  }
+
+  public static int executeUpdate(String selectSQL, List<?> parameters, final java.sql.Connection connection) throws SQLException {
     String sql = substParameters(selectSQL, parameters);
-    PreparedStatement statement = ConnectionManager.getInstance().getConnection().prepareStatement(sql);
+    PreparedStatement statement = connection.prepareStatement(sql);
 
     try {
       if (DbDataSource.DUMP_SQL) {

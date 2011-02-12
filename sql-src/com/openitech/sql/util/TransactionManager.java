@@ -38,6 +38,10 @@ public class TransactionManager {
     managers.put(connection, this);
   }
 
+  public Connection getConnection() {
+    return connection;
+  }
+
   public ReentrantLock getLock() {
     return lock;
   }

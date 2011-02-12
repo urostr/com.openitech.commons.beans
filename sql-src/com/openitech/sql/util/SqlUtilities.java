@@ -74,7 +74,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
         try {
           instance = (SqlUtilities) implementation.newInstance();
           try {
-            instance.autocommit = ConnectionManager.getInstance().getConnection().getAutoCommit();
+            instance.autocommit = instance.getConnection().getAutoCommit();
           } catch (SQLException ex) {
             //ignore it
             instance.autocommit = true;
@@ -243,8 +243,13 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
               }
               break;
             case Types.CHAR:
+            case Types.CLOB:
             case Types.VARCHAR:
-              statement.setString(pos, value.toString());
+              if (value instanceof Clob || value instanceof SerialClob) {
+                statement.setString(pos, ((Clob) value).getSubString(1L, (int) ((Clob) value).length()));
+              } else {
+                statement.setString(pos, value.toString());
+              }
               break;
             default:
               statement.setObject(pos, value, type);
@@ -306,9 +311,13 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
               }
               break;
             case Types.CHAR:
+            case Types.CLOB:
             case Types.VARCHAR:
-            case Types.LONGVARCHAR:
-              statement.setString(pos, value.toString());
+              if (value instanceof Clob || value instanceof SerialClob) {
+                statement.setString(pos, ((Clob) value).getSubString(1L, (int) ((Clob) value).length()));
+              } else {
+                statement.setString(pos, value.toString());
+              }
               break;
             default:
               statement.setObject(pos, value, type);
