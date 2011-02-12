@@ -3293,23 +3293,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public static String substParameters(String sql, List<?> parameters) {
-    if (sql != null && sql.length() > 0) {
-      Object value;
-      Integer type;
-
-      for (Iterator values = parameters.iterator(); values.hasNext();) {
-        value = values.next();
-        if (value instanceof SubstSqlParameter) {
-          type = ((SubstSqlParameter) value).getType();
-          if (type.equals(Types.SUBST_ALL)) {
-            sql = sql.replaceAll(((SubstSqlParameter) value).getReplace(), ((SubstSqlParameter) value).getValue());
-          } else if (type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST)) {
-            sql = sql.replaceFirst(((SubstSqlParameter) value).getReplace(), ((SubstSqlParameter) value).getValue());
-          }
-        }
-      }
-    }
-    return sql;
+    return SQLDataSource.substParameters(sql, parameters);
   }
 
   public static ResultSet executeQuery(String selectSQL, List<?> parameters) throws SQLException {
