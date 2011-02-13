@@ -67,7 +67,7 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
         return future.get();
 //      return task.call();
       } catch (InterruptedException ex) {
-        throw new SQLException("SQL execution interrupted");
+        throw new SQLException("SQL execution interrupted", ex);
       } catch (ExecutionException ex) {
         if (ex.getCause() instanceof SQLException) {
           throw new SQLException("SQL execution failed", ex.getCause());
