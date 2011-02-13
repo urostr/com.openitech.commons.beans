@@ -194,7 +194,7 @@ public final class RefreshDataSource extends DataSourceEvent {
    * @return the value of shadowLoading
    */
   public boolean isShadowLoading() {
-    if (shadowLoading==null) {
+    if (shadowLoading == null) {
       this.shadowLoading = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
     }
     return shadowLoading;
@@ -324,22 +324,34 @@ public final class RefreshDataSource extends DataSourceEvent {
       }
       loading = false;
       if (isLastInQueue()) {
-        if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
-          final int r = row;
-          System.out.println("trying to load on EQ:" + event.dataSource);
-          try {
-            EventQueue.invokeAndWait(new Runnable() {
-
-              public void run() {
-                event.dataSource.loadData(dataSource, r);
-              }
-            });
-          } catch (Exception ex) {
-            Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
-          }
-        } else {
+        if (EventQueue.isDispatchThread()) {
           event.dataSource.loadData(dataSource, row);
+        } else {
+          final int r = row;
+          EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+              event.dataSource.loadData(dataSource, r);
+            }
+          });
         }
+//        if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
+//          final int r = row;
+//          System.out.println("trying to load on EQ:" + event.dataSource);
+//          try {
+//            EventQueue.invokeAndWait(new Runnable() {
+//
+//              public void run() {
+//                event.dataSource.loadData(dataSource, r);
+//              }
+//            });
+//          } catch (Exception ex) {
+//            Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
+//          }
+//        } else {
+//          event.dataSource.loadData(dataSource, row);
+//        }
       }
     } finally {
       loading = false;
