@@ -12,10 +12,13 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -63,8 +66,14 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
         Future<V> future = super.submit(task);
         return future.get();
 //      return task.call();
-      } catch (Exception ex) {
-        throw new SQLException("SQL execution rejected");
+      } catch (InterruptedException ex) {
+        throw new SQLException("SQL execution interrupted");
+      } catch (ExecutionException ex) {
+        if (ex.getCause() instanceof SQLException) {
+          throw new SQLException("SQL execution failed", ex.getCause());
+        } else {
+          throw new SQLException("SQL execution rejected", ex);
+        }
       }
     } else {
       try {
