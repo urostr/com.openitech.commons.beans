@@ -484,15 +484,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
                     Field nonIndexed = field.getNonIndexedField();
                     fieldName = nonIndexed.getName();
                   }
-                  param = 1;
-                  get_field.setString(param, fieldName);
-
-                  ResultSet rs_field = get_field.executeQuery();
-                  if (!rs_field.next()) {
+                  Field newField = getField(fieldName);
+                  if (newField == null) {
                     throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
                   }
+                  field_id = newField.getIdPolja();
 
-                  field_id = rs_field.getInt("Id");
                 } else {
                   field_id = field.getIdPolja();
                 }
@@ -1622,6 +1619,28 @@ public class SqlUtilitesImpl extends SqlUtilities {
       success = success && insertScheduler.executeUpdate() > 0;
     }
     return success;
+  }
+
+  @Override
+  public Field getField(String fieldName) throws SQLException {
+    Field result = null;
+    if (get_field == null) {
+      final Connection connection = ConnectionManager.getInstance().getTxConnection();
+      get_field = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
+    }
+
+    int param = 1;
+    get_field.clearParameters();
+    get_field.setString(param, fieldName);
+
+    ResultSet rs_field = get_field.executeQuery();
+    if (rs_field.next()) {
+      int idPolja = rs_field.getInt("Id");
+      int tipPolja = rs_field.getInt("TipPolja");
+      result = new Field(idPolja, fieldName, ValueType.valueOf(tipPolja).getSqlType(), 1);
+    }
+
+    return result;
   }
 
   private static class EventQueryKey {
