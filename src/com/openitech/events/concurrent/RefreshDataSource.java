@@ -323,41 +323,30 @@ public final class RefreshDataSource extends DataSourceEvent {
         Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + dataSource + "]", thw);
       }
       loading = false;
-      if (isLastInQueue()) {
-        if (EventQueue.isDispatchThread()) {
-          event.dataSource.loadData(dataSource, row);
-        } else {
-          final int r = row;
-          EventQueue.invokeLater(new Runnable() {
+      tasks.remove(event);
 
-            @Override
-            public void run() {
-              event.dataSource.loadData(dataSource, r);
-            }
-          });
+      if (isLastInQueue()) {
+        if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
+          final int r = row;
+          System.out.println("trying to load on EQ:" + event.dataSource);
+          try {
+            EventQueue.invokeAndWait(new Runnable() {
+
+              public void run() {
+                event.dataSource.loadData(dataSource, r);
+              }
+            });
+          } catch (Exception ex) {
+            Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
+          }
+        } else {
+          event.dataSource.loadData(dataSource, row);
         }
-//        if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
-//          final int r = row;
-//          System.out.println("trying to load on EQ:" + event.dataSource);
-//          try {
-//            EventQueue.invokeAndWait(new Runnable() {
-//
-//              public void run() {
-//                event.dataSource.loadData(dataSource, r);
-//              }
-//            });
-//          } catch (Exception ex) {
-//            Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
-//          }
-//        } else {
-//          event.dataSource.loadData(dataSource, row);
-//        }
       }
     } finally {
       loading = false;
       setReady();
     }
-    tasks.remove(event);
 
   }
 
