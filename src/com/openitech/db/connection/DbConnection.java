@@ -43,6 +43,7 @@ public interface DbConnection {
   String DB_USE_WEBROWSET = "db.useWebRowSet";
   String DB_USE_SECONDARY_WEBROWSET = "db.useSecondaryWebRowSet";
   String DB_SHADOW_LOADING= "db.shadow.loading";
+  String DB_STOP_LOADING_THREAD= "db.thread.kill";
   
   String DB_ENTRY_SERVICE = "ws.entry";
   
