@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 public class DataSourcePoolExecutor extends ThreadPoolExecutor {
 
   protected static final Map<RefreshDataSource, Thread> tasks = new ConcurrentHashMap<RefreshDataSource, Thread>();
+  public static boolean ALLOW_TERMINATE = true;
 
   protected DataSourcePoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
     super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
@@ -43,7 +44,7 @@ public class DataSourcePoolExecutor extends ThreadPoolExecutor {
   protected void beforeExecute(Thread t, Runnable r) {
     if ((r instanceof DataSourceFutureTask) && ((DataSourceFutureTask) r).getTask() instanceof RefreshDataSource) {
       for (Map.Entry<RefreshDataSource, Thread> entry : tasks.entrySet()) {
-        if (entry.getKey().isShadowLoading()) {
+        if (entry.getKey().isShadowLoading() && ALLOW_TERMINATE) {
           String action = "interrupted";
           if (!entry.getKey().isLastInQueue() && entry.getKey().isLoading()) {
             try {
