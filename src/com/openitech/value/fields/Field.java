@@ -1,11 +1,15 @@
 package com.openitech.value.fields;
 
+import com.openitech.sql.util.SqlUtilities;
 import com.openitech.text.CaseInsensitiveString;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -197,13 +201,26 @@ public class Field {
         field = fields.get(CaseInsensitiveString.valueOf(fieldName));
       }
     }
-    return new Field(field.getName(), field.getType(), fieldValueIndex);
+    return new Field(field.getIdPolja(), field.getName(), field.getType(), fieldValueIndex);
+  }
+
+  public static Field newField(String fieldName) {
+    try {
+      final Matcher matcher = indexed.matcher(fieldName);
+      if (matcher.find()) {
+        fieldName = matcher.group(1);
+      }
+      return SqlUtilities.getInstance().getField(fieldName);
+    } catch (SQLException ex) {
+      Logger.getLogger(Field.class.getName()).log(Level.SEVERE, null, ex);
+      return null;
+    }
   }
 
   public Field getNonIndexedField() {
     final Matcher matcher = indexed.matcher(name);
     if (matcher.find()) {
-      return new Field(matcher.group(1), type, Integer.parseInt(matcher.group(2)));
+      return new Field(idPolja, matcher.group(1), type, Integer.parseInt(matcher.group(2)));
     } else {
       return new Field(this);
     }
