@@ -37,6 +37,11 @@ public abstract class SQLValue<T> {
 
   public abstract void setParameter(CallableStatement preparedStatement) throws SQLException;
 
+  @Override
+  public String toString() {
+    return value != null ? value.toString() : "null";
+  }
+
   public static class SQLRegisteredParameter extends SQLValue<java.lang.Object> {
 
     int sqlType;
