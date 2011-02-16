@@ -53,6 +53,8 @@ public interface DbConnection {
   String ACTION_GET_CONNECTION = "getConnection";
   String ACTION_GET_TEMP_CONNECTION = "getTemporaryConnection";
 
+  String DB_DUMP_SQL = "db.dumpSQL";
+
 
   Connection getTemporaryConnection();
   Connection getConnection();
