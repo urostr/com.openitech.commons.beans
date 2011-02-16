@@ -17,8 +17,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -27,6 +25,7 @@ import java.util.logging.Logger;
 public class InterruptableExecutor extends ThreadPoolExecutor implements Interruptable {
 
   protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
+  protected boolean stopThread = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_STOP_LOADING_THREAD, "true"));
   private final Map<Runnable, Thread> tasks = new ConcurrentHashMap<Runnable, Thread>();
 
   public InterruptableExecutor() {
@@ -50,7 +49,7 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
     purge();
     for (Thread thread : tasks.values()) {
       thread.interrupt();
-      if (!tasks.isEmpty()) {
+      if (stopThread && !tasks.isEmpty()) {
         thread.stop(new SQLException("SQL execution cancelled."));
       }
     }
