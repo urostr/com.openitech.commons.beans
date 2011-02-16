@@ -29,6 +29,7 @@ import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.sql.util.SqlUtilities;
+import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
@@ -346,11 +347,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       dataSource.setSafeMode(true);
 
       for (String imePolja : eventColumns) {
-        int tipPolja = dataSource.getType(imePolja);
+//        int tipPolja = dataSource.getType(imePolja);
         DbFieldObserver fieldObserver = new DbFieldObserver();
         fieldObserver.setColumnName(imePolja);
         fieldObserver.setDataSource(dataSource);
-        this.dataEntryValues.add(new FieldValueProxy(imePolja, tipPolja, fieldObserver, dataSource.getObject(imePolja)));
+        this.dataEntryValues.add(new FieldValueProxy(Field.newField(imePolja), fieldObserver, dataSource.getObject(imePolja)));
       }
     }
   }
