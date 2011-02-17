@@ -345,6 +345,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       }
     } finally {
       loading = false;
+      tasks.remove(event);
       setReady();
     }
 
