@@ -12,64 +12,85 @@ import javax.swing.text.Document;
 
 public class FilterDocumentListener extends DataSourceFilterScheduler implements DocumentListener {
 
-    protected DataSourceFilters filter;
-    protected DataSourceFilters.AbstractSeekType<? extends Object> seek_type;
+  protected DataSourceFilters filter;
+  protected DataSourceFilters.AbstractSeekType<? extends Object> seek_type;
 
-    public FilterDocumentListener(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<? extends Object> seek_type) {
-        this(filter, seek_type, DataSourceFilterScheduler.DELAY);
+  public FilterDocumentListener(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<? extends Object> seek_type) {
+    this(filter, seek_type, DataSourceFilterScheduler.DELAY);
+  }
+
+  public FilterDocumentListener(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<? extends Object> seek_type, long delay) {
+    this.filter = filter;
+    this.seek_type = seek_type;
+    this.delay = delay;
+  }
+
+  public String getText(DocumentEvent e) {
+    return getText(e.getDocument());
+  }
+
+  public String getText(Document doc) {
+    String txt;
+    try {
+      txt = doc.getText(0, doc.getLength());
+    } catch (BadLocationException err) {
+      txt = null;
     }
+    return txt;
+  }
 
-    public FilterDocumentListener(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<? extends Object> seek_type, long delay) {
-        this.filter = filter;
-        this.seek_type = seek_type;
-        this.delay = delay;
-    }
+  public void changedUpdate(DocumentEvent e) {
+    setSeekValue(e);
+  }
 
-    public String getText(DocumentEvent e) {
-        return getText(e.getDocument());
-    }
+  public void insertUpdate(DocumentEvent e) {
+    setSeekValue(e);
+  }
 
-    public String getText(Document doc) {
-        String txt;
+  public void removeUpdate(DocumentEvent e) {
+    setSeekValue(e);
+  }
+
+  protected void setSeekValue(final DocumentEvent e) {
+    if (seek_type instanceof DataSourceFilters.DateSeekType) {
+      try {
+        java.util.Date value = FormatFactory.DATE_FORMAT.parse(getText(e));
+        schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
+      } catch (ParseException ex) {
+        Logger.getLogger(FilterDocumentListener.class.getName()).log(Level.WARNING, ex.getMessage());
+        schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, null));
+      }
+    } else if (seek_type instanceof DataSourceFilters.IntegerSeekType) {
+      try {
+        Integer value = Integer.parseInt(getText(e).trim());
+        schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
+      } catch (NumberFormatException ex) {
+        Logger.getLogger(FilterDocumentListener.class.getName()).log(Level.WARNING, ex.getMessage());
+        schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, null));
+      }
+    } else if (seek_type instanceof DataSourceFilters.SeekTypeWrapper) {
+      DataSourceFilters.AbstractSeekType<? extends Object> wrapperSeekType = ((DataSourceFilters.SeekTypeWrapper) seek_type).getWrapperFor();
+      if (wrapperSeekType instanceof DataSourceFilters.DateSeekType) {
         try {
-            txt = doc.getText(0, doc.getLength());
-        } catch (BadLocationException err) {
-            txt = null;
+          java.util.Date value = FormatFactory.DATE_FORMAT.parse(getText(e));
+          schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
+        } catch (ParseException ex) {
+          Logger.getLogger(FilterDocumentListener.class.getName()).log(Level.WARNING, ex.getMessage());
+          schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, null));
         }
-        return txt;
-    }
-
-    public void changedUpdate(DocumentEvent e) {
-        setSeekValue(e);
-    }
-
-    public void insertUpdate(DocumentEvent e) {
-        setSeekValue(e);
-    }
-
-    public void removeUpdate(DocumentEvent e) {
-        setSeekValue(e);
-    }
-
-    protected void setSeekValue(final DocumentEvent e) {
-        if (seek_type instanceof DataSourceFilters.DateSeekType) {
-            try {
-                java.util.Date value = FormatFactory.DATE_FORMAT.parse(getText(e));
-                schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
-            } catch (ParseException ex) {
-                Logger.getLogger(FilterDocumentListener.class.getName()).log(Level.WARNING, ex.getMessage());
-                schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, null));
-            }
-        } else if (seek_type instanceof DataSourceFilters.IntegerSeekType) {
-            try {
-                Integer value = Integer.parseInt(getText(e).trim());
-                schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
-            } catch (NumberFormatException ex) {
-                Logger.getLogger(FilterDocumentListener.class.getName()).log(Level.WARNING, ex.getMessage());
-                schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, null));
-            }
-        }else {
-            schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, getText(e)));
+      } else if (wrapperSeekType instanceof DataSourceFilters.IntegerSeekType) {
+        try {
+          Integer value = Integer.parseInt(getText(e).trim());
+          schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, value));
+        } catch (NumberFormatException ex) {
+          Logger.getLogger(FilterDocumentListener.class.getName()).log(Level.WARNING, ex.getMessage());
+          schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, null));
         }
+      } else {
+        schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, getText(e)));
+      }
+    } else {
+      schedule(new SeekValueUpdateRunnable<Object>(filter, seek_type, getText(e)));
     }
+  }
 }

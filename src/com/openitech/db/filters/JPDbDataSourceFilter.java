@@ -204,7 +204,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     }
   };
 
-  private void updateColumns() {
+private void updateColumns() {
     Vector<DataSourceFilters.AbstractSeekType<? extends Object>> headers = new Vector<DataSourceFilters.AbstractSeekType<? extends Object>>();
     java.awt.GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
 
@@ -216,7 +216,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
 
       for (int i = 0; i < seekTypeList.size(); i++) {
-        final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i);
+        final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i) instanceof DataSourceFilters.SeekTypeWrapper?
+                      ((DataSourceFilters.SeekTypeWrapper) seekTypeList.get(i)).getWrapperFor():
+                      seekTypeList.get(i);
+        final DataSourceFilters.AbstractSeekType<? extends Object> listenerItem = seekTypeList.get(i);
         final boolean addToPanel = item.getLayout() != null && item.getLayout().isDisplayInPanel();
         filtersInPanel += addToPanel ? 1 : 0;
         final SeekLayout layout = item.getLayout();
@@ -250,23 +253,20 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             if (parentFilterPanel.sifranti.containsKey(item)) {
               sifranti.put(item, parentFilterPanel.sifranti.get(item));
             }
-          } else if (item instanceof DataSourceFilters.BetweenDateSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.BetweenDateSeekType)) {
+          } else if (item instanceof DataSourceFilters.BetweenDateSeekType) {
             javax.swing.text.Document from = docs.get(0);
             javax.swing.text.Document to = docs.size() > 1 ? docs.get(1) : new com.openitech.db.components.JDbDateTextField().getDocument();
 
             item.setDocuments(entry.getKey(), new javax.swing.text.Document[]{from, to});
 
             documents.put(item, new javax.swing.text.Document[]{from, to});
-          } else if (item instanceof DataSourceFilters.SifrantSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.SifrantSeekType)) {
+          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             javax.swing.text.Document document = docs.get(0);
-            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), listenerItem));
 
             documents.put(item, new javax.swing.text.Document[]{document});
-            if ((item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.SifrantSeekType)) {
-              sifranti.put(item, ((DataSourceFilters.SifrantSeekType) ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor()).getModel());
-            } else {
-              sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
-            }
+            sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
+
             if (!addToPanel) {
               document.addDocumentListener(new DocumentListener() {
 
@@ -288,7 +288,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             }
           } else {
             javax.swing.text.Document document = docs.get(0);
-            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
+            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), listenerItem));
             documents.put(item, new javax.swing.text.Document[]{document});
           }
         }
@@ -301,7 +301,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
           }
 
-          if (item instanceof DataSourceFilters.BetweenDateSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.BetweenDateSeekType)) {
+          if (item instanceof DataSourceFilters.BetweenDateSeekType) {
             JLabel jlOd = new javax.swing.JLabel();
             jlOd.setText(item.toString() + " od");
             JLabel jlDo = new javax.swing.JLabel();
@@ -335,7 +335,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               gridBagConstraints.weightx = 1;
               jpHoldingPanel.add(new JPanel(), gridBagConstraints);
             }
-          } else if (item instanceof DataSourceFilters.SifrantSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.SifrantSeekType)) {
+          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             JLabel jlOpis = new javax.swing.JLabel();
             JDbTextField jtfSifraOnPanel = new com.openitech.db.components.JDbTextField();
             final JDbComboBox jcbSifrantOnPanel = new com.openitech.db.components.JDbComboBox();
@@ -375,7 +375,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                 updateSifrant(e.getDocument(), jcbSifrantOnPanel);
               }
             });
-          } else if (item instanceof DataSourceFilters.IntegerSeekType ) {
+          } else if (item instanceof DataSourceFilters.IntegerSeekType) {
             final JLabel jlOpis = new javax.swing.JLabel();
             final JComboBox jDbComboBox1 = new JComboBox();
             final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
@@ -718,7 +718,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jtfDateValueOd.setDocument(documents.get(item)[0]);
             jtfDateValueDo.setDocument(documents.get(item)[1]);
             ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "DATEFIELD_CARD");
-          } else if (item instanceof DataSourceFilters.SifrantSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.SifrantSeekType)) {
+          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             jtfSifrant.setDocument(documents.get(item)[0]);
             jcbSifrant.setModel(sifranti.get(item));
             updateSifrant(documents.get(item)[0], jcbSifrant);

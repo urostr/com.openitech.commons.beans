@@ -735,7 +735,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       }
 
       if (do_seek) {
-        try{
         for (AbstractSeekType seek : seek_types) {
           if (seek.hasValue()) {
             value.append(value.length() > 0 ? " " + seek.getOperator() + " " : "").append(seek.getSQLSegment());
@@ -753,9 +752,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
               }
             }
           }
-        }
-        }catch(Exception ex){
-          ex.printStackTrace();
         }
       }
     }
@@ -1095,15 +1091,11 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     @Override
     public boolean setValue(T value) {
-      try{
+
       boolean result = seekType.setValue(value);
 
       this.value = seekType.value;
       return result;
-      }catch(Exception ex){
-        ex.printStackTrace();
-        return false;
-      }
     }
 
     @Override
@@ -1173,7 +1165,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     protected List<T> seekTypes = new ArrayList<T>();
     protected String pattern;
 
-    public SeekFilterWrapper(final DataSourceFilters caller, String pattern, T... seekTypes) {
+    public SeekFilterWrapper(final DataSourceFilters owner, String pattern, T... seekTypes) {
       super("", PREFORMATTED, 1);
       this.pattern = pattern;
       this.seekTypes.addAll(Arrays.asList(seekTypes));
@@ -1183,7 +1175,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-          caller.setSeekValue(SeekFilterWrapper.this, null);
+          owner.setSeekValue(SeekFilterWrapper.this, null);
         }
       });
     }
