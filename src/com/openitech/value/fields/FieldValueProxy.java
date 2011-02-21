@@ -35,6 +35,10 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
     this(-1, imePolja, tipPolja, 1, fieldObserver, value);
   }
 
+  public FieldValueProxy(Integer idPolja, String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver) {
+    this(idPolja, name, type, fieldValueIndex, fieldObserver, null);
+  }
+
   public FieldValueProxy(Integer idPolja, String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver, Object value) {
     super(idPolja, name, type, fieldValueIndex, value);
     setFieldObserver(fieldObserver);
@@ -73,7 +77,7 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
   @Override
   public void fieldValueChanged(ActiveRowChangeEvent event) {
     Object value = fieldObserver.getValue();
-    if (value!=null && (value instanceof java.sql.Clob)) {
+    if (value != null && (value instanceof java.sql.Clob)) {
       value = fieldObserver.getValueAsText();
     }
     super.setValue(value);
