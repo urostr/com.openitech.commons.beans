@@ -618,8 +618,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract String getPPJoinFields();
 
-  public abstract Field getField(String fieldName) throws SQLException;
-
   public static enum Operation {
 
     INSERT,

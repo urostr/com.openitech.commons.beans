@@ -465,6 +465,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
             EventPK eventPK = new EventPK();
 
             Map<Field, List<FieldValue>> eventValues = event.getEventValues();
+            final Map<CaseInsensitiveString, Field> fields = event.getPreparedFields()==null?this.getPreparedFields():event.getPreparedFields();
+            
             for (Field field : eventValues.keySet()) {
               List<FieldValue> fieldValues = eventValues.get(field);
               for (int i = 0; i < fieldValues.size(); i++) {
@@ -484,7 +486,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
                     Field nonIndexed = field.getNonIndexedField();
                     fieldName = nonIndexed.getName();
                   }
-                  Field newField = getField(fieldName);
+                  Field newField = Field.getField(fieldName, fieldValueIndex, fields);
+                  if (newField.getIdPolja()==null) {
+                    newField = getField(fieldName);
+                  }
                   if (newField == null) {
                     throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
                   }
@@ -1621,7 +1626,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return success;
   }
 
-  @Override
   public Field getField(String fieldName) throws SQLException {
     Field result = null;
     if (get_field == null) {
@@ -1629,15 +1633,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
       get_field = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "get_field.sql", "cp1250"));
     }
 
-    int param = 1;
-    get_field.clearParameters();
-    get_field.setString(param, fieldName);
+    synchronized (get_field) {
+      int param = 1;
+      get_field.clearParameters();
+      get_field.setString(param, fieldName);
 
-    ResultSet rs_field = get_field.executeQuery();
-    if (rs_field.next()) {
-      int idPolja = rs_field.getInt("Id");
-      int tipPolja = rs_field.getInt("TipPolja");
-      result = new Field(idPolja, fieldName, ValueType.valueOf(tipPolja).getSqlType(), 1);
+      ResultSet rs_field = get_field.executeQuery();
+      try {
+        if (rs_field.next()) {
+          int idPolja = rs_field.getInt("Id");
+          int tipPolja = rs_field.getInt("TipPolja");
+          result = new Field(idPolja, fieldName, ValueType.valueOf(tipPolja).getSqlType(), 1);
+        }
+      } finally {
+        rs_field.close();
+      }
     }
 
     return result;
