@@ -338,7 +338,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void createEventColumns() throws SQLException {
-    List<String> eventColumns = dataSourceXML.getDataSource().getEventColumns();
+  List<String> eventColumns = dataSourceXML.getDataSource().getEventColumns();
     if (eventColumns.size() > 0) {
       dataSource.setSafeMode(false);
       dataSource.setQueuedDelay(0);
@@ -347,11 +347,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       dataSource.setSafeMode(true);
 
       for (String imePolja : eventColumns) {
-//        int tipPolja = dataSource.getType(imePolja);
+        int tipPolja = dataSource.getType(imePolja);
         DbFieldObserver fieldObserver = new DbFieldObserver();
         fieldObserver.setColumnName(imePolja);
         fieldObserver.setDataSource(dataSource);
-        this.dataEntryValues.add(new FieldValueProxy(Field.newField(imePolja), fieldObserver, dataSource.getObject(imePolja)));
+        this.dataEntryValues.add(new FieldValueProxy(imePolja, tipPolja, fieldObserver, dataSource.getObject(imePolja)));
       }
     }
   }

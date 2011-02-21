@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -29,7 +30,7 @@ public class Field {
 
   /**
    *
-   * @param name fieldName
+   * @param name name
    * @param type fieldType java.sql.Type
    */
   public Field(String name, int type) {
@@ -38,7 +39,7 @@ public class Field {
 
   /**
    *
-   * @param name fieldName
+   * @param name name
    * @param type fieldType java.sql.Type
    */
   public Field(String name, int type, int fieldIndex) {
@@ -47,7 +48,7 @@ public class Field {
 
   /**
    *
-   * @param name fieldName
+   * @param name name
    * @param type fieldType java.sql.Type
    */
   public Field(Integer idPolja, String name, int type, int fieldIndex) {
@@ -88,7 +89,7 @@ public class Field {
 
   /**
    *
-   * @param name fieldName
+   * @param name name
    * @param type fieldType java.sql.Type
    */
   public Field(Field field) {
@@ -149,6 +150,26 @@ public class Field {
     this.idPolja = idPolja;
   }
 
+  public void setIdPolja() {
+    try {
+      Map<CaseInsensitiveString, Field> fields = SqlUtilities.getInstance().getPreparedFields();
+      Field field = fields.get(CaseInsensitiveString.valueOf(name));
+      if (field == null) {
+        final Matcher matcher = indexed.matcher(name);
+        if (matcher.find()) {
+          name = matcher.group(1);
+          fieldIndex = Integer.parseInt(matcher.group(2));
+          field = fields.get(CaseInsensitiveString.valueOf(name));
+        }
+      }
+      if (field != null) {
+        this.idPolja = field.idPolja;
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(Field.class.getName()).log(Level.WARNING, null, ex);
+    }
+  }
+
   /**
    * Get the value of lookupType
    *
@@ -190,31 +211,18 @@ public class Field {
   }
   private final static Pattern indexed = Pattern.compile("(.*)(\\d+)$");
 
-  public static Field getField(String fieldName, int fieldValueIndex, final java.util.Map<CaseInsensitiveString, Field> fields) {
-    Field field = fields.get(CaseInsensitiveString.valueOf(fieldName));
+  public static Field getField(String name, int fieldValueIndex, final java.util.Map<CaseInsensitiveString, Field> fields) {
+    Field field = fields.get(CaseInsensitiveString.valueOf(name));
     if (field == null) {
-      final Matcher matcher = indexed.matcher(fieldName);
+      final Matcher matcher = indexed.matcher(name);
       if (matcher.find()) {
-        fieldName = matcher.group(1);
+        name = matcher.group(1);
         fieldValueIndex = Integer.parseInt(matcher.group(2));
 
-        field = fields.get(CaseInsensitiveString.valueOf(fieldName));
+        field = fields.get(CaseInsensitiveString.valueOf(name));
       }
     }
     return new Field(field.getIdPolja(), field.getName(), field.getType(), fieldValueIndex);
-  }
-
-  public static Field newField(String fieldName) {
-    try {
-      final Matcher matcher = indexed.matcher(fieldName);
-      if (matcher.find()) {
-        fieldName = matcher.group(1);
-      }
-      return SqlUtilities.getInstance().getField(fieldName);
-    } catch (SQLException ex) {
-      Logger.getLogger(Field.class.getName()).log(Level.SEVERE, null, ex);
-      return null;
-    }
   }
 
   public Field getNonIndexedField() {
