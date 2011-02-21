@@ -28,6 +28,7 @@ import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
@@ -249,20 +250,23 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             if (parentFilterPanel.sifranti.containsKey(item)) {
               sifranti.put(item, parentFilterPanel.sifranti.get(item));
             }
-          } else if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+          } else if (item instanceof DataSourceFilters.BetweenDateSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.BetweenDateSeekType)) {
             javax.swing.text.Document from = docs.get(0);
             javax.swing.text.Document to = docs.size() > 1 ? docs.get(1) : new com.openitech.db.components.JDbDateTextField().getDocument();
 
             item.setDocuments(entry.getKey(), new javax.swing.text.Document[]{from, to});
 
             documents.put(item, new javax.swing.text.Document[]{from, to});
-          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
+          } else if (item instanceof DataSourceFilters.SifrantSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.SifrantSeekType)) {
             javax.swing.text.Document document = docs.get(0);
             document.addDocumentListener(new FilterDocumentListener(entry.getKey(), item));
 
             documents.put(item, new javax.swing.text.Document[]{document});
-            sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
-
+            if ((item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.SifrantSeekType)) {
+              sifranti.put(item, ((DataSourceFilters.SifrantSeekType) ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor()).getModel());
+            } else {
+              sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
+            }
             if (!addToPanel) {
               document.addDocumentListener(new DocumentListener() {
 
@@ -297,7 +301,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jpHoldingPanel.setLayout(new java.awt.GridBagLayout());
           }
 
-          if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+          if (item instanceof DataSourceFilters.BetweenDateSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.BetweenDateSeekType)) {
             JLabel jlOd = new javax.swing.JLabel();
             jlOd.setText(item.toString() + " od");
             JLabel jlDo = new javax.swing.JLabel();
@@ -331,7 +335,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               gridBagConstraints.weightx = 1;
               jpHoldingPanel.add(new JPanel(), gridBagConstraints);
             }
-          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
+          } else if (item instanceof DataSourceFilters.SifrantSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.SifrantSeekType)) {
             JLabel jlOpis = new javax.swing.JLabel();
             JDbTextField jtfSifraOnPanel = new com.openitech.db.components.JDbTextField();
             final JDbComboBox jcbSifrantOnPanel = new com.openitech.db.components.JDbComboBox();
@@ -371,7 +375,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                 updateSifrant(e.getDocument(), jcbSifrantOnPanel);
               }
             });
-          } else if (item instanceof DataSourceFilters.IntegerSeekType) {
+          } else if (item instanceof DataSourceFilters.IntegerSeekType ) {
             final JLabel jlOpis = new javax.swing.JLabel();
             final JComboBox jDbComboBox1 = new JComboBox();
             final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
@@ -714,7 +718,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jtfDateValueOd.setDocument(documents.get(item)[0]);
             jtfDateValueDo.setDocument(documents.get(item)[1]);
             ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "DATEFIELD_CARD");
-          } else if (item instanceof DataSourceFilters.SifrantSeekType) {
+          } else if (item instanceof DataSourceFilters.SifrantSeekType || (item instanceof DataSourceFilters.SeekTypeWrapper && ((DataSourceFilters.SeekTypeWrapper) item).getWrapperFor() instanceof DataSourceFilters.SifrantSeekType)) {
             jtfSifrant.setDocument(documents.get(item)[0]);
             jcbSifrant.setModel(sifranti.get(item));
             updateSifrant(documents.get(item)[0], jcbSifrant);

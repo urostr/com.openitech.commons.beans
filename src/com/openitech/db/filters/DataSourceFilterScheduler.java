@@ -54,7 +54,7 @@ public class DataSourceFilterScheduler {
     public SeekValueUpdateRunnable(DataSourceFilters filter, DataSourceFilters.AbstractSeekType<? extends E> seek_type, E value) {
       this.filter = filter;
       this.seek_type = (DataSourceFilters.AbstractSeekType<E>) seek_type;
-      this.value = value;
+      this.value = (E) value;
     }
     
     public void run() {

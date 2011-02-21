@@ -8,10 +8,13 @@ import com.openitech.text.FormatFactory;
 import com.openitech.util.Equals;
 import com.openitech.util.Telefon;
 import com.openitech.util.TelefonskeStevilke;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -302,7 +305,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public void setCaseInsensitive(boolean caseInsensitive) {
       this.caseInsensitive = caseInsensitive;
     }
-
     protected SeekLayout layout = null;
 
     /**
@@ -322,7 +324,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public void setLayout(SeekLayout layout) {
       this.layout = layout;
     }
-
   }
 
   public final static class SeekType extends AbstractSeekType<String> {
@@ -603,7 +604,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
-
   public final static class BooleanSeekType extends AbstractSeekType<java.lang.Boolean> {
 
     public BooleanSeekType(String field) {
@@ -735,6 +735,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       }
 
       if (do_seek) {
+        try{
         for (AbstractSeekType seek : seek_types) {
           if (seek.hasValue()) {
             value.append(value.length() > 0 ? " " + seek.getOperator() + " " : "").append(seek.getSQLSegment());
@@ -752,6 +753,9 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
               }
             }
           }
+        }
+        }catch(Exception ex){
+          ex.printStackTrace();
         }
       }
     }
@@ -907,7 +911,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public SifrantSeekType(AbstractSeekType<String> seekType, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined) {
       this(seekType, sifrantSkupina, sifrantOpis, textNotDefined, null, null);
     }
-    
+
     public SifrantSeekType(AbstractSeekType<String> seekType, final String sifrantSkupina, final String sifrantOpis, final String textNotDefined, final List<String> allowedValues, final List<String> excludedValues) {
       this(seekType, sifrantSkupina, sifrantOpis, textNotDefined, "", allowedValues, excludedValues);
     }
@@ -1074,28 +1078,32 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public static class SeekTypeWrapper<T, V extends AbstractSeekType<T>> extends AbstractSeekType<T> {
 
-//    protected V seekType;
     protected V seekType;
     protected String pattern;
 
     public SeekTypeWrapper(String pattern, V seekType) {
       super("", PREFORMATTED, 1);
-      if (seekType==null) {
+      if (seekType == null) {
         throw new NullPointerException("Wrapped AbstractSeekType can't be null");
       }
-      this.pattern  = pattern;
+      this.pattern = pattern;
       this.seekType = seekType;
-      
+
       this.i_type = seekType.getSeekType();
       this.p_count = seekType.p_count;
     }
 
     @Override
     public boolean setValue(T value) {
+      try{
       boolean result = seekType.setValue(value);
 
       this.value = seekType.value;
       return result;
+      }catch(Exception ex){
+        ex.printStackTrace();
+        return false;
+      }
     }
 
     @Override
@@ -1152,6 +1160,64 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         return new StringBuilder(MessageFormat.format(pattern, seekType.getSQLSegment()));
       }
 
+    }
+
+    public V getWrapperFor() {
+      return seekType;
+    }
+  }
+
+  public static class SeekFilterWrapper<T extends AbstractSeekType> extends AbstractSeekType<java.util.List<T>> implements ValuesList {
+
+    private DataSourceFilters filter = new DataSourceFilters("");
+    protected List<T> seekTypes = new ArrayList<T>();
+    protected String pattern;
+
+    public SeekFilterWrapper(final DataSourceFilters caller, String pattern, T... seekTypes) {
+      super("", PREFORMATTED, 1);
+      this.pattern = pattern;
+      this.seekTypes.addAll(Arrays.asList(seekTypes));
+
+
+      filter.addPropertyChangeListener("query", new PropertyChangeListener() {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+          caller.setSeekValue(SeekFilterWrapper.this, null);
+        }
+      });
+    }
+
+    public DataSourceFilters getFilter() {
+      return filter;
+    }
+
+    @Override
+    public boolean hasValue() {
+      boolean result = false;
+      for (AbstractSeekType abstractSeekType : filter.seek_types) {
+        result = result || abstractSeekType.hasValue();
+      }
+      return result;
+    }
+
+    @Override
+    public StringBuilder getSQLSegment() {
+      return new StringBuilder(MessageFormat.format(pattern, filter.getValue()));
+    }
+
+    @Override
+    public boolean setValue(List<T> value) {
+      if (value != null) {
+        this.seekTypes.clear();
+        this.seekTypes.addAll(value);
+      }
+      return true;
+    }
+
+    @Override
+    public List getValues() {
+      return filter.getParameters();
     }
   }
 
