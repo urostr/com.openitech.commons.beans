@@ -12,6 +12,7 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.db.model.DbTableModel;
+import com.openitech.db.model.xml.config.DataModel;
 import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.TaskList.Tasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
@@ -156,7 +157,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             }
           }
         } catch (Exception ex) {
-          Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
+          Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, "Can't create " + config.getClass(), ex);
         }
       } else if (queryParameter != null) {
         parameters.add(queryParameter);
@@ -324,7 +325,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   protected DbTableModel createTableModel() {
     com.openitech.db.model.DbTableModel tableModel = new com.openitech.db.model.DbTableModel();
-    List<TableColumnDefinition> tableColumnDefinitions = dataSourceXML.getDataModel().getTableColumns().getTableColumnDefinition();
+    final DataModel dataModel = dataSourceXML.getDataModel();
+    if(dataModel != null){
+    List<TableColumnDefinition> tableColumnDefinitions = dataModel.getTableColumns().getTableColumnDefinition();
     List<String[]> tableColumns = new ArrayList<String[]>();
     for (TableColumnDefinition tableColumnDefinition : tableColumnDefinitions) {
       tableColumns.add(tableColumnDefinition.getTableColumnEntry().toArray(new String[tableColumnDefinition.getTableColumnEntry().size()]));
@@ -332,6 +335,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     tableModel.setColumns(tableColumns.toArray(new String[tableColumns.size()][]));
     if (dataSourceXML.getDataModel().getSeparator() != null) {
       tableModel.setSeparator(dataSourceXML.getDataModel().getSeparator());
+    }
     }
     tableModel.setDataSource(dataSource);
     return tableModel;
