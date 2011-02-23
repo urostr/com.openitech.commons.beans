@@ -13,6 +13,8 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -41,19 +43,22 @@ public class CachedTemporaryTablesManager extends DataSourceParametersFactory<Da
     return createTemporaryTable(tt);
   }
 
-  public TemporarySubselectSqlParameter getCachedTemporarySubselectSqlParameter(Class clazz, String resource) throws JAXBException {
+  public TemporarySubselectSqlParameter getCachedTemporarySubselectSqlParameter(Class clazz, String resource) {
     Reader is;
     try {
       is = new LineNumberReader(new InputStreamReader(clazz.getResourceAsStream(resource), "UTF-8"));
     } catch (UnsupportedEncodingException ex) {
       is = new LineNumberReader(new InputStreamReader(clazz.getResourceAsStream(resource)));
     }
-    JAXBContext ctx = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class);
-    Unmarshaller um = ctx.createUnmarshaller();
-
-    com.openitech.db.model.xml.config.CachedTemporaryTable ctt = (com.openitech.db.model.xml.config.CachedTemporaryTable) um.unmarshal(is);
-
-    return getCachedTemporarySubselectSqlParameter(ctt.getTemporaryTable());
+    try {
+      JAXBContext ctx = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class);
+      Unmarshaller um = ctx.createUnmarshaller();
+      com.openitech.db.model.xml.config.CachedTemporaryTable ctt = (com.openitech.db.model.xml.config.CachedTemporaryTable) um.unmarshal(is);
+      return getCachedTemporarySubselectSqlParameter(ctt.getTemporaryTable());
+    } catch (JAXBException ex) {
+      Logger.getLogger(CachedTemporaryTablesManager.class.getName()).log(Level.SEVERE, null, ex);
+      return null;
+    }
 
   }
 }
