@@ -108,7 +108,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
     } finally {
       long endTime = System.currentTimeMillis();
       sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
-      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_SQL, "false"))) {
+      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
         Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
       }
     }
@@ -145,7 +145,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
     } finally {
       long endTime = System.currentTimeMillis();
       sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
-      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_SQL, "false"))) {
+      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
         Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
       }
     }
@@ -181,7 +181,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
     } finally {
       long endTime = System.currentTimeMillis();
       sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
-      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_SQL, "false"))) {
+      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
         Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
       }
     }
