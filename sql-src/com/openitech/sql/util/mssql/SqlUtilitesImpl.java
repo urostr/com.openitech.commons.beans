@@ -1196,6 +1196,26 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
 
+@Override
+  public MaterializedView getCacheDefinition(String table, int idSifranta, String idSifre) {
+    String changeLog = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB);
+    MaterializedView result = new MaterializedView();
+    result.setValue("[MViewCache].[dbo].[" + table + "]");
+    result.setIsViewValidSql(com.openitech.text.Document.identText(
+            "\nSELECT CAST(CASE WHEN " +
+            "\n   (SELECT count(*) FROM "+changeLog+".[dbo].[Events] ev " +
+            "\n    WHERE ev.[IdSifranta] = "+idSifranta+" AND" +
+            "\n          ev.[IdSifre] = '"+idSifre+"' AND" +
+            "\n          ev.valid = 1 AND" +
+            "\n          NOT EXISTS (SELECT Id FROM [MViewCache].[dbo].["+table+"] cached WHERE cached.Id = ev.Id AND cached.Version=ev.Version )" +
+            "\n   )+" +
+            "\n   (SELECT count(*) FROM [MViewCache].[dbo].["+table+"]"+
+            "\n    WHERE [Version] NOT IN (SELECT ev.Version FROM "+changeLog+".[dbo].[Events] ev WHERE ev.[IdSifranta] = "+idSifranta+" AND ev.[IdSifre] = '"+idSifre+"' AND ev.valid = 1))" +
+            "\n =0 THEN 1 ELSE 0 END AS BIT) AS Valid", 15));
+    result.setSetViewVersionSql("EXECUTE [MViewCache].[dbo].[updateRefreshDate] '" + table + "'");
+    return result;
+  }
+
   @Override
   public Map<String, TemporaryTable> getCachedTemporaryTables() {
     Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();

@@ -601,6 +601,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract void storeCachedTemporaryTable(com.openitech.db.model.xml.config.TemporaryTable tt);
 
   public abstract com.openitech.db.model.xml.config.MaterializedView getCacheDefinition(String table);
+  public abstract com.openitech.db.model.xml.config.MaterializedView getCacheDefinition(String table, int idSifranta, String idSifre);
   /*
    * Sestavi SQL s katerim lahko pripravimo tabelo za shranjevanje rezultatov v podanem result set.
    */
