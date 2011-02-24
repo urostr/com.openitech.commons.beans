@@ -26,6 +26,7 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
+import com.openitech.ref.SoftHashMap;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
 import com.openitech.value.StringValue;
 import com.openitech.value.VariousValue;
@@ -1876,7 +1877,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       return hash;
     }
   }
-  private Map<EventQueryKey, EventQueryKey> findEventStatements = new HashMap<EventQueryKey, EventQueryKey>();
+  private Map<EventQueryKey, EventQueryKey> findEventStatements = new SoftHashMap<EventQueryKey, EventQueryKey>();
 
   @Override
   public Event findEvent(Event event) throws SQLException {
@@ -1911,10 +1912,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
           parametersVecVrednosti.add(event.getSifra());
 
           ResultSet rsVecVrednosti = SQLDataSource.executeQuery(getCheckVecVrednostiEventSQL(), parametersVecVrednosti, ConnectionManager.getInstance().getTxConnection());
-          if (rsVecVrednosti.next()) {
-            if (rsVecVrednosti.getInt(1) > 0) {
-              seek = false;
+          try {
+            if (rsVecVrednosti.next()) {
+              if (rsVecVrednosti.getInt(1) > 0) {
+                seek = false;
+              }
             }
+          } finally {
+            rsVecVrednosti.getStatement().close();
           }
         }
 
