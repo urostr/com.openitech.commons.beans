@@ -118,31 +118,42 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public long getScopeIdentity() throws SQLException {
     Statement statement = ConnectionManager.getInstance().getTxConnection().createStatement();
+    try {
 
-    ResultSet result = statement.executeQuery("SELECT SCOPE_IDENTITY() AS ScopeIdentity");
-    result.next();
+      ResultSet result = statement.executeQuery("SELECT SCOPE_IDENTITY() AS ScopeIdentity");
+      result.next();
 
-    return result.getLong(1);
+      return result.getLong(1);
+    } finally {
+      statement.close();
+    }
   }
 
   @Override
   public long getCurrentIdentity(String tableName) throws SQLException {
     Statement statement = ConnectionManager.getInstance().getTxConnection().createStatement();
+    try {
 
-    ResultSet result = statement.executeQuery("SELECT IDENT_CURRENT(" + tableName + ") AS CurrentIdentity");
-    result.next();
+      ResultSet result = statement.executeQuery("SELECT IDENT_CURRENT(" + tableName + ") AS CurrentIdentity");
+      result.next();
 
-    return result.getLong(1);
+      return result.getLong(1);
+    } finally {
+      statement.close();
+    }
   }
 
   @Override
   public long getLastIdentity() throws SQLException {
     Statement statement = ConnectionManager.getInstance().getTxConnection().createStatement();
+    try {
+      ResultSet result = statement.executeQuery("SELECT @@IDENTITY AS [Identity]");
+      result.next();
 
-    ResultSet result = statement.executeQuery("SELECT @@IDENTITY AS [Identity]");
-    result.next();
-
-    return result.getLong(1);
+      return result.getLong(1);
+    } finally {
+      statement.close();
+    }
   }
 
   @Override
@@ -1196,22 +1207,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
 
-@Override
+  @Override
   public MaterializedView getCacheDefinition(String table, int idSifranta, String idSifre) {
     String changeLog = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB);
     MaterializedView result = new MaterializedView();
     result.setValue("[MViewCache].[dbo].[" + table + "]");
     result.setIsViewValidSql(com.openitech.text.Document.identText(
-            "\nSELECT CAST(CASE WHEN " +
-            "\n   (SELECT count(*) FROM "+changeLog+".[dbo].[Events] ev " +
-            "\n    WHERE ev.[IdSifranta] = "+idSifranta+" AND" +
-            "\n          ev.[IdSifre] = '"+idSifre+"' AND" +
-            "\n          ev.valid = 1 AND" +
-            "\n          NOT EXISTS (SELECT Id FROM [MViewCache].[dbo].["+table+"] cached WHERE cached.Id = ev.Id AND cached.Version=ev.Version )" +
-            "\n   )+" +
-            "\n   (SELECT count(*) FROM [MViewCache].[dbo].["+table+"]"+
-            "\n    WHERE [Version] NOT IN (SELECT ev.Version FROM "+changeLog+".[dbo].[Events] ev WHERE ev.[IdSifranta] = "+idSifranta+" AND ev.[IdSifre] = '"+idSifre+"' AND ev.valid = 1))" +
-            "\n =0 THEN 1 ELSE 0 END AS BIT) AS Valid", 15));
+            "\nSELECT CAST(CASE WHEN "
+            + "\n   (SELECT count(*) FROM " + changeLog + ".[dbo].[Events] ev "
+            + "\n    WHERE ev.[IdSifranta] = " + idSifranta + " AND"
+            + "\n          ev.[IdSifre] = '" + idSifre + "' AND"
+            + "\n          ev.valid = 1 AND"
+            + "\n          NOT EXISTS (SELECT Id FROM [MViewCache].[dbo].[" + table + "] cached WHERE cached.Id = ev.Id AND cached.Version=ev.Version )"
+            + "\n   )+"
+            + "\n   (SELECT count(*) FROM [MViewCache].[dbo].[" + table + "]"
+            + "\n    WHERE [Version] NOT IN (SELECT ev.Version FROM " + changeLog + ".[dbo].[Events] ev WHERE ev.[IdSifranta] = " + idSifranta + " AND ev.[IdSifre] = '" + idSifre + "' AND ev.valid = 1))"
+            + "\n =0 THEN 1 ELSE 0 END AS BIT) AS Valid", 15));
     result.setSetViewVersionSql("EXECUTE [MViewCache].[dbo].[updateRefreshDate] '" + table + "'");
     return result;
   }
@@ -2653,61 +2664,61 @@ public class SqlUtilitesImpl extends SqlUtilities {
             qIdPolja.append(fieldNames.get(fn) != null ? fieldNames.get(fn).fieldId : f.getIdPolja().intValue());
           } else {
             qIdPolja.append("(SELECT [Id] FROM ").
-                     append(sifrantVnosnihPolj).
-                     append(" WITH (NOLOCK) WHERE [SifrantVnosnihPolj].ImePolja= '").append(f.getName()).append("' )");
+                    append(sifrantVnosnihPolj).
+                    append(" WITH (NOLOCK) WHERE [SifrantVnosnihPolj].ImePolja= '").append(f.getName()).append("' )");
           }
 
           int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
           switch (tipPolja) {
             case 1:
-              sbresult.append(",\n").append(resultFormat.format(new Object[] {
-                "IntValue",
-                qIdPolja,
-                f.getFieldIndex()
-              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              sbresult.append(",\n").append(resultFormat.format(new Object[]{
+                        "IntValue",
+                        qIdPolja,
+                        f.getFieldIndex()
+                      })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
               break;
             case 2:
               //Real
-              sbresult.append(",\n").append(resultFormat.format(new Object[] {
-                "RealValue",
-                qIdPolja,
-                f.getFieldIndex()
-              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              sbresult.append(",\n").append(resultFormat.format(new Object[]{
+                        "RealValue",
+                        qIdPolja,
+                        f.getFieldIndex()
+                      })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
               break;
             case 3:
               //String
-              sbresult.append(",\n").append(resultFormat.format(new Object[] {
-                "StringValue",
-                qIdPolja,
-                f.getFieldIndex()
-              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              sbresult.append(",\n").append(resultFormat.format(new Object[]{
+                        "StringValue",
+                        qIdPolja,
+                        f.getFieldIndex()
+                      })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
               break;
             case 4:
             case 8:
             case 9:
             case 10:
               //Date
-              sbresult.append(",\n").append(resultFormat.format(new Object[] {
-                "DateValue",
-                qIdPolja,
-                f.getFieldIndex()
-              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              sbresult.append(",\n").append(resultFormat.format(new Object[]{
+                        "DateValue",
+                        qIdPolja,
+                        f.getFieldIndex()
+                      })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
               break;
             case 6:
               //Clob
-              sbresult.append(",\n").append(resultFormat.format(new Object[] {
-                "ClobValue",
-                qIdPolja,
-                f.getFieldIndex()
-              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              sbresult.append(",\n").append(resultFormat.format(new Object[]{
+                        "ClobValue",
+                        qIdPolja,
+                        f.getFieldIndex()
+                      })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
               break;
             case 7:
               //Boolean
-              sbresult.append(",\n").append("CAST(").append(resultFormat.format(new Object[] {
-                "IntValue",
-                qIdPolja,
-                f.getFieldIndex()
-              })).append(" AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
+              sbresult.append(",\n").append("CAST(").append(resultFormat.format(new Object[]{
+                        "IntValue",
+                        qIdPolja,
+                        f.getFieldIndex()
+                      })).append(" AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
           }
         } else {
           sb.append("\nLEFT OUTER JOIN ").append(eventValues).append(" ").append(ev_alias).append(" WITH (NOLOCK) ON (");
