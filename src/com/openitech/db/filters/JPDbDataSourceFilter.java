@@ -28,7 +28,6 @@ import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.ComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
@@ -204,7 +203,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     }
   };
 
-private void updateColumns() {
+  private void updateColumns() {
     Vector<DataSourceFilters.AbstractSeekType<? extends Object>> headers = new Vector<DataSourceFilters.AbstractSeekType<? extends Object>>();
     java.awt.GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
 
@@ -216,9 +215,9 @@ private void updateColumns() {
       java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
 
       for (int i = 0; i < seekTypeList.size(); i++) {
-        final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i) instanceof DataSourceFilters.SeekTypeWrapper?
-                      ((DataSourceFilters.SeekTypeWrapper) seekTypeList.get(i)).getWrapperFor():
-                      seekTypeList.get(i);
+        final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i) instanceof DataSourceFilters.SeekTypeWrapper
+                ? ((DataSourceFilters.SeekTypeWrapper) seekTypeList.get(i)).getWrapperFor()
+                : seekTypeList.get(i);
         final DataSourceFilters.AbstractSeekType<? extends Object> listenerItem = seekTypeList.get(i);
         final boolean addToPanel = item.getLayout() != null && item.getLayout().isDisplayInPanel();
         filtersInPanel += addToPanel ? 1 : 0;
@@ -306,18 +305,18 @@ private void updateColumns() {
             jlOd.setText(item.toString() + " od");
             JLabel jlDo = new javax.swing.JLabel();
             jlDo.setText("do");
-            JDbDateTextField jtfDateValueOd = new com.openitech.db.components.JDbDateTextField();
-            jtfDateValueOd.setSearchField(true);
-            JDbDateTextField jtfDateValueDo = new com.openitech.db.components.JDbDateTextField();
-            jtfDateValueDo.setSearchField(true);
+            JDbDateTextField jtfDateValueOd1 = new com.openitech.db.components.JDbDateTextField();
+            jtfDateValueOd1.setSearchField(true);
+            JDbDateTextField jtfDateValueDo1 = new com.openitech.db.components.JDbDateTextField();
+            jtfDateValueDo1.setSearchField(true);
 
-            jtfDateValueOd.setDocument(documents.get(item)[0]);
-            jtfDateValueDo.setDocument(documents.get(item)[1]);
+            jtfDateValueOd1.setDocument(documents.get(item)[0]);
+            jtfDateValueDo1.setDocument(documents.get(item)[1]);
 
             JXDatePicker jXDatePicker = new org.jdesktop.swingx.JXDatePicker();
-            JXDatePicker jXDatePicker2 = new org.jdesktop.swingx.JXDatePicker();
-            jXDatePicker.setEditor(jtfDateValueOd);
-            jXDatePicker2.setEditor(jtfDateValueDo);
+            JXDatePicker jXDatePicker3 = new org.jdesktop.swingx.JXDatePicker();
+            jXDatePicker.setEditor(jtfDateValueOd1);
+            jXDatePicker3.setEditor(jtfDateValueDo1);
 
             int index = 0;
 
@@ -328,7 +327,7 @@ private void updateColumns() {
             jpHoldingPanel.add(jlDo, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
             gridBagConstraints = new java.awt.GridBagConstraints();
             //gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-            jpHoldingPanel.add(jXDatePicker2, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jXDatePicker3, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
 
             if (group) {
               gridBagConstraints = new java.awt.GridBagConstraints();
@@ -1003,9 +1002,22 @@ private void updateColumns() {
 
     private void jcbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbTypeActionPerformed
       if (!refreshing) {
-        DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
+        DataSourceFilters.AbstractSeekType<? extends Object> seek = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
+        for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
+          java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
 
-        filters.getFilterFor(item).setSeekType(item, jcbType.getSelectedIndex());
+          for (int i = 0; i < seekTypeList.size(); i++) {
+            final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i) instanceof DataSourceFilters.SeekTypeWrapper
+                    ? ((DataSourceFilters.SeekTypeWrapper) seekTypeList.get(i)).getWrapperFor()
+                    : seekTypeList.get(i);
+
+            if (item.equals(seek)) {
+              filters.getFilterFor(seekTypeList.get(i)).setSeekType(seekTypeList.get(i), jcbType.getSelectedIndex());
+              break;
+            }
+          }
+        }
+
       }
       //pnDataModel.dsPonudbeFilter.setSeekType(pnDataModel.dsPonudbeFilter.I_TYPE_INSOFFERS_STRANKA_PRIIMEK, jcbType.getSelectedIndex());
 }//GEN-LAST:event_jcbTypeActionPerformed
@@ -1038,9 +1050,21 @@ private void updateColumns() {
 
     private void jcbNumberTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbNumberTypeActionPerformed
       if (!refreshing) {
-        DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
+        DataSourceFilters.AbstractSeekType<? extends Object> seek = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
+        for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
+          java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
 
-        filters.getFilterFor(item).setSeekType(item, jcbNumberType.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+          for (int i = 0; i < seekTypeList.size(); i++) {
+            final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i) instanceof DataSourceFilters.SeekTypeWrapper
+                    ? ((DataSourceFilters.SeekTypeWrapper) seekTypeList.get(i)).getWrapperFor()
+                    : seekTypeList.get(i);
+
+            if (item.equals(seek)) {
+              filters.getFilterFor(seekTypeList.get(i)).setSeekType(seekTypeList.get(i), jcbNumberType.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+              break;
+            }
+          }
+        }
       }
     }//GEN-LAST:event_jcbNumberTypeActionPerformed
   // Variables declaration - do not modify//GEN-BEGIN:variables
