@@ -5032,18 +5032,19 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   @Override
   public void updateRefreshPending() {
-    boolean refreshPending = DataSourceEvent.isRefreshing(owner);
-    if (this.refreshPending != refreshPending) {
-      this.refreshPending = refreshPending;
-      try {
-        if (isDataLoaded()) {
-          int row = getRow();
-          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, row, row));
-        }
-      } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).warning("Couldn't update pending refresh.");
-      }
-    }
+    this.refreshPending = DataSourceEvent.isRefreshing(owner);
+//    boolean refreshPending = DataSourceEvent.isRefreshing(owner);
+//    if (this.refreshPending != refreshPending) {
+//      this.refreshPending = refreshPending;
+//      try {
+//        if (isDataLoaded()) {
+//          int row = getRow();
+//          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, row, row));
+//        }
+//      } catch (SQLException ex) {
+//        Logger.getLogger(Settings.LOGGER).warning("Couldn't update pending refresh.");
+//      }
+//    }
   }
 
   @Override
