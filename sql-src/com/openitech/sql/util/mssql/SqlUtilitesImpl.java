@@ -286,11 +286,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
         findVersion.clearParameters();
         findVersion.setLong(param++, eventId);
         ResultSet rs_findVersion = findVersion.executeQuery();
-        if (rs_findVersion.next()) {
-          result = rs_findVersion.getInt(1);
-          if (rs_findVersion.wasNull()) {
-            result = null;
+        try {
+          if (rs_findVersion.next()) {
+            result = rs_findVersion.getInt(1);
+            if (rs_findVersion.wasNull()) {
+              result = null;
+            }
           }
+        } finally {
+          rs_findVersion.close();
         }
       }
     }
@@ -465,8 +469,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
             EventPK eventPK = new EventPK();
 
             Map<Field, List<FieldValue>> eventValues = event.getEventValues();
-            final Map<CaseInsensitiveString, Field> fields = event.getPreparedFields()==null?this.getPreparedFields():event.getPreparedFields();
-            
+            final Map<CaseInsensitiveString, Field> fields = event.getPreparedFields() == null ? this.getPreparedFields() : event.getPreparedFields();
+
             for (Field field : eventValues.keySet()) {
               List<FieldValue> fieldValues = eventValues.get(field);
               for (int i = 0; i < fieldValues.size(); i++) {
@@ -487,7 +491,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                     fieldName = nonIndexed.getName();
                   }
                   Field newField = Field.getField(fieldName, fieldValueIndex, fields);
-                  if (newField.getIdPolja()==null) {
+                  if (newField.getIdPolja() == null) {
                     newField = getField(fieldName);
                   }
                   if (newField == null) {
@@ -510,37 +514,42 @@ public class SqlUtilitesImpl extends SqlUtilities {
                       findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
 
                       ResultSet rs = findEventValue.executeQuery();
-                      rs.next();
+                      try {
+                        rs.next();
 
-                      if (rs.getInt(1) == 0) {
-                        //insertaj event value
-                        param = 1;
-                        insertEventValues.clearParameters();
-                        insertEventValues.setLong(param++, events_ID);
-                        insertEventValues.setInt(param++, field_id);
-                        insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-                        if (valueId == null) {
-                          insertEventValues.setNull(param++, java.sql.Types.BIGINT);
+                        if (rs.getInt(1) == 0) {
+                          //insertaj event value
+                          param = 1;
+                          insertEventValues.clearParameters();
+                          insertEventValues.setLong(param++, events_ID);
+                          insertEventValues.setInt(param++, field_id);
+                          insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                          if (valueId == null) {
+                            insertEventValues.setNull(param++, java.sql.Types.BIGINT);
+                          } else {
+                            insertEventValues.setLong(param++, valueId);
+                          }
+
+                          success = success && insertEventValues.executeUpdate() > 0;
                         } else {
-                          insertEventValues.setLong(param++, valueId);
-                        }
+                          //updataj event value
+                          param = 1;
+                          updateEventValues.clearParameters();
+                          if (valueId == null) {
+                            updateEventValues.setNull(param++, java.sql.Types.BIGINT);
+                          } else {
+                            updateEventValues.setLong(param++, valueId);
+                          }
+                          updateEventValues.setLong(param++, events_ID);
+                          updateEventValues.setInt(param++, field_id);
+                          updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
 
-                        success = success && insertEventValues.executeUpdate() > 0;
-                      } else {
-                        //updataj event value
-                        param = 1;
-                        updateEventValues.clearParameters();
-                        if (valueId == null) {
-                          updateEventValues.setNull(param++, java.sql.Types.BIGINT);
-                        } else {
-                          updateEventValues.setLong(param++, valueId);
+                          success = success && updateEventValues.executeUpdate() > 0;
                         }
-                        updateEventValues.setLong(param++, events_ID);
-                        updateEventValues.setInt(param++, field_id);
-                        updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-
-                        success = success && updateEventValues.executeUpdate() > 0;
+                      } finally {
+                        rs.close();
                       }
+
                     }
                   }
 
@@ -760,8 +769,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
       find_eventLookupKeys.setInt(param++, idPolja);
       find_eventLookupKeys.setInt(param++, fieldValueIndex);
       ResultSet rs_find_eventLookupKeys = find_eventLookupKeys.executeQuery();
-      if (rs_find_eventLookupKeys.next()) {
-        result = true;
+      try {
+        if (rs_find_eventLookupKeys.next()) {
+          result = true;
+        }
+      } finally {
+        rs_find_eventLookupKeys.close();
       }
     }
     return result;
@@ -778,29 +791,33 @@ public class SqlUtilitesImpl extends SqlUtilities {
       findValue.clearParameters();
       findValue.setLong(param++, valueId);
       ResultSet rs_findValue = findValue.executeQuery();
-      if (rs_findValue.next()) {
-        int fieldType = rs_findValue.getInt("FieldType");
-        ValueType type = ValueType.valueOf(fieldType);
-        switch (type) {
-          case IntValue:
-            int intValue = rs_findValue.getInt("IntValue");
-            result = new VariousValue(valueId, type.getTypeIndex(), new Integer(intValue));
-            break;
-          case RealValue:
-            double realValue = rs_findValue.getDouble("RealValue");
-            result = new VariousValue(valueId, type.getTypeIndex(), new Double(realValue));
-            break;
-          case StringValue:
-            String stringValue = rs_findValue.getString("StringValue");
-            result = new VariousValue(valueId, type.getTypeIndex(), stringValue);
-            break;
-          case DateValue:
-            Date dateValue = rs_findValue.getDate("DateValue");
-            result = new VariousValue(valueId, type.getTypeIndex(), dateValue);
-            break;
-          //TODO
-          //object, clob, cclob
+      try {
+        if (rs_findValue.next()) {
+          int fieldType = rs_findValue.getInt("FieldType");
+          ValueType type = ValueType.valueOf(fieldType);
+          switch (type) {
+            case IntValue:
+              int intValue = rs_findValue.getInt("IntValue");
+              result = new VariousValue(valueId, type.getTypeIndex(), new Integer(intValue));
+              break;
+            case RealValue:
+              double realValue = rs_findValue.getDouble("RealValue");
+              result = new VariousValue(valueId, type.getTypeIndex(), new Double(realValue));
+              break;
+            case StringValue:
+              String stringValue = rs_findValue.getString("StringValue");
+              result = new VariousValue(valueId, type.getTypeIndex(), stringValue);
+              break;
+            case DateValue:
+              Date dateValue = rs_findValue.getDate("DateValue");
+              result = new VariousValue(valueId, type.getTypeIndex(), dateValue);
+              break;
+            //TODO
+            //object, clob, cclob
+          }
         }
+      } finally {
+        rs_findValue.close();
       }
     }
     return result;
@@ -816,7 +833,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     int pos = 0;
     FieldValue[] fieldValues = new FieldValue[7];
     fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, new Integer(fieldType.getTypeIndex()));
-    java.sql.ResultSet rs;
     Long newValueId = null;
     if (value != null) {
       switch (fieldType) {
@@ -911,17 +927,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
       findOpomba.clearParameters();
       findOpomba.setLong(param++, eventId);
       ResultSet rsFindOpomba = findOpomba.executeQuery();
-      if (rsFindOpomba.next()) {
-        Clob oldOpombaClob = rsFindOpomba.getClob("ClobValue");
-        if (oldOpombaClob != null) {
-          String oldOpomba = oldOpombaClob.getSubString(1L, (int) oldOpombaClob.length());
-          if (oldOpomba.equals(opomba)) {
-            //opomba se ni spemenila
-            saveOpomba = false;
-          } else {
-            //update event in opomba se je spremenila
+      try {
+        if (rsFindOpomba.next()) {
+          Clob oldOpombaClob = rsFindOpomba.getClob("ClobValue");
+          if (oldOpombaClob != null) {
+            String oldOpomba = oldOpombaClob.getSubString(1L, (int) oldOpombaClob.length());
+            if (oldOpomba.equals(opomba)) {
+              //opomba se ni spemenila
+              saveOpomba = false;
+            } else {
+              //update event in opomba se je spremenila
+            }
           }
         }
+      } finally {
+        rsFindOpomba.close();
       }
 
       if (saveOpomba) {
