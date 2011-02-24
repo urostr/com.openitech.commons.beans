@@ -215,7 +215,12 @@ public class SQLCache implements Serializable {
               System.out.println(query);
             }
             long start = System.currentTimeMillis();
-            entry.populate(SQLDataSource.executeQuery(getStatement(connection), parameters));
+            final ResultSet rs = SQLDataSource.executeQuery(getStatement(connection), parameters);
+            try {
+              entry.populate(rs);
+            } finally {
+              rs.close();
+            }
             long end = System.currentTimeMillis();
             System.out.println("reloadEntry::" + (end - start) + " ms.");
           } finally {
