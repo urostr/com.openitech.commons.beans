@@ -459,7 +459,16 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       if (!isTransaction) {
         beginTransaction();
       }
-      final Map<CaseInsensitiveString, Field> preparedFields = getPreparedFields();
+      Map<CaseInsensitiveString, Field> preparedFields;
+
+      if ((newValues.getPreparedFields()==null)&&(oldValues.getPreparedFields()==null)) {
+        preparedFields = getPreparedFields();
+      } else if (newValues.getPreparedFields()==null) {
+        preparedFields = oldValues.getPreparedFields();
+      } else {
+        preparedFields = newValues.getPreparedFields();
+      }
+
       newValues.setPreparedFields(preparedFields);
       oldValues.setPreparedFields(preparedFields);
 
