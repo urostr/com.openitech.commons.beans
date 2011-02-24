@@ -565,6 +565,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             try {
               execute(connection, queryParameters);
               commit = true;
+            } catch (SQLException ex) {
+              Logger.getLogger(SQLMaterializedView.class.getName()).log(Level.SEVERE, null, ex);
+              throw ex;
             } finally {
               tm.endTransaction(commit);
             }
