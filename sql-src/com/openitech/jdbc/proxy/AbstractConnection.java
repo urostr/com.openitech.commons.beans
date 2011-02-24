@@ -440,6 +440,18 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
     }
   }
 
+  public void reconnect() {
+    try {
+      if (this.connection != null) {
+        this.connection.close();
+        this.connection = null;
+        activeSavepoints.clear();
+        getActiveConnection();
+      }
+    } catch (SQLException ex) {
+    }
+  }
+
   /**
    * Get the value of shadowLoading
    *
