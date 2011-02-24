@@ -233,10 +233,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     CachedRowSet versions = new com.sun.rowset.CachedRowSetImpl();
-
-    versions.populate(SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())),
-            eventIds,
-            connection));
+    ResultSet rs = SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())), eventIds, connection);
+    try {
+      versions.populate(rs);
+    } finally {
+      rs.close();
+    }
 
     if ((versions.size() == 1) && (versions.first())) {
       return versions.getInt(1);
@@ -2070,7 +2072,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           rs = new com.sun.rowset.CachedRowSetImpl();
-          rs.populate(dsGeneratedFields.getResultSet());
+          ResultSet rs_generatedFields = dsGeneratedFields.getResultSet();
+          try {
+            rs.populate(rs_generatedFields);
+          } finally {
+            rs_generatedFields.close();
+          }
           long end = System.currentTimeMillis();
           System.out.println("getGeneratedFields::" + (end - start) + " ms.");
 
@@ -2103,7 +2110,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
         getGeneratedFields.setString(param++, idSifre);
         getGeneratedFields.setBoolean(param++, !visibleOnly);
         CachedRowSet rs = new com.sun.rowset.CachedRowSetImpl();
-        rs.populate(getGeneratedFields.executeQuery());
+        ResultSet rs_generatedFields = getGeneratedFields.executeQuery();
+        try {
+          rs.populate(rs_generatedFields);
+        } finally {
+          rs_generatedFields.close();
+        }
 
         return rs;
       }
