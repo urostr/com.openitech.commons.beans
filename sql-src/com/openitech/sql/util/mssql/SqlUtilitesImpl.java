@@ -45,6 +45,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.text.FieldPosition;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -2145,7 +2147,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     try {
       rs.beforeFirst();
       while (rs.next()) {
-        result.put(new NamedFieldIds(rs.getString("ImePolja"), Long.MIN_VALUE), new NamedFieldIds(rs.getString("ImePolja"), rs.getLong("IdPolja")));
+        result.put(new NamedFieldIds(rs.getString("ImePolja"), Integer.MIN_VALUE), new NamedFieldIds(rs.getString("ImePolja"), rs.getInt("IdPolja")));
       }
     } finally {
       rs.close();
@@ -2304,9 +2306,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
   private static class NamedFieldIds {
 
     CaseInsensitiveString fieldName;
-    Long fieldId;
+    Integer fieldId;
 
-    public NamedFieldIds(String fieldName, Long fieldId) {
+    public NamedFieldIds(String fieldName, Integer fieldId) {
       this.fieldName = CaseInsensitiveString.valueOf(fieldName);
       this.fieldId = fieldId;
     }
@@ -2458,6 +2460,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
       fieldNames = new java.util.HashMap<NamedFieldIds, NamedFieldIds>();
       Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
     }
+
+    final String eventValues = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues]";
+    final String sifrantVnosnihPolj = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj]";
+    final String variousValues = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[VariousValues]";
+
     for (Field f : searchFields) {
       if (!(Event.EVENT_SOURCE.equals(f)
               || Event.EVENT_DATE.equals(f))) {
@@ -2466,20 +2473,20 @@ public class SqlUtilitesImpl extends SqlUtilities {
         final String ev_alias = "[ev_" + f.getName() + "]";
         final String vp_alias = "[vp_" + f.getName() + "]";
         final String val_alias = "[val_" + f.getName() + "]";
-        sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues] ").append(ev_alias).append(" WITH (NOLOCK) ON (");
+        sb.append("\nLEFT OUTER JOIN ").append(eventValues).append(" ").append(ev_alias).append(" WITH (NOLOCK) ON (");
         sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
-        NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
+        NamedFieldIds fn = new NamedFieldIds(f.getName(), Integer.MIN_VALUE);
         if (fieldNames.containsKey(fn)) {
           sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn).fieldId);
           sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
         } else {
           sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex());
           sb.append(") ");
-          sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" WITH (NOLOCK) ON (");
+          sb.append("\nLEFT OUTER JOIN ").append(sifrantVnosnihPolj).append(" ").append(vp_alias).append(" WITH (NOLOCK) ON (");
           sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
           sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' )");
         }
-        sb.append("\nINNER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[VariousValues] ").append(val_alias).append(" WITH (NOLOCK) ON (");
+        sb.append("\nINNER JOIN ").append(variousValues).append(" ").append(val_alias).append(" WITH (NOLOCK) ON (");
         sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id]");
         List<FieldValue> values;
         if (event.getEventValues().containsKey(f)) {
@@ -2592,71 +2599,151 @@ public class SqlUtilitesImpl extends SqlUtilities {
         valuesSet++;
       }
     }
+
+    String template = "(SELECT [VariousValues].{0} FROM <%VARIOUS_VALUES%> WITH (NOLOCK) WHERE [VariousValues].[Id] = (SELECT [ValueId] FROM <%EVENT_VALUES%> WITH (NOLOCK) "
+            + "WHERE [EventValues].[EventId] = ev.[Id] AND"
+            + " [EventValues].[IdPolja] = {1} AND"
+            + " [EventValues].[FieldValueIndex] = {2}))";
+    template = template.replaceAll("<%VARIOUS_VALUES%>", variousValues);
+    template = template.replaceAll("<%EVENT_VALUES%>", eventValues);
+
+
+    MessageFormat resultFormat = new MessageFormat(template);
+
+
     for (Field f : resultFields) {
       if (!searchFields.contains(f)) {
         String fieldValueIndex = f.getFieldIndex() > 1 ? Integer.toString(f.getFieldIndex()) : "";
         if (f.getName().endsWith(fieldValueIndex)) {
           fieldValueIndex = "";
         }
+
         final String ev_alias = "[ev_" + f.getName() + fieldValueIndex + "]";
         final String vp_alias = "[vp_" + f.getName() + fieldValueIndex + "]";
         final String val_alias = "[val_" + f.getName() + fieldValueIndex + "]";
-        sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[EventValues] ").append(ev_alias).append(" WITH (NOLOCK) ON (");
-        sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
-        NamedFieldIds fn = new NamedFieldIds(f.getName(), Long.MIN_VALUE);
-        //TODO to ni uredu, ker ne da pravilnega rezultata, ce ne iscem po id polja
-        if (fieldNames.containsKey(fn) || f.getIdPolja() != null) {
-          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(fieldNames.get(fn) != null ? fieldNames.get(fn).fieldId : f.getIdPolja().intValue());
-          sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
-        } else {
-          sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append("(SELECT Id FROM " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] WHERE ImePolja = '").append(f.getName()).append("' ) ");
-          sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
-          sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex());
-//          sb.append(") ");
-//          sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj] ").append(vp_alias).append(" WITH (NOLOCK) ON (");
-//          sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
-//          sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' ) ");
-        }
-        sb.append("\nLEFT OUTER JOIN " + SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[VariousValues] ").append(val_alias).append(" WITH (NOLOCK) ON (");
-        sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
 
-        int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
-        String value = null;
-        switch (tipPolja) {
-          case 1:
-            value = val_alias + ".IntValue";
-            sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName() + fieldValueIndex).append("]");
-            break;
-          case 2:
-            //Real
-            value = val_alias + ".RealValue";
-            sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName() + fieldValueIndex).append("]");
-            break;
-          case 3:
-            //String
-            value = val_alias + ".StringValue";
-            sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName() + fieldValueIndex).append("]");
-            break;
-          case 4:
-          case 8:
-          case 9:
-          case 10:
-            //Date
-            value = val_alias + ".DateValue";
-            sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName() + fieldValueIndex).append("]");
-            break;
-          case 6:
-            //Clob
-            value = val_alias + ".ClobValue";
-            sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName() + fieldValueIndex).append("]");
-            break;
-          case 7:
-            //Boolean
-            value = val_alias + ".IntValue";
-            sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
-        }
-        if ((f.getModel().getQuery() != null)
-                && (f.getModel().getQuery() != null)) {
+        if (f.getModel() == null
+                || f.getModel().getQuery() == null) {
+
+          StringBuilder qIdPolja = new StringBuilder(500);
+
+          NamedFieldIds fn = new NamedFieldIds(f.getName(), Integer.MIN_VALUE);
+          //TODO to ni uredu, ker ne da pravilnega rezultata, ce ne iscem po id polja
+          if (fieldNames.containsKey(fn) || f.getIdPolja() != null) {
+            qIdPolja.append(fieldNames.get(fn) != null ? fieldNames.get(fn).fieldId : f.getIdPolja().intValue());
+          } else {
+            qIdPolja.append("(SELECT [Id] FROM ").
+                     append(sifrantVnosnihPolj).
+                     append(" WITH (NOLOCK) WHERE [SifrantVnosnihPolj].ImePolja= '").append(f.getName()).append("' )");
+          }
+
+          int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
+          switch (tipPolja) {
+            case 1:
+              sbresult.append(",\n").append(resultFormat.format(new Object[] {
+                "IntValue",
+                qIdPolja,
+                f.getFieldIndex()
+              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 2:
+              //Real
+              sbresult.append(",\n").append(resultFormat.format(new Object[] {
+                "RealValue",
+                qIdPolja,
+                f.getFieldIndex()
+              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 3:
+              //String
+              sbresult.append(",\n").append(resultFormat.format(new Object[] {
+                "StringValue",
+                qIdPolja,
+                f.getFieldIndex()
+              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 4:
+            case 8:
+            case 9:
+            case 10:
+              //Date
+              sbresult.append(",\n").append(resultFormat.format(new Object[] {
+                "DateValue",
+                qIdPolja,
+                f.getFieldIndex()
+              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 6:
+              //Clob
+              sbresult.append(",\n").append(resultFormat.format(new Object[] {
+                "ClobValue",
+                qIdPolja,
+                f.getFieldIndex()
+              })).append(" AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 7:
+              //Boolean
+              sbresult.append(",\n").append("CAST(").append(resultFormat.format(new Object[] {
+                "IntValue",
+                qIdPolja,
+                f.getFieldIndex()
+              })).append(" AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
+          }
+        } else {
+          sb.append("\nLEFT OUTER JOIN ").append(eventValues).append(" ").append(ev_alias).append(" WITH (NOLOCK) ON (");
+          sb.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
+          NamedFieldIds fn = new NamedFieldIds(f.getName(), Integer.MIN_VALUE);
+          //TODO to ni uredu, ker ne da pravilnega rezultata, ce ne iscem po id polja
+          if (fieldNames.containsKey(fn) || f.getIdPolja() != null) {
+            long idPolja = fieldNames.get(fn) != null ? fieldNames.get(fn).fieldId : f.getIdPolja().intValue();
+            sb.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(idPolja);
+            sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
+          } else {
+            sb.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex());
+            sb.append(") ");
+            sb.append("\nLEFT OUTER JOIN ").append(sifrantVnosnihPolj).append(" ").append(vp_alias).append(" WITH (NOLOCK) ON (");
+            sb.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
+            sb.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' )");
+          }
+          sb.append("\nLEFT OUTER JOIN ").append(variousValues).append(" ").append(val_alias).append(" WITH (NOLOCK) ON (");
+          sb.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
+
+          int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
+          String value = null;
+          switch (tipPolja) {
+            case 1:
+              value = val_alias + ".IntValue";
+              sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 2:
+              //Real
+              value = val_alias + ".RealValue";
+              sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 3:
+              //String
+              value = val_alias + ".StringValue";
+              sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 4:
+            case 8:
+            case 9:
+            case 10:
+              //Date
+              value = val_alias + ".DateValue";
+              sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 6:
+              //Clob
+              value = val_alias + ".ClobValue";
+              sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 7:
+              //Boolean
+              value = val_alias + ".IntValue";
+              sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
+          }
+
           if (f.getModel().getQuery().getSelect() != null) {
             for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
               sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
