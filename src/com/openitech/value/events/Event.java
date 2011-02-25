@@ -33,23 +33,15 @@ public class Event {
   public static final Field EVENT_DATE = new Field("EVENT_DATE", java.sql.Types.DATE);
 
   public Event(int sifrant, String sifra) {
-    this(null, sifrant, sifra);
+    this(sifrant, sifra, Integer.MIN_VALUE);
   }
 
   public Event(int sifrant, String sifra, int eventSource) {
-    this(null, sifrant, sifra, eventSource);
-  }
-
-  public Event(Event parent, int sifrant, String sifra) {
-    this(parent, sifrant, sifra, Integer.MIN_VALUE);
-  }
-
-  public Event(Event parent, int sifrant, String sifra, int eventSource) {
-    this.parent = parent;
     this.sifrant = sifrant;
     this.sifra = sifra;
     this.eventSource = eventSource;
   }
+
   private Long id;
 
   /**
@@ -69,16 +61,7 @@ public class Event {
   public void setId(Long id) {
     this.id = id;
   }
-  private final Event parent;
 
-  /**
-   * Get the value of parent
-   *
-   * @return the value of parent
-   */
-  public Event getParent() {
-    return parent;
-  }
   private int sifrant;
 
   /**
@@ -450,7 +433,7 @@ public class Event {
 
   @Override
   public String toString() {
-    return (parent != null ? "P:" + parent.toString() : "E:") + sifrant + "-" + sifra + ":" + id + ":" + operation;
+    return "E:" + sifrant + "-" + sifra + ":" + id + ":" + operation;
   }
 
   public EventPK getEventPK() {
