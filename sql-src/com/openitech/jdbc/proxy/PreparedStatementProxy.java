@@ -80,14 +80,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    StringBuilder sb = new StringBuilder("Executing query: sql=\n");
-    sb.append(sql);
-    if (parameters.size() > 0) {
-      for (SQLValue sQLValue : parameters) {
-        sb.append("\n--");
-        sb.append(sQLValue.toString());
-      }
-    }
+
     long startTime = System.currentTimeMillis();
     try {
       if (connection.isShadowLoading()) {
@@ -107,8 +100,16 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
       throw ex;
     } finally {
       long endTime = System.currentTimeMillis();
-      sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
       if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
+        StringBuilder sb = new StringBuilder("Executing query: sql=\n");
+        sb.append(sql);
+        if (parameters.size() > 0) {
+          for (SQLValue sQLValue : parameters) {
+            sb.append("\n--");
+            sb.append(sQLValue.toString());
+          }
+        }
+        sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
         Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
       }
     }
@@ -117,14 +118,6 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public int executeUpdate() throws SQLException {
-    StringBuilder sb = new StringBuilder("Executing update: sql=\n");
-    sb.append(sql);
-    if (parameters.size() > 0) {
-      for (SQLValue sQLValue : parameters) {
-        sb.append("\n--");
-        sb.append(sQLValue.toString());
-      }
-    }
     long startTime = System.currentTimeMillis();
     try {
       if (connection.isShadowLoading()) {
@@ -144,8 +137,16 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
       throw ex;
     } finally {
       long endTime = System.currentTimeMillis();
-      sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
       if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
+        StringBuilder sb = new StringBuilder("Executing update: sql=\n");
+        sb.append(sql);
+        if (parameters.size() > 0) {
+          for (SQLValue sQLValue : parameters) {
+            sb.append("\n--");
+            sb.append(sQLValue.toString());
+          }
+        }
+        sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
         Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
       }
     }
@@ -153,14 +154,6 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   @Override
   public boolean execute() throws SQLException {
-    StringBuilder sb = new StringBuilder("Executing: sql=\n");
-    sb.append(sql);
-    if (parameters.size() > 0) {
-      for (SQLValue sQLValue : parameters) {
-        sb.append("\n--");
-        sb.append(sQLValue.toString());
-      }
-    }
     long startTime = System.currentTimeMillis();
     try {
       if (connection.isShadowLoading()) {
@@ -180,8 +173,17 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
       throw ex;
     } finally {
       long endTime = System.currentTimeMillis();
-      sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
       if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
+        StringBuilder sb = new StringBuilder("Executing: sql=\n");
+        sb.append(sql);
+        if (parameters.size() > 0) {
+          for (SQLValue sQLValue : parameters) {
+            sb.append("\n--");
+            sb.append(sQLValue.toString());
+          }
+        }
+        sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
+
         Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
       }
     }
