@@ -1099,6 +1099,12 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     @Override
+    public void setLayout(SeekLayout layout) {
+      seekType.setLayout(layout);
+      super.setLayout(layout);
+    }
+
+    @Override
     public boolean hasValue() {
       return seekType.hasValue();
     }
