@@ -41,7 +41,6 @@ public class Event {
     this.sifra = sifra;
     this.eventSource = eventSource;
   }
-
   private Long id;
 
   /**
@@ -61,7 +60,6 @@ public class Event {
   public void setId(Long id) {
     this.id = id;
   }
-
   private int sifrant;
 
   /**
@@ -439,7 +437,7 @@ public class Event {
   public EventPK getEventPK() {
     EventPK eventPK = null;
     try {
-      eventPK = getEventPK(this.preparedFields==null?SqlUtilities.getInstance().getPreparedFields():preparedFields);
+      eventPK = getEventPK(this.preparedFields == null ? SqlUtilities.getInstance().getPreparedFields() : preparedFields);
     } catch (SQLException ex) {
       Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
     }
@@ -452,29 +450,42 @@ public class Event {
       try {
         eventPK = new EventPK(id, sifrant, sifra);
         eventPK.setEventOperation(operation);
-        for (Field field : eventValues.keySet()) {
-          List<FieldValue> fieldValues = eventValues.get(field);
-
-          for (int i = 0; i < fieldValues.size(); i++) {
-            FieldValue fieldValue = fieldValues.get(i);
-            String fieldNameWithIndex = field.getName();
-            int fieldValueIndex = field.getFieldIndex();
-            LookupType lookupType = field.getLookupType();
-            CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(field.getNonIndexedField().getName());
-            int idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : field.getIdPolja();
-
-            if (getPrimaryKey() != null && getPrimaryKey().length > 0) {
-              FieldValue fieldValuePK = new FieldValue(idPolja, fieldNameWithIndex, field.getType(), fieldValueIndex, VariousValue.newVariousValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
-              fieldValuePK.setLookupType(lookupType);
-              for (Field field1 : getPrimaryKey()) {
-                if (field1.equals(fieldValuePK)) {
-                  eventPK.addPrimaryKeyField(fieldValuePK);
-                  break;
+        for (Map.Entry<Field, List<FieldValue>> entry : eventValues.entrySet()) {
+          for (FieldValue fieldValue : entry.getValue()) {
+            for (Field field1 : getPrimaryKey()) {
+              if (field1.equals(fieldValue)) {
+                if (fieldValue.getValueId() == null) {
+                  fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
                 }
+                eventPK.addPrimaryKeyField(fieldValue);
+                break;
               }
             }
           }
         }
+//        for (Field field : eventValues.keySet()) {
+//          List<FieldValue> fieldValues = eventValues.get(field);
+//
+//          for (int i = 0; i < fieldValues.size(); i++) {
+//            FieldValue fieldValue = fieldValues.get(i);
+//            String fieldNameWithIndex = field.getName();
+//            int fieldValueIndex = field.getFieldIndex();
+//            LookupType lookupType = field.getLookupType();
+//            CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(field.getNonIndexedField().getName());
+//            int idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : field.getIdPolja();
+//
+//            if (getPrimaryKey() != null && getPrimaryKey().length > 0) {
+//              FieldValue fieldValuePK = new FieldValue(idPolja, fieldNameWithIndex, field.getType(), fieldValueIndex, VariousValue.newVariousValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
+//              fieldValuePK.setLookupType(lookupType);
+//              for (Field field1 : getPrimaryKey()) {
+//                if (field1.equals(fieldValuePK)) {
+//                  eventPK.addPrimaryKeyField(fieldValuePK);
+//                  break;
+//                }
+//              }
+//            }
+//          }
+//        }
       } catch (SQLException ex) {
         Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
       }

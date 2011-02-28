@@ -129,11 +129,33 @@ public class EventPK {
         result.append("{");
         result.append(Integer.toHexString(fieldValue.getIdPolja())).append(";");
         result.append(Integer.toHexString(fieldValue.getFieldIndex())).append(";");
-        result.append(((VariousValue) fieldValue.getValue()).getId() == null ? "null" : Long.toHexString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+        result.append(getValueString(fieldValue, StringType.HEX)).append(";");
         result.append("}");
       }
     }
     return result.toString();
+  }
+
+  private String getValueString(FieldValue fieldValue, StringType type) {
+    Long valueId = null;
+    if (fieldValue.getValue() instanceof VariousValue) {
+      valueId = ((VariousValue) fieldValue.getValue()).getId();
+    } else {
+      valueId = fieldValue.getValueId();
+    }
+
+    if (valueId==null) {
+      return "null";
+    } else if (type==StringType.HEX) {
+      return Long.toHexString(valueId);
+    } else {
+      return Long.toString(valueId);
+    }
+  }
+
+  private enum StringType {
+    HEX,
+    NORMAL
   }
 
   public String toNormalString() {
@@ -143,7 +165,7 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
-      result.append(((VariousValue) fieldValue.getValue()).getId() == null ? "null" : Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append(getValueString(fieldValue, StringType.NORMAL)).append(";");
       result.append("}");
     }
     return result.toString();
@@ -156,7 +178,7 @@ public class EventPK {
       result.append("{");
       result.append(Integer.toString(fieldValue.getIdPolja())).append(";");
       result.append(Integer.toString(fieldValue.getFieldIndex())).append(";");
-      result.append(((VariousValue) fieldValue.getValue()).getId() == null ? "null" : Long.toString(((VariousValue) fieldValue.getValue()).getId())).append(";");
+      result.append(getValueString(fieldValue, StringType.NORMAL)).append(";");
       if (fieldValue.getValue() != null) {
         if (fieldValue.getValue() instanceof VariousValue) {
           result.append(((VariousValue) fieldValue.getValue()).getValue() == null ? "null" : (((VariousValue) fieldValue.getValue()).getValue().toString()));

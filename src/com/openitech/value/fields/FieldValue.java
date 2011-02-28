@@ -28,8 +28,13 @@ public class FieldValue extends Field {
   }
 
   public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, Object value) {
+    this(idPolja, name, type, fieldValueIndex, value, null);
+  }
+
+  public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, Object value, Long valueId) {
     super(idPolja, name, type, fieldValueIndex);
     this.value = value;
+    this.valueId = valueId;
   }
   private Object value;
 
@@ -48,11 +53,32 @@ public class FieldValue extends Field {
    * @param value new value of value
    */
   public void setValue(Object value) {
+    setValue(value, null);
+  }
+
+  /**
+   * Set the value of value
+   *
+   * @param value new value of value
+   */
+  public void setValue(Object value, Long valueId) {
     if (!Equals.equals(this.value, value)) {
       Object oldValue = this.value;
       this.value = value;
+      this.valueId = valueId;
+      
       propertyChangeSupport.firePropertyChange("value", oldValue, value);
     }
+  }
+
+  Long valueId;
+
+  public Long getValueId() {
+    return valueId;
+  }
+
+  public void setValueId(Long valueId) {
+    this.valueId = valueId;
   }
 
   public boolean isNull() {
