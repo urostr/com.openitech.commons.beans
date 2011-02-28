@@ -455,6 +455,11 @@ public class Event {
             for (FieldValue fieldValue : entry.getValue()) {
               for (Field pkField : getPrimaryKey()) {
                 if (pkField.equals(fieldValue)) {
+                  if (fieldValue.getIdPolja() == null) {
+                    CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(fieldValue.getNonIndexedField().getName());
+                    Integer idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : fieldValue.getIdPolja();
+                    fieldValue.setIdPolja(idPolja);
+                  }
                   if (fieldValue.getValueId() == null) {
                     fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
                   }
