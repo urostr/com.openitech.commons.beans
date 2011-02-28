@@ -492,6 +492,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               for (int i = 0; i < fieldValues.size(); i++) {
                 FieldValue value = fieldValues.get(i);
                 Long valueId = storeValue(value.getValueType(), value.getValue());
+                value.setValueId(valueId);
 
                 fieldValuesList.add(value);
 
@@ -1142,39 +1143,39 @@ public class SqlUtilitesImpl extends SqlUtilities {
             FieldValue fv = null;
             switch (rs.getInt("FieldType")) {
               case 1:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("FieldValueIndex"), rs.getInt("IntValue")));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.INTEGER, rs.getInt("FieldValueIndex"), rs.getInt("IntValue"), rs.getLong("ValueId")));
                 break;
               case 2:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getInt("FieldValueIndex"), rs.getDouble("RealValue")));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DOUBLE, rs.getInt("FieldValueIndex"), rs.getDouble("RealValue"), rs.getLong("ValueId")));
                 break;
               case 3:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), rs.getString("StringValue")));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), rs.getString("StringValue"), rs.getLong("ValueId")));
                 break;
               case 4:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue")));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue"), rs.getLong("ValueId")));
                 break;
               case 5:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getInt("FieldValueIndex"), rs.getBlob("ObjectValue")));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BLOB, rs.getInt("FieldValueIndex"), rs.getBlob("ObjectValue"), rs.getLong("ValueId")));
                 break;
               case 6:
                 java.sql.Clob value = rs.getClob("ClobValue");
                 if ((value != null) && (value.length() > 0)) {
-                  result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), value.getSubString(1L, (int) value.length())));
+                  result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), value.getSubString(1L, (int) value.length()), rs.getLong("ValueId")));
                 } else {
-                  result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), ""));
+                  result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.VARCHAR, rs.getInt("FieldValueIndex"), "", rs.getLong("ValueId")));
                 }
                 break;
               case 7:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("FieldValueIndex"), rs.getInt("IntValue") != 0));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.BOOLEAN, rs.getInt("FieldValueIndex"), rs.getInt("IntValue") != 0, rs.getLong("ValueId")));
                 break;
               case 8:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue")));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIMESTAMP, rs.getInt("FieldValueIndex"), rs.getTimestamp("DateValue"), rs.getLong("ValueId")));
                 break;
               case 9:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIME, rs.getInt("FieldValueIndex"), rs.getTime("DateValue")));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.TIME, rs.getInt("FieldValueIndex"), rs.getTime("DateValue"), rs.getLong("ValueId")));
                 break;
               case 10:
-                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DATE, rs.getInt("FieldValueIndex"), rs.getDate("DateValue")));
+                result.addValue(fv = new FieldValue(rs.getInt("IdPolja"), rs.getString("ImePolja"), java.sql.Types.DATE, rs.getInt("FieldValueIndex"), rs.getDate("DateValue"), rs.getLong("ValueId")));
                 break;
             }
             if (fv != null && rs.getBoolean("PrimaryKey")) {
