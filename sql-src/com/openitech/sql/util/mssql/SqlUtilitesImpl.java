@@ -515,7 +515,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                     throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
                   }
                   field_id = newField.getIdPolja();
-
+                  field.setIdPolja(newField.getIdPolja());
                 } else {
                   field_id = field.getIdPolja();
                 }
