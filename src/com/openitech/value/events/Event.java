@@ -450,15 +450,17 @@ public class Event {
       try {
         eventPK = new EventPK(id, sifrant, sifra);
         eventPK.setEventOperation(operation);
-        for (Map.Entry<Field, List<FieldValue>> entry : eventValues.entrySet()) {
-          for (FieldValue fieldValue : entry.getValue()) {
-            for (Field field1 : getPrimaryKey()) {
-              if (field1.equals(fieldValue)) {
-                if (fieldValue.getValueId() == null) {
-                  fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
+        if (getPrimaryKey() != null && getPrimaryKey().length > 0) {
+          for (Map.Entry<Field, List<FieldValue>> entry : eventValues.entrySet()) {
+            for (FieldValue fieldValue : entry.getValue()) {
+              for (Field pkField : getPrimaryKey()) {
+                if (pkField.equals(fieldValue)) {
+                  if (fieldValue.getValueId() == null) {
+                    fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
+                  }
+                  eventPK.addPrimaryKeyField(fieldValue);
+                  break;
                 }
-                eventPK.addPrimaryKeyField(fieldValue);
-                break;
               }
             }
           }
