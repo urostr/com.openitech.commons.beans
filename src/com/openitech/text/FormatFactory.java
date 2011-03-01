@@ -6,7 +6,6 @@
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-
 package com.openitech.text;
 
 import java.text.DateFormat;
@@ -28,24 +27,33 @@ import javax.swing.text.NumberFormatter;
  * @author tomaz
  */
 public class FormatFactory {
+
   public static final DateFormat TIME_FORMAT = new SimpleTimestampFormater("HH:mm:ss");
   public static final DateFormat DATETIME_FORMAT = new SimpleTimestampFormater("dd.MM.yyyy HH:mm:ss");
   public static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy");
   public static final DateFormat DATE_FORMAT_SHORT = new SimpleDateFormat("d.M.yy");
   public static final DateFormat DATE_PICKER_FORMAT = new SimpleDateFormat("EEE dd.MM.yyyy");
   public static final DateFormat JDBC_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-  private static final DecimalFormatSymbols sl_SI_DECIMAL_FORMAT_SYMBOLS = new DecimalFormatSymbols(new Locale("sl","SI"));
-    
-    /** Creates a new instance of FormatFactory */
-    private FormatFactory() {
-    }
-    
+  private static final DecimalFormatSymbols sl_SI_DECIMAL_FORMAT_SYMBOLS = new DecimalFormatSymbols(new Locale("sl", "SI"));
+
+  /** Creates a new instance of FormatFactory */
+  private FormatFactory() {
+  }
+
   public static NumberFormat getIntegerNumberFormat(int length) {
     NumberFormat nf = NumberFormat.getIntegerInstance();
     nf.setGroupingUsed(false);
-    if (length>0) {
+    if (length > 0) {
       nf.setMaximumIntegerDigits(length);
     }
+    return nf;
+  }
+
+  public static NumberFormat getLongNumberFormat() {
+    NumberFormat nf = NumberFormat.getNumberInstance();
+    nf.setGroupingUsed(false);
+    nf.setMaximumFractionDigits(0);
+
     return nf;
   }
 
@@ -56,23 +64,24 @@ public class FormatFactory {
     nf.setDecimalSeparatorAlwaysShown(true);
     return nf;
   }
-  
+
   public static DateFormat getDateFormat() {
     return DATE_FORMAT;
   }
-    
+
   public static JFormattedTextField.AbstractFormatterFactory getFormatFactory(Format format) {
     JFormattedTextField.AbstractFormatterFactory af;
     if (format instanceof DateFormat) {
       af = new DefaultFormatterFactory(new DateFormatter((DateFormat) format));
     } else if (format instanceof NumberFormat) {
       af = new DefaultFormatterFactory(new NumberFormatter(
-              (NumberFormat)format));
+              (NumberFormat) format));
     } else if (format instanceof Format) {
       af = new DefaultFormatterFactory(new InternationalFormatter(
-              (Format)format));
-    } else
+              (Format) format));
+    } else {
       af = new DefaultFormatterFactory(new DefaultFormatter());
+    }
     return af;
   }
 }

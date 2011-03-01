@@ -37,7 +37,6 @@ public enum ValueType {
       return 3;
     }
 
-
     @Override
     public int getSqlType() {
       return Types.VARCHAR;
@@ -48,7 +47,6 @@ public enum ValueType {
     public int getTypeIndex() {
       return 4;
     }
-
 
     @Override
     public int getSqlType() {
@@ -120,6 +118,28 @@ public enum ValueType {
     public int getSqlType() {
       return Types.DATE;
     }
+  }, LongValue {
+
+    @Override
+    public int getTypeIndex() {
+      return 1;
+    }
+
+    @Override
+    public int getSqlType() {
+      return Types.BIGINT;
+    }
+  }, BlobValue {
+
+    @Override
+    public int getTypeIndex() {
+      return 5;
+    }
+
+    @Override
+    public int getSqlType() {
+      return Types.BLOB;
+    }
   };
 
   public abstract int getTypeIndex();
@@ -147,9 +167,11 @@ public enum ValueType {
       case Types.BOOLEAN:
       case Types.TINYINT:
       case Types.SMALLINT:
-      case Types.BIGINT:
       case Types.INTEGER:
         result = IntValue;
+        break;
+      case Types.BIGINT:
+        result = LongValue;
         break;
       case Types.FLOAT:
       case Types.REAL:
@@ -179,6 +201,10 @@ public enum ValueType {
       case Types.DATE:
       case Types.TIMESTAMP:
         result = DateValue;
+        break;
+      case Types.BLOB:
+      case Types.VARBINARY:
+        result = BlobValue;
         break;
       default:
         result = ObjectValue;

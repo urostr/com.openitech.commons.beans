@@ -21,6 +21,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.sql.Blob;
 import java.sql.Clob;
 import java.util.Arrays;
 import java.util.Date;
@@ -346,23 +347,40 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
   }
 
   public byte[] getValueAsByteArray() {
+
     byte[] result = new byte[]{};
-    wasNull = true;
-    if (dataSource != null && columnName != null) {
-      //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
-      if (dataSource.isDataLoaded()) {
+    Object value = getValue();
+
+    if (value != null) {
+      if (value instanceof java.sql.Blob) {
         try {
-          if (dataSource.getRowCount() > 0) {
-            result = dataSource.getBytes(columnName);
-            wasNull = dataSource.wasNull();
+          Blob blob = (Blob) value;
+          if (blob != null) {
+            result = blob.getBytes(1, (int) blob.length());
           }
         } catch (Exception ex) {
           Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
           result = new byte[]{};
         }
+      } else if (value instanceof byte[]) {
+        result = (byte[]) value;
+      } else if (dataSource != null && columnName != null) {
+        //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
+        if (dataSource.isDataLoaded()) {
+          try {
+            if (dataSource.getRowCount() > 0) {
+              result = dataSource.getBytes(columnName);
+              wasNull = dataSource.wasNull();
+            }
+          } catch (Exception ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
+            result = new byte[]{};
+          }
+        }
+        //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
       }
-      //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
     }
+
     return result;
   }
 
