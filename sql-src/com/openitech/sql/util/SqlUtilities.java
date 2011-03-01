@@ -166,7 +166,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
             case Types.INTEGER:
               if (value instanceof Number) {
                 statement.setInt(pos, ((Number) value).intValue());
-                break;
               } else {
                 statement.setInt(pos, Integer.parseInt(value.toString()));
               }
@@ -186,6 +185,20 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
                 statement.setString(pos, ((Clob) value).getSubString(1L, (int) ((Clob) value).length()));
               } else {
                 statement.setString(pos, value.toString());
+              }
+              break;
+            case Types.BLOB:
+              if (value instanceof byte[]) {
+                statement.setBytes(pos, (byte[]) value);
+              }else{
+                statement.setObject(pos, value);
+              }
+              break;
+            case Types.BIGINT:
+              if (value instanceof Number) {
+                statement.setLong(pos, ((Number) value).longValue());
+              } else {
+                statement.setLong(pos, Long.parseLong(value.toString()));
               }
               break;
             default:
@@ -461,9 +474,9 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       }
       Map<CaseInsensitiveString, Field> preparedFields;
 
-      if ((newValues.getPreparedFields()==null)&&(oldValues.getPreparedFields()==null)) {
+      if ((newValues.getPreparedFields() == null) && (oldValues.getPreparedFields() == null)) {
         preparedFields = getPreparedFields();
-      } else if (newValues.getPreparedFields()==null) {
+      } else if (newValues.getPreparedFields() == null) {
         preparedFields = oldValues.getPreparedFields();
       } else {
         preparedFields = newValues.getPreparedFields();
@@ -601,6 +614,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract void storeCachedTemporaryTable(com.openitech.db.model.xml.config.TemporaryTable tt);
 
   public abstract com.openitech.db.model.xml.config.MaterializedView getCacheDefinition(String table);
+
   public abstract com.openitech.db.model.xml.config.MaterializedView getCacheDefinition(String table, int idSifranta, String idSifre);
   /*
    * Sestavi SQL s katerim lahko pripravimo tabelo za shranjevanje rezultatov v podanem result set.

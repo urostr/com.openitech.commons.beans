@@ -678,7 +678,11 @@ public abstract class SQLValue<T> {
     public SQLBytes(int parameterIndex, byte[] value) {
       this.parameterIndex = parameterIndex;
       Byte[] bytes = new Byte[value.length];
-      System.arraycopy(value, 0, bytes, 0, bytes.length);
+      for (int i = 0; i < value.length; i++) {
+        bytes[i] = value[i];
+      }
+      //copy ne dela
+//      System.arraycopy(value, 0, bytes, 0, bytes.length);
       this.value = bytes;
     }
 

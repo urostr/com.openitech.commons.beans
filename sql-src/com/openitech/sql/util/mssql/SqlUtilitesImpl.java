@@ -16,7 +16,6 @@ import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.db.model.DbDataSourceIndex;
 import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.sql.SQLDataSource;
-import com.openitech.db.model.sql.SQLNotificationException;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
@@ -46,7 +45,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.text.FieldPosition;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -829,6 +827,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
               Date dateValue = rs_findValue.getDate("DateValue");
               result = new VariousValue(valueId, type.getTypeIndex(), dateValue);
               break;
+            case LongValue:
+              Long longValue = rs_findValue.getLong("IntValue");
+              result = new VariousValue(valueId, type.getTypeIndex(), longValue);
+              break;
             //TODO
             //object, clob, cclob
           }
@@ -890,6 +892,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
           break;
         case ObjectValue:
+        case BlobValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
           fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
