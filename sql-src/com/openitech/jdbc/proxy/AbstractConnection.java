@@ -61,10 +61,18 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
     lock();
     Connection result = null;
     try {
-      result = (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
+      if (pooledConnection == null) {
+        result = (dataSource instanceof ConnectionPoolDataSource) ? (pooledConnection = ((ConnectionPoolDataSource) dataSource).getPooledConnection()).getConnection() : dataSource.getConnection();
+      } else {
+        result = pooledConnection.getConnection();
+      }
       Statement initStatement = result.createStatement();
-      for (String sql : executeOnCreate) {
-        initStatement.execute(sql);
+      try {
+        for (String sql : executeOnCreate) {
+          initStatement.execute(sql);
+        }
+      } finally {
+        initStatement.close();
       }
       result.setAutoCommit(initAutoCommit);
     } finally {
