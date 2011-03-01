@@ -95,7 +95,6 @@ public class PooledConnectionProxy extends ConnectionProxy {
           }
           activeStatemens.clear();
           activeSavepoints.clear();
-          connection.close();
           closed = Boolean.TRUE;
 
 
