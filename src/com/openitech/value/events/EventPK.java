@@ -8,6 +8,8 @@ import com.openitech.value.VariousValue;
 import com.openitech.value.events.Event.EventOperation;
 import com.openitech.value.fields.FieldValue;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -16,6 +18,18 @@ import java.util.List;
  */
 public class EventPK {
 
+  private static final Comparator<FieldValue> FIELD_COMPARATOR = new Comparator<FieldValue>() {
+
+    @Override
+    public int compare(FieldValue o1, FieldValue o2) {
+      if (o1.getIdPolja() != o1.getIdPolja()) {
+        return o1.getIdPolja().compareTo(o1.getIdPolja());
+      } else {
+        return o1.getFieldIndex() < o2.getFieldIndex() ? -1 : (o1.getFieldIndex() == o2.getFieldIndex() ? 0 : 1);
+      }
+    }
+  };
+  
   private long eventId;
   private EventOperation eventOperation = EventOperation.UPDATE;
 
@@ -114,17 +128,10 @@ public class EventPK {
 
   public String toHexString() {
     StringBuilder result = new StringBuilder();
-    List<FieldValue> fieldValues = new ArrayList<FieldValue>();
+
+    Collections.sort(fields, FIELD_COMPARATOR);
+
     for (FieldValue fieldValue : fields) {
-      int insertIndex = 0;
-      for (FieldValue fieldValue1 : fieldValues) {
-        if (fieldValue.getIdPolja() > fieldValue1.getIdPolja()) {
-          insertIndex++;
-        }
-      }
-      fieldValues.add(insertIndex, fieldValue);
-    }
-    for (FieldValue fieldValue : fieldValues) {
       if (fieldValue.getLookupType() == null) {
         result.append("{");
         result.append(Integer.toHexString(fieldValue.getIdPolja())).append(";");
@@ -144,9 +151,9 @@ public class EventPK {
       valueId = fieldValue.getValueId();
     }
 
-    if (valueId==null) {
+    if (valueId == null) {
       return "null";
-    } else if (type==StringType.HEX) {
+    } else if (type == StringType.HEX) {
       return Long.toHexString(valueId);
     } else {
       return Long.toString(valueId);
@@ -154,6 +161,7 @@ public class EventPK {
   }
 
   private enum StringType {
+
     HEX,
     NORMAL
   }
