@@ -30,8 +30,6 @@ package com.openitech.db.components;
  */
 import com.openitech.Settings;
 import com.openitech.awt.Desktop;
-import com.openitech.db.connection.ConnectionManager;
-import com.openitech.db.connection.DbConnection;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
@@ -64,9 +62,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -248,8 +243,6 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
               tempFile.createNewFile();
 
               ImageIO.write((BufferedImage) img, "jpg", tempFile);
-//              new ProcessBuilder("msPaint", tempFile.getAbsolutePath()).start();
-//              new ProcessBuilder("rundll32.exe", "C:\\WINDOWS\\System32\\shimgvw.dll,ImageView_Fullscreen", tempFile.getAbsolutePath()).start();
               Desktop.open(tempFile);
             }
           } catch (IOException ex) {
