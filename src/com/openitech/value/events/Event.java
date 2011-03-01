@@ -446,7 +446,7 @@ public class Event {
 
   public EventPK getEventPK(final Map<CaseInsensitiveString, Field> preparedFields) {
     EventPK eventPK = null;
-    if (getId() != null) {
+//    if (getId() != null) {
       try {
         eventPK = new EventPK(id, sifrant, sifra);
         eventPK.setEventOperation(operation);
@@ -496,7 +496,7 @@ public class Event {
       } catch (SQLException ex) {
         Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
       }
-    }
+//    }
     return eventPK;
 
   }
