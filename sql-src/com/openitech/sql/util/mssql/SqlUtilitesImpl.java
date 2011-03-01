@@ -857,6 +857,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       switch (fieldType) {
         case BitValue:
         case IntValue:
+        case LongValue:
           fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, value);
           fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
           fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
