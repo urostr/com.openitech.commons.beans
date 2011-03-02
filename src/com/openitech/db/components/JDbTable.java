@@ -17,7 +17,11 @@ import com.openitech.db.model.DbNavigatorDataSource;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.DbTableRowSorter;
 import java.awt.Color;
+
 import java.awt.EventQueue;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Constructor;
@@ -25,8 +29,13 @@ import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -77,6 +86,18 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     setSelectionForeground(Color.black);
     setSelectionBackground(new Color(204, 204, 255));
     setBackground(Color.white);
+
+    InputMap editorInputMap = getInputMap();
+    ActionMap actionMap = getActionMap();
+    Action copyAction = new AbstractAction() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        copy();
+      }
+    };
+    editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_DOWN_MASK), copyAction);
+    actionMap.put(copyAction, copyAction);
 
     putClientProperty("Quaqua.Table.style", "striped");
     javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
@@ -134,11 +155,35 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     });
 
     menu.add(aReload);
+
+    org.jdesktop.swingx.action.BoundAction copy = new org.jdesktop.swingx.action.BoundAction("Copy", "COPY");
+    copy.addActionListener(new ActionListener() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        copy();
+      }
+    });
+
+    menu.add(copy);
+
+
     setComponentPopupMenu(menu);
     try {
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, null, "tableModel_activeRowChanged");
     } catch (NoSuchMethodException ex) {
       Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
+    }
+  }
+
+  public void copy() {
+    try {
+      String value = getValueAt(getSelectedRow(), getSelectedColumn()).toString();
+      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+      clipboard.setContents(new StringSelection(value), null);
+      System.out.println("Copy Pressed. Value=" + value);
+    } catch (Exception ex) {
+      //ignore
     }
   }
   private JMenuItem activeFiltersMenu;
@@ -548,9 +593,8 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     checkDataSource();
   }
 
-
   private void checkDataSource() {
-    if (getDataSource()!=null) {
+    if (getDataSource() != null) {
       setCanExportData(getDataSource().isCanExportData());
     }
   }
