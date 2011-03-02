@@ -61,4 +61,10 @@ public interface EventQuery {
    * @return the value of searchFields
    */
   public Set<Field> getSearchFields();
+
+  /**
+   * Check if we're searching by the event's primary key
+   * 
+   */
+  public boolean isSearchByEventPK();
 }
