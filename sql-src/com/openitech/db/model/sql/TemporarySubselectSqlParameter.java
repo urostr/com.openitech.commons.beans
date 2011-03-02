@@ -240,7 +240,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   private String qEmptyTable;
   private List<PreparedStatement> psEmptyTable = new ArrayList<PreparedStatement>();
   private String qIsTableDataValidSql = null;
-  private PreparedStatement psIsTableDataValidSql = null;
+  private List<PreparedStatement> psIsTableDataValidSql = new ArrayList<PreparedStatement>();
 
   public boolean isTableDataValidSql(Connection connection, java.util.List<Object> parameters) {
     if (isTableDataValidSql == null) {
@@ -251,26 +251,46 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         String query = SQLDataSource.substParameters(isTableDataValidSql, parameters);
         if (!Equals.equals(this.connection, connection)
                 || !Equals.equals(this.qIsTableDataValidSql, query)) {
+          String[] sqls = query.split(";");
+          for (PreparedStatement preparedStatement : this.psIsTableDataValidSql) {
+            preparedStatement.close();
+          }
+          this.psIsTableDataValidSql.clear();
+          for (String sql : sqls) {
+            this.psIsTableDataValidSql.add(connection.prepareStatement(sql,
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY,
+                    ResultSet.HOLD_CURSORS_OVER_COMMIT));
+          }
           this.qIsTableDataValidSql = query;
-          psIsTableDataValidSql = connection.prepareStatement(this.qIsTableDataValidSql,
-                  ResultSet.TYPE_SCROLL_INSENSITIVE,
-                  ResultSet.CONCUR_READ_ONLY,
-                  ResultSet.HOLD_CURSORS_OVER_COMMIT);
+
           this.connection = connection;
         }
+
+        boolean result = true;
 
         if (DbDataSource.DUMP_SQL) {
           System.out.println("##############");
           System.out.println(this.qIsTableDataValidSql);
         }
-        ResultSet executeQuery = SQLDataSource.executeQuery(psIsTableDataValidSql, parameters);
+        for (PreparedStatement preparedStatement : psIsTableDataValidSql) {
+          ResultSet executeQuery = SQLDataSource.executeQuery(preparedStatement, parameters);
+          try {
+            if (executeQuery.next()) {
+              result = result || executeQuery.getBoolean(1);
+            }
+          } finally {
+            executeQuery.close();
+          }
+          if (!result) {
+            break;
+          }
+        }
         if (DbDataSource.DUMP_SQL) {
           System.out.println("tt:isvalid:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
           System.out.println("##############");
         }
-        if (executeQuery.next()) {
-          return executeQuery.getBoolean(1);
-        }
+        return result;
       } catch (SQLException ex) {
         Logger.getLogger(SQLMaterializedView.class.getName()).log(Level.SEVERE, null, ex);
       }
@@ -340,15 +360,15 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             fill = true;
           }
 
-          qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
-
-          fill = fill || !isTableDataValidSql(connection, qparams);
+          fill = fill || !isTableDataValidSql(connection, new ArrayList<Object>());
 
           if ((!fill) && (sqlMaterializedView != null)) {
-            fill = !sqlMaterializedView.isViewValid(connection, qparams);
+            fill = !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
           }
 
           if (fill && !disabled) {
+            qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+
             if (sqlMaterializedView != null) {
               if (!(transaction || tm.isTransaction())) {
                 tm.beginTransaction();

@@ -13,6 +13,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -98,10 +100,9 @@ public class SQLMaterializedView extends SubstSqlParameter {
   public void setSetViewVersionSql(String setViewVersionSql) {
     this.setViewVersionSql = setViewVersionSql;
   }
-  
   private Connection connection = null;
   private String qIsViewValid = null;
-  private PreparedStatement isViewValid = null;
+  private List<PreparedStatement> isViewValid = new ArrayList<PreparedStatement>();
   private final ReentrantLock lock = new ReentrantLock();
 
   public boolean isViewValid(Connection connection, java.util.List<Object> parameters) {
@@ -109,29 +110,47 @@ public class SQLMaterializedView extends SubstSqlParameter {
     try {
       long timer = System.currentTimeMillis();
       if (!Equals.equals(this.connection, connection)) {
-        this.qIsViewValid = SQLDataSource.substParameters(isViewValidSQL, parameters);
-        if (isViewValid!=null) {
-          isViewValid.close();
+        String query = SQLDataSource.substParameters(isViewValidSQL, parameters);
+        String[] sqls = query.split(";");
+        for (PreparedStatement preparedStatement : this.isViewValid) {
+          preparedStatement.close();
         }
-        isViewValid = connection.prepareStatement(this.qIsViewValid,
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY,
-                ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        this.isViewValid.clear();
+        for (String sql : sqls) {
+          this.isViewValid.add(connection.prepareStatement(sql,
+                  ResultSet.TYPE_SCROLL_INSENSITIVE,
+                  ResultSet.CONCUR_READ_ONLY,
+                  ResultSet.HOLD_CURSORS_OVER_COMMIT));
+        }
+        this.qIsViewValid = query;
+
         this.connection = connection;
       }
+
+      boolean result = true;
 
       if (DbDataSource.DUMP_SQL) {
         System.out.println("##############");
         System.out.println(this.qIsViewValid);
       }
-      ResultSet executeQuery = SQLDataSource.executeQuery(isViewValid, parameters);
+      for (PreparedStatement preparedStatement : isViewValid) {
+        ResultSet executeQuery = SQLDataSource.executeQuery(preparedStatement, parameters);
+        try {
+          if (executeQuery.next()) {
+            result = result || executeQuery.getBoolean(1);
+          }
+        } finally {
+          executeQuery.close();
+        }
+        if (!result) {
+          break;
+        }
+      }
       if (DbDataSource.DUMP_SQL) {
         System.out.println("materialized:isvalid:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
         System.out.println("##############");
       }
-      if (executeQuery.next()) {
-        return executeQuery.getBoolean(1);
-      }
+      return result;
     } catch (SQLException ex) {
       Logger.getLogger(SQLMaterializedView.class.getName()).log(Level.SEVERE, null, ex);
     } finally {
