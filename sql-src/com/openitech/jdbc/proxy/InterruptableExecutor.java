@@ -25,7 +25,8 @@ import java.util.concurrent.TimeUnit;
 public class InterruptableExecutor extends ThreadPoolExecutor implements Interruptable {
 
   protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
-  protected boolean stopThread = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_STOP_LOADING_THREAD, "true"));
+  protected boolean shadowLoadingInterrupt = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_INTERRUPT, "false"));
+  protected boolean stopThread = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_STOP_LOADING_THREAD, "false"));
   private final Map<Runnable, Thread> tasks = new ConcurrentHashMap<Runnable, Thread>();
 
   public InterruptableExecutor() {
@@ -60,17 +61,20 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
    * @throws CancellationException {@inheritDoc}
    */
   public <V> V get(Callable<V> task) throws SQLException {
-    if (isShadowLoading()) {
+    if (isShadowLoading()&&isShadowLoadingInterrupt()) {
       try {
         Future<V> future = super.submit(task);
         return future.get();
 //      return task.call();
       } catch (InterruptedException ex) {
         throw new SQLException("SQL execution interrupted", ex);
-      } catch (ExecutionException ex) {
+      } catch (Exception ex) {
         if (ex.getCause() instanceof SQLException) {
           throw new SQLException("SQL execution failed", ex.getCause());
         } else {
+          if (ex.getCause()!=null) {
+            ex.getCause().printStackTrace(System.err);
+          }
           throw new SQLException("SQL execution rejected", ex);
         }
       }
@@ -91,4 +95,14 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
   public boolean isShadowLoading() {
     return shadowLoading;
   }
+
+  /**
+   * Get the value of shadowLoadingInterrupt
+   *
+   * @return the value of shadowLoadingInterrupt
+   */
+  public boolean isShadowLoadingInterrupt() {
+    return shadowLoadingInterrupt;
+  }
+
 }
