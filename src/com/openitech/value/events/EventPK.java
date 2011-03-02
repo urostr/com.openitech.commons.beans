@@ -30,17 +30,17 @@ public class EventPK {
     }
   };
   
-  private long eventId;
+  private Long eventId;
   private EventOperation eventOperation = EventOperation.UPDATE;
 
   public EventPK() {
   }
 
-  public EventPK(long eventId, int idSifranta, String idSifre) {
+  public EventPK(Long eventId, int idSifranta, String idSifre) {
     this(eventId, idSifranta, idSifre, null);
   }
 
-  public EventPK(long eventId, int idSifranta, String idSifre, Integer versionID) {
+  public EventPK(Long eventId, int idSifranta, String idSifre, Integer versionID) {
     this.eventId = eventId;
     this.idSifranta = idSifranta;
     this.idSifre = idSifre;
@@ -52,7 +52,7 @@ public class EventPK {
    *
    * @return the value of eventId
    */
-  public long getEventId() {
+  public Long getEventId() {
     return eventId;
   }
 
@@ -61,7 +61,7 @@ public class EventPK {
    *
    * @param eventId new value of eventId
    */
-  public void setEventId(long eventId) {
+  public void setEventId(Long eventId) {
     this.eventId = eventId;
   }
   private int idSifranta;

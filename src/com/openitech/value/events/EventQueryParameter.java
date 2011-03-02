@@ -24,9 +24,6 @@ public abstract class EventQueryParameter extends DbDataSource.SubstSqlParameter
     namedParameters.put(Field.VERSION, this.versionId);
   }
 
-  public abstract void setEventPK(EventPK eventPK);
-  public abstract EventPK getEventPK();
-
   public abstract boolean hasVersionId();
 
   @Override
