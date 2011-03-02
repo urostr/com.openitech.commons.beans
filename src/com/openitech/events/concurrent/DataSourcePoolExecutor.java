@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 public class DataSourcePoolExecutor extends ThreadPoolExecutor {
 
   protected static final Map<RefreshDataSource, Thread> tasks = new ConcurrentHashMap<RefreshDataSource, Thread>();
-  public static boolean ALLOW_TERMINATE = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_INTERRUPT, "true"));
+  public static boolean ALLOW_TERMINATE = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_INTERRUPT, "false"));
 
   protected DataSourcePoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
     super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
