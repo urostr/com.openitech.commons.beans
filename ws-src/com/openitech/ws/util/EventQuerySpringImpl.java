@@ -75,6 +75,11 @@ public class EventQuerySpringImpl implements EventQuery{
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
+  @Override
+  public boolean isSearchByEventPK() {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
 
 
 }
