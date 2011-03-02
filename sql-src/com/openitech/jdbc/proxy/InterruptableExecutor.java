@@ -60,10 +60,14 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
    * @throws CancellationException {@inheritDoc}
    */
   public <V> V get(Callable<V> task) throws SQLException {
-    if (isShadowLoading()&&isShadowLoadingInterrupt()) {
+    if (isShadowLoading() && isShadowLoadingInterrupt()) {
       try {
-        Future<V> future = super.submit(task);
-        return future.get();
+        V result;
+        synchronized (this) {
+          Future<V> future = super.submit(task);
+          result = future.get();
+        }
+        return result;
 //      return task.call();
       } catch (InterruptedException ex) {
         throw new SQLException("SQL execution interrupted", ex);
@@ -71,7 +75,7 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
         if (ex.getCause() instanceof SQLException) {
           throw new SQLException("SQL execution failed", ex.getCause());
         } else {
-          if (ex.getCause()!=null) {
+          if (ex.getCause() != null) {
             ex.getCause().printStackTrace(System.err);
           }
           throw new SQLException("SQL execution rejected", ex);
@@ -103,5 +107,4 @@ public class InterruptableExecutor extends ThreadPoolExecutor implements Interru
   public boolean isShadowLoadingInterrupt() {
     return shadowLoadingInterrupt;
   }
-
 }
