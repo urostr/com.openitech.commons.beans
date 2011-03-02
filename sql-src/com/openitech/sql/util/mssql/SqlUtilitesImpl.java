@@ -25,10 +25,8 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
-import com.openitech.jdbc.values.SQLValue.SQLUnicodeStream;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
-import com.openitech.util.Equals;
 import com.openitech.value.StringValue;
 import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
@@ -1735,7 +1733,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           search_by_PK.setInt(param++, idSifranta);
           search_by_PK.setString(param++, sifra);
 
-          ResultSet rs = get_field.executeQuery();
+          ResultSet rs = search_by_PK.executeQuery();
           try {
             if (rs.next()) {
               result = result && (rs.getInt(1) == 0);
@@ -2448,7 +2446,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     List<Object> evNonVersionedParameters = new ArrayList<Object>();
     List<Object> evVersionedParameters = new ArrayList<Object>();
 
-    public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly) {
+    public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
       super(namedParameters);
 
       final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifrant);
@@ -2491,6 +2489,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlFindEventDate.addParameter(new SqlParameter<Date>(java.sql.Types.TIMESTAMP, eventDatum));
       }
 
+      setEventPK(eventPK);
+
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventType);
@@ -2519,8 +2519,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
      *
      * @return the value of eventPK
      */
-    @Override
-    public EventPK getEventPK() {
+    protected EventPK getEventPK() {
       return eventPK;
     }
 
@@ -2529,12 +2528,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
      *
      * @param eventPK new value of eventPK
      */
-    @Override
-    public void setEventPK(EventPK eventPK) {
+    protected void setEventPK(EventPK eventPK) {
       this.eventPK = eventPK;
       if (eventPK==null) {
         sqlFindEventVersion.setValue("");
+        sqlFindEventVersion.clearParameters();
         sqlFindEventPk.setValue("");
+        sqlFindEventPk.clearParameters();
       } else {
         sqlFindEventPk.setValue("ev.[Id] IN ("+EV_SEARCH_BY_PK_SUBQUERY+")");
         sqlFindEventPk.addParameter(sqlEventSifrant);
@@ -2562,12 +2562,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-  @Override
-  public EventQueryParameter getEventQueryParameter(Map<Field, SqlParameter<Object>> namedParameters, Integer eventSource, Date eventDatum, int sifrant, String[] sifra, boolean validOnly) {
-    return new EventFilterSearch(namedParameters, eventSource, eventDatum, sifrant, sifra, validOnly);
-  }
-
-  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly) {
+  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly, EventPK eventPK) {
     StringBuilder sb = new StringBuilder(500);
     StringBuilder sbresult = new StringBuilder(500);
     DbDataSource.SubstSqlParameter sqlResultLimit = new DbDataSource.SubstSqlParameter("<%ev_result_limit%>");
@@ -2575,7 +2570,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : " DISTINCT TOP 100 PERCENT ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
     parameters.add(sqlResultFields);
-    EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE) ? event.getEventSource() : null, searchFields.contains(Event.EVENT_DATE) ? event.getDatum() : null, sifrant, sifra, validOnly);
+    EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE) ? event.getEventSource() : null, searchFields.contains(Event.EVENT_DATE) ? event.getDatum() : null, sifrant, sifra, validOnly, eventPK);
     parameters.add(eventSearchFilter);
     DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
     parameters.add(sqlFind);
@@ -2932,15 +2927,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
     result.sifra = sifra;
     result.resultFields = Collections.unmodifiableSet(resultFields);
     result.searchFields = Collections.unmodifiableSet(searchFields);
-    if (parent.getPrimaryKey() == null) {
-      result.searchByEventPK = false;
-    } else {
-      result.searchByEventPK = (searchFields.size() == parent.getPrimaryKey().length) && searchFields.containsAll(Arrays.asList(parent.getPrimaryKey()));
-      if (result.searchByEventPK) {
-        result.searchByEventPK = getSearchByEventPK(sifrant, sifra);
-      }
-    }
-    result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, validOnly, lastEntryOnly);
+    result.eventPK = null;
+//    if (parent.getPrimaryKey() == null) {
+//      result.searchByEventPK = false;
+//    } else {
+//      result.searchByEventPK = searchFields.containsAll(Arrays.asList(parent.getPrimaryKey()));
+//      if (result.searchByEventPK) {
+//        result.searchByEventPK = getSearchByEventPK(sifrant, sifra);
+//      }
+////      if (result.searchByEventPK) {
+////        result.eventPK = new EventPK();
+////      }
+//    }
+    result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, validOnly, lastEntryOnly, result.eventPK);
 
     return result;
   }
@@ -2948,6 +2947,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public static class EventQueryImpl implements EventQuery {
 
     private Event parent;
+    private EventPK eventPK;
     private int valuesSet = 0;
     private List<Object> parameters = new ArrayList<Object>();
     private Map<Field, DbDataSource.SqlParameter<Object>> namedParameters = new HashMap<Field, DbDataSource.SqlParameter<Object>>();

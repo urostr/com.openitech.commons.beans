@@ -599,8 +599,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     return prepareEventQuery(event, searchFields, resultFields, event.getSifrant(), new String[]{event.getSifra()}, true, false);
   }
 
-  public abstract EventQueryParameter getEventQueryParameter(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly);
-
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly);
 
   public abstract Map<String, com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
