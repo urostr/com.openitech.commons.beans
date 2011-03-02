@@ -605,6 +605,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Map<String, com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
 
+  public abstract boolean getSearchByEventPK(int idSifranta, String... idSifre);
+
   public void storeCachedTemporaryTable(TemporarySubselectSqlParameter ttsql) {
     if (ttsql.getSqlMaterializedView() != null) {
       storeCachedTemporaryTable(ttsql.getTemporaryTable());

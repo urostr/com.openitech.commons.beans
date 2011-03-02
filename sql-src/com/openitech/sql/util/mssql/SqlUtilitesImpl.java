@@ -25,8 +25,10 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
+import com.openitech.jdbc.values.SQLValue.SQLUnicodeStream;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
+import com.openitech.util.Equals;
 import com.openitech.value.StringValue;
 import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
@@ -112,6 +114,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement insertScheduler;
   PreparedStatement delete_eventPKVersions;
   PreparedStatement update_eventPK_versions_byValue;
+  PreparedStatement search_by_PK;
+  PreparedStatement find_event_by_PK;
   Map<CaseInsensitiveString, Field> preparedFields;
 
   @Override
@@ -1714,6 +1718,41 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
 
+  @Override
+  public boolean getSearchByEventPK(int idSifranta, String... idSifre) {
+    boolean result = false;
+    try {
+      if (search_by_PK == null) {
+        final Connection connection = ConnectionManager.getInstance().getTxConnection();
+        search_by_PK = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "search_by_pk.sql", "cp1250"));
+      }
+
+      result = true;
+      for (String sifra : idSifre) {
+        synchronized (search_by_PK) {
+          int param = 1;
+          search_by_PK.clearParameters();
+          search_by_PK.setInt(param++, idSifranta);
+          search_by_PK.setString(param++, sifra);
+
+          ResultSet rs = get_field.executeQuery();
+          try {
+            if (rs.next()) {
+              result = result && (rs.getInt(1) == 0);
+            }
+          } finally {
+            rs.close();
+          }
+        }
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, null, ex);
+      result = false;
+    }
+
+    return result;
+  }
+
   private static class EventQueryKey {
 
     public EventQueryKey(Event event) {
@@ -1823,6 +1862,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
      */
     public void setEventQuery(EventQuery eventQuery) {
       this.eventQuery = eventQuery;
+      this.searchByEventPK = eventQuery.isSearchByEventPK();
+    }
+    protected boolean searchByEventPK;
+
+    /**
+     * Get the value of searchByEventPK
+     *
+     * @return the value of searchByEventPK
+     */
+    public boolean isSearchByEventPK() {
+      return searchByEventPK;
     }
 
     public ResultSet executeQuery(Event event) throws SQLException {
@@ -2381,11 +2431,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     private static final String EV_VERSIONED_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_versioned.sql", "cp1250");
     private static final String EV_NONVERSIONED_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_valid.sql", "cp1250");
+    private static final String EV_SEARCH_BY_PK_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_PK.sql", "cp1250");
+    private static final String EV_SEARCH_BY_VERSION_PK_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_version_PK.sql", "cp1250");
+    
     DbDataSource.SubstSqlParameter sqlFindEventVersion = new DbDataSource.SubstSqlParameter("<%ev_version_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventSource = new DbDataSource.SubstSqlParameter("<%ev_source_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
+    DbDataSource.SubstSqlParameter sqlFindEventPk = new DbDataSource.SubstSqlParameter("<%ev_pk_filter%>");
+    DbDataSource.SubstSqlParameter sqlFindEventVersionPk = new DbDataSource.SubstSqlParameter("<%ev_version_pk_filter%>");
+    DbDataSource.SubstSqlParameter sqlEventSifrant = new DbDataSource.SubstSqlParameter("<%ev_sifrant%>");
+    DbDataSource.SubstSqlParameter sqlEventSifra = new DbDataSource.SubstSqlParameter("<%ev_sifra%>");
     String evVersionedSubquery;
     String evNonVersionedSubquery;
     List<Object> evNonVersionedParameters = new ArrayList<Object>();
@@ -2418,6 +2475,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlFindEventType.setValue(sbet.toString());
       }
 
+      sqlEventSifrant.setValue("ev.[IdSifranta]");
+      sqlEventSifra.setValue("ev.[IdSifre]");
+
       if (eventSource == null) {
         sqlFindEventSource.setValue("");
       } else {
@@ -2436,18 +2496,59 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evVersionedParameters.add(sqlFindEventType);
       evVersionedParameters.add(sqlFindEventSource);
       evVersionedParameters.add(sqlFindEventDate);
+      evVersionedParameters.add(sqlFindEventVersionPk);
       evVersionedSubquery = SQLDataSource.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
 
       evNonVersionedParameters.add(sqlFindEventType);
       evNonVersionedParameters.add(sqlFindEventValid);
       evNonVersionedParameters.add(sqlFindEventSource);
       evNonVersionedParameters.add(sqlFindEventDate);
+      evNonVersionedParameters.add(sqlFindEventPk);
       evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
     @Override
     public boolean hasVersionId() {
       return versionId.getValue() != null && (((Long) versionId.getValue()) > 0);
+    }
+
+    protected EventPK eventPK;
+
+    /**
+     * Get the value of eventPK
+     *
+     * @return the value of eventPK
+     */
+    @Override
+    public EventPK getEventPK() {
+      return eventPK;
+    }
+
+    /**
+     * Set the value of eventPK
+     *
+     * @param eventPK new value of eventPK
+     */
+    @Override
+    public void setEventPK(EventPK eventPK) {
+      this.eventPK = eventPK;
+      if (eventPK==null) {
+        sqlFindEventVersion.setValue("");
+        sqlFindEventPk.setValue("");
+      } else {
+        sqlFindEventPk.setValue("ev.[Id] IN ("+EV_SEARCH_BY_PK_SUBQUERY+")");
+        sqlFindEventPk.addParameter(sqlEventSifrant);
+        sqlFindEventPk.addParameter(sqlEventSifra);
+        sqlFindEventPk.addParameter(eventPK.getPrimaryKey());
+
+        sqlFindEventVersionPk.setValue("ev.[Id] IN ("+EV_SEARCH_BY_VERSION_PK_SUBQUERY+")");
+        sqlFindEventVersionPk.addParameter(sqlEventSifrant);
+        sqlFindEventVersionPk.addParameter(sqlEventSifra);
+        sqlFindEventVersionPk.addParameter(sqlFindEventVersion);
+        sqlFindEventVersionPk.addParameter(eventPK.getPrimaryKey());
+      }
+      evVersionedSubquery = SQLDataSource.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
+      evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
     @Override
@@ -2831,6 +2932,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
     result.sifra = sifra;
     result.resultFields = Collections.unmodifiableSet(resultFields);
     result.searchFields = Collections.unmodifiableSet(searchFields);
+    if (parent.getPrimaryKey() == null) {
+      result.searchByEventPK = false;
+    } else {
+      result.searchByEventPK = (searchFields.size() == parent.getPrimaryKey().length) && searchFields.containsAll(Arrays.asList(parent.getPrimaryKey()));
+      if (result.searchByEventPK) {
+        result.searchByEventPK = getSearchByEventPK(sifrant, sifra);
+      }
+    }
     result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, validOnly, lastEntryOnly);
 
     return result;
@@ -2939,6 +3048,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
     @Override
     public Set<Field> getSearchFields() {
       return searchFields;
+    }
+    protected boolean searchByEventPK;
+
+    /**
+     * Get the value of searchByEventPK
+     *
+     * @return the value of searchByEventPK
+     */
+    @Override
+    public boolean isSearchByEventPK() {
+      return searchByEventPK;
     }
   }
 }
