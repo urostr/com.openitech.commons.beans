@@ -143,18 +143,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       //ignore it;
     }
 
-    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke", "RELOAD");
-    aReload.addActionListener(new ActionListener() {
-
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if (getDataSource() != null) {
-          getDataSource().reload();
-        }
-      }
-    });
-
-    menu.add(aReload);
+    
 
     org.jdesktop.swingx.action.BoundAction copy = new org.jdesktop.swingx.action.BoundAction("Copy", "COPY");
     copy.addActionListener(new ActionListener() {
@@ -167,6 +156,18 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
     menu.add(copy);
 
+    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke", "RELOAD");
+    aReload.addActionListener(new ActionListener() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if (getDataSource() != null) {
+          getDataSource().reload();
+        }
+      }
+    });
+
+    menu.add(aReload);
 
     setComponentPopupMenu(menu);
     try {
