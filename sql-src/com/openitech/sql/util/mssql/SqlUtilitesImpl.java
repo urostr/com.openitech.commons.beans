@@ -1220,21 +1220,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
     String changeLog = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB);
     MaterializedView result = new MaterializedView();
     result.setValue("[MViewCache].[dbo].[" + table + "]");
-//    result.setIsViewValidSql(com.openitech.text.Document.identText(
-//            "EXECUTE [MViewCache].[dbo].[isValidCachedEvent]" +
-//            "                     N'[MViewCache].[dbo].[" + table + "]'" +
-//            "        ,"+idSifranta+
-//            ",'" + idSifre + "'",15));
     result.setIsViewValidSql(com.openitech.text.Document.identText(
-              "\nSELECT CAST(CASE WHEN count(*) = 0 THEN 1 ELSE 0 END AS BIT) AS Valid FROM " + changeLog + ".[dbo].[Events] ev WITH (NOLOCK) "
-            + "\n    WHERE ev.[IdSifranta] = " + idSifranta + " AND"
-            + "\n          ev.[IdSifre] = '" + idSifre + "' AND"
-            + "\n          ev.valid = 1 AND"
-            + "\n          NOT EXISTS (SELECT Id FROM [MViewCache].[dbo].[" + table + "] cached WITH (NOLOCK) WHERE cached.Id = ev.Id AND cached.Version=ev.Version );"
-            + "\n"
-            + "\nSELECT CAST(CASE WHEN count(*) = 0 THEN 1 ELSE 0 END AS BIT) AS Valid FROM [MViewCache].[dbo].[" + table + "] WITH (NOLOCK) "
-            + "\n    WHERE [Version] NOT IN (SELECT ev.Version FROM " + changeLog + ".[dbo].[Events] ev WITH (NOLOCK) WHERE ev.[IdSifranta] = " + idSifranta + " AND ev.[IdSifre] = '" + idSifre + "' AND ev.valid = 1)"
-            + "\n", 15));
+            "\nEXECUTE [MViewCache].[dbo].[isValidCachedEvent]" +
+            "\n         N'[MViewCache].[dbo].[" + table + "]'" +
+            "\n        ,"+idSifranta+
+            "\n        ,'" + idSifre + "'",15));
+//    result.setIsViewValidSql(com.openitech.text.Document.identText(
+//              "\nSELECT CAST(CASE WHEN count(*) = 0 THEN 1 ELSE 0 END AS BIT) AS Valid FROM " + changeLog + ".[dbo].[Events] ev WITH (NOLOCK) "
+//            + "\n    WHERE ev.[IdSifranta] = " + idSifranta + " AND"
+//            + "\n          ev.[IdSifre] = '" + idSifre + "' AND"
+//            + "\n          ev.valid = 1 AND"
+//            + "\n          NOT EXISTS (SELECT Id FROM [MViewCache].[dbo].[" + table + "] cached WITH (NOLOCK) WHERE cached.Id = ev.Id AND cached.Version=ev.Version );"
+//            + "\n"
+//            + "\nSELECT CAST(CASE WHEN count(*) = 0 THEN 1 ELSE 0 END AS BIT) AS Valid FROM [MViewCache].[dbo].[" + table + "] WITH (NOLOCK) "
+//            + "\n    WHERE [Version] NOT IN (SELECT ev.Version FROM " + changeLog + ".[dbo].[Events] ev WITH (NOLOCK) WHERE ev.[IdSifranta] = " + idSifranta + " AND ev.[IdSifre] = '" + idSifre + "' AND ev.valid = 1)"
+//            + "\n", 15));
     result.setSetViewVersionSql("EXECUTE [MViewCache].[dbo].[updateRefreshDate] '" + table + "'");
     return result;
   }
