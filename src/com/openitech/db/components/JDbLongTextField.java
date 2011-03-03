@@ -16,9 +16,15 @@ import com.openitech.text.FormatFactory;
  */
 public class JDbLongTextField extends JDbFormattedTextField {
 
+
   /** Creates a new instance of JDbIntegerTextField */
   public JDbLongTextField() {
     super();
+    setColumns(10);
     setFormat(FormatFactory.getLongNumberFormat());
+  }
+
+  public void setLength(int length) {
+    setColumns(length + 1);
   }
 }
