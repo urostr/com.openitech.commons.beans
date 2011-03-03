@@ -249,17 +249,22 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
         alDataSource = new ActionListener() {
 
           public void actionPerformed(ActionEvent e) {
+            final String actionCommand = e.getActionCommand();
             if (dataSource != null) {
-              boolean updating = false;
-              try {
-                updating = dataSource.isDataLoaded() && (dataSource.rowInserted() || dataSource.rowUpdated());
-              } catch (SQLException ex) {
-                Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
-              }
+              if (!actionCommand.equals(DbDataSource.UPDATE_ROW)
+                      && !actionCommand.equals(DbDataSource.CAN_UPDATE_ROW)) {
 
-              dbDataModel.disableFilters(!updating);
+                boolean updating = false;
+                try {
+                  updating = dataSource.isDataLoaded() && (dataSource.rowInserted() || dataSource.rowUpdated());
+                } catch (SQLException ex) {
+                  Logger.getLogger(JPIzbiraNaslova.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                dbDataModel.disableFilters(!updating);
+              }
             }
-            if (e.getActionCommand().equals(DbDataSource.UPDATE_ROW)) {
+            if (actionCommand.equals(DbDataSource.UPDATE_ROW)) {
               updateMIDs();
             }
           }
