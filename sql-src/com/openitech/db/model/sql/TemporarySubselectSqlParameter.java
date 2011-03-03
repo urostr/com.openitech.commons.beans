@@ -360,14 +360,15 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             fill = true;
           }
 
-          fill = fill || !isTableDataValidSql(connection, new ArrayList<Object>());
+          qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+
+          fill = fill || !isTableDataValidSql(connection, qparams);
 
           if ((!fill) && (sqlMaterializedView != null)) {
-            fill = !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
+            fill = !sqlMaterializedView.isViewValid(connection, qparams);
           }
 
           if (fill && !disabled) {
-            qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
 
             if (sqlMaterializedView != null) {
               if (!(transaction || tm.isTransaction())) {
