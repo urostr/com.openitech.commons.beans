@@ -196,6 +196,7 @@
       <xsd:element name="IsViewValidSql" type="xsd:string"></xsd:element>
       <xsd:element name="SetViewVersionSql" type="xsd:string" minOccurs="0"></xsd:element>
     </xsd:all>
+    <xsd:attribute name="UseParameters" type="xsd:boolean" default="false"/>
   </xsd:complexType>
   <xsd:complexType name="TemporaryTable">
     <xsd:all>
@@ -259,6 +260,7 @@
     </xsd:all>
     <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
     <xsd:attribute name="Disabled" default="false" type="xsd:boolean"/>
+    <xsd:attribute name="UseParameters" type="xsd:boolean" default="false"/>
   </xsd:complexType>
   <xsd:complexType name="DataModel">
     <xsd:all>
@@ -645,5 +647,6 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
+
 
 

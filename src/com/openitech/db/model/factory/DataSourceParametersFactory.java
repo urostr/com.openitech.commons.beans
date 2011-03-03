@@ -107,6 +107,8 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     if (tt.getIsTableDataValidSql() != null) {
       ttParameter.setIsTableDataValidSql(getReplacedSql(tt.getIsTableDataValidSql()));
     }
+    ttParameter.setHasParameters(tt.isUseParameters());
+
     if (tt.getParameter() != null) {
       for (QueryParameter parameter : tt.getParameter().getParameters()) {
         final Object queryParameter = createQueryParameter(parameter);
@@ -124,6 +126,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
       mv.setValue(tt.getMaterializedView().getValue());
       mv.setIsViewValidSQL(tt.getMaterializedView().getIsViewValidSql());
       mv.setSetViewVersionSql(tt.getMaterializedView().getSetViewVersionSql());
+      mv.setHasParameters(tt.getMaterializedView().isUseParameters());
       ttParameter.setSqlMaterializedView(mv);
     }
     ttParameter.setDisabled(tt.isDisabled());
