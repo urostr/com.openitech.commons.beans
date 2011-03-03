@@ -355,6 +355,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
           boolean transaction = false;
           boolean commit = false;
+          boolean preparedTemporary = false;
 
           try {
             if (checkTableSql != null) {
@@ -377,14 +378,19 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
             }
             statement.executeBatch();
+
+            qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+            preparedTemporary = true;
+
             fill = true;
           }
 
-          boolean preparedTemporary = false;
 
           if (isUseParameters()) {
-            qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
-            preparedTemporary = true;
+            if (!preparedTemporary) {
+              qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+              preparedTemporary = true;
+            }
             fill = fill || !isTableDataValidSql(connection, qparams);
           } else {
             fill = fill || !isTableDataValidSql(connection, new ArrayList<Object>());
@@ -393,8 +399,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
           if ((!fill) && (sqlMaterializedView != null)) {
             if (sqlMaterializedView.isUseParameters()) {
-              qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
-              preparedTemporary = true;
+              if (!preparedTemporary) {
+                qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+                preparedTemporary = true;
+              }
               fill = !sqlMaterializedView.isViewValid(connection, qparams);
             } else {
               fill = !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
