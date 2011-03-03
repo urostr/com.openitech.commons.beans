@@ -5583,6 +5583,26 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     this.goToLastOnInsert = goToLastOnInsert;
   }
 
+  public boolean goToFirstOnInsert = false;
+
+  /**
+   * Get the value of goToLastOnInsert
+   *
+   * @return the value of goToLastOnInsert
+   */
+  public boolean isGoToFirstOnInsert() {
+    return goToFirstOnInsert;
+  }
+
+  /**
+   * Set the value of goToLastOnInsert
+   *
+   * @param goToLastOnInsert new value of goToLastOnInsert
+   */
+  public void setGoToFirstOnInsert(boolean goToFirstOnInsert) {
+    this.goToFirstOnInsert = goToFirstOnInsert;
+  }
+
 
   @Override
   public DbDataSource getDataSource() {
