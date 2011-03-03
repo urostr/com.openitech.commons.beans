@@ -225,6 +225,26 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     return sqlMaterializedView == null ? super.getValue() : sqlMaterializedView.getValue();
   }
 
+  protected boolean useParameters = false;
+
+  /**
+   * Get the value of useParameters
+   *
+   * @return the value of useParameters
+   */
+  public boolean isUseParameters() {
+    return useParameters;
+  }
+
+  /**
+   * Set the value of useParameters
+   *
+   * @param useParameters new value of useParameters
+   */
+  public void setHasParameters(boolean useParameters) {
+    this.useParameters = useParameters;
+  }
+
   public SubstSqlParameter getSubstSqlParameter() {
     SubstSqlParameter substSqlParameter = new DbDataSource.SubstSqlParameter(this.getReplace());
     substSqlParameter.setValue(this.getValue());
@@ -360,15 +380,32 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             fill = true;
           }
 
-          qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+          boolean preparedTemporary = false;
 
-          fill = fill || !isTableDataValidSql(connection, qparams);
+          if (isUseParameters()) {
+            qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+            preparedTemporary = true;
+            fill = fill || !isTableDataValidSql(connection, qparams);
+          } else {
+            fill = fill || !isTableDataValidSql(connection, new ArrayList<Object>());
+          }
+
 
           if ((!fill) && (sqlMaterializedView != null)) {
-            fill = !sqlMaterializedView.isViewValid(connection, qparams);
+            if (sqlMaterializedView.isUseParameters()) {
+              qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+              preparedTemporary = true;
+              fill = !sqlMaterializedView.isViewValid(connection, qparams);
+            } else {
+              fill = !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
+            }
           }
 
           if (fill && !disabled) {
+            if (!preparedTemporary) {
+              qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+              preparedTemporary = true;
+            }
 
             if (sqlMaterializedView != null) {
               if (!(transaction || tm.isTransaction())) {
@@ -467,6 +504,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     tt.setFillOnceOnly(isFillOnceOnly());
     tt.setTableName(getValue());
     tt.setReplace(getReplace());
+    tt.setUseParameters(isUseParameters());
     tt.setCheckTableSql(getCheckTableSql());
     if (getCleanTableSqls() != null) {
       tt.setCleanTableSqls(new TemporaryTable.CleanTableSqls());
@@ -509,6 +547,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
     if (getSqlMaterializedView() != null) {
       tt.setMaterializedView(new MaterializedView());
+      tt.getMaterializedView().setUseParameters(getSqlMaterializedView().isUseParameters());
       tt.getMaterializedView().setValue(getSqlMaterializedView().getValue());
       tt.getMaterializedView().setIsViewValidSql(getSqlMaterializedView().getIsViewValidSQL());
       tt.getMaterializedView().setSetViewVersionSql(getSqlMaterializedView().getSetViewVersionSql());

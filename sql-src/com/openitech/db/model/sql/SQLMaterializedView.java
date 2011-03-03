@@ -91,6 +91,27 @@ public class SQLMaterializedView extends SubstSqlParameter {
   public String getSetViewVersionSql() {
     return setViewVersionSql;
   }
+  
+  protected boolean useParameters = false;
+
+  /**
+   * Get the value of useParameters
+   *
+   * @return the value of useParameters
+   */
+  public boolean isUseParameters() {
+    return useParameters;
+  }
+
+  /**
+   * Set the value of useParameters
+   *
+   * @param useParameters new value of useParameters
+   */
+  public void setHasParameters(boolean useParameters) {
+    this.useParameters = useParameters;
+  }
+
 
   /**
    * Set the value of setViewVersionSql
