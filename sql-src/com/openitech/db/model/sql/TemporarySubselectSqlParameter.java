@@ -307,7 +307,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           }
         }
         if (DbDataSource.DUMP_SQL) {
-          System.out.println("tt:isvalid:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+          System.out.println("tt:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
           System.out.println("##############");
         }
         return result;

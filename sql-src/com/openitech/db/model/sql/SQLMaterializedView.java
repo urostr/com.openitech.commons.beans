@@ -91,7 +91,6 @@ public class SQLMaterializedView extends SubstSqlParameter {
   public String getSetViewVersionSql() {
     return setViewVersionSql;
   }
-  
   protected boolean useParameters = false;
 
   /**
@@ -111,7 +110,6 @@ public class SQLMaterializedView extends SubstSqlParameter {
   public void setHasParameters(boolean useParameters) {
     this.useParameters = useParameters;
   }
-
 
   /**
    * Set the value of setViewVersionSql
@@ -168,7 +166,7 @@ public class SQLMaterializedView extends SubstSqlParameter {
         }
       }
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("materialized:isvalid:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+        System.out.println("materialized:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
         System.out.println("##############");
       }
       return result;

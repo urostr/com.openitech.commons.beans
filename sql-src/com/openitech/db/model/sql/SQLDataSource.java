@@ -5469,6 +5469,14 @@ public class SQLDataSource implements DbDataSourceImpl {
           }
         }
 
+        if (owner.isGoToFirstOnInsert() && insert && positioned) {
+          try {
+            openSelectResultSet.first();
+          } catch (Exception ex) {
+            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, null, ex);
+          }
+        }
+
         count = -1; //reset row count
 
         owner.fireContentsChanged(new ListDataEvent(owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
