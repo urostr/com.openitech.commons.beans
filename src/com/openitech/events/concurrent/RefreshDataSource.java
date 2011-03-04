@@ -325,7 +325,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       loading = false;
       tasks.remove(event);
 
-      if (isLastInQueue()) {
+      if (!Thread.interrupted()&&isLastInQueue()) {
         if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
           final int r = row;
           System.out.println("trying to load on EQ:" + event.dataSource);
