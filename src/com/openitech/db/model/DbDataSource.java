@@ -5563,7 +5563,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     this.seekUpdatedRow = seekUpdatedRow;
   }
 
-  public boolean goToLastOnInsert = false;
+  private boolean goToLastOnInsert = false;
 
   /**
    * Get the value of goToLastOnInsert
@@ -5583,7 +5583,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     this.goToLastOnInsert = goToLastOnInsert;
   }
 
-  public boolean goToFirstOnInsert = false;
+  private boolean goToFirstOnInsert = false;
 
   /**
    * Get the value of goToLastOnInsert
