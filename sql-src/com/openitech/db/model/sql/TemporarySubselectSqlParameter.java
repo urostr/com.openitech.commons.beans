@@ -9,10 +9,12 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
 import com.openitech.db.model.xml.config.MaterializedView;
+import com.openitech.db.model.xml.config.MaterializedView.CacheEvents.Event;
 import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.sql.util.TransactionManager;
 import com.openitech.util.Equals;
+import com.openitech.value.events.EventType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -252,15 +254,13 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
     return substSqlParameter;
   }
-  private Connection connection = null;
-  private String qFillTable;
-  private PreparedStatement psFillTable = null;
-  private String qCheckTable;
-  private PreparedStatement psCheckTable = null;
-  private String qEmptyTable;
-  private List<PreparedStatement> psEmptyTable = new ArrayList<PreparedStatement>();
-  private String qIsTableDataValidSql = null;
-  private List<PreparedStatement> psIsTableDataValidSql = new ArrayList<PreparedStatement>();
+  protected Connection connection = null;
+  protected String qFillTable;
+  protected PreparedStatement psFillTable = null;
+  protected String qEmptyTable;
+  protected List<PreparedStatement> psEmptyTable = new ArrayList<PreparedStatement>();
+  protected String qIsTableDataValidSql = null;
+  protected List<PreparedStatement> psIsTableDataValidSql = new ArrayList<PreparedStatement>();
 
   public boolean isTableDataValidSql(Connection connection, java.util.List<Object> parameters) {
     if (isTableDataValidSql == null) {
@@ -297,7 +297,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           ResultSet executeQuery = SQLDataSource.executeQuery(preparedStatement, parameters);
           try {
             if (executeQuery.next()) {
-              result = result || executeQuery.getBoolean(1);
+              result = result && executeQuery.getBoolean(1);
             }
           } finally {
             executeQuery.close();
@@ -559,6 +559,17 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       tt.getMaterializedView().setValue(getSqlMaterializedView().getValue());
       tt.getMaterializedView().setIsViewValidSql(getSqlMaterializedView().getIsViewValidSQL());
       tt.getMaterializedView().setSetViewVersionSql(getSqlMaterializedView().getSetViewVersionSql());
+
+      if (getSqlMaterializedView().getCacheEventTypes().size()>0) {
+        tt.getMaterializedView().setCacheEvents(new MaterializedView.CacheEvents());
+        List<Event> events = tt.getMaterializedView().getCacheEvents().getEvent();
+        for (EventType eventType : getSqlMaterializedView().getCacheEventTypes()) {
+          Event event = new Event();
+          event.setSifra(eventType.getSifra());
+          event.setSifrant(eventType.getSifrant());
+          events.add(event);
+        }
+      }
     }
 
     return tt;

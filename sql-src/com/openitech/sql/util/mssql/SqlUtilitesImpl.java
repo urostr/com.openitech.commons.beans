@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util.mssql;
 
+import com.openitech.value.events.EventType;
 import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
@@ -14,7 +15,9 @@ import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.db.model.DbDataSourceIndex;
+import com.openitech.db.model.factory.DataSourceConfig;
 import com.openitech.db.model.factory.DataSourceFactory;
+import com.openitech.db.model.factory.DataSourceParametersFactory;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.value.fields.Field;
@@ -27,6 +30,7 @@ import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
+import com.openitech.util.Equals;
 import com.openitech.value.StringValue;
 import com.openitech.value.VariousValue;
 import com.openitech.value.events.EventQueryParameter;
@@ -35,6 +39,7 @@ import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -96,6 +101,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement findVersion;
   String getEventVersionSQL;
   PreparedStatement storeCachedTemporaryTable;
+  PreparedStatement storeCachedEventObject;
+  PreparedStatement invalidateCachedEventObject;
+  PreparedStatement deleteCachedEventObject;
   PreparedStatement delete_eventPK;
   PreparedStatement insert_eventPK;
   PreparedStatement find_eventPK;
@@ -115,6 +123,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement search_by_PK;
   PreparedStatement find_event_by_PK;
   Map<CaseInsensitiveString, Field> preparedFields;
+  Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -316,6 +325,69 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     return result;
+  }
+
+  private Map<EventType, List<EventCacheTemporaryParameter>> getCachedEventObjects() throws SQLException {
+    Map<EventType, List<EventCacheTemporaryParameter>> result = new HashMap<EventType, List<EventCacheTemporaryParameter>>();
+    if (cachedEventObjects == null) {
+      Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+      try {
+        Map<String, TemporaryTable> cachedTemporaryTables = getCachedTemporaryTables();
+        TemporaryParametersFactory temporaryParametersFactory = new TemporaryParametersFactory();
+        ResultSet rs = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedEventObjects.sql", "cp1250"));
+        while (rs.next()) {
+          String object = rs.getString("Object");
+
+          if (cachedTemporaryTables.containsKey(object)) {
+            EventType key = new EventType(rs.getInt("IdSifranta"), rs.getString("IdSifre"));
+            List<EventCacheTemporaryParameter> parameters;
+
+            if (result.containsKey(key)) {
+              parameters = result.get(key);
+            } else {
+              parameters = new ArrayList<EventCacheTemporaryParameter>();
+              result.put(key, parameters);
+            }
+
+            EventCacheTemporaryParameter tt = (EventCacheTemporaryParameter) temporaryParametersFactory.createTemporaryTable(cachedTemporaryTables.get(object));
+            parameters.add(tt);
+          }
+        }
+      } finally {
+        statement.close();
+      }
+
+      if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_CACHEFIELDS, "true"))) {
+        this.cachedEventObjects = result;
+      }
+    } else {
+      result = this.cachedEventObjects;
+    }
+
+    return result;
+  }
+
+  private void cacheEvent(Event event) throws SQLException {
+    Map<EventType, List<EventCacheTemporaryParameter>> eventObjects = getCachedEventObjects();
+    EventType key = new EventType(event);
+
+    if (eventObjects.containsKey(key)) {
+      final Connection txConnection = ConnectionManager.getInstance().getTxConnection();
+
+      if (invalidateCachedEventObject==null) {
+        invalidateCachedEventObject = txConnection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "invalidateCachedEventObjects.sql", "cp1250"));
+      }
+
+      synchronized(invalidateCachedEventObject) {
+        invalidateCachedEventObject.setInt(1, key.getSifrant());
+        invalidateCachedEventObject.setString(2, key.getSifra());
+        invalidateCachedEventObject.executeUpdate();
+      }
+
+      for (EventCacheTemporaryParameter tt : eventObjects.get(key)) {
+        tt.executeQuery(txConnection, new ArrayList<Object>());
+      }
+    }
   }
 
   @Override
@@ -654,6 +726,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         } else {
           events_ID = event.getId();
         }
+        cacheEvent(event);
       } finally {
         if (!isTransaction) {
           endTransaction(commit);
@@ -1217,14 +1290,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public MaterializedView getCacheDefinition(String table, int idSifranta, String idSifre) {
-    String changeLog = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB);
     MaterializedView result = new MaterializedView();
     result.setValue("[MViewCache].[dbo].[" + table + "]");
     result.setIsViewValidSql(com.openitech.text.Document.identText(
-            "\nEXECUTE [MViewCache].[dbo].[isValidCachedEvent]" +
-            "\n         N'[MViewCache].[dbo].[" + table + "]'" +
-            "\n        ,"+idSifranta+
-            "\n        ,'" + idSifre + "'",15));
+            "\nEXECUTE [MViewCache].[dbo].[isValidCachedEvent]"
+            + "\n         N'[MViewCache].[dbo].[" + table + "]'"
+            + "\n        ," + idSifranta
+            + "\n        ,'" + idSifre + "'", 15));
 //    result.setIsViewValidSql(com.openitech.text.Document.identText(
 //              "\nSELECT CAST(CASE WHEN count(*) = 0 THEN 1 ELSE 0 END AS BIT) AS Valid FROM " + changeLog + ".[dbo].[Events] ev WITH (NOLOCK) "
 //            + "\n    WHERE ev.[IdSifranta] = " + idSifranta + " AND"
@@ -1235,7 +1307,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //            + "\nSELECT CAST(CASE WHEN count(*) = 0 THEN 1 ELSE 0 END AS BIT) AS Valid FROM [MViewCache].[dbo].[" + table + "] WITH (NOLOCK) "
 //            + "\n    WHERE [Version] NOT IN (SELECT ev.Version FROM " + changeLog + ".[dbo].[Events] ev WITH (NOLOCK) WHERE ev.[IdSifranta] = " + idSifranta + " AND ev.[IdSifre] = '" + idSifre + "' AND ev.valid = 1)"
 //            + "\n", 15));
-    result.setSetViewVersionSql("EXECUTE [MViewCache].[dbo].[updateRefreshDate] '" + table + "'");
+    result.setSetViewVersionSql("EXECUTE [MViewCache].[dbo].[updateRefreshDate] '[MViewCache].[dbo].[" + table + "]'");
+    result.setCacheEvents(new MaterializedView.CacheEvents());
+    MaterializedView.CacheEvents.Event event = new MaterializedView.CacheEvents.Event();
+    event.setSifra(idSifre);
+    event.setSifrant(idSifranta);
+
+    result.getCacheEvents().getEvent().add(event);
+
     return result;
   }
 
@@ -1295,6 +1374,32 @@ public class SqlUtilitesImpl extends SqlUtilities {
           storeCachedTemporaryTable.setString(1, tt.getMaterializedView().getValue());
           storeCachedTemporaryTable.setString(2, sw.toString());
           storeCachedTemporaryTable.executeUpdate();
+        }
+
+        if (tt.getMaterializedView().getCacheEvents() != null) {
+          for (MaterializedView.CacheEvents.Event event : tt.getMaterializedView().getCacheEvents().getEvent()) {
+            if (deleteCachedEventObject == null) {
+              deleteCachedEventObject = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "deleteCachedEventObject.sql", "cp1250"));
+            }
+
+            synchronized (deleteCachedEventObject) {
+              deleteCachedEventObject.setInt(1, event.getSifrant());
+              deleteCachedEventObject.setString(2, event.getSifra());
+              deleteCachedEventObject.setString(3, tt.getMaterializedView().getValue());
+              deleteCachedEventObject.executeUpdate();
+            }
+
+            if (storeCachedEventObject == null) {
+              storeCachedEventObject = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "storeCachedEventObject.sql", "cp1250"));
+            }
+
+            synchronized (storeCachedEventObject) {
+              storeCachedEventObject.setInt(1, event.getSifrant());
+              storeCachedEventObject.setString(2, event.getSifra());
+              storeCachedEventObject.setString(3, tt.getMaterializedView().getValue());
+              storeCachedEventObject.executeUpdate();
+            }
+          }
         }
       } catch (SQLException ex) {
         Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -1753,6 +1858,138 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     return result;
+  }
+
+  private static class EventCacheTemporaryParameter extends TemporarySubselectSqlParameter {
+
+    public EventCacheTemporaryParameter(String replace) {
+      super(replace);
+    }
+
+    @Override
+    public void executeQuery(Connection connection, List<Object> parameters) throws SQLException {
+      long timer = System.currentTimeMillis();
+
+      String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
+      List<Object> qparams = new ArrayList<Object>(parameters.size());
+      qparams.addAll(getParameters());
+      qparams.addAll(parameters);
+      qparams.add(getSubstSqlParameter());
+      if (sqlMaterializedView != null) {
+        qparams.add(sqlMaterializedView);
+      }
+
+      Statement statement = connection.createStatement();
+      try {
+        try {
+          if (getCheckTableSql() != null) {
+            statement.executeQuery(SQLDataSource.substParameters(getCheckTableSql(), qparams));
+          }
+        } catch (SQLException ex) {
+          for (String sql : getCreateTableSqls()) {
+            String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
+            statement.addBatch(createSQL);
+            if (DbDataSource.DUMP_SQL) {
+              System.out.println(createSQL + ";");
+              System.out.println("-- -- -- --");
+            }
+          }
+          statement.executeBatch();
+        }
+
+        qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+
+
+        try {
+          if (getEmptyTableSql().length() > 0) {
+            String query = SQLDataSource.substParameters(getEmptyTableSql(), qparams);
+            if (!Equals.equals(this.connection, connection)
+                    || !Equals.equals(this.qEmptyTable, query)) {
+              String[] sqls = query.split(";");
+              for (PreparedStatement preparedStatement : this.psEmptyTable) {
+                preparedStatement.close();
+              }
+              this.psEmptyTable.clear();
+              for (String sql : sqls) {
+                this.psEmptyTable.add(connection.prepareStatement(sql,
+                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY,
+                        ResultSet.HOLD_CURSORS_OVER_COMMIT));
+              }
+              this.qEmptyTable = query;
+            }
+
+            if (DbDataSource.DUMP_SQL) {
+              System.out.println("##############");
+              System.out.println(this.qEmptyTable);
+            }
+            int rowsDeleted = 0;
+            for (PreparedStatement preparedStatement : psEmptyTable) {
+              rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
+            }
+            if (DbDataSource.DUMP_SQL) {
+              System.out.println("Rows deleted:" + rowsDeleted);
+            }
+          }
+
+          String query = SQLDataSource.substParameters(getFillTableSql(), qparams);
+          if (!Equals.equals(this.connection, connection)
+                  || !Equals.equals(this.qFillTable, query)) {
+            if (this.psFillTable != null) {
+              this.psFillTable.close();
+            }
+            this.psFillTable = connection.prepareStatement(query,
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY,
+                    ResultSet.HOLD_CURSORS_OVER_COMMIT);
+            this.qFillTable = query;
+          }
+
+          if (DbDataSource.DUMP_SQL) {
+            System.out.println("##############");
+            System.out.println(this.qFillTable);
+          }
+          System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+          if (getCleanTableSqls() != null) {
+            for (String sql : getCleanTableSqls()) {
+              SQLDataSource.executeUpdate(connection.prepareStatement(SQLDataSource.substParameters(sql, qparams)), qparams);
+            }
+          }
+          if ((sqlMaterializedView != null) && (sqlMaterializedView.getSetViewVersionSql() != null)) {
+            SQLDataSource.execute(connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.getSetViewVersionSql(), qparams)), qparams);
+          }
+          if (DbDataSource.DUMP_SQL) {
+            System.out.println("cached:event:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+            System.out.println("##############");
+          }
+
+
+        } catch (SQLException ex) {
+          Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:cached:event:fill:" + getValue(), ex);
+          throw new SQLException(ex);
+        }
+
+      } finally {
+        statement.close();
+      }
+      this.connection = connection;
+    }
+  }
+
+  private static class TemporaryParametersFactory extends DataSourceParametersFactory<DataSourceConfig> {
+
+    public TemporaryParametersFactory() {
+    }
+
+    @Override
+    protected TemporarySubselectSqlParameter createTemporaryTable(TemporaryTable tt) {
+      return super.createTemporaryTable(tt);
+    }
+
+    @Override
+    protected TemporarySubselectSqlParameter createTemporaryTableParameter(TemporaryTable tt) {
+      return new EventCacheTemporaryParameter(tt.getReplace());
+    }
   }
 
   private static class EventQueryKey {
@@ -2435,7 +2672,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     private static final String EV_NONVERSIONED_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_valid.sql", "cp1250");
     private static final String EV_SEARCH_BY_PK_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_PK.sql", "cp1250");
     private static final String EV_SEARCH_BY_VERSION_PK_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_version_PK.sql", "cp1250");
-    
     DbDataSource.SubstSqlParameter sqlFindEventVersion = new DbDataSource.SubstSqlParameter("<%ev_version_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
@@ -2515,7 +2751,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     public boolean hasVersionId() {
       return versionId.getValue() != null && (((Long) versionId.getValue()) > 0);
     }
-
     protected EventPK eventPK;
 
     /**
@@ -2534,18 +2769,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
      */
     protected void setEventPK(EventPK eventPK) {
       this.eventPK = eventPK;
-      if (eventPK==null) {
+      if (eventPK == null) {
         sqlFindEventVersion.setValue("");
         sqlFindEventVersion.clearParameters();
         sqlFindEventPk.setValue("");
         sqlFindEventPk.clearParameters();
       } else {
-        sqlFindEventPk.setValue("ev.[Id] IN ("+EV_SEARCH_BY_PK_SUBQUERY+")");
+        sqlFindEventPk.setValue("ev.[Id] IN (" + EV_SEARCH_BY_PK_SUBQUERY + ")");
         sqlFindEventPk.addParameter(sqlEventSifrant);
         sqlFindEventPk.addParameter(sqlEventSifra);
         sqlFindEventPk.addParameter(eventPK.getPrimaryKey());
 
-        sqlFindEventVersionPk.setValue("ev.[Id] IN ("+EV_SEARCH_BY_VERSION_PK_SUBQUERY+")");
+        sqlFindEventVersionPk.setValue("ev.[Id] IN (" + EV_SEARCH_BY_VERSION_PK_SUBQUERY + ")");
         sqlFindEventVersionPk.addParameter(sqlEventSifrant);
         sqlFindEventVersionPk.addParameter(sqlEventSifra);
         sqlFindEventVersionPk.addParameter(sqlFindEventVersion);

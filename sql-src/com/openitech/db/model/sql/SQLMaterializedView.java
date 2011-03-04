@@ -9,6 +9,7 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
 import com.openitech.util.Equals;
+import com.openitech.value.events.EventType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -119,6 +120,39 @@ public class SQLMaterializedView extends SubstSqlParameter {
   public void setSetViewVersionSql(String setViewVersionSql) {
     this.setViewVersionSql = setViewVersionSql;
   }
+
+  protected boolean cacheEvent = false;
+
+  /**
+   * Get the value of cacheEvent
+   *
+   * @return the value of cacheEvent
+   */
+  public boolean isCacheEvent() {
+    return cacheEvent;
+  }
+
+  /**
+   * Set the value of cacheEvent
+   *
+   * @param cacheEvent new value of cacheEvent
+   */
+  public void setCacheEvent(boolean cacheEvent) {
+    this.cacheEvent = cacheEvent;
+  }
+
+  protected List<EventType> cacheEventTypes = new ArrayList<EventType>();
+
+  /**
+   * Get the value of cacheEventTypes
+   *
+   * @return the value of cacheEventTypes
+   */
+  public List<EventType> getCacheEventTypes() {
+    return cacheEventTypes;
+  }
+
+
   private Connection connection = null;
   private String qIsViewValid = null;
   private List<PreparedStatement> isViewValid = new ArrayList<PreparedStatement>();
@@ -156,7 +190,7 @@ public class SQLMaterializedView extends SubstSqlParameter {
         ResultSet executeQuery = SQLDataSource.executeQuery(preparedStatement, parameters);
         try {
           if (executeQuery.next()) {
-            result = result || executeQuery.getBoolean(1);
+            result = result && executeQuery.getBoolean(1);
           }
         } finally {
           executeQuery.close();
