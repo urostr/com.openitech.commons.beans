@@ -195,6 +195,18 @@
       <xsd:element name="Value" type="xsd:string"></xsd:element>
       <xsd:element name="IsViewValidSql" type="xsd:string"></xsd:element>
       <xsd:element name="SetViewVersionSql" type="xsd:string" minOccurs="0"></xsd:element>
+      <xsd:element name="CacheEvents" minOccurs="0">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Event" maxOccurs="unbounded">
+              <xsd:complexType>
+                <xsd:attribute name="Sifrant" type="xsd:int" use="required"/>
+                <xsd:attribute name="Sifra" type="xsd:string" use="required"/>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
     </xsd:all>
     <xsd:attribute name="UseParameters" type="xsd:boolean" default="false"/>
   </xsd:complexType>
@@ -647,6 +659,8 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
+
+
 
 
 

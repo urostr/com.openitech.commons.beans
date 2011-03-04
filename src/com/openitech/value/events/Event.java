@@ -27,7 +27,7 @@ import java.util.logging.Logger;
  *
  * @author uros
  */
-public class Event {
+public class Event extends EventType {
 
   public static final Field EVENT_SOURCE = new Field("EVENT_SOURCE", java.sql.Types.INTEGER);
   public static final Field EVENT_DATE = new Field("EVENT_DATE", java.sql.Types.DATE);
@@ -37,10 +37,10 @@ public class Event {
   }
 
   public Event(int sifrant, String sifra, int eventSource) {
-    this.sifrant = sifrant;
-    this.sifra = sifra;
+    super(sifrant, sifra);
     this.eventSource = eventSource;
   }
+  
   private Long id;
 
   /**
@@ -60,44 +60,7 @@ public class Event {
   public void setId(Long id) {
     this.id = id;
   }
-  private int sifrant;
 
-  /**
-   * Get the value of sifrant
-   *
-   * @return the value of sifrant
-   */
-  public int getSifrant() {
-    return sifrant;
-  }
-
-  /**
-   * Set the value of sifrant
-   *
-   * @param sifrant new value of sifrant
-   */
-  public void setSifrant(int sifrant) {
-    this.sifrant = sifrant;
-  }
-  private String sifra;
-
-  /**
-   * Get the value of sifra
-   *
-   * @return the value of sifra
-   */
-  public String getSifra() {
-    return sifra;
-  }
-
-  /**
-   * Set the value of sifra
-   *
-   * @param sifra new value of sifra
-   */
-  public void setSifra(String sifra) {
-    this.sifra = sifra;
-  }
   private Date datum = java.util.Calendar.getInstance().getTime();
 
   /**

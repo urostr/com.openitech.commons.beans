@@ -13,12 +13,14 @@ import com.openitech.db.model.sql.PendingSqlParameter;
 import com.openitech.db.model.sql.SQLMaterializedView;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.db.model.xml.config.DataSourceFilter;
+import com.openitech.db.model.xml.config.MaterializedView.CacheEvents.Event;
 import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.SubQuery;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.db.model.xml.config.TemporaryTableGroup;
 import com.openitech.io.ReadInputStream;
 import com.openitech.sql.util.SqlUtilities;
+import com.openitech.value.events.EventType;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.logging.Level;
@@ -91,8 +93,10 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
   }
 
   protected TemporarySubselectSqlParameter createTemporaryTable(TemporaryTable tt) {
+    String tt_replace = tt.getReplace();
     tt = getCachedTemporaryTable(tt);
-    TemporarySubselectSqlParameter ttParameter = new TemporarySubselectSqlParameter(tt.getReplace());
+    TemporarySubselectSqlParameter ttParameter = createTemporaryTableParameter(tt);
+    ttParameter.setReplace(tt_replace);
     ttParameter.setValue(tt.getTableName());
     ttParameter.setCheckTableSql(getReplacedSql(tt.getCheckTableSql()));
     ttParameter.setCreateTableSqls(getReplacedSqls(tt.getCreateTableSqls().getQuery().toArray(new String[]{})));
@@ -127,12 +131,24 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
       mv.setIsViewValidSQL(tt.getMaterializedView().getIsViewValidSql());
       mv.setSetViewVersionSql(tt.getMaterializedView().getSetViewVersionSql());
       mv.setHasParameters(tt.getMaterializedView().isUseParameters());
+
+      if (tt.getMaterializedView().getCacheEvents()!=null &&
+          tt.getMaterializedView().getCacheEvents().getEvent().size()>0) {
+        mv.setCacheEvent(true);
+        for (Event event : tt.getMaterializedView().getCacheEvents().getEvent()) {
+          mv.getCacheEventTypes().add(new EventType(event.getSifrant(), event.getSifra()));
+        }
+      }
+      
       ttParameter.setSqlMaterializedView(mv);
     }
     ttParameter.setDisabled(tt.isDisabled());
     return ttParameter;
   }
 
+  protected TemporarySubselectSqlParameter createTemporaryTableParameter(TemporaryTable tt) {
+    return new TemporarySubselectSqlParameter(tt.getReplace());
+  }
 
   protected List<TemporarySubselectSqlParameter> createTemporaryTableGroup(TemporaryTableGroup temporaryTableGroup) {
     List<TemporarySubselectSqlParameter> result = new java.util.ArrayList<TemporarySubselectSqlParameter>(temporaryTableGroup.getTemporaryTable().size());
