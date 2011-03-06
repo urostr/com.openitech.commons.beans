@@ -223,6 +223,7 @@
               </xsd:simpleType>
             </xsd:element>
           </xsd:sequence>
+          <xsd:attribute name="Catalog" type="xsd:string"/>
         </xsd:complexType>
       </xsd:element>
       <xsd:element name="FillTableSql">
