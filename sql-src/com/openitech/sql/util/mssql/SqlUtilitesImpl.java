@@ -727,7 +727,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
         } else {
           events_ID = event.getId();
         }
-        cacheEvent(event);
+
+        if (event.getOperation() == Event.EventOperation.IGNORE) {
+          cacheEvent(event);
+        }
       } finally {
         if (!isTransaction) {
           endTransaction(commit);
