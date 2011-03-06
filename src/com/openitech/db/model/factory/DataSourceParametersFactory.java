@@ -4,6 +4,7 @@
  */
 package com.openitech.db.model.factory;
 
+import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.filters.ActiveFiltersReader;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DataSourceObserver;
@@ -33,6 +34,7 @@ import org.codehaus.groovy.control.CompilationFailedException;
  */
 public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
 
+  protected boolean override = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_OVERRIDE_CACHED_VIEWS, "false"));
   protected static java.util.Map<String, TemporaryTable> cachedTemporaryTables;
   protected T config;
   protected DbDataSource dataSource = new DbDataSource();
@@ -173,7 +175,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     if (cachedTemporaryTables == null) {
       cachedTemporaryTables = SqlUtilities.getInstance().getCachedTemporaryTables();
     }
-    final boolean cached = (tt.getMaterializedView() != null) && cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue());
+    final boolean cached = !override && (tt.getMaterializedView() != null) && cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue());
     if (cached) {
       tt = cachedTemporaryTables.get(tt.getMaterializedView().getValue());
       System.out.println("CACHED:TT:" + tt.getMaterializedView().getValue());
