@@ -101,18 +101,23 @@ public class ReadInputStream {
   }
 
   public static String getReplacedSql(String sql) {
-    sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-    sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-    sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-    sql = sql.replaceAll("<%MVIEWCACHE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.MVIEW_CACHE_DB, SqlUtilities.MVIEW_CACHE_DB));
+    if (sql != null) {
+      sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+      sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+      sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+      sql = sql.replaceAll("<%MVIEWCACHE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.MVIEW_CACHE_DB, SqlUtilities.MVIEW_CACHE_DB));
+    }
 
     return sql;
   }
 
   public static String[] getReplacedSqls(String... sqls) {
-    for (int i = 0; i < sqls.length; i++) {
-      sqls[i] = getReplacedSql(sqls[i]);
+    if (sqls != null) {
+      for (int i = 0; i < sqls.length; i++) {
+        sqls[i] = getReplacedSql(sqls[i]);
+      }
     }
 
     return sqls;
-  }}
+  }
+}
