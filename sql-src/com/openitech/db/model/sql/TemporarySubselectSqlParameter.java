@@ -259,6 +259,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   protected PreparedStatement psFillTable = null;
   protected String qEmptyTable;
   protected List<PreparedStatement> psEmptyTable = new ArrayList<PreparedStatement>();
+  protected List<String> qCleanTable = new ArrayList<String>();
+  protected List<PreparedStatement> psCleanTable = new ArrayList<PreparedStatement>();
   protected String qIsTableDataValidSql = null;
   protected List<PreparedStatement> psIsTableDataValidSql = new ArrayList<PreparedStatement>();
 
@@ -442,7 +444,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 }
 
                 if (DbDataSource.DUMP_SQL) {
-                  System.out.println("##############");
+                  System.out.println("############## empty");
                   System.out.println(this.qEmptyTable);
                 }
                 int rowsDeleted = 0;
@@ -468,13 +470,43 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
 
               if (DbDataSource.DUMP_SQL) {
-                System.out.println("##############");
+                System.out.println("############## fill");
                 System.out.println(this.qFillTable);
               }
               System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
               if (cleanTableSqls != null) {
+                List<String> queries = new ArrayList<String>(cleanTableSqls.length);
                 for (String sql : cleanTableSqls) {
-                  SQLDataSource.executeUpdate(connection.prepareStatement(SQLDataSource.substParameters(sql, qparams)), qparams);
+                  queries.add(SQLDataSource.substParameters(sql, qparams));
+                }
+
+                if (!Equals.equals(this.connection, connection)
+                        || !Equals.equals(this.qCleanTable, queries)) {
+                  for (PreparedStatement preparedStatement : this.psCleanTable) {
+                    preparedStatement.close();
+                  }
+                  this.psCleanTable.clear();
+                  for (String sql : queries) {
+                    this.psCleanTable.add(connection.prepareStatement(sql,
+                            ResultSet.TYPE_SCROLL_INSENSITIVE,
+                            ResultSet.CONCUR_READ_ONLY,
+                            ResultSet.HOLD_CURSORS_OVER_COMMIT));
+                  }
+                  this.qCleanTable = queries;
+                }
+
+                if (DbDataSource.DUMP_SQL) {
+                  System.out.println("############## cleanup/update");
+                  for (String string : queries) {
+                    System.out.println(string);
+                  }
+                }
+                int rowsAffected = 0;
+                for (PreparedStatement preparedStatement : psCleanTable) {
+                  rowsAffected += SQLDataSource.executeUpdate(preparedStatement, qparams);
+                }
+                if (DbDataSource.DUMP_SQL) {
+                  System.out.println("Rows cleaned/updated:" + rowsAffected);
                 }
               }
               if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
