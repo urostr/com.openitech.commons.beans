@@ -307,8 +307,8 @@ public final class RefreshDataSource extends DataSourceEvent {
       int row = 0;
       try {
         boolean reload = false;
-        if (dataSource.isDataLoaded()) {
-          reload = dataSource.reload(dataSource.getRow());
+        if (event.dataSource.isDataLoaded()) {
+          reload = dataSource.reload(event.dataSource.getRow());
         } else {
           reload = dataSource.reload();
         }
