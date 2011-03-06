@@ -373,13 +373,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
             for (String sql : createTableSqls) {
               String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
-              statement.addBatch(createSQL);
               if (DbDataSource.DUMP_SQL) {
                 System.out.println(createSQL + ";");
                 System.out.println("-- -- -- --");
               }
+              statement.execute(createSQL);
             }
-            statement.executeBatch();
 
             qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
             preparedTemporary = true;
