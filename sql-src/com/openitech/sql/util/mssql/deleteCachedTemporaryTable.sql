@@ -1,0 +1,4 @@
+DELETE FROM
+  <%MVIEWCACHE%>.[DBO].[CACHED:OBJECTS]
+WHERE
+    [Object] = ?

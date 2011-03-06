@@ -39,7 +39,6 @@ import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -73,6 +72,7 @@ import javax.xml.bind.Unmarshaller;
  * @author uros
  */
 public class SqlUtilitesImpl extends SqlUtilities {
+  protected boolean override = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_OVERRIDE_CACHED_VIEWS, "false"));
 
   PreparedStatement logChanges;
   PreparedStatement logValues;
@@ -101,6 +101,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement findVersion;
   String getEventVersionSQL;
   PreparedStatement storeCachedTemporaryTable;
+  PreparedStatement deleteCachedTemporaryTable;
   PreparedStatement storeCachedEventObject;
   PreparedStatement invalidateCachedEventObject;
   PreparedStatement deleteCachedEventObject;
@@ -1368,6 +1369,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
         final Connection connection = ConnectionManager.getInstance().getTxConnection();
         if (storeCachedTemporaryTable == null) {
           storeCachedTemporaryTable = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "storeCachedTemporaryTable.sql", "cp1250"));
+        }
+
+        if (override) {
+        if (deleteCachedTemporaryTable == null) {
+          deleteCachedTemporaryTable = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "deleteCachedTemporaryTable.sql", "cp1250"));
+        }
+        synchronized (deleteCachedTemporaryTable) {
+          deleteCachedTemporaryTable.setString(1, tt.getMaterializedView().getValue());
+          deleteCachedTemporaryTable.executeUpdate();
+        }
         }
 
         synchronized (storeCachedTemporaryTable) {
