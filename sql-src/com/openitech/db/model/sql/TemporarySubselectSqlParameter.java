@@ -145,7 +145,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void setDisabled(boolean disabled) {
     this.disabled = disabled;
   }
-  private String emptyTableSql;
+  private String emptyTableSql = "";
 
   /**
    * Get the value of emptyTableSql
@@ -162,7 +162,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
    * @param emptyTableSql new value of emptyTableSql
    */
   public void setEmptyTableSql(String emptyTableSql) {
-    this.emptyTableSql = emptyTableSql;
+    this.emptyTableSql = emptyTableSql==null?"":emptyTableSql;
   }
   private String catalog;
 
