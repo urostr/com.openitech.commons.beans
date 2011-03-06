@@ -113,6 +113,9 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     if (tt.getIsTableDataValidSql() != null) {
       ttParameter.setIsTableDataValidSql(getReplacedSql(tt.getIsTableDataValidSql()));
     }
+    if (tt.getCatalog()!=null) {
+      ttParameter.setCatalog(tt.getCatalog());
+    }
     ttParameter.setHasParameters(tt.isUseParameters());
 
     if (tt.getParameter() != null) {

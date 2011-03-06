@@ -223,7 +223,6 @@
               </xsd:simpleType>
             </xsd:element>
           </xsd:sequence>
-          <xsd:attribute name="Catalog" type="xsd:string"/>
         </xsd:complexType>
       </xsd:element>
       <xsd:element name="FillTableSql">
@@ -274,6 +273,7 @@
     <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
     <xsd:attribute name="Disabled" default="false" type="xsd:boolean"/>
     <xsd:attribute name="UseParameters" type="xsd:boolean" default="false"/>
+    <xsd:attribute name="Catalog" type="xsd:string"/>
   </xsd:complexType>
   <xsd:complexType name="DataModel">
     <xsd:all>
