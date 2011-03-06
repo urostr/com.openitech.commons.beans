@@ -1897,6 +1897,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
             statement.executeQuery(SQLDataSource.substParameters(getCheckTableSql(), qparams));
           }
         } catch (SQLException ex) {
+          String context = connection.getCatalog();
+
+          if (getCatalog() != null) {
+            connection.setCatalog(getCatalog());
+          }
+
           for (String sql : getCreateTableSqls()) {
             String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
             if (DbDataSource.DUMP_SQL) {
@@ -1904,6 +1910,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
               System.out.println("-- -- -- --");
             }
             statement.execute(createSQL);
+          }
+
+          if (getCatalog() != null) {
+            connection.setCatalog(context);
           }
         }
 

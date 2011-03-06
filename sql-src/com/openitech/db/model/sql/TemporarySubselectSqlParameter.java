@@ -164,6 +164,26 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void setEmptyTableSql(String emptyTableSql) {
     this.emptyTableSql = emptyTableSql;
   }
+  private String catalog;
+
+  /**
+   * Get the value of catalog
+   *
+   * @return the value of catalog
+   */
+  public String getCatalog() {
+    return catalog;
+  }
+
+  /**
+   * Set the value of catalog
+   *
+   * @param catalog new value of catalog
+   */
+  public void setCatalog(String catalog) {
+    this.catalog = catalog;
+  }
+  
   private String checkTableSql;
 
   /**
@@ -370,6 +390,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 transaction = true;
               }
             }
+            
+            String context = connection.getCatalog();
+
+            if (getCatalog()!=null) {
+              connection.setCatalog(catalog);
+            }
 
             for (String sql : createTableSqls) {
               String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
@@ -379,6 +405,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
               statement.execute(createSQL);
             }
+
+            if (getCatalog()!=null) {
+              connection.setCatalog(context);
+            }
+
 
             qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
             preparedTemporary = true;
@@ -555,6 +586,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
     if (getIsTableDataValidSql() != null) {
       tt.setIsTableDataValidSql(getIsTableDataValidSql());
+    }
+    if (getCatalog()!=null) {
+      tt.setCatalog(getCatalog());
     }
     tt.setEmptyTableSql(getEmptyTableSql());
     tt.setFillTableSql(getFillTableSql());
