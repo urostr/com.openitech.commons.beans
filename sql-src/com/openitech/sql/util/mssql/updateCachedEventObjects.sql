@@ -1,7 +1,7 @@
 UPDATE
   <%MVIEWCACHE%>.[DBO].[CACHED:EVENT:OBJECTS]
 SET
-  [Valid]=0
+  [Valid]=?
 WHERE
   [IdSifranta] = ? AND
   [IdSifre] = ?

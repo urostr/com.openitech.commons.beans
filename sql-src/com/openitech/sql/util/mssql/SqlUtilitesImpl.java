@@ -103,7 +103,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement storeCachedTemporaryTable;
   PreparedStatement deleteCachedTemporaryTable;
   PreparedStatement storeCachedEventObject;
-  PreparedStatement invalidateCachedEventObject;
+  PreparedStatement updateCachedEventObject;
   PreparedStatement deleteCachedEventObject;
   PreparedStatement delete_eventPK;
   PreparedStatement insert_eventPK;
@@ -373,20 +373,31 @@ public class SqlUtilitesImpl extends SqlUtilities {
     EventType key = new EventType(event);
 
     if (eventObjects.containsKey(key)) {
+      if (DbDataSource.DUMP_SQL) {
+        System.out.println("Caching:"+key);
+      }
       final Connection txConnection = ConnectionManager.getInstance().getTxConnection();
 
-      if (invalidateCachedEventObject==null) {
-        invalidateCachedEventObject = txConnection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "invalidateCachedEventObjects.sql", "cp1250"));
+      if (updateCachedEventObject==null) {
+        updateCachedEventObject = txConnection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateCachedEventObjects.sql", "cp1250"));
       }
 
-      synchronized(invalidateCachedEventObject) {
-        invalidateCachedEventObject.setInt(1, key.getSifrant());
-        invalidateCachedEventObject.setString(2, key.getSifra());
-        invalidateCachedEventObject.executeUpdate();
+      synchronized(updateCachedEventObject) {
+        updateCachedEventObject.setBoolean(1, false);
+        updateCachedEventObject.setInt(2, key.getSifrant());
+        updateCachedEventObject.setString(3, key.getSifra());
+        updateCachedEventObject.executeUpdate();
       }
 
       for (EventCacheTemporaryParameter tt : eventObjects.get(key)) {
         tt.executeQuery(txConnection, new ArrayList<Object>());
+      }
+
+      synchronized(updateCachedEventObject) {
+        updateCachedEventObject.setBoolean(1, true);
+        updateCachedEventObject.setInt(2, key.getSifrant());
+        updateCachedEventObject.setString(3, key.getSifra());
+        updateCachedEventObject.executeUpdate();
       }
     }
   }
@@ -728,7 +739,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           events_ID = event.getId();
         }
 
-        if (event.getOperation() == Event.EventOperation.IGNORE) {
+        if (event.getOperation() != Event.EventOperation.IGNORE) {
           cacheEvent(event);
         }
       } finally {
