@@ -122,7 +122,7 @@ public enum ValueType {
 
     @Override
     public int getTypeIndex() {
-      return 1;
+      return 11;
     }
 
     @Override
