@@ -21,7 +21,6 @@ public class EventType {
   public int getSifrant() {
     return sifrant;
   }
-  
   protected final String sifra;
 
   /**
@@ -57,5 +56,10 @@ public class EventType {
     hash = 53 * hash + this.sifrant;
     hash = 53 * hash + (this.sifra != null ? this.sifra.hashCode() : 0);
     return hash;
+  }
+
+  @Override
+  public String toString() {
+    return "EventType:" + sifrant + "-" + sifra;
   }
 }
