@@ -72,8 +72,8 @@ import javax.xml.bind.Unmarshaller;
  * @author uros
  */
 public class SqlUtilitesImpl extends SqlUtilities {
-  protected boolean override = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_OVERRIDE_CACHED_VIEWS, "false"));
 
+  protected boolean override = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_OVERRIDE_CACHED_VIEWS, "false"));
   PreparedStatement logChanges;
   PreparedStatement logValues;
   PreparedStatement logChangedValues;
@@ -1386,13 +1386,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
         }
 
         if (override) {
-        if (deleteCachedTemporaryTable == null) {
-          deleteCachedTemporaryTable = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "deleteCachedTemporaryTable.sql", "cp1250"));
-        }
-        synchronized (deleteCachedTemporaryTable) {
-          deleteCachedTemporaryTable.setString(1, tt.getMaterializedView().getValue());
-          deleteCachedTemporaryTable.executeUpdate();
-        }
+          if (deleteCachedTemporaryTable == null) {
+            deleteCachedTemporaryTable = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "deleteCachedTemporaryTable.sql", "cp1250"));
+          }
+          synchronized (deleteCachedTemporaryTable) {
+            deleteCachedTemporaryTable.setString(1, tt.getMaterializedView().getValue());
+            deleteCachedTemporaryTable.executeUpdate();
+          }
         }
 
         synchronized (storeCachedTemporaryTable) {
@@ -2566,6 +2566,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       switch (type) {
         case RealValue:
         case IntValue:
+        case LongValue:
           start.setValue(1);
           break;
         case StringValue:
@@ -2590,6 +2591,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           value.setValue(((Number) value.getValue()).doubleValue() + 1);
           break;
         case IntValue:
+        case LongValue:
           value.setValue(((Number) value.getValue()).longValue() + 1);
           break;
         case StringValue:
@@ -2953,7 +2955,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
           switch (tipPolja) {
             case 1:
-              //Integer
+            case 11:
+              //Integer //Long
               value = val_alias + ".IntValue";
               sb.append(val_alias).append(".IntValue = ? ");
               if (resultFields.contains(f)) {
