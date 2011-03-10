@@ -503,6 +503,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
         success = success && storePrimaryKeyVersions(eventPK);
       }
 
+      updateEventsCache(newValues);
 
       commit = success;
       return eventId;
@@ -557,6 +558,17 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
   }
 
+  private void updateEventsCache(Event event) throws SQLException {
+    if (event.getOperation() != Event.EventOperation.IGNORE) {
+      for (Event childEvent : event.getChildren()) {
+        updateEventsCache(childEvent);
+      }
+
+      cacheEvent(event);
+    }
+  }
+
+  protected abstract void cacheEvent(Event event) throws SQLException;
   protected abstract Integer assignEventVersion(List<EventPK> eventIds) throws SQLException;
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;

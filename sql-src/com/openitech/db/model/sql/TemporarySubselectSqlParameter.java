@@ -539,7 +539,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 }
               }
               if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
-                SQLDataSource.execute(connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams)), qparams);
+                PreparedStatement ps = connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams));
+                try {
+                  SQLDataSource.execute(ps, qparams);
+                } finally {
+                  ps.close();
+                }
               }
               if (DbDataSource.DUMP_SQL) {
                 System.out.println("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
@@ -631,6 +636,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           Event event = new Event();
           event.setSifra(eventType.getSifra());
           event.setSifrant(eventType.getSifrant());
+          event.setCacheOnUpdate(eventType.isCacheOnUpdate());
           events.add(event);
         }
       }

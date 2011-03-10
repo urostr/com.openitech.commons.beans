@@ -5,10 +5,12 @@ INTO
     [IdSifranta],
     [IdSifre],
     [Object],
+    [CacheOnUpdate],
     [Valid]
   )
   VALUES
   (
+    ?,
     ?,
     ?,
     ?,

@@ -3,6 +3,7 @@ SELECT
   [IdSifranta],
   [IdSifre],
   [Object],
-  [Valid]
+  [Valid],
+  [CacheOnUpdate]
 FROM
   <%MVIEWCACHE%>.[DBO].[CACHED:EVENT:OBJECTS]

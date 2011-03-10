@@ -368,7 +368,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
 
-  private void cacheEvent(Event event) throws SQLException {
+  @Override
+  protected  void cacheEvent(Event event) throws SQLException {
     Map<EventType, List<EventCacheTemporaryParameter>> eventObjects = getCachedEventObjects();
     EventType key = new EventType(event);
 
@@ -737,10 +738,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
         } else {
           events_ID = event.getId();
-        }
-
-        if (event.getOperation() != Event.EventOperation.IGNORE) {
-          cacheEvent(event);
         }
       } finally {
         if (!isTransaction) {
@@ -1327,6 +1324,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     MaterializedView.CacheEvents.Event event = new MaterializedView.CacheEvents.Event();
     event.setSifra(idSifre);
     event.setSifrant(idSifranta);
+    event.setCacheOnUpdate(false);
 
     result.getCacheEvents().getEvent().add(event);
 
@@ -1422,6 +1420,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               storeCachedEventObject.setInt(1, event.getSifrant());
               storeCachedEventObject.setString(2, event.getSifra());
               storeCachedEventObject.setString(3, tt.getMaterializedView().getValue());
+              storeCachedEventObject.setBoolean(4, event.isCacheOnUpdate());
               storeCachedEventObject.executeUpdate();
             }
           }
