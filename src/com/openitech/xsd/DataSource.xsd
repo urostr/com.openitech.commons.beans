@@ -202,6 +202,7 @@
               <xsd:complexType>
                 <xsd:attribute name="Sifrant" type="xsd:int" use="required"/>
                 <xsd:attribute name="Sifra" type="xsd:string" use="required"/>
+                <xsd:attribute name="CacheOnUpdate" type="xsd:boolean" default="true"/>
               </xsd:complexType>
             </xsd:element>
           </xsd:sequence>
@@ -660,6 +661,7 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
+
 
 
 

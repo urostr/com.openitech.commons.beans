@@ -5,12 +5,19 @@ public class EventType {
   public EventType(Event event) {
     this.sifrant = event.getSifrant();
     this.sifra = event.getSifra();
+    this.cacheOnUpdate = event.isCacheOnUpdate();
   }
 
   public EventType(int sifrant, String sifra) {
+    this(sifrant, sifra, true);
+  }
+
+  public EventType(int sifrant, String sifra, boolean cacheOnUpdate) {
     this.sifrant = sifrant;
     this.sifra = sifra;
+    this.cacheOnUpdate = cacheOnUpdate;
   }
+
   protected final int sifrant;
 
   /**
@@ -31,6 +38,18 @@ public class EventType {
   public String getSifra() {
     return sifra;
   }
+
+  protected final boolean cacheOnUpdate;
+
+  /**
+   * Get the value of cacheOnUpdate
+   *
+   * @return the value of cacheOnUpdate
+   */
+  public boolean isCacheOnUpdate() {
+    return cacheOnUpdate;
+  }
+
 
   @Override
   public boolean equals(Object obj) {
