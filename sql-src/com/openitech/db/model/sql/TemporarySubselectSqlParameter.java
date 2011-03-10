@@ -162,7 +162,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
    * @param emptyTableSql new value of emptyTableSql
    */
   public void setEmptyTableSql(String emptyTableSql) {
-    this.emptyTableSql = emptyTableSql==null?"":emptyTableSql;
+    this.emptyTableSql = emptyTableSql == null ? "" : emptyTableSql;
   }
   private String catalog;
 
@@ -183,7 +183,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void setCatalog(String catalog) {
     this.catalog = catalog;
   }
-  
   private String checkTableSql;
 
   /**
@@ -246,7 +245,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public String getValue() {
     return sqlMaterializedView == null ? super.getValue() : sqlMaterializedView.getValue();
   }
-
   protected boolean useParameters = false;
 
   /**
@@ -390,10 +388,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 transaction = true;
               }
             }
-            
+
             String context = connection.getCatalog();
 
-            if (getCatalog()!=null) {
+            if (getCatalog() != null) {
               connection.setCatalog(catalog);
             }
 
@@ -406,7 +404,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               statement.execute(createSQL);
             }
 
-            if (getCatalog()!=null) {
+            if (getCatalog() != null) {
               connection.setCatalog(context);
             }
 
@@ -485,25 +483,26 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   System.out.println("Rows deleted:" + rowsDeleted);
                 }
               }
-
-              String query = SQLDataSource.substParameters(fillTableSql, qparams);
-              if (!Equals.equals(this.connection, connection)
-                      || !Equals.equals(this.qFillTable, query)) {
-                if (this.psFillTable != null) {
-                  this.psFillTable.close();
+              if (fillTableSql != null) {
+                String query = SQLDataSource.substParameters(fillTableSql, qparams);
+                if (!Equals.equals(this.connection, connection)
+                        || !Equals.equals(this.qFillTable, query)) {
+                  if (this.psFillTable != null) {
+                    this.psFillTable.close();
+                  }
+                  this.psFillTable = connection.prepareStatement(query,
+                          ResultSet.TYPE_SCROLL_INSENSITIVE,
+                          ResultSet.CONCUR_READ_ONLY,
+                          ResultSet.HOLD_CURSORS_OVER_COMMIT);
+                  this.qFillTable = query;
                 }
-                this.psFillTable = connection.prepareStatement(query,
-                        ResultSet.TYPE_SCROLL_INSENSITIVE,
-                        ResultSet.CONCUR_READ_ONLY,
-                        ResultSet.HOLD_CURSORS_OVER_COMMIT);
-                this.qFillTable = query;
-              }
 
-              if (DbDataSource.DUMP_SQL) {
-                System.out.println("############## fill");
-                System.out.println(this.qFillTable);
+                if (DbDataSource.DUMP_SQL) {
+                  System.out.println("############## fill");
+                  System.out.println(this.qFillTable);
+                }
+                System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
               }
-              System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
               if (cleanTableSqls != null) {
                 List<String> queries = new ArrayList<String>(cleanTableSqls.length);
                 for (String sql : cleanTableSqls) {
@@ -587,7 +586,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     if (getIsTableDataValidSql() != null) {
       tt.setIsTableDataValidSql(getIsTableDataValidSql());
     }
-    if (getCatalog()!=null) {
+    if (getCatalog() != null) {
       tt.setCatalog(getCatalog());
     }
     tt.setEmptyTableSql(getEmptyTableSql());
@@ -625,7 +624,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       tt.getMaterializedView().setIsViewValidSql(getSqlMaterializedView().getIsViewValidSQL());
       tt.getMaterializedView().setSetViewVersionSql(getSqlMaterializedView().getSetViewVersionSql());
 
-      if (getSqlMaterializedView().getCacheEventTypes().size()>0) {
+      if (getSqlMaterializedView().getCacheEventTypes().size() > 0) {
         tt.getMaterializedView().setCacheEvents(new MaterializedView.CacheEvents());
         List<Event> events = tt.getMaterializedView().getCacheEvents().getEvent();
         for (EventType eventType : getSqlMaterializedView().getCacheEventTypes()) {
