@@ -2910,15 +2910,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
     final String sifrantVnosnihPolj = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[SifrantVnosnihPolj]";
     final String variousValues = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB) + ".[dbo].[VariousValues]";
 
-    String template = "(SELECT [VariousValues].{0} FROM <%VARIOUS_VALUES%> WITH (NOLOCK) WHERE [VariousValues].[Id] = (SELECT [ValueId] FROM <%EVENT_VALUES%> WITH (NOLOCK) "
+    String searchTemplate = "EXISTS (SELECT [VariousValues].Id FROM <%VARIOUS_VALUES%> WITH (NOLOCK) "
+            + "WHERE [VariousValues].[Id] = "
+            + "(SELECT [ValueId] FROM <%EVENT_VALUES%> WITH (NOLOCK) "
             + "WHERE [EventValues].[EventId] = ev.[Id] AND"
             + " [EventValues].[IdPolja] = {1} AND"
-            + " [EventValues].[FieldValueIndex] = {2}))";
-    template = template.replaceAll("<%VARIOUS_VALUES%>", variousValues);
-    template = template.replaceAll("<%EVENT_VALUES%>", eventValues);
+            + " [EventValues].[FieldValueIndex] = {2})"
+            + "AND [VariousValues].{0} = ? )";
+    searchTemplate = searchTemplate.replaceAll("<%VARIOUS_VALUES%>", variousValues);
+    searchTemplate = searchTemplate.replaceAll("<%EVENT_VALUES%>", eventValues);
 
 
-    MessageFormat resultFormat = new MessageFormat(template);
+    MessageFormat searchFormat = new MessageFormat(searchTemplate);
 
 
     for (Field f : searchFields) {
@@ -3098,12 +3101,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
               break;
           }
           sbWhere.append(sbWhere.length() > 0 ? " AND " : " WHERE ");
-          sbWhere.append(" \n? = ");
-          sbWhere.append(resultFormat.format(new Object[]{
+          sbWhere.append("\n");
+          sbWhere.append(searchFormat.format(new Object[]{
                     tipPolja,
                     qIdPolja,
-                    f.getFieldIndex()
-                  }));
+                    f.getFieldIndex(),
+                    }));
           sbWhere.append("\n");
 
           DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
@@ -3121,6 +3124,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     sbSearch.insert(sbSearch.length(), sbWhere.toString());
 
+
+    String template = "(SELECT [VariousValues].{0} FROM <%VARIOUS_VALUES%> WITH (NOLOCK) WHERE [VariousValues].[Id] = (SELECT [ValueId] FROM <%EVENT_VALUES%> WITH (NOLOCK) "
+            + "WHERE [EventValues].[EventId] = ev.[Id] AND"
+            + " [EventValues].[IdPolja] = {1} AND"
+            + " [EventValues].[FieldValueIndex] = {2}))";
+    template = template.replaceAll("<%VARIOUS_VALUES%>", variousValues);
+    template = template.replaceAll("<%EVENT_VALUES%>", eventValues);
+
+    MessageFormat resultFormat = new MessageFormat(template);
 
     for (Field f : resultFields) {
       if (!searchFields.contains(f)) {
