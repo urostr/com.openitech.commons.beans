@@ -457,6 +457,9 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
         dataSource.updateObject(columnName, value);
         fireUpdateActionEvent();
         Object newvalue = dataSource.getObject(columnName);
+        if(value != null && newvalue != null && !value.equals(newvalue)){
+          Logger.getAnonymousLogger().warning("DbFieldObserver.updateValue: UpdateObject and getObject are not equal!");
+        }
 //        if (!((newvalue==null && value==null) || (value!=null && value.equals(newvalue))))
         if (!Equals.equals(newvalue, value)) {
           fireLaterFieldValueChanged(new ActiveRowChangeEvent(dataSource, columnName, -1));
