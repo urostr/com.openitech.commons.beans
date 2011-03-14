@@ -395,7 +395,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               @Override
               public void actionPerformed(java.awt.event.ActionEvent evt) {
                 if (!refreshing) {
-                  filters.getFilterFor(item).setSeekType(item, jDbComboBox1.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+                  filters.getFilterFor(listenerItem).setSeekType(listenerItem, jDbComboBox1.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
                 }
               }
             });
@@ -476,7 +476,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               public void actionPerformed(java.awt.event.ActionEvent evt) {
                 if (!refreshing) {
 
-                  filters.getFilterFor(item).setSeekType(item, jDbComboBox1.getSelectedIndex());
+                  filters.getFilterFor(listenerItem).setSeekType(listenerItem, jDbComboBox1.getSelectedIndex());
                 }
               }
             });
