@@ -3059,7 +3059,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           //dodaj v where brez joina
           StringBuilder qIdPolja = new StringBuilder(500);
 
-          if (f.getIdPolja() != null) {
+          if (f.getIdPolja() != null && f.getIdPolja() > 0) {
             qIdPolja.append(f.getIdPolja().intValue());
           } else {
             qIdPolja.append("(SELECT [Id] FROM ").
