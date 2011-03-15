@@ -558,7 +558,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
   }
 
-  private void updateEventsCache(Event event) throws SQLException {
+  public void updateEventsCache(Event event) throws SQLException {
     if (event.getOperation() != Event.EventOperation.IGNORE) {
       for (Event childEvent : event.getChildren()) {
         updateEventsCache(childEvent);

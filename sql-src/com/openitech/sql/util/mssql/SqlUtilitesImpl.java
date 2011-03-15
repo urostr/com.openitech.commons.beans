@@ -390,15 +390,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
         updateCachedEventObject.executeUpdate();
       }
 
-      for (EventCacheTemporaryParameter tt : eventObjects.get(key)) {
-        tt.executeQuery(txConnection, new ArrayList<Object>());
-      }
+      if (event.getOperation().isUpdateCache()) {
+        for (EventCacheTemporaryParameter tt : eventObjects.get(key)) {
+          tt.executeQuery(txConnection, new ArrayList<Object>());
+        }
 
-      synchronized (updateCachedEventObject) {
-        updateCachedEventObject.setBoolean(1, true);
-        updateCachedEventObject.setInt(2, key.getSifrant());
-        updateCachedEventObject.setString(3, key.getSifra());
-        updateCachedEventObject.executeUpdate();
+        synchronized (updateCachedEventObject) {
+          updateCachedEventObject.setBoolean(1, true);
+          updateCachedEventObject.setInt(2, key.getSifrant());
+          updateCachedEventObject.setString(3, key.getSifra());
+          updateCachedEventObject.executeUpdate();
+        }
       }
     }
   }
