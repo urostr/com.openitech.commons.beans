@@ -13,9 +13,7 @@ import java.util.logging.Logger;
  * <p>Title: J2EE Common components</p>
  * <p>Description: </p>
  * <p>Copyright: Copyright (c) 2003</p>
- * <p>Company: Prosoft-Consulting d.o.o.</p>
- * @author Uroš Trojar
- * $Revision: 1.7 $
+ * @author Uros Trojar
  */
 public class ReadInputStream {
 

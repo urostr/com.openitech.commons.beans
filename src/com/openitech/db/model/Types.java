@@ -4,9 +4,7 @@ package com.openitech.db.model;
  * <p>Title: J2EE Common components</p>
  * <p>Description: </p>
  * <p>Copyright: Copyright (c) 2003</p>
- * <p>Company: Prosoft-Consulting d.o.o.</p>
- * @author Uroš Trojar
- * $Revision: 1.1.1.1 $
+ * @author Uros Trojar
  */
 
 public interface Types {
