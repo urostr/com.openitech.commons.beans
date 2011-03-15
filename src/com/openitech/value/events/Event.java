@@ -507,8 +507,47 @@ public class Event extends EventType {
 
   public static enum EventOperation {
 
-    UPDATE,
-    DELETE,
-    IGNORE
+    UPDATE {
+      @Override
+      public boolean isUpdateCache() {
+        return !isDisableEventCaching();
+      }
+
+    },
+    DELETE {
+      @Override
+      public boolean isUpdateCache() {
+        return !isDisableEventCaching();
+      }
+
+    },
+    IGNORE {
+      @Override
+      public boolean isUpdateCache() {
+        return false;
+      }      
+    };
+
+    private boolean disableEventCaching = false;
+
+    /**
+     * Get the value of disableEventCaching
+     *
+     * @return the value of disableEventCaching
+     */
+    public boolean isDisableEventCaching() {
+      return disableEventCaching;
+    }
+
+    /**
+     * Set the value of disableEventCaching
+     *
+     * @param disableEventCaching new value of disableEventCaching
+     */
+    public void setDisableEventCaching(boolean disableEventCaching) {
+      this.disableEventCaching = disableEventCaching;
+    }
+
+    public abstract boolean isUpdateCache();
   }
 }
