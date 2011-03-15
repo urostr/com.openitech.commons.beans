@@ -58,7 +58,7 @@ public class ReadInputStream {
     st.resetSyntax();
     st.eolIsSignificant(true);
     st.wordChars('!', '~');
-    st.whitespaceChars(' ', ' ');
+    st.wordChars(' ', ' ');
     st.whitespaceChars('\t', '\t');
     if (!batch) {
       st.whitespaceChars(';', ';');
