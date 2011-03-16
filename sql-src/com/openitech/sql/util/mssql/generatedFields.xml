@@ -99,6 +99,11 @@
               [Id] ASC
             )
       </Query>
+      <Query>CREATE NONCLUSTERED INDEX [GENERATED_FIELDS$IdSifre] ON #GENERATED_FIELDS
+            (
+              [IdSifre] ASC
+            )
+      </Query>
     </CreateTableSqls>
     <FillTableSql>INSERT INTO #GENERATED_FIELDS
                ([Id]
