@@ -2917,7 +2917,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             + "WHERE [EventValues].[EventId] = ev.[Id] AND"
             + " [EventValues].[IdPolja] = {1} AND"
             + " [EventValues].[FieldValueIndex] = {2})"
-            + "AND [VariousValues].{0} = ? )";
+            + "AND [VariousValues].{0} = {3} )";
     searchTemplate = searchTemplate.replaceAll("<%VARIOUS_VALUES%>", variousValues);
     searchTemplate = searchTemplate.replaceAll("<%EVENT_VALUES%>", eventValues);
 
@@ -2992,7 +2992,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
               case 3:
                 //String
                 value = val_alias + ".StringValue";
-                sbSearch.append(val_alias).append(".StringValue = ? ");
+                if (ConnectionManager.getInstance().isConvertToVarchar()) {
+                  sbSearch.append(val_alias).append(".StringValue = CAST(? AS VARCHAR)");
+                } else {
+                  sbSearch.append(val_alias).append(".StringValue = ?");
+                }
                 if (resultFields.contains(f)) {
                   sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName()).append("]");
                 }
@@ -3069,44 +3073,49 @@ public class SqlUtilitesImpl extends SqlUtilities {
                     append(" WITH (NOLOCK) WHERE [SifrantVnosnihPolj].ImePolja= '").append(f.getName()).append("' )");
           }
 
-          String tipPolja = "";
+          String valueColumn = "";
+          String searchParameter = "?";
           ValueType valueType = ValueType.getType(f.getType());
           switch (valueType) {
             case IntValue:
             case LongValue:
             case BitValue:
-              tipPolja = "IntValue";
+              valueColumn = "IntValue";
               break;
             case RealValue:
               //Real
-              tipPolja = "RealValue";
+              valueColumn = "RealValue";
               break;
             case StringValue:
               //String
-              tipPolja = "StringValue";
+              valueColumn = "StringValue";
+              if (ConnectionManager.getInstance().isConvertToVarchar()) {
+                searchParameter = "CAST(? AS VARCHAR)";
+              }
               break;
             case DateValue:
             case TimeValue:
             case MonthValue:
             case DateTimeValue:
               //Date
-              tipPolja = "DateValue";
+              valueColumn = "DateValue";
               break;
             case ClobValue:
               //Clob
-              tipPolja = "ClobValue";
+              valueColumn = "ClobValue";
               break;
             case ObjectValue:
             case BlobValue:
-              tipPolja = "ObjectValue";
+              valueColumn = "ObjectValue";
               break;
           }
           sbWhere.append(sbWhere.length() > 0 ? " AND " : " WHERE ");
           sbWhere.append("\n");
           sbWhere.append(searchFormat.format(new Object[]{
-                    tipPolja,
+                    valueColumn,
                     qIdPolja,
                     f.getFieldIndex(),
+                    searchParameter
                     }));
           sbWhere.append("\n");
 
