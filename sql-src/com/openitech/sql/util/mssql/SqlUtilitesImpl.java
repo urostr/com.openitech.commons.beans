@@ -2768,14 +2768,23 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlFindEventType.setValue("ev.[IdSifranta] = ?");
         sqlFindEventType.addParameter(qpSifrant);
       } else if (sifra.length == 1) {
-        sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
+        if (ConnectionManager.getInstance().isConvertToVarchar()) {
+          sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR)");
+        } else {
+          sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
+        }
         sqlFindEventType.addParameter(qpSifrant);
         sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, sifra[0]));
       } else {
         StringBuilder sbet = new StringBuilder();
         sqlFindEventType.addParameter(qpSifrant);
         for (String s : sifra) {
-          sbet.append(sbet.length() > 0 ? ", " : "").append("?");
+          sbet.append(sbet.length() > 0 ? ", " : "");
+          if (ConnectionManager.getInstance().isConvertToVarchar()) {
+            sbet.append("CAST(? AS VARCHAR)");
+          } else {
+            sbet.append("?");
+          }
           sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, s));
         }
         sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
