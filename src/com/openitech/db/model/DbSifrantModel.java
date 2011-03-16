@@ -150,6 +150,8 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
       setFilterRequired(true);
       addRequired(I_TYPE_SKUPINA_SIFRANTA, 2);
       addRequired(I_TYPE_OPIS_SIFRANTA, 2);
+      I_TYPE_SKUPINA_SIFRANTA.setConvertToVarchar(false);
+      I_TYPE_OPIS_SIFRANTA.setConvertToVarchar(false);
     }
 
     public void setSeekValue(String sifrantSkupina, String sifrantOpis) {
