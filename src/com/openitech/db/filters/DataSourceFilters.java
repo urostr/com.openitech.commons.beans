@@ -102,6 +102,23 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      * CONTAINS has value 10
      */
     public static final int CONTAINS = 10;
+    /**
+    /**
+     * Equals has value 11
+     */
+    public static final int CI_VARCHAR_EQUALS = 11;
+    /**
+     * BEGINS_WITH has value 12
+     */
+    public static final int CI_VARCHAR_BEGINS_WITH = 12;
+    /**
+     * ENDS_WITH has value 13
+     */
+    public static final int CI_VARCHAR_ENDS_WITH = 13;
+    /**
+     * CONTAINS has value 14
+     */
+    public static final int CI_VARCHAR_CONTAINS = 14;
     protected final MessageFormat[] formati = new MessageFormat[]{
       new MessageFormat(" (UPPER({0}) = ?) "), //-0
       new MessageFormat(" (UPPER({0}) like (?+''%'')) "), //-1
@@ -114,6 +131,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       new MessageFormat(" ({0} like (?+''%'')) "), //-8
       new MessageFormat(" ({0} like (''%''+?)) "), //-9
       new MessageFormat(" ({0} like (''%''+?+''%'')) "), //-10
+      new MessageFormat(" ({0} = CAST(? AS VARCHAR)) "), //-11
+      new MessageFormat(" ({0} like (CAST(? AS VARCHAR)+''%'')) "), //-12
+      new MessageFormat(" ({0} like (''%''+CAST(? AS VARCHAR))) "), //-13
+      new MessageFormat(" ({0} like (''%''+CAST(? AS VARCHAR)+''%'')) "), //-14
     };
     protected final String[] descriptions = new String[]{
       "je enak",
@@ -123,6 +144,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       "je enak",
       "je veèji ali enak",
       "je manjši ali enak",
+      "je",
+      "se zaène z",
+      "se konèa z",
+      "vsebuje",
       "je",
       "se zaène z",
       "se konèa z",
@@ -262,19 +287,36 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       int seekType = i_type;
 
       if (isCaseInsensitive()) {
-        switch (i_type) {
-          case UPPER_EQUALS:
-            seekType = EQUALS;
-            break;
-          case UPPER_BEGINS_WITH:
-            seekType = BEGINS_WITH;
-            break;
-          case UPPER_END_WITH:
-            seekType = ENDS_WITH;
-            break;
-          case UPPER_CONTAINS:
-            seekType = CONTAINS;
-            break;
+        if (!isConvertToVarchar()) {
+          switch (i_type) {
+            case UPPER_EQUALS:
+              seekType = EQUALS;
+              break;
+            case UPPER_BEGINS_WITH:
+              seekType = BEGINS_WITH;
+              break;
+            case UPPER_END_WITH:
+              seekType = ENDS_WITH;
+              break;
+            case UPPER_CONTAINS:
+              seekType = CONTAINS;
+              break;
+          }
+        } else {
+          switch (i_type) {
+            case UPPER_EQUALS:
+              seekType = CI_VARCHAR_EQUALS;
+              break;
+            case UPPER_BEGINS_WITH:
+              seekType = CI_VARCHAR_BEGINS_WITH;
+              break;
+            case UPPER_END_WITH:
+              seekType = CI_VARCHAR_ENDS_WITH;
+              break;
+            case UPPER_CONTAINS:
+              seekType = CI_VARCHAR_CONTAINS;
+              break;
+          }
         }
       }
 
@@ -304,6 +346,25 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      */
     public void setCaseInsensitive(boolean caseInsensitive) {
       this.caseInsensitive = caseInsensitive;
+    }
+    private boolean convertToVarchar = ConnectionManager.getInstance().isConvertToVarchar();
+
+    /**
+     * Get the value of convertToVarchar
+     *
+     * @return the value of convertToVarchar
+     */
+    public boolean isConvertToVarchar() {
+      return convertToVarchar;
+    }
+
+    /**
+     * Set the value of convertToVarchar
+     *
+     * @param convertToVarchar new value of convertToVarchar
+     */
+    public void setConvertToVarchar(boolean convertToVarchar) {
+      this.convertToVarchar = convertToVarchar;
     }
     protected SeekLayout layout = null;
 

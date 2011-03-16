@@ -46,6 +46,7 @@ public interface DbConnection {
   String DB_SHADOW_INTERRUPT= "db.shadow.interrupt";
   String DB_STOP_LOADING_THREAD= "db.thread.kill";
   String DB_OVERRIDE_CACHED_VIEWS= "db.override.cached";
+  String DB_CONVERT_TO_VARCHAR= "db.convert.varchar";
   
   String DB_ENTRY_SERVICE = "ws.entry";
   
@@ -76,6 +77,7 @@ public interface DbConnection {
   boolean isConnectOnDemand();
   boolean isCacheRowSet();
   boolean isCaseInsensitive();
+  boolean isConvertToVarchar();
   String getDialect();
   String getUrl();
 
