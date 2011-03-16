@@ -45,7 +45,7 @@ public class DefaultFilterFactory extends AbstractDataSourceParametersFactory im
     filterPanel = new DefaultFilterPanel(config.getDataModel().getDocuments(), filtersMap);
     config.getDataModel().getDocuments().putAll(filterPanel.getJPDbDataSourceFilter().getNamedDocuments());
 
-    viewMenuItems.add(filterPanel.getFilterMenuItem());
+    viewMenuItems.add(filterPanel.getJPDbDataSourceFilter().getFilterMenuItem());
 
   }
 
