@@ -75,6 +75,11 @@ public abstract class AbstractSQLConnection implements DbConnection {
   }
 
   @Override
+  public boolean isConvertToVarchar() {
+    return implementation.isConvertToVarchar();
+  }
+
+  @Override
   public Connection getTemporaryConnection() {
     return implementation.getTemporaryConnection();
   }

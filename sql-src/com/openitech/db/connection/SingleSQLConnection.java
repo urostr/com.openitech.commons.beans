@@ -22,6 +22,7 @@ public class SingleSQLConnection implements DbConnection {
   private final AbstractSQLConnection owner;
 
   Boolean isCaseInsensitive = null;
+  Boolean isConvertToVarchar = null;
   private final Properties connect;
   private final SQLConnectionInitializer sqlConnectionInitializer;
   /**
@@ -71,9 +72,16 @@ public class SingleSQLConnection implements DbConnection {
     return sqlConnectionInitializer.getDialect();
   }
 
+  //za MS sql predpostavljamo da je case insensitive
   @Override
   public boolean isCaseInsensitive() {
     return isCaseInsensitive == null ? (isCaseInsensitive = Boolean.valueOf(settings.getProperty(DB_CASE_INSENSITIVE, Boolean.toString("mssql".equals(getDialect()))))) : isCaseInsensitive;
+  }
+
+  //za MS sql predpostavljamo da ne uporabljamo nvarchar
+  @Override
+  public boolean isConvertToVarchar() {
+    return isConvertToVarchar == null ? (isConvertToVarchar = Boolean.valueOf(settings.getProperty(DB_CONVERT_TO_VARCHAR, Boolean.toString("mssql".equals(getDialect()))))) : isConvertToVarchar;
   }
 
   @Override
