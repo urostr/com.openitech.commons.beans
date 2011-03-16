@@ -33,6 +33,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -153,6 +154,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
       }
     }
+    JMenuItem clearMenuItem = new JMenuItem("Odstrani vse");
+    clearMenuItem.setActionCommand("CLEAR");
+    clearMenuItem.addActionListener(new ClearFilters());
+    filterMenuItem.add(clearMenuItem);
+
+
     firePropertyChange("filter_menu", filterMenuItem, null);
   }
 
@@ -190,6 +197,24 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             document.remove(0, document.getLength());
           } catch (BadLocationException ex) {
             Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.WARNING, null, ex);
+          }
+        }
+      }
+    }
+  }
+
+  private class ClearFilters implements ActionListener {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      if (e.getActionCommand().equalsIgnoreCase("CLEAR") && documents != null) {
+        for (javax.swing.text.Document documents1[] : documents.values()) {
+          for (Document document : documents1) {
+            try {
+              document.remove(0, document.getLength());
+            } catch (BadLocationException ex) {
+              Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.WARNING, null, ex);
+            }
           }
         }
       }
