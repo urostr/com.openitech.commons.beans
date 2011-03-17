@@ -119,6 +119,15 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      * CONTAINS has value 14
      */
     public static final int CI_VARCHAR_CONTAINS = 14;
+    /**
+     * GREATER_OR_EQUALS has value 5
+     */
+    public static final int CI_GREATER_OR_EQUALS = 15;
+    /**
+     * LESS_OR_EQUALS has value 6
+     */
+    public static final int CI_LESS_OR_EQUALS = 16;
+    
     protected final MessageFormat[] formati = new MessageFormat[]{
       new MessageFormat(" (UPPER({0}) = ?) "), //-0
       new MessageFormat(" (UPPER({0}) like (?+''%'')) "), //-1
@@ -135,6 +144,8 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       new MessageFormat(" ({0} like (CAST(? AS VARCHAR)+''%'')) "), //-12
       new MessageFormat(" ({0} like (''%''+CAST(? AS VARCHAR))) "), //-13
       new MessageFormat(" ({0} like (''%''+CAST(? AS VARCHAR)+''%'')) "), //-14
+      new MessageFormat(" ({0} >= CAST(? AS VARCHAR)) "), //-15
+      new MessageFormat(" ({0} <= CAST(? AS VARCHAR)) "), //-16
     };
     protected final String[] descriptions = new String[]{
       "je enak",
@@ -151,7 +162,9 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       "je",
       "se zaène z",
       "se konèa z",
-      "vsebuje"
+      "vsebuje",
+      "je veèji ali enak",
+      "je manjši ali enak"
     };
     protected String field;
     protected E value = null;
@@ -304,6 +317,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
           }
         } else {
           switch (i_type) {
+            case EQUALS:
             case UPPER_EQUALS:
               seekType = CI_VARCHAR_EQUALS;
               break;
@@ -315,6 +329,12 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
               break;
             case UPPER_CONTAINS:
               seekType = CI_VARCHAR_CONTAINS;
+              break;
+            case GREATER_OR_EQUALS:
+              seekType = CI_GREATER_OR_EQUALS;
+              break;
+            case LESS_OR_EQUALS:
+              seekType = CI_LESS_OR_EQUALS;
               break;
           }
         }
