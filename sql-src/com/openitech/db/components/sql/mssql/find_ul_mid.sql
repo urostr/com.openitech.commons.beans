@@ -22,7 +22,7 @@ LEFT OUTER JOIN
     )
 WHERE 
     UL_s.ul_mid is not null AND
-    UL_s.ul_ime = ? AND
+    UL_s.ul_ime = CAST(? AS VARCHAR) AND
     PT_s.pt_id = ? AND
-    NA_s.na_ime = ?
+    NA_s.na_ime = CAST(? AS VARCHAR)
 

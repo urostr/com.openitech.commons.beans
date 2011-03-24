@@ -5,5 +5,5 @@ FROM
 WHERE 
     PT_s.pt_mid is not null AND
     PT_s.pt_id = ? AND
-    PT_s.pt_ime = ?
+    PT_s.pt_ime = CAST(? AS VARCHAR)
 

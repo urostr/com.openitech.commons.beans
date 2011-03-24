@@ -17,6 +17,6 @@ LEFT OUTER JOIN
 WHERE 
      NA_s.na_mid is not null AND
     PT_s.pt_id = ? AND
-    NA_s.na_ime = ? 
+    NA_s.na_ime = CAST(? AS VARCHAR)
     
 

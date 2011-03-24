@@ -6,8 +6,8 @@ SELECT <%ev_result_limit%>
     ev.[IdEventSource],
     ev.[VersionId],
     ev.[Version],
-    ev.Datum
-<%ev_field_results%>
+    ev.[Datum],
+    ev.[DatumSpremembe]<%ev_field_results%>
 FROM (<%ev_events_subquery%>) ev
 <%ev_values_filter%>
 <%ev_valid_filter%>
