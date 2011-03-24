@@ -491,7 +491,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       success = success && eventId != null;
 
 
-
       Integer versionId = null;
       if (newValues.isVersioned()) {
         versionId = assignEventVersion(eventPKs);
@@ -516,9 +515,13 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   private Long updateEvent(Event newValues, Event oldValues, List<EventPK> eventIds) throws SQLException {
     Event find = findEvent(oldValues);
+//    boolean versioned = false;
     if (find != null) {
       newValues.setId(find.getId());
       newValues.setEventSource(find.getEventSource());
+      //samo ce ni ze versioned
+      //get versioned!!!
+      //zato da nama pravino shrani, ne pozabi nastavit versioed na childih!!!
     }
     if (eventIds == null) {
       eventIds = new ArrayList<EventPK>();
@@ -543,9 +546,13 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
 
 
+
     if (eventPK.getEventOperation() == Event.EventOperation.UPDATE) {
       eventIds.add(eventPK);
     }
+//    if (versioned) {
+      //update versions
+//    }
     return eventPK.getEventId();
   }
 
