@@ -29,7 +29,6 @@ public class EventPK {
       }
     }
   };
-  
   private Long eventId;
   private EventOperation eventOperation = EventOperation.UPDATE;
 
@@ -45,6 +44,25 @@ public class EventPK {
     this.idSifranta = idSifranta;
     this.idSifre = idSifre;
     this.versionID = versionID;
+  }
+  private Long oldEventId;
+
+  /**
+   * Get the value of id
+   *
+   * @return the value of id
+   */
+  public Long getOldEventId() {
+    return oldEventId;
+  }
+
+  /**
+   * Set the value of id
+   *
+   * @param id new value of id
+   */
+  public void setOldEventId(Long oldEventId) {
+    this.oldEventId = oldEventId;
   }
 
   /**
@@ -101,6 +119,25 @@ public class EventPK {
    */
   public void setIdSifre(String idSifre) {
     this.idSifre = idSifre;
+  }
+  protected boolean versioned = false;
+
+  /**
+   * Get the value of versioned
+   *
+   * @return the value of versioned
+   */
+  public boolean isVersioned() {
+    return versioned;
+  }
+
+  /**
+   * Set the value of versioned
+   *
+   * @param versioned new value of versioned
+   */
+  public void setVersioned(boolean versioned) {
+    this.versioned = versioned;
   }
 
   /**
