@@ -7,9 +7,7 @@ package com.openitech.value.events;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.util.Equals;
-import com.openitech.value.VariousValue;
 import com.openitech.value.fields.Field;
-import com.openitech.value.fields.Field.LookupType;
 import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import java.sql.ResultSet;
@@ -40,7 +38,6 @@ public class Event extends EventType {
     super(sifrant, sifra);
     this.eventSource = eventSource;
   }
-  
   private Long id;
 
   /**
@@ -60,7 +57,6 @@ public class Event extends EventType {
   public void setId(Long id) {
     this.id = id;
   }
-
   private Date datum = java.util.Calendar.getInstance().getTime();
 
   /**
@@ -137,16 +133,6 @@ public class Event extends EventType {
   public void setEventSource(int eventSource) {
     this.eventSource = eventSource;
   }
-  protected boolean versioned = false;
-
-  /**
-   * Get the value of versioned
-   *
-   * @return the value of versioned
-   */
-  public boolean isVersioned() {
-    return versioned;
-  }
   protected Map<CaseInsensitiveString, Field> preparedFields;
 
   /**
@@ -168,6 +154,16 @@ public class Event extends EventType {
     for (Event event : getChildren()) {
       event.setPreparedFields(preparedFields);
     }
+  }
+  protected boolean versioned = false;
+
+  /**
+   * Get the value of versioned
+   *
+   * @return the value of versioned
+   */
+  public boolean isVersioned() {
+    return versioned;
   }
 
   /**
@@ -409,57 +405,33 @@ public class Event extends EventType {
 
   public EventPK getEventPK(final Map<CaseInsensitiveString, Field> preparedFields) {
     EventPK eventPK = null;
-//    if (getId() != null) {
-      try {
-        eventPK = new EventPK(id, sifrant, sifra);
-        eventPK.setEventOperation(operation);
-        if (getPrimaryKey() != null && getPrimaryKey().length > 0) {
-          for (Map.Entry<Field, List<FieldValue>> entry : eventValues.entrySet()) {
-            for (FieldValue fieldValue : entry.getValue()) {
-              for (Field pkField : getPrimaryKey()) {
-                if (pkField.equals(fieldValue)) {
-                  if (fieldValue.getIdPolja() == null) {
-                    CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(fieldValue.getNonIndexedField().getName());
-                    Integer idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : fieldValue.getIdPolja();
-                    fieldValue.setIdPolja(idPolja);
-                  }
-                  if (fieldValue.getValueId() == null) {
-                    fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
-                  }
-                  eventPK.addPrimaryKeyField(fieldValue);
-                  break;
+    try {
+      eventPK = new EventPK(id, sifrant, sifra);
+      eventPK.setEventOperation(operation);
+      eventPK.setVersioned(versioned);
+      if (getPrimaryKey() != null && getPrimaryKey().length > 0) {
+        for (Map.Entry<Field, List<FieldValue>> entry : eventValues.entrySet()) {
+          for (FieldValue fieldValue : entry.getValue()) {
+            for (Field pkField : getPrimaryKey()) {
+              if (pkField.equals(fieldValue)) {
+                if (fieldValue.getIdPolja() == null) {
+                  CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(fieldValue.getNonIndexedField().getName());
+                  Integer idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : fieldValue.getIdPolja();
+                  fieldValue.setIdPolja(idPolja);
                 }
+                if (fieldValue.getValueId() == null) {
+                  fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
+                }
+                eventPK.addPrimaryKeyField(fieldValue);
+                break;
               }
             }
           }
         }
-//        for (Field field : eventValues.keySet()) {
-//          List<FieldValue> fieldValues = eventValues.get(field);
-//
-//          for (int i = 0; i < fieldValues.size(); i++) {
-//            FieldValue fieldValue = fieldValues.get(i);
-//            String fieldNameWithIndex = field.getName();
-//            int fieldValueIndex = field.getFieldIndex();
-//            LookupType lookupType = field.getLookupType();
-//            CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(field.getNonIndexedField().getName());
-//            int idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : field.getIdPolja();
-//
-//            if (getPrimaryKey() != null && getPrimaryKey().length > 0) {
-//              FieldValue fieldValuePK = new FieldValue(idPolja, fieldNameWithIndex, field.getType(), fieldValueIndex, VariousValue.newVariousValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
-//              fieldValuePK.setLookupType(lookupType);
-//              for (Field field1 : getPrimaryKey()) {
-//                if (field1.equals(fieldValuePK)) {
-//                  eventPK.addPrimaryKeyField(fieldValuePK);
-//                  break;
-//                }
-//              }
-//            }
-//          }
-//        }
-      } catch (SQLException ex) {
-        Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
       }
-//    }
+    } catch (SQLException ex) {
+      Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
+    }
     return eventPK;
 
   }
@@ -504,30 +476,50 @@ public class Event extends EventType {
     }
     return result;
   }
+  private Event versionParent;
+
+  /**
+   * Get the value of versionParent
+   *
+   * @return the value of versionParent
+   */
+  public Event getVersionParent() {
+    return versionParent;
+  }
+
+  /**
+   * Set the value of versionParent
+   *
+   * @param versionParent new value of versionParent
+   */
+  public void setVersionParent(Event versionParent) {
+    this.versionParent = versionParent;
+  }
+
 
   public static enum EventOperation {
 
     UPDATE {
+
       @Override
       public boolean isUpdateCache() {
         return !isDisableEventCaching();
       }
-
     },
     DELETE {
+
       @Override
       public boolean isUpdateCache() {
         return !isDisableEventCaching();
       }
-
     },
     IGNORE {
+
       @Override
       public boolean isUpdateCache() {
         return false;
-      }      
+      }
     };
-
     private boolean disableEventCaching = false;
 
     /**
