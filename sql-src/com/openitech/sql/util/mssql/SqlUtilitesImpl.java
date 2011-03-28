@@ -55,10 +55,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.rowset.CachedRowSet;
@@ -100,6 +100,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement insertVersion;
   PreparedStatement insertEventVersion;
   PreparedStatement findVersion;
+  PreparedStatement getVersionedEventIds;
+  PreparedStatement insertUpdatedVersion;
+  PreparedStatement findVersionTypes;
   String getEventVersionSQL;
   PreparedStatement storeCachedTemporaryTable;
   PreparedStatement deleteCachedTemporaryTable;
@@ -214,26 +217,128 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
+  private boolean isVersioned(List<EventPK> eventPKs) {
+    boolean result = true;
+    for (EventPK eventPK : eventPKs) {
+      result = result && eventPK.isVersioned();
+      if (!result) {
+        break;
+      }
+    }
+    return result;
+  }
+
+  private static class VersionType extends EventType {
+
+    public VersionType(int sifrant, String sifra, Integer versionId) {
+      super(sifrant, sifra);
+      this.versionId = versionId;
+    }
+    protected Integer versionId;
+
+    /**
+     * Get the value of versionId
+     *
+     * @return the value of versionId
+     */
+    public Integer getVersionId() {
+      return versionId;
+    }
+
+    /**
+     * Set the value of versionId
+     *
+     * @param versionId new value of versionId
+     */
+    public void setVersionId(Integer versionId) {
+      this.versionId = versionId;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == null) {
+        return false;
+      }
+      final EventType other = (EventType) obj;
+      if (this.sifrant != other.getSifrant()) {
+        return false;
+      }
+      if ((this.sifra == null) ? (other.getSifra() != null) : !this.sifra.equals(other.getSifra())) {
+        return false;
+      }
+      return true;
+    }
+  }
+
   @Override
-  protected Integer assignEventVersion(List<EventPK> eventPKs) throws SQLException {
+  protected Integer assignEventVersion(EventType parent, List<EventPK> eventPKs) throws SQLException {
     if (!eventPKs.isEmpty()) {
-      //najprej dodaj verzijo (tabela Versions)
+      //iskanje verzije, ampak se naj nebi noben event dodal oz spremenil,
+      //zato je to brez veze
       Integer versionId = getVersion(eventPKs);
 
       if (versionId == null) {
-        versionId = new Integer((int) storeVersion());
-        //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je
-        List<Long> storedEventIds = new ArrayList<Long>();
-        for (EventPK eventPK : eventPKs) {
-          if (!storedEventIds.contains(eventPK.getEventId())) {
-            storedEventIds.add(eventPK.getEventId());
-            storeEventVersion(versionId, eventPK);
-            eventPK.setVersionID(versionId);
-            storePrimaryKeyVersions(eventPK);
-          }
 
+        if (isVersioned(eventPKs)) {
+          //najprej dodaj verzijo (tabela Versions)
+          versionId = new Integer((int) storeVersion(parent));
+          //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je
+          List<Long> storedEventIds = new ArrayList<Long>();
+          for (EventPK eventPK : eventPKs) {
+            if (!storedEventIds.contains(eventPK.getEventId())) {
+              storedEventIds.add(eventPK.getEventId());
+              storeEventVersion(versionId, eventPK.getEventId());
+              eventPK.setVersionID(versionId);
+              storePrimaryKeyVersions(eventPK);
+            }
+          }
         }
       }
+
+      List<Long> oldEventIds1 = new ArrayList<Long>(eventPKs.size());
+      for (EventPK eventPK : eventPKs) {
+        final Long oldEventId = eventPK.getOldEventId();
+        if (oldEventId != null) {
+          oldEventIds1.add(oldEventId);
+        }
+      }
+
+      Map<Long, List<VersionType>> versionTypesMap = findVersionTypes(oldEventIds1);
+
+      //seznam verzij, ki jih bo potrebno updejtat
+      Map<VersionType, List<EventPK>> updateEventVersions = new HashMap<VersionType, List<EventPK>>();
+
+      //cez vse shranjene EventId-je, vkljuèno s starimi
+      for (EventPK eventPK : eventPKs) {
+        if (eventPK.getOldEventId() != null) {
+          List<VersionType> versionTypes = versionTypesMap.get(eventPK.getOldEventId());//findVersionTypes(eventPK.getOldEventId());
+          for (VersionType versionType : versionTypes) {
+            //parent je sifrant, ki ja najvisji za trenutno workarea
+            //iscem samo tiste versionirane dogodke, ki niso parent, ker parent se sam updejta
+            if (!versionType.equals(parent)) {
+              if (!updateEventVersions.containsKey(versionType)) {
+                updateEventVersions.put(versionType, new ArrayList<EventPK>());
+              }
+              updateEventVersions.get(versionType).add(eventPK);
+            }
+          }
+        }
+      }
+
+      for (Map.Entry<VersionType, List<EventPK>> entry : updateEventVersions.entrySet()) {
+        List<Long> newEventIds = new ArrayList<Long>(entry.getValue().size());
+        List<Long> oldEventIds = new ArrayList<Long>(entry.getValue().size());
+
+        for (EventPK eventPK : entry.getValue()) {
+          if ((eventPK.getEventId() != null)
+                  && (eventPK.getOldEventId() != null)) {
+            newEventIds.add(eventPK.getEventId());
+            oldEventIds.add(eventPK.getOldEventId());
+          }
+        }
+        updateVersion(entry.getKey().getVersionId(), newEventIds, oldEventIds);
+      }
+
       return versionId;
     } else {
       return null;
@@ -272,19 +377,24 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-  private long storeVersion() throws SQLException {
+  @Override
+  protected long storeVersion(EventType eventType) throws SQLException {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertVersion == null) {
       insertVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertVersion.sql", "cp1250"));
     }
 
     synchronized (insertVersion) {
+      int param = 1;
+      insertVersion.clearParameters();
+      insertVersion.setInt(param++, eventType.getSifrant());
+      insertVersion.setString(param++, eventType.getSifra());
       insertVersion.executeUpdate();
       return getLastIdentity();
     }
   }
 
-  private void storeEventVersion(long versionId, EventPK eventPK) throws SQLException {
+  private void storeEventVersion(long versionId, Long eventID) throws SQLException {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertEventVersion == null) {
       insertEventVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertEventVersion.sql", "cp1250"));
@@ -294,10 +404,37 @@ public class SqlUtilitesImpl extends SqlUtilities {
       int param = 1;
       insertEventVersion.clearParameters();
       insertEventVersion.setLong(param++, versionId);
-      insertEventVersion.setLong(param++, eventPK.getEventId());
-      System.out.println("versionId = " + versionId + ", eventId = " + eventPK.getEventId());
+      insertEventVersion.setLong(param++, eventID);
+      System.out.println("versionId = " + versionId + ", eventId = " + eventID);
       insertEventVersion.executeUpdate();
     }
+  }
+
+  private Map<Long, List<VersionType>> findVersionTypes(List<Long> eventIds) throws SQLException {
+    Map<Long, List<VersionType>> result = new HashMap<Long, List<VersionType>>();
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+    StringBuilder sbEventIds = new StringBuilder();
+    for (Long eventId : eventIds) {
+      sbEventIds.append(sbEventIds.length() > 0 ? "," : "").append(eventId);
+    }
+    String sql = ReadInputStream.getResourceAsString(getClass(), "findVersionTypes.sql", "cp1250");
+    sql = sql.replaceAll("<%eventIds%>", sbEventIds.toString());
+
+    findVersionTypes = connection.prepareStatement(sql);
+    ResultSet rs_findVersionTypes = findVersionTypes.executeQuery();
+    while (rs_findVersionTypes.next()) {
+      VersionType versionType = new VersionType(rs_findVersionTypes.getInt("IdSifranta"), rs_findVersionTypes.getString("IdSifre"), rs_findVersionTypes.getInt("Id"));
+      Long eventId = rs_findVersionTypes.getLong("EventId");
+      if (!result.containsKey(eventId)) {
+        result.put(eventId, new ArrayList<VersionType>());
+      }
+      List<VersionType> type = result.get(eventId);
+      if (!type.contains(versionType)) {
+        type.add(versionType);
+      }
+    }
+
+    return result;
   }
 
   @Override
@@ -327,6 +464,41 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     return result;
+  }
+
+  @Override
+  protected void updateVersion(int oldVersion, List<Long> eventIds, List<Long> oldEventIds) throws SQLException {
+    int param;
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+    if (getVersionedEventIds == null) {
+      getVersionedEventIds = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getVersionedEventIds.sql", "cp1250"));
+    }
+    if (insertUpdatedVersion == null) {
+      insertUpdatedVersion = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insertUpdatedVersion.sql", "cp1250"));
+    }
+    long newVersionID;
+    param = 1;
+    insertUpdatedVersion.clearParameters();
+    insertUpdatedVersion.setInt(param++, oldVersion);
+    insertUpdatedVersion.executeUpdate();
+    newVersionID = getLastIdentity();
+
+    param = 1;
+    getVersionedEventIds.clearParameters();
+    getVersionedEventIds.setInt(param++, oldVersion);
+    ResultSet storedVersionedEventIds = getVersionedEventIds.executeQuery();
+
+    //shranim vse nespremenjene eventId-je
+    while (storedVersionedEventIds.next()) {
+      Long storedEventId = storedVersionedEventIds.getLong("EventId");
+      if (!oldEventIds.contains(storedEventId)) {
+        storeEventVersion(newVersionID, storedEventId);
+      }
+    }
+    //shranim se vse nove EventId-je
+    for (Long eventId : eventIds) {
+      storeEventVersion(newVersionID, eventId);
+    }
   }
 
   private Map<EventType, List<EventCacheTemporaryParameter>> getCachedEventObjects() throws SQLException {
@@ -370,7 +542,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  protected  void cacheEvent(Event event) throws SQLException {
+  protected void cacheEvent(Event event) throws SQLException {
     Map<EventType, List<EventCacheTemporaryParameter>> eventObjects = getCachedEventObjects();
     EventType key = new EventType(event);
 
@@ -408,8 +580,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public EventPK storeEvent(Event event, Event oldEvent) throws SQLException {
+    EventPK result;
+    EventPK oldEventPK = (oldEvent != null) ? oldEvent.getEventPK() : null;
     if ((oldEvent != null) && oldEvent.equalEventValues(event) && event.getOperation() == Event.EventOperation.UPDATE) {
-      return oldEvent.getEventPK();
+      result = oldEvent.getEventPK();
     } else {
       final Connection connection = ConnectionManager.getInstance().getTxConnection();
       if (insertEvents == null) {
@@ -579,9 +753,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
               List<FieldValue> fieldValues = eventValues.get(field);
               for (int i = 0; i < fieldValues.size(); i++) {
                 FieldValue value = fieldValues.get(i);
-                Long valueId = storeValue(value.getValueType(), value.getValue());
-                value.setValueId(valueId);
 
+                Long valueId = null;
+                //ce ze imamo valueId, potem ne rabimo vec shranjevat,
+                //ker se vrednosti in valueId ne spreminja
+                if (value.getValueId() == null) {
+                  valueId = storeValue(value.getValueType(), value.getValue());
+                  value.setValueId(valueId);
+                } else {
+                  valueId = value.getValueId();
+                }
                 fieldValuesList.add(value);
 
                 String fieldName = field.getName();
@@ -749,8 +930,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
         event.setId(events_ID);
       }
 
-      return event.getEventPK();
+      result = event.getEventPK();
     }
+
+    if (oldEventPK != null) {
+      result.setOldEventId(oldEventPK.getEventId());
+      result.setVersioned(oldEventPK.isVersioned());
+    }
+    return result;
   }
 
   @Override
@@ -1483,7 +1670,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
       //insert
       synchronized (insert_eventPK) {
         param = 1;
-
         insert_eventPK.clearParameters();
         insert_eventPK.setLong(param++, eventId);
         insert_eventPK.setInt(param++, idSifranta);
@@ -1540,6 +1726,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             update_eventPK_versions_byValue.setLong(param++, eventId);
             update_eventPK_versions_byValue.setInt(param++, 1);
             update_eventPK_versions_byValue.setNull(param++, java.sql.Types.INTEGER);
+            update_eventPK_versions_byValue.setInt(param++, 0);
             update_eventPK_versions_byValue.setInt(param++, idSifranta);
             update_eventPK_versions_byValue.setString(param++, idSifre);
             update_eventPK_versions_byValue.setString(param++, primaryKey);
@@ -1672,9 +1859,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (versionId == null) {
         find_eventPK_versions_byValues.setInt(param++, 1);
         find_eventPK_versions_byValues.setNull(param++, java.sql.Types.INTEGER);
+        find_eventPK_versions_byValues.setInt(param++, 0);
       } else {
         find_eventPK_versions_byValues.setInt(param++, 0);
         find_eventPK_versions_byValues.setInt(param++, versionId.intValue());
+        find_eventPK_versions_byValues.setInt(param++, 1);
       }
       find_eventPK_versions_byValues.setInt(param++, idSifranta);
       find_eventPK_versions_byValues.setString(param++, idSifre);
@@ -2554,60 +2743,66 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
   private final static Event SYSTEM_IDENTITIES = new Event(0, "ID01", -1);
+  private final Semaphore lock = new Semaphore(1);
 
   @Override
   public FieldValue getNextIdentity(Field field) throws SQLException {
-    SYSTEM_IDENTITIES.setPrimaryKey(new Field[]{});
-    Event system = findEvent(SYSTEM_IDENTITIES);
-    system = system == null ? SYSTEM_IDENTITIES : system;
-    List<FieldValue> get = system.getEventValues().get(field);
-    if ((get == null) || (get.isEmpty())) {
-      ValueType type = ValueType.getType(field.getType());
-      FieldValue start = new FieldValue(field);
-
-      switch (type) {
-        case RealValue:
-        case IntValue:
-        case LongValue:
-          start.setValue(1);
-          break;
-        case StringValue:
-          start.setValue("AAA000000001");
-          break;
-        default:
-          start = null;
+    try {
+      //ta motoda mora imeti lock, èeprav se zaenkrat naj nebi klicala iz veè threadov
+      lock.acquire();
+      try {
+        SYSTEM_IDENTITIES.setPrimaryKey(new Field[]{});
+        Event system = findEvent(SYSTEM_IDENTITIES);
+        system = system == null ? SYSTEM_IDENTITIES : system;
+        List<FieldValue> get = system.getEventValues().get(field);
+        if ((get == null) || (get.isEmpty())) {
+          ValueType type = ValueType.getType(field.getType());
+          FieldValue start = new FieldValue(field);
+          switch (type) {
+            case RealValue:
+            case IntValue:
+            case LongValue:
+              start.setValue(1);
+              break;
+            case StringValue:
+              start.setValue("AAA000000001");
+              break;
+            default:
+              start = null;
+          }
+          if (start != null) {
+            system.addValue(start);
+            storeEvent(system);
+          }
+          return start;
+        } else {
+          FieldValue value = get.get(0);
+          ValueType type = ValueType.getType(value.getType());
+          switch (type) {
+            case RealValue:
+              value.setValue(((Number) value.getValue()).doubleValue() + 1);
+              break;
+            case IntValue:
+            case LongValue:
+              value.setValue(((Number) value.getValue()).longValue() + 1);
+              break;
+            case StringValue:
+              value.setValue(StringValue.getNextSifra((String) value.getValue()));
+              break;
+            default:
+              value = null;
+          }
+          if (value != null) {
+            storeEvent(system);
+          }
+          return value;
+        }
+      } finally {
+        lock.release();
       }
-
-      if (start != null) {
-        system.addValue(start);
-        storeEvent(system);
-      }
-
-      return start;
-    } else {
-      FieldValue value = get.get(0);
-      ValueType type = ValueType.getType(value.getType());
-
-      switch (type) {
-        case RealValue:
-          value.setValue(((Number) value.getValue()).doubleValue() + 1);
-          break;
-        case IntValue:
-        case LongValue:
-          value.setValue(((Number) value.getValue()).longValue() + 1);
-          break;
-        case StringValue:
-          value.setValue(StringValue.getNextSifra((String) value.getValue()));
-          break;
-        default:
-          value = null;
-      }
-
-      if (value != null) {
-        storeEvent(system);
-      }
-
-      return value;
+    } catch (InterruptedException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      return null;
     }
   }
 
@@ -3126,7 +3321,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                     qIdPolja,
                     f.getFieldIndex(),
                     searchParameter
-                    }));
+                  }));
           sbWhere.append("\n");
 
           DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
