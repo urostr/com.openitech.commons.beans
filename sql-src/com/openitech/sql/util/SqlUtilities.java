@@ -21,7 +21,7 @@ import com.openitech.value.events.EventQuery;
 import com.openitech.util.Equals;
 import com.openitech.value.VariousValue;
 import com.openitech.value.events.AfterUpdateEvent;
-import com.openitech.value.events.EventQueryParameter;
+import com.openitech.value.events.EventType;
 import com.openitech.value.events.UpdateEventFields;
 import java.sql.Clob;
 import java.sql.ResultSetMetaData;
@@ -190,7 +190,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
             case Types.BLOB:
               if (value instanceof byte[]) {
                 statement.setBytes(pos, (byte[]) value);
-              }else{
+              } else {
                 statement.setObject(pos, value);
               }
               break;
@@ -492,10 +492,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
 
       Integer versionId = null;
-      if (newValues.isVersioned()) {
-        versionId = assignEventVersion(eventPKs);
-        success = success && versionId != null;
-      }
+      //za razumevanje in konsistentnost raje vzamem versionedparent in ne samo newvalues, ceprav sta ista
+      versionId = assignEventVersion(newValues.getVersionParent(), eventPKs);
 
       for (EventPK eventPK : eventPKs) {
         eventPK.setVersionID(versionId);
@@ -513,15 +511,12 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
   }
 
-  private Long updateEvent(Event newValues, Event oldValues, List<EventPK> eventIds) throws SQLException {
+  private Long updateEvent(Event newValues, Event oldValues, List<EventPK> eventIds/*, List<Event> oldEvents//*/) throws SQLException {
     Event find = findEvent(oldValues);
-//    boolean versioned = false;
     if (find != null) {
       newValues.setId(find.getId());
       newValues.setEventSource(find.getEventSource());
-      //samo ce ni ze versioned
-      //get versioned!!!
-      //zato da nama pravino shrani, ne pozabi nastavit versioed na childih!!!
+      find.setVersioned(newValues.isVersioned());
     }
     if (eventIds == null) {
       eventIds = new ArrayList<EventPK>();
@@ -550,9 +545,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     if (eventPK.getEventOperation() == Event.EventOperation.UPDATE) {
       eventIds.add(eventPK);
     }
-//    if (versioned) {
-      //update versions
-//    }
     return eventPK.getEventId();
   }
 
@@ -570,13 +562,17 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       for (Event childEvent : event.getChildren()) {
         updateEventsCache(childEvent);
       }
-
       cacheEvent(event);
     }
   }
 
+  protected abstract void updateVersion(int oldVersion, List<Long> parentEventIds, List<Long> oldParentEventIds) throws SQLException;
+
+  protected abstract long storeVersion(EventType eventType) throws SQLException;
+
   protected abstract void cacheEvent(Event event) throws SQLException;
-  protected abstract Integer assignEventVersion(List<EventPK> eventIds) throws SQLException;
+
+  protected abstract Integer assignEventVersion(EventType parent, List<EventPK> eventIds) throws SQLException;
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
