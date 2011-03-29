@@ -313,14 +313,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
         for (EventPK eventPK : eventPKs) {
           if (eventPK.getOldEventId() != null) {
             List<VersionType> versionTypes = versionTypesMap.get(eventPK.getOldEventId());//findVersionTypes(eventPK.getOldEventId());
-            for (VersionType versionType : versionTypes) {
-              //parent je sifrant, ki ja najvisji za trenutno workarea
-              //iscem samo tiste versionirane dogodke, ki niso parent, ker parent se sam updejta
-              if (!versionType.equals(parent)) {
-                if (!updateEventVersions.containsKey(versionType)) {
-                  updateEventVersions.put(versionType, new ArrayList<EventPK>());
+            if (versionTypes != null) {
+              for (VersionType versionType : versionTypes) {
+                //parent je sifrant, ki ja najvisji za trenutno workarea
+                //iscem samo tiste versionirane dogodke, ki niso parent, ker parent se sam updejta
+                if (!versionType.equals(parent)) {
+                  if (!updateEventVersions.containsKey(versionType)) {
+                    updateEventVersions.put(versionType, new ArrayList<EventPK>());
+                  }
+                  updateEventVersions.get(versionType).add(eventPK);
                 }
-                updateEventVersions.get(versionType).add(eventPK);
               }
             }
           }
