@@ -305,40 +305,41 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       Map<Long, List<VersionType>> versionTypesMap = findVersionTypes(oldEventIds1);
 
-      //seznam verzij, ki jih bo potrebno updejtat
-      Map<VersionType, List<EventPK>> updateEventVersions = new HashMap<VersionType, List<EventPK>>();
+      if (versionTypesMap != null && versionTypesMap.size() > 0) {
+        //seznam verzij, ki jih bo potrebno updejtat
+        Map<VersionType, List<EventPK>> updateEventVersions = new HashMap<VersionType, List<EventPK>>();
 
-      //cez vse shranjene EventId-je, vkljuèno s starimi
-      for (EventPK eventPK : eventPKs) {
-        if (eventPK.getOldEventId() != null) {
-          List<VersionType> versionTypes = versionTypesMap.get(eventPK.getOldEventId());//findVersionTypes(eventPK.getOldEventId());
-          for (VersionType versionType : versionTypes) {
-            //parent je sifrant, ki ja najvisji za trenutno workarea
-            //iscem samo tiste versionirane dogodke, ki niso parent, ker parent se sam updejta
-            if (!versionType.equals(parent)) {
-              if (!updateEventVersions.containsKey(versionType)) {
-                updateEventVersions.put(versionType, new ArrayList<EventPK>());
+        //cez vse shranjene EventId-je, vkljuèno s starimi
+        for (EventPK eventPK : eventPKs) {
+          if (eventPK.getOldEventId() != null) {
+            List<VersionType> versionTypes = versionTypesMap.get(eventPK.getOldEventId());//findVersionTypes(eventPK.getOldEventId());
+            for (VersionType versionType : versionTypes) {
+              //parent je sifrant, ki ja najvisji za trenutno workarea
+              //iscem samo tiste versionirane dogodke, ki niso parent, ker parent se sam updejta
+              if (!versionType.equals(parent)) {
+                if (!updateEventVersions.containsKey(versionType)) {
+                  updateEventVersions.put(versionType, new ArrayList<EventPK>());
+                }
+                updateEventVersions.get(versionType).add(eventPK);
               }
-              updateEventVersions.get(versionType).add(eventPK);
             }
           }
         }
-      }
 
-      for (Map.Entry<VersionType, List<EventPK>> entry : updateEventVersions.entrySet()) {
-        List<Long> newEventIds = new ArrayList<Long>(entry.getValue().size());
-        List<Long> oldEventIds = new ArrayList<Long>(entry.getValue().size());
+        for (Map.Entry<VersionType, List<EventPK>> entry : updateEventVersions.entrySet()) {
+          List<Long> newEventIds = new ArrayList<Long>(entry.getValue().size());
+          List<Long> oldEventIds = new ArrayList<Long>(entry.getValue().size());
 
-        for (EventPK eventPK : entry.getValue()) {
-          if ((eventPK.getEventId() != null)
-                  && (eventPK.getOldEventId() != null)) {
-            newEventIds.add(eventPK.getEventId());
-            oldEventIds.add(eventPK.getOldEventId());
+          for (EventPK eventPK : entry.getValue()) {
+            if ((eventPK.getEventId() != null)
+                    && (eventPK.getOldEventId() != null)) {
+              newEventIds.add(eventPK.getEventId());
+              oldEventIds.add(eventPK.getOldEventId());
+            }
           }
+          updateVersion(entry.getKey().getVersionId(), newEventIds, oldEventIds);
         }
-        updateVersion(entry.getKey().getVersionId(), newEventIds, oldEventIds);
       }
-
       return versionId;
     } else {
       return null;
@@ -411,6 +412,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   private Map<Long, List<VersionType>> findVersionTypes(List<Long> eventIds) throws SQLException {
+    if (eventIds == null || eventIds.isEmpty()) {
+      return null;
+    }
     Map<Long, List<VersionType>> result = new HashMap<Long, List<VersionType>>();
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     StringBuilder sbEventIds = new StringBuilder();
