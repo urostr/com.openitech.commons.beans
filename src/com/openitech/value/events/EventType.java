@@ -17,7 +17,6 @@ public class EventType {
     this.sifra = sifra;
     this.cacheOnUpdate = cacheOnUpdate;
   }
-
   protected final int sifrant;
 
   /**
@@ -38,7 +37,6 @@ public class EventType {
   public String getSifra() {
     return sifra;
   }
-
   protected final boolean cacheOnUpdate;
 
   /**
@@ -50,13 +48,12 @@ public class EventType {
     return cacheOnUpdate;
   }
 
-
   @Override
   public boolean equals(Object obj) {
     if (obj == null) {
       return false;
     }
-    if (getClass() != obj.getClass()) {
+    if (!(obj instanceof EventType)) {
       return false;
     }
     final EventType other = (EventType) obj;
