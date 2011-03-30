@@ -247,6 +247,11 @@ public class Field {
       public int getSqlType() {
         return Types.VARCHAR;
       }
+
+      @Override
+      public String toString() {
+        return "L_PK";
+      }
     },
     VERSION_ID {
 
@@ -258,6 +263,11 @@ public class Field {
       @Override
       public int getSqlType() {
         return Types.INTEGER;
+      }
+
+      @Override
+      public String toString() {
+        return "L_VERS";
       }
     },
     ID_SIFRANTA {
@@ -271,6 +281,11 @@ public class Field {
       public int getSqlType() {
         return Types.INTEGER;
       }
+
+      @Override
+      public String toString() {
+        return "L_SIFRANT";
+      }
     },
     ID_SIFRE {
 
@@ -282,6 +297,11 @@ public class Field {
       @Override
       public int getSqlType() {
         return Types.VARCHAR;
+      }
+
+      @Override
+      public String toString() {
+        return "L_SIFRA";
       }
     };
 
