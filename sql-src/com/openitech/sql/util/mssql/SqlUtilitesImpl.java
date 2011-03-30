@@ -2433,87 +2433,144 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
   private Map<EventQueryKey, EventQueryKey> findEventStatements = new SoftHashMap<EventQueryKey, EventQueryKey>();
+  private Map<EventType, Boolean> searchByPKMap = new HashMap<EventType, Boolean>();
 
   @Override
   public Event findEvent(Event event) throws SQLException {
-    if ((event.getId() == null) || (event.getId() <= 0)) {
-      EventQueryKey eqk = new EventQueryKey(event);
-      boolean seek = false;
-
-      if (findEventStatements.containsKey(eqk)) {
-        eqk = findEventStatements.get(eqk);
-        seek = true;
-      } else {
-        java.util.Set<Field> primaryKey = new java.util.HashSet<Field>();
-        if (event.getPrimaryKey() != null) {
-          primaryKey.addAll(Arrays.asList(event.getPrimaryKey()));
-        } else {
-          primaryKey.addAll(event.getEventValues().keySet());
-          //primaryKey.add(Event.EVENT_DATE);
-          primaryKey.add(Event.EVENT_SOURCE);
+    Long eventId = null;
+    if (!((event.getId() == null) || (event.getId() <= 0))) {
+      eventId = event.getId();
+    } else {
+      EventType eventType = new EventType(event);
+      if (!searchByPKMap.containsKey(eventType)) {
+        if (search_by_PK == null) {
+          final Connection connection = ConnectionManager.getInstance().getTxConnection();
+          search_by_PK = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "search_by_pk.sql", "cp1250"));
         }
 
-        EventQuery eq = prepareEventQuery(event, primaryKey, new java.util.HashSet<Field>());
-        int valuesSet = eq.getValuesSet();
+        //prestejem evente, kateri nimajo shranjenega primarykey-a
+        //ce je vsaj eden, ne iscem po PK ampak po vrednostih PK
+        int param = 1;
+        search_by_PK.clearParameters();
+        search_by_PK.setInt(param++, event.getSifrant());
+        search_by_PK.setString(param++, event.getSifra());
+        ResultSet rs_search_by_PK = search_by_PK.executeQuery();
+        try {
+          Boolean search = Boolean.FALSE;
+          if (rs_search_by_PK.next()) {
+            int count = rs_search_by_PK.getInt(1);
+            search = count == 0;
+          }
+          searchByPKMap.put(eventType, search);
+        } finally {
+          rs_search_by_PK.close();
+        }
+      }
+      Boolean searchByPK = searchByPKMap.get(eventType);
+      if (searchByPK != null && searchByPK) {
+        //find by PK
+        EventPK eventPK = event.getEventPK();
+        int idSifranta = event.getSifrant();
+        String idSifre = event.getSifra();
+        String primaryKeyHex = eventPK.getPrimaryKey();
 
+        if (find_event_by_PK == null) {
+          final Connection connection = ConnectionManager.getInstance().getTxConnection();
+          find_event_by_PK = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "find_event_by_PK.sql", "cp1250"));
+        }
+        int param = 1;
+        find_event_by_PK.clearParameters();
+        find_event_by_PK.setInt(param++, idSifranta);
+        find_event_by_PK.setString(param++, idSifre);
+        find_event_by_PK.setString(param++, primaryKeyHex);
 
-        if (event.getPrimaryKey() != null) {
-          //vedno iscemo po PK, cetudi se dogodek pojavlja v polju z vec vrednostmi
-          //ce niso bile nastavljene vse vrednosti PK-ja potem ne iscemo
-          seek = valuesSet == primaryKey.size();
+        ResultSet rs = find_event_by_PK.executeQuery();
+        try {
+          if (rs.next()) {
+            eventId = rs.getLong("EventId");
+          }
+        } finally {
+          rs.close();
+        }
+      } else {
+        ////////old
+        EventQueryKey eqk = new EventQueryKey(event);
+        boolean seek = false;
+
+        if (findEventStatements.containsKey(eqk)) {
+          eqk = findEventStatements.get(eqk);
+          seek = true;
         } else {
-          java.util.List parametersVecVrednosti = new java.util.ArrayList<Object>();
-          parametersVecVrednosti.add(event.getSifrant());
-          parametersVecVrednosti.add(event.getSifra());
+          java.util.Set<Field> primaryKey = new java.util.HashSet<Field>();
+          if (event.getPrimaryKey() != null) {
+            primaryKey.addAll(Arrays.asList(event.getPrimaryKey()));
+          } else {
+            primaryKey.addAll(event.getEventValues().keySet());
+            //primaryKey.add(Event.EVENT_DATE);
+            primaryKey.add(Event.EVENT_SOURCE);
+          }
 
-          ResultSet rsVecVrednosti = SQLDataSource.executeQuery(getCheckVecVrednostiEventSQL(), parametersVecVrednosti, ConnectionManager.getInstance().getTxConnection());
-          try {
-            if (rsVecVrednosti.next()) {
-              if (rsVecVrednosti.getInt(1) > 0) {
-                seek = false;
+          EventQuery eq = prepareEventQuery(event, primaryKey, new java.util.HashSet<Field>());
+          int valuesSet = eq.getValuesSet();
+
+
+          if (event.getPrimaryKey() != null) {
+            //vedno iscemo po PK, cetudi se dogodek pojavlja v polju z vec vrednostmi
+            //ce niso bile nastavljene vse vrednosti PK-ja potem ne iscemo
+            seek = valuesSet == primaryKey.size();
+          } else {
+            java.util.List parametersVecVrednosti = new java.util.ArrayList<Object>();
+            parametersVecVrednosti.add(event.getSifrant());
+            parametersVecVrednosti.add(event.getSifra());
+
+            ResultSet rsVecVrednosti = SQLDataSource.executeQuery(getCheckVecVrednostiEventSQL(), parametersVecVrednosti, ConnectionManager.getInstance().getTxConnection());
+            try {
+              if (rsVecVrednosti.next()) {
+                if (rsVecVrednosti.getInt(1) > 0) {
+                  seek = false;
+                }
               }
+            } finally {
+              rsVecVrednosti.getStatement().close();
             }
-          } finally {
-            rsVecVrednosti.getStatement().close();
+          }
+
+          if (seek) {
+            String sql = SQLDataSource.substParameters(eq.getQuery(), eq.getParameters());
+            Logger.getLogger(getClass().getName()).log(Level.INFO, "Searching event : \n {0}", sql);
+            PreparedStatement statement = ConnectionManager.getInstance().getTxConnection().prepareStatement(sql,
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY,
+                    ResultSet.HOLD_CURSORS_OVER_COMMIT);
+
+            statement.setQueryTimeout(1800);
+
+            eqk.setEventQuery(eq);
+            eqk.setQuery(statement);
+
+            findEventStatements.put(eqk, eqk);
           }
         }
 
         if (seek) {
-          String sql = SQLDataSource.substParameters(eq.getQuery(), eq.getParameters());
-          Logger.getLogger(getClass().getName()).log(Level.INFO, "Searching event : \n {0}", sql);
-          PreparedStatement statement = ConnectionManager.getInstance().getTxConnection().prepareStatement(sql,
-                  ResultSet.TYPE_SCROLL_INSENSITIVE,
-                  ResultSet.CONCUR_READ_ONLY,
-                  ResultSet.HOLD_CURSORS_OVER_COMMIT);
-
-          statement.setQueryTimeout(1800);
-
-          eqk.setEventQuery(eq);
-          eqk.setQuery(statement);
-
-          findEventStatements.put(eqk, eqk);
-        }
-      }
-
-      if (seek) {
-        synchronized (eqk) {
-          ResultSet rs = eqk.executeQuery(event);
-          try {
-            if (rs.next()) {
-              event.setId(rs.getLong("Id"));
-              return findEvent(event.getId());
-            } else {
-              return null;
+          synchronized (eqk) {
+            ResultSet rs = eqk.executeQuery(event);
+            try {
+              if (rs.next()) {
+                eventId = rs.getLong("Id");
+              }
+            } finally {
+              rs.close();
             }
-          } finally {
-            rs.close();
           }
         }
-      } else {
-        return null;
       }
+    }
+    if (eventId != null) {
+      event.setId(eventId);
+      return findEvent(eventId);
     } else {
-      return findEvent(event.getId());
+      return null;
     }
   }
 
