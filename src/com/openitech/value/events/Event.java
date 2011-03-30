@@ -362,7 +362,7 @@ public class Event extends EventType {
     if (obj == null) {
       return false;
     }
-    if (getClass() != obj.getClass()) {
+    if (!(obj instanceof Event)) {
       return false;
     }
     final Event other = (Event) obj;
@@ -495,7 +495,6 @@ public class Event extends EventType {
   public void setVersionParent(Event versionParent) {
     this.versionParent = versionParent;
   }
-
 
   public static enum EventOperation {
 
