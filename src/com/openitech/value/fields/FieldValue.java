@@ -66,11 +66,10 @@ public class FieldValue extends Field {
       Object oldValue = this.value;
       this.value = value;
       this.valueId = valueId;
-      
+
       propertyChangeSupport.firePropertyChange("value", oldValue, value);
     }
   }
-
   Long valueId;
 
   public Long getValueId() {
@@ -110,10 +109,10 @@ public class FieldValue extends Field {
 
   public static FieldValue createFieldValue(final ResultSet source, final String fieldName, int fieldValueIndex, final String columnName, final java.util.Map<CaseInsensitiveString, Field> fields) throws SQLException {
     Field field = Field.getField(fieldName, fieldValueIndex, fields);
-    fieldValueIndex = field.fieldIndex==1?fieldValueIndex:field.fieldIndex;
+    fieldValueIndex = field.fieldIndex == 1 ? fieldValueIndex : field.fieldIndex;
     return createFieldValue(source, new Field(field.idPolja, fieldName, field.type, fieldValueIndex), columnName);
   }
-  
+
   public static FieldValue createFieldValue(final ResultSet source, final Field field, final String columnName) throws SQLException {
     FieldValue fieldValue = new FieldValue(field, source.getObject(columnName));
     if (source.wasNull()) {
@@ -124,6 +123,6 @@ public class FieldValue extends Field {
 
   @Override
   public String toString() {
-    return name + ":" + fieldIndex + ":" + type + ":" + ValueType.getType(type) + ":" + value;
+    return name + ":" + fieldIndex + ":" + type + ":" + ValueType.getType(type) + (lookupType != null ? (":" + lookupType.toString()) : "") + ":" + value;
   }
 }
