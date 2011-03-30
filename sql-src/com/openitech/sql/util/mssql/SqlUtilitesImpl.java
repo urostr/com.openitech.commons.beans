@@ -763,7 +763,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 Long valueId = null;
                 //ce ze imamo valueId, potem ne rabimo vec shranjevat,
                 //ker se vrednosti in valueId ne spreminja
-                if (value.getValueId() == null) {
+                if (value.getValueId() == null || value.getValueId() <= 0) {
                   valueId = storeValue(value.getValueType(), value.getValue());
                   value.setValueId(valueId);
                 } else {
@@ -3279,11 +3279,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
           if (f.getIdPolja() != null && f.getIdPolja() > 0) {
             qIdPolja.append(f.getIdPolja().intValue());
           } else {
-            qIdPolja.append("(SELECT [Id] FROM ").
-                    append(sifrantVnosnihPolj).
-                    append(" WITH (NOLOCK) WHERE [SifrantVnosnihPolj].ImePolja= '").append(f.getName()).append("' )");
+            NamedFieldIds fn = new NamedFieldIds(f.getName(), Integer.MIN_VALUE);
+            if (fieldNames.containsKey(fn)) {
+              qIdPolja.append(fieldNames.get(fn).fieldId);
+            } else {
+              qIdPolja.append("(SELECT [Id] FROM ").
+                      append(sifrantVnosnihPolj).
+                      append(" WITH (NOLOCK) WHERE [SifrantVnosnihPolj].ImePolja= '").append(f.getName()).append("' )");
+            }
           }
-
           String valueColumn = "";
           String searchParameter = "?";
           ValueType valueType = ValueType.getType(f.getType());
