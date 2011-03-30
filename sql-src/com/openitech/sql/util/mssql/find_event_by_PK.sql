@@ -3,6 +3,6 @@ SELECT
 FROM
     <%ChangeLog%>.[dbo].[EventsPK]
 WHERE
-    [IdSifranta] = <%ev_sifrant%> AND
-    [IdSifre] = <%ev_sifra%> AND
-    [PrimaryKey] = ?
+        [IdSifranta] = ?
+    AND [IdSifre] = CAST(? AS VARCHAR)
+    AND [PrimaryKey] = CAST(? AS VARCHAR)
