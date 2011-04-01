@@ -159,6 +159,9 @@ public class SQLMaterializedView extends SubstSqlParameter {
   private final ReentrantLock lock = new ReentrantLock();
 
   public boolean isViewValid(Connection connection, java.util.List<Object> parameters) {
+    if(isViewValidSQL == null){
+      return true;
+    }
     lock.lock();
     try {
       long timer = System.currentTimeMillis();
