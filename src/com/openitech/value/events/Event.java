@@ -186,6 +186,12 @@ public class Event extends EventType {
     }
   }
 
+  public void addValues(List<FieldValue> fieldValues) {
+    for (FieldValue fieldValue : fieldValues) {
+      addValue(fieldValue);
+    }
+  }
+
   public void addValues(ResultSet rs, final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String[][] fields) throws SQLException {
     for (String[] field : fields) {
       if (field.length > 0) {
