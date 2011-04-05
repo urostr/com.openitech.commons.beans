@@ -3066,7 +3066,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlFindEventDate.addParameter(new SqlParameter<Date>(java.sql.Types.TIMESTAMP, eventDatum));
       }
 
-      setEventPK(eventPK);
+    //  setEventPK(eventPK);
 
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventVersion);
@@ -3107,7 +3107,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     protected void setEventPK(EventPK eventPK) {
       this.eventPK = eventPK;
       if (eventPK == null) {
-        sqlFindEventVersion.setValue("");
+        sqlFindEventVersion.setValue(" null ");
         sqlFindEventVersion.clearParameters();
         sqlFindEventPk.setValue("");
         sqlFindEventPk.clearParameters();
