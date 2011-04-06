@@ -52,11 +52,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public static final String RPE_DB = "[RPE]";
   public static final String MVIEW_CACHE_DB = "[MViewCache]";
   private static Map<Class, SqlUtilities> instances = new HashMap<Class, SqlUtilities>();
-  public static final String EV_VERSIONED_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(SqlUtilities.class, "mssql/find_event_by_values_versioned.sql", "cp1250");
-  public static final String EV_NONVERSIONED_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(SqlUtilities.class, "mssql/find_event_by_values_valid.sql", "cp1250");
-  public static final String EV_SEARCH_BY_PK_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(SqlUtilities.class, "mssql/find_event_by_PK.sql", "cp1250");
-  public static final String EV_SEARCH_BY_VERSION_PK_SUBQUERY = com.openitech.io.ReadInputStream.getResourceAsString(SqlUtilities.class, "mssql/find_event_by_version_PK.sql", "cp1250");
-
+  
   protected SqlUtilities() {
   }
 
