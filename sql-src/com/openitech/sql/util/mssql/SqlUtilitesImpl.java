@@ -2808,8 +2808,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
   private final static Event SYSTEM_IDENTITIES = new Event(0, "ID01", -1);
   private final Semaphore lock = new Semaphore(1);
 
+
   @Override
-  public FieldValue getNextIdentity(Field field) throws SQLException {
+  public FieldValue getNextIdentity(Field field, Object initValue) throws SQLException {
     try {
       //ta motoda mora imeti lock, èeprav se zaenkrat naj nebi klicala iz veè threadov
       lock.acquire();
@@ -2825,10 +2826,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
             case RealValue:
             case IntValue:
             case LongValue:
-              start.setValue(1);
+              if ((initValue!=null) && (initValue instanceof Number)) {
+                start.setValue(initValue);
+              } else {
+                start.setValue(1);
+              }
               break;
             case StringValue:
-              start.setValue("AAA000000001");
+              if (initValue!=null) {
+                start.setValue(initValue);
+              } else {
+                start.setValue("AAA000000001");
+              }
               break;
             default:
               start = null;
@@ -2844,13 +2853,28 @@ public class SqlUtilitesImpl extends SqlUtilities {
           switch (type) {
             case RealValue:
               value.setValue(((Number) value.getValue()).doubleValue() + 1);
+              if ((initValue!=null) && (initValue instanceof Number)) {
+                if (((Number) initValue).doubleValue()>=((Number) value.getValue()).doubleValue()) {
+                  value.setValue(initValue);
+                }
+              }
               break;
             case IntValue:
             case LongValue:
               value.setValue(((Number) value.getValue()).longValue() + 1);
+              if ((initValue!=null) && (initValue instanceof Number)) {
+                if (((Number) initValue).longValue()>=((Number) value.getValue()).longValue()) {
+                  value.setValue(initValue);
+                }
+              }
               break;
             case StringValue:
               value.setValue(StringValue.getNextSifra((String) value.getValue()));
+              if (initValue!=null) {
+                if (initValue.toString().compareToIgnoreCase(value.getValue().toString())>=0) {
+                  value.setValue(initValue);
+                }
+              }
               break;
             default:
               value = null;

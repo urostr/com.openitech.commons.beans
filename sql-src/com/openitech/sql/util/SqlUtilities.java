@@ -580,7 +580,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
-  public abstract FieldValue getNextIdentity(Field field) throws SQLException;
+  public FieldValue getNextIdentity(Field field) throws SQLException {
+    return getNextIdentity(field, null);
+  }
+
+  public abstract FieldValue getNextIdentity(Field field, Object initValue) throws SQLException;
 
   protected EventPK storeEvent(Event event) throws SQLException {
     return storeEvent(event, null);
