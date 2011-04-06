@@ -33,8 +33,8 @@ import com.openitech.sql.cache.CachedTemporaryTablesManager;
 import com.openitech.util.Equals;
 import com.openitech.value.StringValue;
 import com.openitech.value.VariousValue;
-import com.openitech.value.events.EventFilterSearch;
 import com.openitech.value.events.EventPK;
+import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -2082,6 +2082,222 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
 
+  public DbDataSource joinSecondaryDataSource(List<DbDataSource> dataSources) {
+    DbDataSource model = dataSources.get(0);
+    DbDataSource result = new DbDataSource(model.getSelectSql(), model.getCountSql(), SQLDataSource.class);
+    List<Object> parameters = new ArrayList<Object>(model.getParameters());
+    EventFilterSearch evfModel = null;
+    for (Object object : parameters) {
+      if (object instanceof EventFilterSearch) {
+        evfModel = (EventFilterSearch) object;
+        break;
+      }
+    }
+    parameters.remove(evfModel);
+
+    List<Integer> sifranti = new ArrayList<Integer>(dataSources.size());
+    for (DbDataSource dbDataSource : dataSources) {
+      EventFilterSearch filter1 = null;
+      for (Object object : dbDataSource.getParameters()) {
+        if (object instanceof EventFilterSearch) {
+          filter1 = (EventFilterSearch) object;
+          for (int sifrant : filter1.getSifrant()) {
+            sifranti.add(sifrant);
+          }
+          break;
+        }
+      }
+    }
+    int[] sifrantiArray = new int[sifranti.size()];
+    for (int i = 0; i < sifrantiArray.length; i++) {
+      sifrantiArray[i] = sifranti.get(i);
+    }
+    EventFilterSearch newFilter = new EventFilterSearch(evfModel, sifrantiArray, null);
+    parameters.add(newFilter);
+
+    result.setParameters(parameters);
+
+    return result;
+  }
+
+  private static class EventFilterSearch extends EventQueryParameter {
+
+    private static final String EV_VERSIONED_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_versioned.sql", "cp1250");
+    private static final String EV_NONVERSIONED_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_valid.sql", "cp1250");
+    private static final String EV_SEARCH_BY_PK_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_PK.sql", "cp1250");
+    private static final String EV_SEARCH_BY_VERSION_PK_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_version_PK.sql", "cp1250");
+    DbDataSource.SubstSqlParameter sqlFindEventVersion = new DbDataSource.SubstSqlParameter("<%ev_version_filter%>");
+    DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
+    DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
+    DbDataSource.SubstSqlParameter sqlFindEventSource = new DbDataSource.SubstSqlParameter("<%ev_source_filter%>");
+    DbDataSource.SubstSqlParameter sqlFindEventDate = new DbDataSource.SubstSqlParameter("<%ev_date_filter%>");
+    DbDataSource.SubstSqlParameter sqlFindEventPk = new DbDataSource.SubstSqlParameter("<%ev_pk_filter%>");
+    DbDataSource.SubstSqlParameter sqlFindEventVersionPk = new DbDataSource.SubstSqlParameter("<%ev_version_pk_filter%>");
+    DbDataSource.SubstSqlParameter sqlEventSifrant = new DbDataSource.SubstSqlParameter("<%ev_sifrant%>");
+    DbDataSource.SubstSqlParameter sqlEventSifra = new DbDataSource.SubstSqlParameter("<%ev_sifra%>");
+    String evVersionedSubquery;
+    String evNonVersionedSubquery;
+    List<Object> evNonVersionedParameters = new ArrayList<Object>();
+    List<Object> evVersionedParameters = new ArrayList<Object>();
+    Integer eventSource;
+    java.util.Date eventDatum;
+    int[] sifrant;
+    String[] sifra;
+    boolean validOnly;
+
+    public EventFilterSearch(EventFilterSearch eventFilterSearch, int[] sifrant, String[] sifra) {
+      this(eventFilterSearch.namedParameters, eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifrant, sifra, eventFilterSearch.validOnly, eventFilterSearch.eventPK);
+    }
+
+    public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
+      this(namedParameters, eventSource, eventDatum, new int[]{sifrant}, sifra, validOnly, eventPK);
+    }
+
+    public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int[] sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
+      super(namedParameters);
+      this.eventSource = eventSource;
+      this.eventDatum = eventDatum;
+      this.sifrant = sifrant;
+      this.sifra = sifra;
+      this.validOnly = validOnly;
+      this.eventPK = eventPK;
+
+
+      final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifrant[0]);
+
+      sqlFindEventVersion.setValue("?");
+      sqlFindEventVersion.addParameter(this.versionId);
+
+      sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
+      if (sifra == null) {
+        StringBuilder sbSifrant = new StringBuilder();
+        for (int i = 0; i < sifrant.length; i++) {
+          final SqlParameter<Integer> qpSifrant1 = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifrant[i]);
+          sqlFindEventType.addParameter(qpSifrant1);
+          sbSifrant.append(sbSifrant.length() > 0 ? "," : "").append(" ? ");
+        }
+        sbSifrant.insert(0, " (");
+
+        sbSifrant.append(" ) ");
+        sbSifrant.insert(0, " ev.[IdSifranta] " + (sifrant.length > 1 ? " IN " : " = "));
+        sqlFindEventType.setValue(sbSifrant.toString());
+
+      } else if (sifra.length == 1) {
+        if (ConnectionManager.getInstance().isConvertToVarchar()) {
+          sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR)");
+        } else {
+          sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
+        }
+        sqlFindEventType.addParameter(qpSifrant);
+        sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, sifra[0]));
+      } else {
+        StringBuilder sbet = new StringBuilder();
+        sqlFindEventType.addParameter(qpSifrant);
+        for (String s : sifra) {
+          sbet.append(sbet.length() > 0 ? ", " : "");
+          if (ConnectionManager.getInstance().isConvertToVarchar()) {
+            sbet.append("CAST(? AS VARCHAR)");
+          } else {
+            sbet.append("?");
+          }
+          sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, s));
+        }
+        sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
+        sqlFindEventType.setValue(sbet.toString());
+      }
+
+      sqlEventSifrant.setValue("ev.[IdSifranta]");
+      sqlEventSifra.setValue("ev.[IdSifre]");
+
+      if (eventSource == null) {
+        sqlFindEventSource.setValue("");
+      } else {
+        sqlFindEventSource.setValue(" AND ev.[IdEventSource] = ?");
+        sqlFindEventSource.addParameter(new SqlParameter<Integer>(java.sql.Types.INTEGER, eventSource));
+      }
+      if (eventDatum == null) {
+        sqlFindEventDate.setValue("");
+      } else {
+        sqlFindEventDate.setValue(" AND ev.DATUM = ?");
+        sqlFindEventDate.addParameter(new SqlParameter<Date>(java.sql.Types.TIMESTAMP, eventDatum));
+      }
+
+      //  setEventPK(eventPK);
+
+      evVersionedParameters.add(sqlFindEventVersion);
+      evVersionedParameters.add(sqlFindEventVersion);
+      evVersionedParameters.add(sqlFindEventType);
+      evVersionedParameters.add(sqlFindEventSource);
+      evVersionedParameters.add(sqlFindEventDate);
+      evVersionedParameters.add(sqlFindEventVersionPk);
+      evVersionedSubquery = SQLDataSource.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
+
+      evNonVersionedParameters.add(sqlFindEventType);
+      evNonVersionedParameters.add(sqlFindEventValid);
+      evNonVersionedParameters.add(sqlFindEventSource);
+      evNonVersionedParameters.add(sqlFindEventDate);
+      evNonVersionedParameters.add(sqlFindEventPk);
+      evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
+    }
+
+    @Override
+    public boolean hasVersionId() {
+      return versionId.getValue() != null && (((Long) versionId.getValue()) > 0);
+    }
+    protected EventPK eventPK;
+
+    /**
+     * Get the value of eventPK
+     *
+     * @return the value of eventPK
+     */
+    protected EventPK getEventPK() {
+      return eventPK;
+    }
+
+    /**
+     * Set the value of eventPK
+     *
+     * @param eventPK new value of eventPK
+     */
+    protected void setEventPK(EventPK eventPK) {
+      this.eventPK = eventPK;
+      if (eventPK == null) {
+        sqlFindEventVersion.setValue(" null ");
+        sqlFindEventVersion.clearParameters();
+        sqlFindEventPk.setValue("");
+        sqlFindEventPk.clearParameters();
+      } else {
+        sqlFindEventPk.setValue("ev.[Id] IN (" + EV_SEARCH_BY_PK_SUBQUERY + ")");
+        sqlFindEventPk.addParameter(sqlEventSifrant);
+        sqlFindEventPk.addParameter(sqlEventSifra);
+        sqlFindEventPk.addParameter(eventPK.getPrimaryKey());
+
+        sqlFindEventVersionPk.setValue("ev.[Id] IN (" + EV_SEARCH_BY_VERSION_PK_SUBQUERY + ")");
+        sqlFindEventVersionPk.addParameter(sqlEventSifrant);
+        sqlFindEventVersionPk.addParameter(sqlEventSifra);
+        sqlFindEventVersionPk.addParameter(sqlFindEventVersion);
+        sqlFindEventVersionPk.addParameter(eventPK.getPrimaryKey());
+      }
+      evVersionedSubquery = SQLDataSource.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
+      evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
+    }
+
+    @Override
+    public List<Object> getParameters() {
+      return Collections.unmodifiableList(hasVersionId() ? evVersionedParameters : evNonVersionedParameters);
+    }
+
+    @Override
+    public String getValue() {
+      return hasVersionId() ? evVersionedSubquery : evNonVersionedSubquery;
+    }
+
+    public int[] getSifrant() {
+      return sifrant;
+    }
+  }
+
   private static class EventCacheTemporaryParameter extends TemporarySubselectSqlParameter {
 
     public EventCacheTemporaryParameter(String replace) {
@@ -3016,7 +3232,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       hash = 61 * hash + (this.fieldName != null ? this.fieldName.hashCode() : 0);
       return hash;
     }
-  } 
+  }
 
   private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly, EventPK eventPK) {
     StringBuilder sbSearch = new StringBuilder(500);
