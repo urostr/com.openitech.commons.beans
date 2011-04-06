@@ -325,13 +325,17 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
    * @param anItem the list object to select or <code>null</code>
    *        to clear the selection
    */
+  @Override
   public void setSelectedItem(Object anItem) {
     Object selectItem = null;
     if ((entries != null) && (anItem != null) && (anItem instanceof String)) {
       for (DbComboBoxEntry<K, String> entry : entries) {
-        if (entry.value.equals((String) anItem)) {
-          selectItem = entry;
-          break;
+        //ne vem zakaj, ampak ne zna delat s tem
+        if (entry != null && entry.value != null) {
+          if (entry.value.equals((String) anItem)) {
+            selectItem = entry;
+            break;
+          }
         }
       }
     } else {
