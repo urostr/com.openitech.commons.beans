@@ -3042,10 +3042,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
       //ta motoda mora imeti lock, èeprav se zaenkrat naj nebi klicala iz veè threadov
       lock.acquire();
 
-      if (findIdentityEventId == null) {
-        findIdentityEventId = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getReplacedSql("SELECT TOP 1 Id FROM <%ChangeLog%>.[dbo].[Events] ev WITH (NOLOCK) WHERE IdSifranta = 0 AND IdSifre = 'ID01'"));
-      }
       try {
+        if (findIdentityEventId == null) {
+          findIdentityEventId = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getReplacedSql("SELECT TOP 1 Id FROM <%ChangeLog%>.[dbo].[Events] ev WITH (NOLOCK) WHERE IdSifranta = 0 AND IdSifre = 'ID01'"));
+        }
         ResultSet rsFindIdentityEventId = findIdentityEventId.executeQuery();
         Event system = null;
         try {
