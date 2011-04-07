@@ -2198,6 +2198,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       this.validOnly = validOnly;
       this.eventPK = eventPK;
 
+      sqlFindEventVersion.clearParameters();
+      sqlFindEventType.clearParameters();
 
       final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifrant[0]);
 
