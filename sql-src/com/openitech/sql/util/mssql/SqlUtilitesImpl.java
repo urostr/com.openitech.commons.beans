@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -2093,42 +2094,59 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
 
-  public DbDataSource joinSecondaryDataSource(List<DbDataSource> dataSources) {
-    DbDataSource model = dataSources.get(0);
-    DbDataSource result = new DbDataSource(model.getSelectSql(), model.getCountSql(), SQLDataSource.class);
-    List<Object> parameters = new ArrayList<Object>(model.getParameters());
-    EventFilterSearch evfModel = null;
-    for (Object object : parameters) {
-      if (object instanceof EventFilterSearch) {
-        evfModel = (EventFilterSearch) object;
-        break;
-      }
-    }
-    parameters.remove(evfModel);
+  @Override
+  public DbDataSource joinSecondaryDataSources(List<DbDataSource> dataSources) {
+    MergedSecondaryDataSource result = null;
+    EventFilterSearch mergedFilter = null;
+    Set<Integer> sifranti = new LinkedHashSet<Integer>(dataSources.size());
 
-    List<Integer> sifranti = new ArrayList<Integer>(dataSources.size());
     for (DbDataSource dbDataSource : dataSources) {
-      EventFilterSearch filter1 = null;
-      for (Object object : dbDataSource.getParameters()) {
-        if (object instanceof EventFilterSearch) {
-          filter1 = (EventFilterSearch) object;
-          for (int sifrant : filter1.getSifrant()) {
-            sifranti.add(sifrant);
+      if (dbDataSource instanceof MergedSecondaryDataSource) {
+        result = (MergedSecondaryDataSource) dbDataSource;
+        for (Object object : dbDataSource.getParameters()) {
+          if (object instanceof EventFilterSearch) {
+            mergedFilter = (EventFilterSearch) object;
+            break;
           }
-          break;
+        }
+      } else {
+        for (Object object : dbDataSource.getParameters()) {
+          if (object instanceof EventFilterSearch) {
+            sifranti.addAll(Arrays.asList(((EventFilterSearch) object).getSifrant()));
+            break;
+          }
         }
       }
     }
-    int[] sifrantiArray = new int[sifranti.size()];
-    for (int i = 0; i < sifrantiArray.length; i++) {
-      sifrantiArray[i] = sifranti.get(i);
-    }
-    EventFilterSearch newFilter = new EventFilterSearch(evfModel, sifrantiArray, null);
-    parameters.add(newFilter);
 
-    result.setParameters(parameters);
+    if (result == null) {
+      DbDataSource model = dataSources.get(0);
+
+      result = new MergedSecondaryDataSource(model.getSelectSql(), model.getCountSql());
+      List<Object> parameters = new ArrayList<Object>(model.getParameters());
+      EventFilterSearch evfModel = null;
+      for (Object object : parameters) {
+        if (object instanceof EventFilterSearch) {
+          evfModel = (EventFilterSearch) object;
+          break;
+        }
+      }
+
+      EventFilterSearch newFilter = new EventFilterSearch(evfModel, sifranti);
+      parameters.set(parameters.indexOf(evfModel), newFilter);
+
+      result.setParameters(parameters);
+    } else {
+      mergedFilter.addSifranti(sifranti);
+    }
 
     return result;
+  }
+
+  private static class MergedSecondaryDataSource extends DbDataSource  {
+    public MergedSecondaryDataSource(String selectSql, String countSql) {
+      super(selectSql, countSql);
+    }
   }
 
   private static class EventFilterSearch extends EventQueryParameter {
@@ -2152,20 +2170,27 @@ public class SqlUtilitesImpl extends SqlUtilities {
     List<Object> evVersionedParameters = new ArrayList<Object>();
     Integer eventSource;
     java.util.Date eventDatum;
-    int[] sifrant;
+    Integer[] sifrant;
     String[] sifra;
     boolean validOnly;
 
-    public EventFilterSearch(EventFilterSearch eventFilterSearch, int[] sifrant, String[] sifra) {
-      this(eventFilterSearch.namedParameters, eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifrant, sifra, eventFilterSearch.validOnly, eventFilterSearch.eventPK);
+    public EventFilterSearch(EventFilterSearch eventFilterSearch, Set<Integer> sifranti) {
+      super(eventFilterSearch.namedParameters);
+      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti.toArray(new Integer[sifranti.size()]), null, eventFilterSearch.validOnly, eventFilterSearch.eventPK);
     }
 
     public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
-      this(namedParameters, eventSource, eventDatum, new int[]{sifrant}, sifra, validOnly, eventPK);
+      super(namedParameters);
+      init(eventSource, eventDatum, new Integer[]{sifrant}, sifra, validOnly, eventPK);
     }
 
-    public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int[] sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
-      super(namedParameters);
+    public EventFilterSearch addSifranti(Set<Integer> sifranti) {
+      sifranti.addAll(Arrays.asList(sifrant));
+      init(eventSource, eventDatum, sifranti.toArray(new Integer[sifranti.size()]), sifra, validOnly, eventPK);
+      return this;
+    }
+
+    private void init(Integer eventSource, java.util.Date eventDatum, Integer[] sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
       this.eventSource = eventSource;
       this.eventDatum = eventDatum;
       this.sifrant = sifrant;
@@ -2304,7 +2329,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       return hasVersionId() ? evVersionedSubquery : evNonVersionedSubquery;
     }
 
-    public int[] getSifrant() {
+    public Integer[] getSifrant() {
       return sifrant;
     }
   }
