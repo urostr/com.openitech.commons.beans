@@ -2200,6 +2200,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       sqlFindEventVersion.clearParameters();
       sqlFindEventType.clearParameters();
+      sqlFindEventValid.clearParameters();
+      sqlFindEventSource.clearParameters();
+      sqlFindEventDate.clearParameters();
+      sqlFindEventPk.clearParameters();
+      sqlFindEventVersionPk.clearParameters();
+      sqlEventSifrant.clearParameters();
+      sqlEventSifra.clearParameters();
 
       final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifrant[0]);
 
