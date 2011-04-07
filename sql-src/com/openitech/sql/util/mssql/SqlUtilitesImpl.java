@@ -255,20 +255,20 @@ public class SqlUtilitesImpl extends SqlUtilities {
       this.versionId = versionId;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == null) {
-        return false;
-      }
-      final EventType other = (EventType) obj;
-      if (this.sifrant != other.getSifrant()) {
-        return false;
-      }
-      if ((this.sifra == null) ? (other.getSifra() != null) : !this.sifra.equals(other.getSifra())) {
-        return false;
-      }
-      return true;
-    }
+//    @Override
+//    public boolean equals(Object obj) {
+//      if (obj == null) {
+//        return false;
+//      }
+//      final EventType other = (EventType) obj;
+//      if (this.sifrant != other.getSifrant()) {
+//        return false;
+//      }
+//      if ((this.sifra == null) ? (other.getSifra() != null) : !this.sifra.equals(other.getSifra())) {
+//        return false;
+//      }
+//      return true;
+//    }
   }
 
   @Override
