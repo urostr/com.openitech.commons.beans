@@ -52,6 +52,7 @@ import java.sql.Types;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -2112,7 +2113,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       } else {
         for (Object object : dbDataSource.getParameters()) {
           if (object instanceof EventFilterSearch) {
-            sifranti.addAll(Arrays.asList(((EventFilterSearch) object).getSifrant()));
+            sifranti.addAll(((EventFilterSearch) object).getSifrant());
             break;
           }
         }
@@ -2170,30 +2171,30 @@ public class SqlUtilitesImpl extends SqlUtilities {
     List<Object> evVersionedParameters = new ArrayList<Object>();
     Integer eventSource;
     java.util.Date eventDatum;
-    Integer[] sifrant;
+    Collection<Integer> sifrant = new LinkedHashSet<Integer>();
     String[] sifra;
     boolean validOnly;
 
     public EventFilterSearch(EventFilterSearch eventFilterSearch, Set<Integer> sifranti) {
       super(eventFilterSearch.namedParameters);
-      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti.toArray(new Integer[sifranti.size()]), null, eventFilterSearch.validOnly, eventFilterSearch.eventPK);
+      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti, null, eventFilterSearch.validOnly, eventFilterSearch.eventPK);
     }
 
     public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
       super(namedParameters);
-      init(eventSource, eventDatum, new Integer[]{sifrant}, sifra, validOnly, eventPK);
+      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, eventPK);
     }
 
     public EventFilterSearch addSifranti(Set<Integer> sifranti) {
-      sifranti.addAll(Arrays.asList(sifrant));
-      init(eventSource, eventDatum, sifranti.toArray(new Integer[sifranti.size()]), sifra, validOnly, eventPK);
+      sifrant.addAll(sifranti);
+      init(eventSource, eventDatum, sifrant, sifra, validOnly, eventPK);
       return this;
     }
 
-    private void init(Integer eventSource, java.util.Date eventDatum, Integer[] sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
+    private void init(Integer eventSource, java.util.Date eventDatum, Collection<Integer> sifranti, String[] sifra, boolean validOnly, EventPK eventPK) {
       this.eventSource = eventSource;
       this.eventDatum = eventDatum;
-      this.sifrant = sifrant;
+      this.sifrant = new LinkedHashSet<Integer>(sifranti);
       this.sifra = sifra;
       this.validOnly = validOnly;
       this.eventPK = eventPK;
@@ -2208,47 +2209,48 @@ public class SqlUtilitesImpl extends SqlUtilities {
       sqlEventSifrant.clearParameters();
       sqlEventSifra.clearParameters();
 
-      final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifrant[0]);
-
       sqlFindEventVersion.setValue("?");
       sqlFindEventVersion.addParameter(this.versionId);
 
       sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
       if (sifra == null) {
         StringBuilder sbSifrant = new StringBuilder();
-        for (int i = 0; i < sifrant.length; i++) {
-          final SqlParameter<Integer> qpSifrant1 = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifrant[i]);
-          sqlFindEventType.addParameter(qpSifrant1);
+        for (Integer s : sifranti) {
+          sqlFindEventType.addParameter(new SqlParameter<Integer>(java.sql.Types.INTEGER, s));
           sbSifrant.append(sbSifrant.length() > 0 ? "," : "").append(" ? ");
         }
         sbSifrant.insert(0, " (");
 
         sbSifrant.append(" ) ");
-        sbSifrant.insert(0, " ev.[IdSifranta] " + (sifrant.length > 1 ? " IN " : " = "));
+        sbSifrant.insert(0, " ev.[IdSifranta] " + (sifranti.size() > 1 ? " IN " : " = "));
         sqlFindEventType.setValue(sbSifrant.toString());
 
-      } else if (sifra.length == 1) {
-        if (ConnectionManager.getInstance().isConvertToVarchar()) {
-          sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR)");
-        } else {
-          sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
-        }
-        sqlFindEventType.addParameter(qpSifrant);
-        sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, sifra[0]));
       } else {
-        StringBuilder sbet = new StringBuilder();
-        sqlFindEventType.addParameter(qpSifrant);
-        for (String s : sifra) {
-          sbet.append(sbet.length() > 0 ? ", " : "");
+        final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifranti.toArray(new Integer[sifranti.size()])[0]);
+
+        if (sifra.length == 1) {
           if (ConnectionManager.getInstance().isConvertToVarchar()) {
-            sbet.append("CAST(? AS VARCHAR)");
+            sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR)");
           } else {
-            sbet.append("?");
+            sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
           }
-          sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, s));
+          sqlFindEventType.addParameter(qpSifrant);
+          sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, sifra[0]));
+        } else {
+          StringBuilder sbet = new StringBuilder();
+          sqlFindEventType.addParameter(qpSifrant);
+          for (String s : sifra) {
+            sbet.append(sbet.length() > 0 ? ", " : "");
+            if (ConnectionManager.getInstance().isConvertToVarchar()) {
+              sbet.append("CAST(? AS VARCHAR)");
+            } else {
+              sbet.append("?");
+            }
+            sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, s));
+          }
+          sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
+          sqlFindEventType.setValue(sbet.toString());
         }
-        sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
-        sqlFindEventType.setValue(sbet.toString());
       }
 
       sqlEventSifrant.setValue("ev.[IdSifranta]");
@@ -2338,7 +2340,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       return hasVersionId() ? evVersionedSubquery : evNonVersionedSubquery;
     }
 
-    public Integer[] getSifrant() {
+    public Collection<Integer> getSifrant() {
       return sifrant;
     }
   }
