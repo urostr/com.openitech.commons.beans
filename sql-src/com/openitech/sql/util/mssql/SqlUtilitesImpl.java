@@ -127,6 +127,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement update_eventPK_versions_byValue;
   PreparedStatement search_by_PK;
   PreparedStatement find_event_by_PK;
+  PreparedStatement findIdentityEventId;
   Map<CaseInsensitiveString, Field> preparedFields;
   Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
 
@@ -3040,9 +3041,21 @@ public class SqlUtilitesImpl extends SqlUtilities {
     try {
       //ta motoda mora imeti lock, èeprav se zaenkrat naj nebi klicala iz veè threadov
       lock.acquire();
+
+      if (findIdentityEventId == null) {
+        findIdentityEventId = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getReplacedSql("SELECT TOP 1 Id FROM <%ChangeLog%>.[dbo].[Events] ev WITH (NOLOCK) WHERE IdSifranta = 0 AND IdSifre = 'ID01'"));
+      }
       try {
+        ResultSet rsFindIdentityEventId = findIdentityEventId.executeQuery();
+        Event system = null;
+        try {
+          if (rsFindIdentityEventId.next()) {
+            system = findEvent(rsFindIdentityEventId.getLong(1));
+          }
+        } finally {
+          rsFindIdentityEventId.close();
+        }
         SYSTEM_IDENTITIES.setPrimaryKey(new Field[]{});
-        Event system = findEvent(SYSTEM_IDENTITIES);
         system = system == null ? SYSTEM_IDENTITIES : system;
         List<FieldValue> get = system.getEventValues().get(field);
         if ((get == null) || (get.isEmpty())) {
