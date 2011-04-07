@@ -570,15 +570,25 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       if (event.getOperation().isUpdateCache()) {
+        boolean cache = true;
         for (EventCacheTemporaryParameter tt : eventObjects.get(key)) {
-          tt.executeQuery(txConnection, new ArrayList<Object>());
+          if (tt.getSqlMaterializedView().getCacheEventTypes().contains(key)) {
+            for (EventType eventType : tt.getSqlMaterializedView().getCacheEventTypes()) {
+              cache = cache && eventType.isCacheOnUpdate();
+            }
+          }
+          if (cache) {
+            tt.executeQuery(txConnection, new ArrayList<Object>());
+          }
         }
 
-        synchronized (updateCachedEventObject) {
-          updateCachedEventObject.setBoolean(1, true);
-          updateCachedEventObject.setInt(2, key.getSifrant());
-          updateCachedEventObject.setString(3, key.getSifra());
-          updateCachedEventObject.executeUpdate();
+        if (cache) {
+          synchronized (updateCachedEventObject) {
+            updateCachedEventObject.setBoolean(1, true);
+            updateCachedEventObject.setInt(2, key.getSifrant());
+            updateCachedEventObject.setString(3, key.getSifra());
+            updateCachedEventObject.executeUpdate();
+          }
         }
       }
     }
