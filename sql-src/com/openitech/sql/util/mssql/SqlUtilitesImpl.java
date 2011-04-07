@@ -2219,10 +2219,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
           sqlFindEventType.addParameter(new SqlParameter<Integer>(java.sql.Types.INTEGER, s));
           sbSifrant.append(sbSifrant.length() > 0 ? "," : "").append(" ? ");
         }
-        sbSifrant.insert(0, " (");
-
-        sbSifrant.append(" ) ");
-        sbSifrant.insert(0, " ev.[IdSifranta] " + (sifranti.size() > 1 ? " IN " : " = "));
+        if (sifranti.size()>1) {
+          sbSifrant.insert(0, " ev.[IdSifranta] IN (").append(" ) ");
+        } else {
+          sbSifrant.insert(0, " ev.[IdSifranta] = ");
+        }
+        
         sqlFindEventType.setValue(sbSifrant.toString());
 
       } else {
