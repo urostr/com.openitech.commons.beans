@@ -619,6 +619,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   }
 
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly);
+  
+  public abstract DbDataSource joinSecondaryDataSources(List<DbDataSource> dataSources);
 
   public abstract Map<String, com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
 
