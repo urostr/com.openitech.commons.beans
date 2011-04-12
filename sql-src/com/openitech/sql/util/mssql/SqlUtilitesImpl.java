@@ -28,6 +28,7 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
+import com.openitech.jdbc.proxy.DataSourceProxy;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
 import com.openitech.util.Equals;
@@ -56,6 +57,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -256,7 +258,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     public void setVersionId(Integer versionId) {
       this.versionId = versionId;
     }
-
 //    @Override
 //    public boolean equals(Object obj) {
 //      if (obj == null) {
@@ -2096,10 +2097,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public DbDataSource joinSecondaryDataSources(List<DbDataSource> dataSources) {
+  public DbDataSource joinSecondaryDataSources(List<DbDataSource> dataSources) throws SQLException {
     MergedSecondaryDataSource result = null;
     EventFilterSearch mergedFilter = null;
     Set<Integer> sifranti = new LinkedHashSet<Integer>(dataSources.size());
+    Map<DbDataSource, Collection<Integer>> ds = new HashMap<DbDataSource, Collection<Integer>>();
 
     for (DbDataSource dbDataSource : dataSources) {
       if (dbDataSource instanceof MergedSecondaryDataSource) {
@@ -2113,6 +2115,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       } else {
         for (Object object : dbDataSource.getParameters()) {
           if (object instanceof EventFilterSearch) {
+            ds.put(dbDataSource, ((EventFilterSearch) object).getSifrant());
             sifranti.addAll(((EventFilterSearch) object).getSifrant());
             break;
           }
@@ -2123,13 +2126,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
     if (result == null) {
       DbDataSource model = dataSources.get(0);
 
-      result = new MergedSecondaryDataSource(model.getSelectSql(), model.getCountSql());
+      result = new MergedSecondaryDataSource();
       List<Object> parameters = new ArrayList<Object>(model.getParameters());
       EventFilterSearch evfModel = null;
+      EventLimit eventLimitModel = null;
       for (Object object : parameters) {
         if (object instanceof EventFilterSearch) {
           evfModel = (EventFilterSearch) object;
-          break;
+        } else if (object instanceof EventLimit) {
+          eventLimitModel = (EventLimit) object;
+          eventLimitModel.setValue("");
         }
       }
 
@@ -2137,20 +2143,71 @@ public class SqlUtilitesImpl extends SqlUtilities {
       parameters.set(parameters.indexOf(evfModel), newFilter);
 
       result.setParameters(parameters);
+//      result.setCountSql(model.getCountSql());
+      result.setSelectSql(model.getSelectSql());
+
     } else {
       mergedFilter.addSifranti(sifranti);
+      result.filterChanged();
+    }
+    result.setName("MergedSecondary " + sifranti.toString());
+
+
+    for (DbDataSource dbDataSource : dataSources) {
+      if (!(dbDataSource instanceof MergedSecondaryDataSource)) {
+        //zamenjaj implementacion v dbDataSource (ce ni ze spremenjena)
+//        if (!(dbDataSource.getImplementation() instanceof DataSourceProxy)) {
+
+        DbDataSourceIndex index = new DbDataSourceIndex();
+        index.setDataSource(result);
+
+        Map<String, Collection<Object>> keyFilters = new LinkedHashMap<String, Collection<Object>>();
+        Collection<Object> allowedValues = new ArrayList<Object>();
+        for (Integer allowedValue : ds.get(dbDataSource)) {
+          allowedValues.add(allowedValue);
+        }
+        keyFilters.put("IdSifranta", allowedValues);
+
+        index.setKeysFilter(keyFilters);
+
+        //pripravi novo implementacijo
+        dbDataSource.setImplementation(new DataSourceProxy(dbDataSource, index));
+      }
+//      }
     }
 
     return result;
   }
 
-  private static class MergedSecondaryDataSource extends DbDataSource  {
-    public MergedSecondaryDataSource(String selectSql, String countSql) {
-      super(selectSql, countSql);
-    }
+  public static class MergedSecondaryDataSource extends DbDataSource {
   }
 
-  private static class EventFilterSearch extends EventQueryParameter {
+//  public  boolean isSuperDataSource(Set<DbDataSource> secondaryDataSources, DbDataSource joinedSecondaryDataSource) {
+//    boolean result = false;
+//    Collection<Integer> newSifranti = null;
+//    for (Object parameter : joinedSecondaryDataSource.getParameters()) {
+//      if (parameter instanceof EventFilterSearch) {
+//        newSifranti = ((EventFilterSearch) parameter).getSifrant();
+//      }
+//    }
+//
+//    for (DbDataSource dbDataSource : secondaryDataSources) {
+//      Collection<Integer> oldSifranti = null;
+//      for (Object parameter : dbDataSource.getParameters()) {
+//      if (parameter instanceof EventFilterSearch) {
+//        oldSifranti = ((EventFilterSearch) parameter).getSifrant();
+//        oldSifranti.removeAll(newSifranti);
+//        //ce sem uspel vse odstraniti, potem je ta datasource podmnozica in ga je potrebno odstraniti
+//        if(oldSifranti.isEmpty()){
+//          result = true;
+//        }
+//      }
+//    }
+//    }
+//
+//    return result;
+//  }
+  public static class EventFilterSearch extends EventQueryParameter {
 
     private static final String EV_VERSIONED_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_versioned.sql", "cp1250");
     private static final String EV_NONVERSIONED_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_valid.sql", "cp1250");
@@ -2219,12 +2276,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
           sqlFindEventType.addParameter(new SqlParameter<Integer>(java.sql.Types.INTEGER, s));
           sbSifrant.append(sbSifrant.length() > 0 ? "," : "").append(" ? ");
         }
-        if (sifranti.size()>1) {
+        if (sifranti.size() > 1) {
           sbSifrant.insert(0, " ev.[IdSifranta] IN (").append(" ) ");
         } else {
           sbSifrant.insert(0, " ev.[IdSifranta] = ");
         }
-        
+
         sqlFindEventType.setValue(sbSifrant.toString());
 
       } else {
@@ -2344,6 +2401,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     public Collection<Integer> getSifrant() {
       return sifrant;
+    }
+  }
+
+  private static class EventLimit extends DbDataSource.SubstSqlParameter {
+
+    private EventLimit(String replace) {
+      super(replace);
     }
   }
 
@@ -3073,7 +3137,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   private final static Event SYSTEM_IDENTITIES = new Event(0, "ID01", -1);
   private final Semaphore lock = new Semaphore(1);
 
-
   @Override
   public FieldValue getNextIdentity(Field field, Object initValue) throws SQLException {
     try {
@@ -3103,14 +3166,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
             case RealValue:
             case IntValue:
             case LongValue:
-              if ((initValue!=null) && (initValue instanceof Number)) {
+              if ((initValue != null) && (initValue instanceof Number)) {
                 start.setValue(initValue);
               } else {
                 start.setValue(1);
               }
               break;
             case StringValue:
-              if (initValue!=null) {
+              if (initValue != null) {
                 start.setValue(initValue);
               } else {
                 start.setValue("AAA000000001");
@@ -3130,8 +3193,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
           switch (type) {
             case RealValue:
               value.setValue(((Number) value.getValue()).doubleValue() + 1);
-              if ((initValue!=null) && (initValue instanceof Number)) {
-                if (((Number) initValue).doubleValue()>=((Number) value.getValue()).doubleValue()) {
+              if ((initValue != null) && (initValue instanceof Number)) {
+                if (((Number) initValue).doubleValue() >= ((Number) value.getValue()).doubleValue()) {
                   value.setValue(initValue);
                 }
               }
@@ -3139,16 +3202,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
             case IntValue:
             case LongValue:
               value.setValue(((Number) value.getValue()).longValue() + 1);
-              if ((initValue!=null) && (initValue instanceof Number)) {
-                if (((Number) initValue).longValue()>=((Number) value.getValue()).longValue()) {
+              if ((initValue != null) && (initValue instanceof Number)) {
+                if (((Number) initValue).longValue() >= ((Number) value.getValue()).longValue()) {
                   value.setValue(initValue);
                 }
               }
               break;
             case StringValue:
               value.setValue(StringValue.getNextSifra((String) value.getValue()));
-              if (initValue!=null) {
-                if (initValue.toString().compareToIgnoreCase(value.getValue().toString())>=0) {
+              if (initValue != null) {
+                if (initValue.toString().compareToIgnoreCase(value.getValue().toString()) >= 0) {
                   value.setValue(initValue);
                 }
               }
@@ -3299,7 +3362,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     StringBuilder sbSearch = new StringBuilder(500);
     StringBuilder sbWhere = new StringBuilder(500);
     StringBuilder sbresult = new StringBuilder(500);
-    DbDataSource.SubstSqlParameter sqlResultLimit = new DbDataSource.SubstSqlParameter("<%ev_result_limit%>");
+    EventLimit sqlResultLimit = new EventLimit("<%ev_result_limit%>");
     parameters.add(sqlResultLimit);
     sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : "  ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
