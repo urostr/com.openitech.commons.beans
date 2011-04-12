@@ -4344,7 +4344,7 @@ public class SQLDataSource implements DbDataSourceImpl {
           }
           reloaded = true;
           owner.unlock();
-          Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+          Logger.getLogger(Settings.LOGGER).finer("Permit unlocked '" + selectSql + "'");
         }
         if (oldRow > 0 && getRowCount() > 0) {
           try {
@@ -4634,11 +4634,11 @@ public class SQLDataSource implements DbDataSourceImpl {
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
     ResultSet resultSet = null;
 //    synchronized (statement.getConnection()) {
-      List<Object> queryParameters = executeTemporarySelects(parameters, statement);
+    List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
-      setParameters(statement, queryParameters, 1, false);
+    setParameters(statement, queryParameters, 1, false);
 
-      resultSet = statement.executeQuery();
+    resultSet = statement.executeQuery();
 //    }
     return resultSet;
   }
@@ -4692,11 +4692,11 @@ public class SQLDataSource implements DbDataSourceImpl {
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
     int result = 0;
 //    synchronized (statement.getConnection()) {
-      List<Object> queryParameters = executeTemporarySelects(parameters, statement);
+    List<Object> queryParameters = executeTemporarySelects(parameters, statement);
 
-      setParameters(statement, queryParameters, 1, false);
+    setParameters(statement, queryParameters, 1, false);
 
-      result = statement.executeUpdate();
+    result = statement.executeUpdate();
 //    }
     return result;
   }
@@ -4704,28 +4704,28 @@ public class SQLDataSource implements DbDataSourceImpl {
   public static List<Object> executeTemporarySelects(List<?> parameters, Connection connection) throws SQLException {
     List<Object> result = null;
 //    synchronized (connection) {
-      List<Object> queryParameters = new java.util.ArrayList(parameters.size());
-      Set<TemporarySubselectSqlParameter.TemporaryTableGroup> temporarySubselectSqlParameters = new java.util.LinkedHashSet<TemporarySubselectSqlParameter.TemporaryTableGroup>(parameters.size());
-      for (Object parameter : parameters) {
-        if (parameter instanceof TemporarySubselectSqlParameter) {
-          TemporarySubselectSqlParameter tt = (TemporarySubselectSqlParameter) parameter;
-          temporarySubselectSqlParameters.add(tt.getGroup());
-          queryParameters.add(tt.getSubstSqlParameter());
-        } else {
-          queryParameters.add(parameter);
-        }
+    List<Object> queryParameters = new java.util.ArrayList(parameters.size());
+    Set<TemporarySubselectSqlParameter.TemporaryTableGroup> temporarySubselectSqlParameters = new java.util.LinkedHashSet<TemporarySubselectSqlParameter.TemporaryTableGroup>(parameters.size());
+    for (Object parameter : parameters) {
+      if (parameter instanceof TemporarySubselectSqlParameter) {
+        TemporarySubselectSqlParameter tt = (TemporarySubselectSqlParameter) parameter;
+        temporarySubselectSqlParameters.add(tt.getGroup());
+        queryParameters.add(tt.getSubstSqlParameter());
+      } else {
+        queryParameters.add(parameter);
       }
+    }
 
-      if (!temporarySubselectSqlParameters.isEmpty()) {
-        try {
-          for (TemporarySubselectSqlParameter.TemporaryTableGroup tempSubselect : temporarySubselectSqlParameters) {
-            tempSubselect.executeQuery(connection, queryParameters);
-          }
-        } catch (InterruptedException ex) {
-          throw new SQLException("Can't prepare the temporary tables", ex);
+    if (!temporarySubselectSqlParameters.isEmpty()) {
+      try {
+        for (TemporarySubselectSqlParameter.TemporaryTableGroup tempSubselect : temporarySubselectSqlParameters) {
+          tempSubselect.executeQuery(connection, queryParameters);
         }
+      } catch (InterruptedException ex) {
+        throw new SQLException("Can't prepare the temporary tables", ex);
       }
-      result = queryParameters;
+    }
+    result = queryParameters;
 //    }
     return result;
   }
@@ -4793,7 +4793,14 @@ public class SQLDataSource implements DbDataSourceImpl {
             if (DbDataSource.DUMP_SQL) {
               System.out.println(owner.getName() + ":getValueAt [" + min + "-" + max + "]");
             }
-            openSelectResultSet.absolute(min);
+            if(SELECT_1.equals(preparedCountSql) && openSelectResultSet.absolute(min)){
+              System.out.println();
+            }
+            if(!openSelectResultSet.absolute(min)){
+              return null;
+            }else{
+              System.out.println();
+            }
             String cn;
             Object value;
             java.util.Set<PendingSqlParameter> fetchcached = new java.util.HashSet<PendingSqlParameter>();
@@ -6901,5 +6908,23 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public void setDelimiterRight(String delimiterRight) {
     this.delimiterRight = delimiterRight;
+  }
+
+  @Override
+  public void destroy() {
+    try {
+      cache.clear();
+      cache = null;
+
+      for (String key : cachedStatements.keySet()) {
+        cachedStatements.get(key).close();
+      }
+
+      cachedStatements.clear();
+      cachedStatements = null;
+      currentResultSet.close();
+      currentResultSet = null;
+    } catch (Exception ex) {
+    }
   }
 }
