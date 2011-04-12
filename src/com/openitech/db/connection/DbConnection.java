@@ -58,6 +58,7 @@ public interface DbConnection {
   String ACTION_GET_TEMP_CONNECTION = "getTemporaryConnection";
 
   String DB_DUMP_STATMENTS = "db.dumpstatments";
+  String DB_MERGE_SECONDARY = "db.merge.secondary";
 
 
   Connection getTemporaryConnection();
