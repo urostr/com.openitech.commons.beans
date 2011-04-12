@@ -153,6 +153,7 @@ public class ConnectionManager implements DbConnection {
     getDbConnection().removeActionListener(l);
   }
 
+  @Override
   public boolean isConvertToVarchar() {
     return getDbConnection() == null ? false : getDbConnection().isConvertToVarchar();
   }
