@@ -182,8 +182,10 @@ public class DbDataSourceFactory {
 
     public void setGetValueColumns(String[] columns);
 
+    @Override
     public void setReadOnly(boolean readOnly);
 
+    @Override
     public boolean isReadOnly();
 
     public boolean isRefreshPending();
@@ -199,5 +201,7 @@ public class DbDataSourceFactory {
     public DbDataSourceImpl copy(DbDataSource owner);
 
     public void loadData(DbDataSourceImpl dataSource, int oldRow);
+
+    public void destroy();
   }
 }
