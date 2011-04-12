@@ -19,8 +19,8 @@ import javax.swing.event.ListDataListener;
  */
 public interface DbNavigatorDataSourceIndex<T extends DbNavigatorDataSource> {
   
-  public <T> void setDataSource(T dataSource)  throws SQLException;
-  public <T> T getDataSource();
+  public void setDataSource(T dataSource)  throws SQLException;
+  public T getDataSource();
   
   public void setKeys(String... columns)  throws SQLException;
   
