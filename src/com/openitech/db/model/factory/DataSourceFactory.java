@@ -438,27 +438,21 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   private void addListeners() {
     try {
-      List<Listeners> listeners = dataSourceXML.getDataSource().getListeners();
-      for (Listeners listener : listeners) {
-        for (Listener listener1 : listener.getListener()) {
+      Listeners listeners = dataSourceXML.getDataSource().getListeners();
+      if (listeners!=null) {
+        for (Listener listener : listeners.getListener()) {
           Object value = null;
-          if (listener1.getActionListener() != null) {
-            Factory factory = listener1.getActionListener();
-            Class jcls = Class.forName(factory.getClassName());
-            value = jcls.newInstance();
-            dataSource.addActionListener((ActionListener) value);
-          } else if (listener1.getActiveRowChangeListener() != null) {
-            Factory factory = listener1.getActiveRowChangeListener();
-            Class jcls = Class.forName(factory.getClassName());
-            value = jcls.newInstance();
-            dataSource.addActiveRowChangeListener((ActiveRowChangeListener) value);
-          } else if (listener1.getListDataListener() != null) {
-            Factory factory = listener1.getListDataListener();
-            Class jcls = Class.forName(factory.getClassName());
-            value = jcls.newInstance();
-            dataSource.addListDataListener((ListDataListener) value);
+          if (listener.getActionListener() != null) {
+            dataSource.addActionListener((ActionListener) (value = ClassInstanceFactory.getInstance(listener.getActionListener(), new Class[] {}).newInstance(new Object[] {})));
+          } else if (listener.getActiveRowChangeListener() != null) {
+            dataSource.addActiveRowChangeListener((ActiveRowChangeListener) (value = ClassInstanceFactory.getInstance(listener.getActiveRowChangeListener(), new Class[] {}).newInstance(new Object[] {})));
+          } else if (listener.getListDataListener() != null) {
+            dataSource.addListDataListener((ListDataListener) (value = ClassInstanceFactory.getInstance(listener.getListDataListener(), new Class[] {}).newInstance(new Object[] {})));
           }
-          ((DataSourceObserver) value).setDataSource(dataSource);
+
+          if (value instanceof DataSourceObserver) {
+            ((DataSourceObserver) value).setDataSource(dataSource);
+          }
         }
       }
     } catch (Exception ex) {

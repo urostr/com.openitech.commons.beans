@@ -37,9 +37,9 @@
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
-              <xsd:element name="Listeners" minOccurs="0" maxOccurs="unbounded">
+              <xsd:element name="Listeners" minOccurs="0">
                 <xsd:complexType>
-                  <xsd:sequence maxOccurs="unbounded">
+                  <xsd:sequence minOccurs="1" maxOccurs="unbounded">
                     <xsd:element name="Listener">
                       <xsd:complexType>
                         <xsd:choice>
