@@ -2457,7 +2457,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
         }
 
-        qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
+        qparams = SQLDataSource.preprocessParameters(qparams, connection);
 
 
         try {

@@ -375,7 +375,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
           boolean transaction = false;
           boolean commit = false;
-          boolean preparedTemporary = false;
+          boolean preprocessed = false;
 
           try {
             if (checkTableSql != null) {
@@ -409,17 +409,17 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             }
 
 
-            qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
-            preparedTemporary = true;
+            qparams = SQLDataSource.preprocessParameters(qparams, connection);
+            preprocessed = true;
 
             fill = true;
           }
 
 
           if (isUseParameters()) {
-            if (!preparedTemporary) {
-              qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
-              preparedTemporary = true;
+            if (!preprocessed) {
+              qparams = SQLDataSource.preprocessParameters(qparams, connection);
+              preprocessed = true;
             }
             fill = fill || !isTableDataValidSql(connection, qparams);
           } else {
@@ -429,9 +429,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
           if ((!fill) && (sqlMaterializedView != null)) {
             if (sqlMaterializedView.isUseParameters()) {
-              if (!preparedTemporary) {
-                qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
-                preparedTemporary = true;
+              if (!preprocessed) {
+                qparams = SQLDataSource.preprocessParameters(qparams, connection);
+                preprocessed = true;
               }
               fill = !sqlMaterializedView.isViewValid(connection, qparams);
             } else {
@@ -440,9 +440,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           }
 
           if (fill && !disabled) {
-            if (!preparedTemporary) {
-              qparams = SQLDataSource.executeTemporarySelects(qparams, connection);
-              preparedTemporary = true;
+            if (!preprocessed) {
+              qparams = SQLDataSource.preprocessParameters(qparams, connection);
+              preprocessed = true;
             }
 
             if (sqlMaterializedView != null) {

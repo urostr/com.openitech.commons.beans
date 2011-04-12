@@ -4634,7 +4634,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
     ResultSet resultSet = null;
 //    synchronized (statement.getConnection()) {
-    List<Object> queryParameters = executeTemporarySelects(parameters, statement);
+      List<Object> queryParameters = preprocessParameters(parameters, statement);
 
     setParameters(statement, queryParameters, 1, false);
 
@@ -4692,7 +4692,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
     int result = 0;
 //    synchronized (statement.getConnection()) {
-    List<Object> queryParameters = executeTemporarySelects(parameters, statement);
+      List<Object> queryParameters = preprocessParameters(parameters, statement);
 
     setParameters(statement, queryParameters, 1, false);
 
@@ -4701,37 +4701,12 @@ public class SQLDataSource implements DbDataSourceImpl {
     return result;
   }
 
-  public static List<Object> executeTemporarySelects(List<?> parameters, Connection connection) throws SQLException {
-    List<Object> result = null;
-//    synchronized (connection) {
-    List<Object> queryParameters = new java.util.ArrayList(parameters.size());
-    Set<TemporarySubselectSqlParameter.TemporaryTableGroup> temporarySubselectSqlParameters = new java.util.LinkedHashSet<TemporarySubselectSqlParameter.TemporaryTableGroup>(parameters.size());
-    for (Object parameter : parameters) {
-      if (parameter instanceof TemporarySubselectSqlParameter) {
-        TemporarySubselectSqlParameter tt = (TemporarySubselectSqlParameter) parameter;
-        temporarySubselectSqlParameters.add(tt.getGroup());
-        queryParameters.add(tt.getSubstSqlParameter());
-      } else {
-        queryParameters.add(parameter);
-      }
-    }
-
-    if (!temporarySubselectSqlParameters.isEmpty()) {
-      try {
-        for (TemporarySubselectSqlParameter.TemporaryTableGroup tempSubselect : temporarySubselectSqlParameters) {
-          tempSubselect.executeQuery(connection, queryParameters);
-        }
-      } catch (InterruptedException ex) {
-        throw new SQLException("Can't prepare the temporary tables", ex);
-      }
-    }
-    result = queryParameters;
-//    }
-    return result;
+  public static List<Object> preprocessParameters(List<?> parameters, Connection connection) throws SQLException {
+    return (List<Object>) DbDataSourceParametersPreprocessor.getInstance().preprocess(parameters, connection);
   }
 
-  private static List<Object> executeTemporarySelects(List<?> parameters, PreparedStatement statement) throws SQLException {
-    return executeTemporarySelects(parameters, statement.getConnection());
+  private static List<Object> preprocessParameters(List<?> parameters, PreparedStatement statement) throws SQLException {
+    return preprocessParameters(parameters, statement.getConnection());
   }
 
   @Override
