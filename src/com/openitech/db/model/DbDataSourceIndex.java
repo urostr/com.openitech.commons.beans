@@ -16,10 +16,9 @@ import com.openitech.ref.events.ListDataWeakListener;
 import com.openitech.util.Equals;
 
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -28,6 +27,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
@@ -44,27 +45,31 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
   private List<String> keys = new ArrayList<String>();
   private transient WeakListenerList listDataListeners;
   private transient Map<DbIndexKey, SortedSet<Integer>> index = new LinkedHashMap<DbIndexKey, SortedSet<Integer>>();
-  private transient Map<Integer, DbIndexKey> r_index = new HashMap<Integer, DbIndexKey>();
+  private transient Map<Integer, DbIndexKey> r_index = new LinkedHashMap<Integer, DbIndexKey>();
+  private transient List<Integer> r_rows = new ArrayList<Integer>();
   private transient List<DbFieldObserver> fields = new ArrayList<DbFieldObserver>();
+  private Map<String, Collection<Object>> keyFilters = new LinkedHashMap<String, Collection<Object>>();
   private String id = "";
 
   /** Creates a new instance of DbDataSourceIndex */
   public DbDataSourceIndex() {
   }
 
-  public <T> void setDataSource(T dataSource) throws SQLException {
+  @Override
+  public void setDataSource(DbDataSource dataSource) throws SQLException {
     if (this.dataSource != null) {
       this.dataSource.removeListDataListener(listDataListener);
     }
-    this.dataSource = (DbDataSource) dataSource;
+    this.dataSource = dataSource;
     updateIndexFields();
     if (this.dataSource != null) {
       this.dataSource.addListDataListener(listDataListener);
     }
   }
 
-  public <T> T getDataSource() {
-    return (T) dataSource;
+  @Override
+  public DbDataSource getDataSource() {
+    return dataSource;
   }
 
   public void addKeys(List<String> columns) throws SQLException {
@@ -73,9 +78,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
   }
 
   public void addKeys(String... columns) throws SQLException {
-    for (String column : columns) {
-      keys.add(column);
-    }
+    keys.addAll(Arrays.asList(columns));
     updateIndexFields();
   }
 
@@ -84,9 +87,41 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     addKeys(columns);
   }
 
+  @Override
   public void setKeys(String... columns) throws SQLException {
     keys.clear();
     addKeys(columns);
+  }
+
+  public void addKeysFilter(Map<String, Collection<Object>> keyFilters) throws SQLException {
+    List<String> columns = new ArrayList<String>(keyFilters.size());
+    for (String column : keyFilters.keySet()) {
+      columns.add(column);
+    }
+    this.keyFilters.putAll(keyFilters);
+    addKeys(columns);
+  }
+
+  public void setKeysFilter(Map<String, Collection<Object>> keyFilters) throws SQLException {
+    List<String> columns = new ArrayList<String>(keyFilters.size());
+    for (String column : keyFilters.keySet()) {
+      columns.add(column);
+    }
+    this.keyFilters.clear();
+    this.keyFilters.putAll(keyFilters);
+    setKeys(columns);
+  }
+
+  public int size() {
+    return r_rows.size();
+  }
+
+  public int getRowAt(int index) {
+    if (index > r_rows.size()) {
+      return -1;
+    } else {
+      return r_rows.get(index - 1);
+    }
   }
 
   private void updateIndexFields() throws SQLException {
@@ -148,7 +183,13 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
       dataSource.lock();
       try {
         for (int row = min; row <= max; row++) {
-          DbIndexKey key = new DbIndexKey(dataSource, keys, row);
+          DbIndexKey key;
+
+          if (keyFilters.size() == keys.size()) {
+            key = new DbIndexKey(dataSource, keyFilters, row);
+          } else {
+            key = new DbIndexKey(dataSource, keys, row);
+          }
 
           if (key.isValid()) {
             SortedSet rowSet;
@@ -167,6 +208,11 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
         }
       } finally {
         dataSource.unlock();
+      }
+
+      r_rows.clear();
+      for (Integer row : r_index.keySet()) {
+        r_rows.add(row);
       }
 
       if (changes.size() == 1) {
@@ -221,6 +267,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     }
   }
 
+  @Override
   public String[] getKeys() {
     return keys.toArray(new String[keys.size()]);
   }
@@ -247,6 +294,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     return index.keySet();
   }
 
+  @Override
   public Set<Integer> findRows(Object... values) {
     return findRows(new DbIndexKey(values));
   }
@@ -272,50 +320,58 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     }
   }
 
+  @Override
   public void intervalAdded(ListDataEvent e) {
     try {
-      reindex(e.getIndex0()+1, e.getIndex1()+1);
+      reindex(e.getIndex0() + 1, e.getIndex1() + 1);
     } catch (SQLException ex) {
-      throw (RuntimeException) new RuntimeException().initCause(ex);
+      throw new RuntimeException(ex);
     }
   }
 
+  @Override
   public void intervalRemoved(ListDataEvent e) {
     try {
-      remove(e.getIndex0()+1, e.getIndex1()+1);
+      remove(e.getIndex0() + 1, e.getIndex1() + 1);
     } catch (SQLException ex) {
-      throw (RuntimeException) new RuntimeException().initCause(ex);
+      throw new RuntimeException(ex);
     }
   }
 
+  @Override
   public void contentsChanged(ListDataEvent e) {
     try {
       reindex();
     } catch (SQLException ex) {
-      throw (RuntimeException) new RuntimeException().initCause(ex);
+      throw new RuntimeException(ex);
     }
   }
 
+  @Override
   public void activeRowChanged(ActiveRowChangeEvent event) {
   }
 
+  @Override
   public void fieldValueChanged(ActiveRowChangeEvent event) {
     if (dataSource.isDataLoaded()) {
+      int row;
       try {
-        int row = dataSource.getRow();
+        row = dataSource.getRow();
         reindex(row, row);
       } catch (SQLException ex) {
-        ex.printStackTrace();
+        Logger.getLogger(DbDataSourceIndex.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
   }
 
+  @Override
   public synchronized void removeListDataListener(ListDataListener l) {
     if (listDataListeners != null && listDataListeners.contains(l)) {
       listDataListeners.removeElement(l);
     }
   }
 
+  @Override
   public synchronized void addListDataListener(ListDataListener l) {
     WeakListenerList v = listDataListeners == null ? new WeakListenerList(2) : listDataListeners;
     if (!v.contains(l)) {
@@ -354,6 +410,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     }
   }
 
+  @Override
   public boolean equals(Object obj) {
     if (obj == null) {
       return false;
@@ -366,11 +423,13 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     }
   }
 
-  //public int hashCode() {
-  //  return id.hashCode();
-  //}
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
 
   public static class DbIndexKey {
+
     private static final String NULL = "NULL";
     private boolean valid = false;
     private int row = -1;
@@ -378,41 +437,75 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
     private String key = "";
 
     public DbIndexKey(Object... keyValues) {
-      StringBuilder key = new StringBuilder(27);
+      StringBuilder sbKey = new StringBuilder(27);
       for (Object value : keyValues) {
         if (value == null) {
           this.keyValuesList.add(NULL);
-          key.append(key.length() > 0 ? ";" : "").append(NULL);
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(NULL);
         } else if (value instanceof java.util.Date) {
-          keyValuesList.add(Long.toString(((java.util.Date)value).getTime()));
-          key.append(key.length() > 0 ? ";" : "").append(Long.toString(((java.util.Date)value).getTime()));
+          keyValuesList.add(Long.toString(((java.util.Date) value).getTime()));
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(Long.toString(((java.util.Date) value).getTime()));
         } else {
           this.keyValuesList.add(value.toString());
-          key.append(key.length() > 0 ? ";" : "").append(value.toString());
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(value.toString());
         }
       }
-      this.key = key.toString();
+      this.key = sbKey.toString();
       valid = true;
     }
 
     public DbIndexKey(DbDataSource dataSource, List<String> keys, int row) throws SQLException {
-      StringBuilder key = new StringBuilder(27);
+      StringBuilder sbKey = new StringBuilder(27);
       for (String column : keys) {
-        Object value = row>dataSource.getRowCount()?null:dataSource.getValueAt(row, column, keys.toArray(new String[keys.size()]));
+        Object value = row > dataSource.getRowCount() ? null : dataSource.getValueAt(row, column, keys.toArray(new String[keys.size()]));
         if (value == null) {
           keyValuesList.add(NULL);
-          key.append(key.length() > 0 ? ";" : "").append(NULL);
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(NULL);
         } else if (value instanceof java.util.Date) {
-          keyValuesList.add(Long.toString(((java.util.Date)value).getTime()));
-          key.append(key.length() > 0 ? ";" : "").append(Long.toString(((java.util.Date)value).getTime()));
+          keyValuesList.add(Long.toString(((java.util.Date) value).getTime()));
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(Long.toString(((java.util.Date) value).getTime()));
         } else {
           keyValuesList.add(value.toString());
-          key.append(key.length() > 0 ? ";" : "").append(value.toString());
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(value.toString());
         }
       }
-      this.key = key.toString();
+      this.key = sbKey.toString();
       this.row = row;
       valid = true;
+    }
+
+    public DbIndexKey(DbDataSource dataSource, Map<String, Collection<Object>> keyFilters, int row) throws SQLException {
+      List<String> keys = new ArrayList<String>(keyFilters.size());
+      for (String column : keyFilters.keySet()) {
+        keys.add(column);
+      }
+      StringBuilder sbKey = new StringBuilder(27);
+      valid = true;
+      for (String column : keys) {
+        Object value = null;
+        try {
+          value = row > dataSource.getRowCount() ? null : dataSource.getValueAt(row, column, keys.toArray(new String[keyFilters.size()]));
+        } catch (Exception ex) {
+          ex.printStackTrace();
+          System.out.println();
+        }
+        for (Object allowedValue : keyFilters.get(column)) {
+          valid = valid && Equals.equals(value, allowedValue);
+        }
+
+        if (value == null) {
+          keyValuesList.add(NULL);
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(NULL);
+        } else if (value instanceof java.util.Date) {
+          keyValuesList.add(Long.toString(((java.util.Date) value).getTime()));
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(Long.toString(((java.util.Date) value).getTime()));
+        } else {
+          keyValuesList.add(value.toString());
+          sbKey.append(sbKey.length() > 0 ? ";" : "").append(value.toString());
+        }
+      }
+      this.key = sbKey.toString();
+      this.row = row;
     }
 
     public Integer getRow() {
@@ -423,10 +516,12 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
       return this.valid;
     }
 
+    @Override
     public int hashCode() {
       return key.hashCode();
     }
 
+    @Override
     public boolean equals(Object obj) {
       if ((obj == null) || !(obj instanceof DbIndexKey)) {
         return false;
@@ -435,6 +530,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
       }
     }
 
+    @Override
     public String toString() {
       return key;
     }
