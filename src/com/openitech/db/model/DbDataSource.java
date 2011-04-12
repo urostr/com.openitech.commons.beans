@@ -91,7 +91,6 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
    * Po moveToInsertRow
    */
   public final static String ROW_INSERTED = "rowInserted";
-
   /**
    * Po shranjevanju
    */
@@ -183,6 +182,15 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     }
   }
 
+  public DbDataSourceImpl getImplementation() {
+    return implementation;
+  }
+
+  public void setImplementation(DbDataSourceImpl implementation) {
+    this.implementation.destroy();
+    this.implementation = null;
+    this.implementation = implementation;
+  }
   protected boolean canExportData = true;
 
   /**
@@ -200,7 +208,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
    * @param canExportData new value of canExportData
    */
   public void setCanExportData(boolean canExportData) {
-    if (this.canExportData!=canExportData) {
+    if (this.canExportData != canExportData) {
       this.canExportData = canExportData;
       firePropertyChange("canExportData", !canExportData, canExportData);
     }
@@ -3403,7 +3411,6 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     return implementation.getValueAt(rowIndex, columnName, columnNames);
   }
 
-
   public CachedRowSet getCachedRowSet() throws SQLException {
     return implementation.getCachedRowSet();
   }
@@ -5562,7 +5569,6 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   public void setSeekUpdatedRow(boolean seekUpdatedRow) {
     this.seekUpdatedRow = seekUpdatedRow;
   }
-
   private boolean goToLastOnInsert = false;
 
   /**
@@ -5582,7 +5588,6 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   public void setGoToLastOnInsert(boolean goToLastOnInsert) {
     this.goToLastOnInsert = goToLastOnInsert;
   }
-
   private boolean goToFirstOnInsert = false;
 
   /**
@@ -5602,7 +5607,6 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   public void setGoToFirstOnInsert(boolean goToFirstOnInsert) {
     this.goToFirstOnInsert = goToFirstOnInsert;
   }
-
 
   @Override
   public DbDataSource getDataSource() {
