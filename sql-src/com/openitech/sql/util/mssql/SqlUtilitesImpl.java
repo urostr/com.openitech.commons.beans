@@ -2156,24 +2156,28 @@ public class SqlUtilitesImpl extends SqlUtilities {
     for (DbDataSource dbDataSource : dataSources) {
       if (!(dbDataSource instanceof MergedSecondaryDataSource)) {
         //zamenjaj implementacion v dbDataSource (ce ni ze spremenjena)
-//        if (!(dbDataSource.getImplementation() instanceof DataSourceProxy)) {
+        if (!(dbDataSource.getImplementation() instanceof DataSourceProxy)) {
 
-        DbDataSourceIndex index = new DbDataSourceIndex();
-        index.setDataSource(result);
+          DbDataSourceIndex index = new DbDataSourceIndex();
+          index.setDataSource(result);
 
-        Map<String, Collection<Object>> keyFilters = new LinkedHashMap<String, Collection<Object>>();
-        Collection<Object> allowedValues = new ArrayList<Object>();
-        for (Integer allowedValue : ds.get(dbDataSource)) {
-          allowedValues.add(allowedValue);
+          Map<String, Collection<Object>> keyFilters = new LinkedHashMap<String, Collection<Object>>();
+          Collection<Object> allowedValues = new ArrayList<Object>();
+          for (Integer allowedValue : ds.get(dbDataSource)) {
+            allowedValues.add(allowedValue);
+          }
+          keyFilters.put("IdSifranta", allowedValues);
+
+          index.setKeysFilter(keyFilters);
+
+          //pripravi novo implementacijo
+          final DataSourceProxy dataSourceProxy = new DataSourceProxy(dbDataSource, index);
+          dataSourceProxy.setCountSql(dbDataSource.getCountSql());
+          dataSourceProxy.setSelectSql(dbDataSource.getSelectSql());
+
+          dbDataSource.setImplementation(dataSourceProxy);
         }
-        keyFilters.put("IdSifranta", allowedValues);
-
-        index.setKeysFilter(keyFilters);
-
-        //pripravi novo implementacijo
-        dbDataSource.setImplementation(new DataSourceProxy(dbDataSource, index));
       }
-//      }
     }
 
     return result;
@@ -2330,6 +2334,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       //  setEventPK(eventPK);
 
+      evVersionedParameters.clear();
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventType);
@@ -2338,6 +2343,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evVersionedParameters.add(sqlFindEventVersionPk);
       evVersionedSubquery = SQLDataSource.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
 
+      evNonVersionedParameters.clear();
       evNonVersionedParameters.add(sqlFindEventType);
       evNonVersionedParameters.add(sqlFindEventValid);
       evNonVersionedParameters.add(sqlFindEventSource);
