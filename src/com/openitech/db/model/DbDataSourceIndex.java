@@ -147,6 +147,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
   }
 
   private void reindex() throws SQLException {
+    Logger.getAnonymousLogger().log(Level.INFO, "Reindexing: " + dataSource.toString());
     reindex(-1, -1);
   }
 
