@@ -59,6 +59,14 @@ public class Field {
     this.fieldIndex = fieldIndex;
   }
 
+  public Field(Field field) {
+    this(field.idPolja, field.name, field.type, field.fieldIndex);
+  }
+
+  public Field(Field field, int fieldIndex) {
+    this(field.idPolja, field.name, field.type, fieldIndex);
+  }
+
   /**
    * Get the value of model
    *
@@ -87,14 +95,6 @@ public class Field {
     this.opis = opis;
   }
 
-  /**
-   *
-   * @param name name
-   * @param type fieldType java.sql.Type
-   */
-  public Field(Field field) {
-    this(field.idPolja, field.name, field.type, field.fieldIndex);
-  }
 
   @Override
   public boolean equals(Object obj) {
