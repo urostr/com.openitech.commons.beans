@@ -3284,14 +3284,21 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
 
   @Override
   public boolean reload() {
+    Logger.getAnonymousLogger().log(Level.INFO, "Reloading: " + toString());
+//    Thread.dumpStack();
     return loadData(true);
   }
 
   public boolean reload(int oldRow) {
+    Logger.getAnonymousLogger().log(Level.INFO, "Reloading: " + toString() + " oldRow=" + oldRow);
     return loadData(true, oldRow);
   }
 
   public boolean reload(boolean queued) {
+    Logger.getAnonymousLogger().log(Level.INFO, "Reloading: " + toString() + " queued=" + queued);
+//    if (queued) {
+////      Thread.dumpStack();
+//    }
     com.openitech.events.concurrent.RefreshDataSource.timestamp(this);
     if (queued) {
       com.openitech.events.concurrent.DataSourceEvent.submit(new com.openitech.events.concurrent.RefreshDataSource(this, true));
