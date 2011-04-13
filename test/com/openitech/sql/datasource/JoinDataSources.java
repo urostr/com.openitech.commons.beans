@@ -84,7 +84,7 @@ public class JoinDataSources extends TestCase {
 
   }
 
-  public void testTrijedataSourci() throws SQLException {
+  public void aatestTrijedataSourci() throws SQLException {
     DbDataSource.DUMP_SQL = true;
     DbConnection.register();
 
@@ -171,6 +171,85 @@ public class JoinDataSources extends TestCase {
       String string = dataSource3.getString("EventId");
       System.out.println(string);
     }
+
+    System.out.println();
+
+  }
+
+  public void testTrijedataSourciBrezNext() throws SQLException {
+    DbDataSource.DUMP_SQL = true;
+    DbConnection.register();
+
+    DbDataSource dataSource1 = new DbDataSource();
+    dataSource1.setName("dataSource1");
+    EventFilterSearch eventFilterSearch = new EventFilterSearch(new HashMap<Field, DbDataSource.SqlParameter<Object>>(), null, null, 297, null, true, null);
+    List<Object> parameters = new ArrayList<Object>();
+    parameters.add(eventFilterSearch);
+    dataSource1.setParameters(parameters);
+    dataSource1.setSelectSql(ReadInputStream.getResourceAsString(JoinDataSources.class, "sql/event.sql", "cp1250"));
+    dataSource1.setCountSql(SQLDataSource.SELECT_1);
+    dataSource1.loadData();
+
+    DbDataSource dataSource2 = new DbDataSource();
+    dataSource2.setName("dataSource2");
+    EventFilterSearch eventFilterSearch2 = new EventFilterSearch(new HashMap<Field, DbDataSource.SqlParameter<Object>>(), null, null, 172, null, true, null);
+    List<Object> parameters2 = new ArrayList<Object>();
+    parameters2.add(eventFilterSearch2);
+    dataSource2.setParameters(parameters2);
+    dataSource2.setSelectSql(ReadInputStream.getResourceAsString(JoinDataSources.class, "sql/event.sql", "cp1250"));
+    dataSource2.setCountSql(SQLDataSource.SELECT_1);
+    dataSource2.loadData();
+
+
+
+    List<DbDataSource> dataSources = new ArrayList<DbDataSource>();
+    dataSources.add(dataSource1);
+    dataSources.add(dataSource2);
+    DbDataSource joinSecondaryDataSources = SqlUtilities.getInstance().joinSecondaryDataSources(dataSources);
+    joinSecondaryDataSources.reload();
+
+    dataSource1.beforeFirst();
+    while (dataSource1.next()) {
+      String string = dataSource1.getString("EventId");
+      System.out.println(string);
+    }
+
+    System.out.println();
+
+    dataSource2.beforeFirst();
+    while (dataSource2.next()) {
+      String string = dataSource2.getString("EventId");
+      System.out.println(string);
+    }
+
+    DbDataSource dataSource3 = new DbDataSource();
+    dataSource3.setName("dataSource3");
+    EventFilterSearch eventFilterSearch3 = new EventFilterSearch(new HashMap<Field, DbDataSource.SqlParameter<Object>>(), null, null, 270, null, true, null);
+    List<Object> parameters3 = new ArrayList<Object>();
+    parameters3.add(eventFilterSearch3);
+    dataSource3.setParameters(parameters3);
+    dataSource3.setSelectSql(ReadInputStream.getResourceAsString(JoinDataSources.class, "sql/event.sql", "cp1250"));
+    dataSource3.setCountSql(SQLDataSource.SELECT_1);
+    dataSource3.loadData();
+
+    dataSources = new ArrayList<DbDataSource>();
+    dataSources.add(dataSource1);
+    dataSources.add(dataSource2);
+    dataSources.add(dataSource3);
+    dataSources.add(joinSecondaryDataSources);
+    DbDataSource joinSecondaryDataSources2 = SqlUtilities.getInstance().joinSecondaryDataSources(dataSources);
+    joinSecondaryDataSources2.reload();
+
+    System.out.println("dataSource1");
+    System.out.println(dataSource1.getString("EventId"));
+
+    System.out.println();
+    System.out.println("dataSource2");
+    System.out.println(dataSource2.getString("EventId"));
+
+    System.out.println();
+    System.out.println("dataSource3");
+    System.out.println(dataSource3.getString("EventId"));
 
     System.out.println();
 
