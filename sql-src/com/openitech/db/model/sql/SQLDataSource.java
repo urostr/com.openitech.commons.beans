@@ -655,7 +655,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public long getLong(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnName, 0l, Number.class);
       return value == null ? null : value.longValue();
     } else {
@@ -675,7 +675,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public int getInt(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnName, 0, Number.class);
       return value == null ? null : value.intValue();
     } else {
@@ -696,7 +696,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public float getFloat(String columnName) throws SQLException {
     //TODO nenatanèno èe roèno vneseš v bazo. èe gre pisanje in branje preko programa potem je uredu
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnName, 0f, Number.class);
       return value == null ? null : value.floatValue();
     } else {
@@ -716,7 +716,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public double getDouble(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnName, 0d, Number.class);
       return value == null ? null : value.doubleValue();
     } else {
@@ -736,7 +736,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Date getDate(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, Date.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -756,7 +756,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Clob getClob(String colName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), colName, null, Clob.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -777,7 +777,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Reader getCharacterStream(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, Reader.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -797,7 +797,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public byte[] getBytes(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return (byte[]) getStoredValue(getRow(), columnName, new byte[]{}, Object.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -828,7 +828,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public InputStream getAsciiStream(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, InputStream.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -846,7 +846,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public int findColumn(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getColumnIndex(columnName);
 //      return openSelectResultSet().findColumn(columnName);
     } else {
@@ -868,7 +868,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public BigDecimal getBigDecimal(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, BigDecimal.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -898,7 +898,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public InputStream getBinaryStream(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, InputStream.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -918,7 +918,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Blob getBlob(String colName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), colName, null, Blob.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -937,7 +937,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public boolean getBoolean(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, false, Boolean.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -956,7 +956,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public byte getByte(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnName, (byte) 0, Number.class);
       return value == null ? null : value.byteValue();
     } else {
@@ -992,7 +992,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Object getObject(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, Object.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1012,7 +1012,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Ref getRef(String colName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), colName, null, Ref.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1031,7 +1031,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public short getShort(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnName, (short) 0, Number.class);
       return value == null ? null : value.shortValue();
     } else {
@@ -1051,7 +1051,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public String getString(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, String.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1071,7 +1071,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Time getTime(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, Time.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1091,7 +1091,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
     //TODO ne dela napaèno castanje. Oèitno èe hoèem date potem dela
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, Timestamp.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1114,7 +1114,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public URL getURL(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, URL.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1247,7 +1247,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Object getObject(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, Object.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1266,7 +1266,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public long getLong(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnIndex, 0l, Number.class);
       return value == null ? null : value.longValue();
     } else {
@@ -1286,7 +1286,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public int getInt(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnIndex, 0, Number.class);
       return value == null ? null : value.intValue();
     } else {
@@ -1306,7 +1306,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public float getFloat(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnIndex, 0f, Number.class);
       return value == null ? null : value.floatValue();
     } else {
@@ -1326,7 +1326,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public double getDouble(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnIndex, 0d, Number.class);
       return value == null ? null : value.doubleValue();
     } else {
@@ -1346,7 +1346,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Date getDate(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, Date.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1366,7 +1366,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Clob getClob(int i) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), i, null, Clob.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1387,7 +1387,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Reader getCharacterStream(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, Reader.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1407,7 +1407,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public byte[] getBytes(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return (byte[]) getStoredValue(getRow(), columnIndex, new byte[]{}, Object.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1439,7 +1439,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public InputStream getAsciiStream(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, InputStream.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1459,7 +1459,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Array getArray(String columnName) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, Array.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1479,7 +1479,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Array getArray(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, Array.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1586,7 +1586,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, InputStream.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1606,7 +1606,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Blob getBlob(int i) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), i, null, Blob.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1625,7 +1625,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public boolean getBoolean(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, false, Boolean.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1644,7 +1644,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public byte getByte(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnIndex, (byte) 0, Number.class);
       return value == null ? null : value.byteValue();
     } else {
@@ -1665,7 +1665,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Ref getRef(int i) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), i, null, Ref.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1684,7 +1684,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public short getShort(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnIndex, (short) 0, Number.class);
       return value == null ? null : value.shortValue();
     } else {
@@ -1704,7 +1704,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public String getString(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, String.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1723,7 +1723,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Time getTime(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, Time.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1742,7 +1742,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public Timestamp getTimestamp(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, Timestamp.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1765,7 +1765,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public URL getURL(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, URL.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -2412,7 +2412,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Deprecated
   @Override
   public BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, BigDecimal.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -2692,7 +2692,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public int getFetchDirection() throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return openSelectResultSet().getFetchDirection();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -2724,7 +2724,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public String getCursorName() throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return openSelectResultSet().getCursorName();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -2744,7 +2744,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public int getConcurrency() throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return openSelectResultSet().getConcurrency();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -3131,7 +3131,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Deprecated
   @Override
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return getStoredValue(getRow(), columnIndex, null, BigDecimal.class);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -3149,7 +3149,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   @Override
   public int getRow() throws SQLException {
     //TODO tukaj paše motoda isDataLodaded() in èe ni mogoèe load data oz. napaka
-    if (loadData()) {
+    if (checkedLoadData()) {
       if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
         return 1;
       } else {
@@ -3191,7 +3191,7 @@ public class SQLDataSource implements DbDataSourceImpl {
    */
   @Override
   public int getType() throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return openSelectResultSet().getType();
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -4288,6 +4288,10 @@ public class SQLDataSource implements DbDataSourceImpl {
     return currentResultSet != null;
   }
 
+  private boolean checkedLoadData() {
+    return isDataLoaded() || loadData();
+  }
+
   private boolean loadData(boolean reload) {
     return loadData(reload, Integer.MIN_VALUE);
   }
@@ -4634,7 +4638,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
     ResultSet resultSet = null;
 //    synchronized (statement.getConnection()) {
-      List<Object> queryParameters = preprocessParameters(parameters, statement);
+    List<Object> queryParameters = preprocessParameters(parameters, statement);
 
     setParameters(statement, queryParameters, 1, false);
 
@@ -4692,7 +4696,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
     int result = 0;
 //    synchronized (statement.getConnection()) {
-      List<Object> queryParameters = preprocessParameters(parameters, statement);
+    List<Object> queryParameters = preprocessParameters(parameters, statement);
 
     setParameters(statement, queryParameters, 1, false);
 
@@ -4730,7 +4734,7 @@ public class SQLDataSource implements DbDataSourceImpl {
   public Object getValueAt(int rowIndex, String columnName, String... columnNames) throws SQLException {
     if (!isDataLoaded() && refreshPending) {
       return null;
-    } else if (loadData()) {
+    } else if (checkedLoadData()) {
       Object result = null;
       columnName = columnName.toUpperCase();
 
@@ -4742,7 +4746,7 @@ public class SQLDataSource implements DbDataSourceImpl {
         if (cache.containsKey(ck) && ((ce = cache.get(ck)) != null)) {
           result = ce.value;
         } else if (rowIndex > getRowCount()) {
-          throw new SQLException("Invalid row number " + rowIndex + " for " + toString());
+          throw new SQLException("Invalid row number " + rowIndex + " for " + toString() + "[" + rowIndex + ">" + getRowCount() + "] " + preparedCountSql);
         } else {
           owner.lock();
           try {
@@ -4768,12 +4772,12 @@ public class SQLDataSource implements DbDataSourceImpl {
             if (DbDataSource.DUMP_SQL) {
               System.out.println(owner.getName() + ":getValueAt [" + min + "-" + max + "]");
             }
-            if(SELECT_1.equals(preparedCountSql) && openSelectResultSet.absolute(min)){
+            if (SELECT_1.equals(preparedCountSql) && openSelectResultSet.absolute(min)) {
               System.out.println();
             }
-            if(!openSelectResultSet.absolute(min)){
+            if (!openSelectResultSet.absolute(min)) {
               return null;
-            }else{
+            } else {
               System.out.println();
             }
             String cn;
@@ -4995,7 +4999,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   @Override
   public String getColumnName(int columnIndex) throws SQLException {
-    if (loadData()) {
+    if (checkedLoadData()) {
       return openSelectResultSet().getMetaData().getColumnName(columnIndex);
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -5732,7 +5736,7 @@ public class SQLDataSource implements DbDataSourceImpl {
 
   @Override
   public String getDataSourceName() {
-    if (loadData()) {
+    if (checkedLoadData()) {
       try {
         if (openSelectResultSet() instanceof javax.sql.RowSet) {
           return ((javax.sql.RowSet) openSelectResultSet()).getDataSourceName();
