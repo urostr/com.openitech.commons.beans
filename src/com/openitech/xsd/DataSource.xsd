@@ -13,6 +13,7 @@
               <xsd:element name="SQL" type="xsd:string"/>
               <xsd:element name="COUNT_SQL" type="xsd:string" minOccurs="0"/>
               <xsd:element name="QueryHints" type="xsd:string" minOccurs="0"/>
+              <xsd:element name="OrderBy" type="xsd:string" minOccurs="0"/>
               <xsd:element name="EventColumns" maxOccurs="unbounded" type="xsd:string"></xsd:element>
               <xsd:element name="Parameters" maxOccurs="unbounded" minOccurs="0" type="tns:QueryParameter"></xsd:element>
               <xsd:element name="CanAddRows" type="xsd:boolean" minOccurs="0"></xsd:element>
@@ -467,6 +468,7 @@
       <xsd:element name="SubQuery" type="tns:SubQuery"></xsd:element>
       <xsd:element name="TemporaryTable" type="tns:TemporaryTable"></xsd:element>
       <xsd:element name="TemporaryTableGroup" type="tns:TemporaryTableGroup"></xsd:element>
+      <xsd:element name="NamedParameter" type="xsd:string"></xsd:element>
     </xsd:choice>
   </xsd:complexType>
   <xsd:simpleType name="Sharing">

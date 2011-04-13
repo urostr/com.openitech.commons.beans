@@ -13,7 +13,6 @@ import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.DataModel;
-import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.TaskList.Tasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners;
@@ -30,7 +29,6 @@ import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.sql.util.SqlUtilities;
-import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
@@ -52,6 +50,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   public static final String DATA_SOURCE_LIMIT = "<%DATA_SOURCE_LIMIT%>";
   public static final String DB_ROW_SORTER = "<%DB_ROW_SORTER%>";
   private DataSourceLimit dataSourceLimit;
+  private List<String> namedParameters = new ArrayList<String>();
 
   public DataSourceFactory(DbDataModel dbDataModel) {
     super(dbDataModel);
@@ -135,7 +134,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
     for (QueryParameter parameter : dataSourceXML.getDataSource().getParameters()) {
       Object queryParameter = createQueryParameter(parameter);
-      if (parameter.getTemporaryTable() != null) {
+      if (parameter.getNamedParameter() != null) {
+        namedParameters.add((String) queryParameter);
+      } else if (parameter.getTemporaryTable() != null) {
         temporaryTables.add((TemporarySubselectSqlParameter) queryParameter);
         parameters.add(queryParameter);
       } else if (parameter.getTemporaryTableGroup() != null) {
@@ -163,7 +164,13 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         parameters.add(queryParameter);
       }
     }
-    parameters.add(new SQLOrderByParameter(DB_ROW_SORTER, dataSource));
+    SQLOrderByParameter orderByParameter = new SQLOrderByParameter(DB_ROW_SORTER, dataSource);
+
+    if (dataSourceXML.getDataSource().getOrderBy()!=null) {
+      orderByParameter.setOrderBy(dataSourceXML.getDataSource().getOrderBy());
+    }
+
+    parameters.add(orderByParameter);
 
     List<SQLMaterializedView> mvParameters = new ArrayList<SQLMaterializedView>(temporaryTables.size());
     for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
@@ -181,6 +188,10 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
 
     return parameters;
+  }
+
+  public List<String> getNamedParameters() {
+    return namedParameters;
   }
 
   protected void limitDataSource() {
