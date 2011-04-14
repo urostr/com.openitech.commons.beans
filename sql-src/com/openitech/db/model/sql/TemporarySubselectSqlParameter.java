@@ -401,7 +401,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 System.out.println(createSQL + ";");
                 System.out.println("-- -- -- --");
               }
+              try{
               statement.execute(createSQL);
+              }catch(Exception ex1){
+                ex1.printStackTrace();
+                System.out.println("-- -- -- --");
+              }
             }
 
             if (getCatalog() != null) {
@@ -433,9 +438,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 qparams = SQLDataSource.preprocessParameters(qparams, connection);
                 preprocessed = true;
               }
-              fill = !sqlMaterializedView.isViewValid(connection, qparams);
+              fill = fill || !sqlMaterializedView.isViewValid(connection, qparams);
             } else {
-              fill = !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
+              fill = fill || !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
             }
           }
 
@@ -501,7 +506,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   System.out.println("############## fill");
                   System.out.println(this.qFillTable);
                 }
+                try{
                 System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+                }catch(Exception ex1){
+                  ex1.printStackTrace();
+                  System.out.println("############## fill");
+                }
               }
               if (cleanTableSqls != null) {
                 List<String> queries = new ArrayList<String>(cleanTableSqls.length);
