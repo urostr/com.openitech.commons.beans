@@ -6903,6 +6903,14 @@ public class SQLDataSource implements DbDataSourceImpl {
       cachedStatements = null;
       currentResultSet.close();
       currentResultSet = null;
+
+      countStatement.close();
+      countStatement = null;
+
+      selectStatement.close();
+      selectStatement = null;
+
+      metaData = null;
     } catch (Exception ex) {
     }
   }
