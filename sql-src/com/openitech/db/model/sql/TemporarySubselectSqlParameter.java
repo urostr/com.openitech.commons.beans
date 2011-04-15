@@ -401,9 +401,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 System.out.println(createSQL + ";");
                 System.out.println("-- -- -- --");
               }
-              try{
-              statement.execute(createSQL);
-              }catch(Exception ex1){
+              try {
+                statement.execute(createSQL);
+              } catch (Exception ex1) {
                 ex1.printStackTrace();
                 System.out.println("-- -- -- --");
               }
@@ -506,11 +506,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   System.out.println("############## fill");
                   System.out.println(this.qFillTable);
                 }
-                try{
-                System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
-                }catch(Exception ex1){
-                  ex1.printStackTrace();
-                  System.out.println("############## fill");
+                try {
+                  System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+                } catch (SQLException ex1) {
+                  Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
+                  throw new SQLException(ex1);
                 }
               }
               if (cleanTableSqls != null) {
