@@ -403,9 +403,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
               try {
                 statement.execute(createSQL);
-              } catch (Exception ex1) {
-                ex1.printStackTrace();
-                System.out.println("-- -- -- --");
+              } catch (SQLException ex1) {
+                Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
+                throw new SQLException(ex1);
               }
             }
 
