@@ -1418,6 +1418,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return address;
   }
 
+  @Override
   public Event findEvent(Long eventId) throws SQLException {
     if (findEventById == null) {
       findEventById = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "find_event_by_id.sql", "cp1250"));

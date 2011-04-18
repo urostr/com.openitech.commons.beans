@@ -457,7 +457,9 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     return findEvent(search);
   }
 
-  public abstract Event findEvent(Event event) throws SQLException;
+ public abstract Event findEvent(Long eventId) throws SQLException;
+ 
+ public abstract Event findEvent(Event event) throws SQLException;
 
   public Long updateEvent(Event event) throws SQLException {
     return updateEvent(event, event); //event vsebuje eventId oz. se dodaja
