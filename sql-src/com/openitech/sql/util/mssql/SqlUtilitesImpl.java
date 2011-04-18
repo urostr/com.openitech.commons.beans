@@ -2177,6 +2177,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           dataSourceProxy.setSelectSql(dbDataSource.getSelectSql());
 
           dbDataSource.setImplementation(dataSourceProxy);
+          dbDataSource.setName(dbDataSource.getName() + ":proxy");
         }
       }
     }
@@ -3150,7 +3151,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       //ta motoda mora imeti lock, èeprav se zaenkrat naj nebi klicala iz veè threadov
       lock.acquire();
 
-      if (field.getFieldIndex()<1) {
+      if (field.getFieldIndex() < 1) {
         field = new Field(field.getName(), field.getType(), 1);
       }
 
