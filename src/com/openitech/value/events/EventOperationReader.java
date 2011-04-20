@@ -12,4 +12,6 @@ public interface EventOperationReader {
 
   public Event.EventOperation getEventOperation(Object key);
 
+  public boolean isActiveEditor(Object key);
+
 }
