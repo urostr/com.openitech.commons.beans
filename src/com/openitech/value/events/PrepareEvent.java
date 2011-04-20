@@ -21,4 +21,6 @@ public interface PrepareEvent {
   public void reloadEventDataSources();
 
   public void setForceSetEventId(boolean forceSetEventId);
+
+  public void setOnlyChangedReload(boolean onlyChangedReload);
 }
