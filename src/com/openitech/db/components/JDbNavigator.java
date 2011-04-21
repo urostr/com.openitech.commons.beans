@@ -16,6 +16,7 @@ import com.openitech.ref.events.PropertyChangeWeakListener;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
@@ -24,12 +25,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import com.openitech.util.Equals;
+import java.awt.event.ActionListener;
 
 /**
  *
  * @author  uros
  */
-public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeListener, PropertyChangeListener {
+public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeListener, PropertyChangeListener, ActionListener {
 
   com.openitech.db.model.DbNavigatorDataSource dataSource;
   private ActiveRowChangeWeakListener activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this);
@@ -347,11 +349,13 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         if (this.dataSource != null) {
           this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
           this.dataSource.removePropertyChangeListener("model", propertyChangeWeakListener);
+          this.dataSource.removeActionListener(this);
         }
         this.dataSource = dataSource;
         if (this.dataSource != null) {
           this.dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
           this.dataSource.addPropertyChangeListener("model", propertyChangeWeakListener);
+          this.dataSource.addActionListener(this);
           if (this.dataSource.canLock()) {
             if (this.dataSource.isDataLoaded() || this.dataSource.loadData()) {
               checkButtons();
@@ -412,11 +416,18 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
     }
   }
 
+  @Override
   public void fieldValueChanged(ActiveRowChangeEvent event) {
     checkButtons();
   }
 
+  @Override
   public void activeRowChanged(ActiveRowChangeEvent event) {
+    checkButtons();
+  }
+
+  @Override
+  public void actionPerformed(ActionEvent e) {
     checkButtons();
   }
 
