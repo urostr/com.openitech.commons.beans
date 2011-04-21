@@ -13,7 +13,7 @@ import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.DataModel;
-import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.TaskList.Tasks;
+import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners.Listener;
@@ -389,9 +389,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if ((dataSourceXML.getAssociatedTasks() != null) && !dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
         for (TaskPanes taskPane : dataSourceXML.getAssociatedTasks().getTaskPanes()) {
           Object newInstance = null;
-          if ((taskPane.getGroovy() != null)
-                  || (taskPane.getClassName() != null)) {
-            ClassInstanceFactory.getInstance("wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis(), taskPane.getGroovy(), taskPane.getClassName(), config.getClass()).newInstance(config);
+          if (taskPane.getFactory() != null) {
+            ClassInstanceFactory.getInstance("wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis(), taskPane.getFactory().getGroovy(), taskPane.getFactory().getClassName(), config.getClass()).newInstance(config);
           } else if (taskPane.getTaskList() != null && !taskPane.getTaskList().getTasks().isEmpty()) {
             newInstance = new JXDataSourceTaskPane(config, dataSource);
             ((JXDataSourceTaskPane) newInstance).setTitle(taskPane.getTitle());
@@ -490,8 +489,23 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       return config;
     }
 
-    private void addTasks(List<Tasks> tasks) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException {
-      for (Tasks task : tasks) {
+    /**
+     * Get the value of dataSource
+     *
+     * @return the value of dataSource
+     */
+    @Override
+    public DbDataSource getDataSource() {
+      return dataSource;
+    }
+
+    @Override
+    public void setDataSource(DbDataSource dataSource) {
+      throw new UnsupportedOperationException("Not supported.");
+    }
+
+    private void addTasks(List<Factory> tasks) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException {
+      for (Factory task : tasks) {
         Object newInstance = ClassInstanceFactory.getInstance("wa_task" + (this.getTitle() == null ? "" : this.getTitle()) + "_" + System.currentTimeMillis(), task.getGroovy(), task.getClassName(), config.getClass()).newInstance(config);
         if (newInstance != null) {
           if (newInstance instanceof DataSourceObserver) {
@@ -507,21 +521,6 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           }
         }
       }
-    }
-
-    /**
-     * Get the value of dataSource
-     *
-     * @return the value of dataSource
-     */
-    @Override
-    public DbDataSource getDataSource() {
-      return dataSource;
-    }
-
-    @Override
-    public void setDataSource(DbDataSource dataSource) {
-      throw new UnsupportedOperationException("Not supported.");
     }
   }
 }

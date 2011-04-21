@@ -16,8 +16,10 @@ import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbNavigatorDataSource;
 import com.openitech.db.model.DbTableModel;
+import com.openitech.ref.WeakListenerList;
 import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,6 +34,7 @@ import org.jdesktop.swingx.JXTable;
  */
 public class JDbXTable extends JXTable implements ListSelectionListener, DbNavigatorDataSource {
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = null;
+  private transient WeakListenerList actionListeners;
   private boolean selectionChanged = false;
   private final UpdateViewRunnable updateViewRunnable = new UpdateViewRunnable();
   
@@ -266,6 +269,23 @@ public class JDbXTable extends JXTable implements ListSelectionListener, DbNavig
   public boolean reload(int row) {
     return (getDataSource()!=null)?getDataSource().reload(row):false;
   }
+
+  @Override
+  public synchronized void removeActionListener(ActionListener l) {
+    if (actionListeners != null && actionListeners.contains(l)) {
+      actionListeners.removeElement(l);
+    }
+  }
+
+  @Override
+  public synchronized void addActionListener(ActionListener l) {
+    WeakListenerList v = actionListeners == null ? new WeakListenerList(2) : actionListeners;
+    if (!v.contains(l)) {
+      v.addElement(l);
+      actionListeners = v;
+    }
+  }
+
   
   private class UpdateViewRunnable implements Runnable {
     java.awt.Rectangle position;
