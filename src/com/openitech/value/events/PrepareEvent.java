@@ -19,8 +19,4 @@ public interface PrepareEvent {
   public void prepareEvent(Event parentEvent) throws SQLException;
 
   public void reloadEventDataSources();
-
-  public void setForceSetEventId(boolean forceSetEventId);
-
-  public void setOnlyChangedReload(boolean onlyChangedReload);
 }
