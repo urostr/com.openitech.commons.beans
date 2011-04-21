@@ -3651,7 +3651,8 @@ public class SQLDataSource implements DbDataSourceImpl {
     if (isDataLoaded()) {
       if ((getRowCount() > 0) && !rowUpdated()) {
         storedUpdates.put(new Integer(getRow()), new HashMap<String, Object>());
-        owner.fireFieldValueChanged(new ActiveRowChangeEvent(owner, "", -1));
+        owner.fireActionPerformed(new ActionEvent(owner, 0, DbDataSource.UPDATING_STARTED));
+//        owner.fireFieldValueChanged(new ActiveRowChangeEvent(owner, "", -1));
       }
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
