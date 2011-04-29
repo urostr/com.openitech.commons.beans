@@ -9,6 +9,7 @@ import com.openitech.Settings;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
+import com.openitech.db.model.DbDataSource;
 import com.openitech.events.concurrent.DataSourceActiveRowChangeEvent;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.events.concurrent.RefreshDataSource;
@@ -428,7 +429,10 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
 
   @Override
   public void actionPerformed(ActionEvent e) {
-    checkButtons();
+    String command = e.getActionCommand();
+    if (command.equals(DbDataSource.UPDATING_STARTED)) {
+      checkButtons();
+    }
   }
 
   public Component getNavigatorFor() {
