@@ -59,6 +59,7 @@ public interface DbConnection {
 
   String DB_DUMP_STATMENTS = "db.dumpstatments";
   String DB_MERGE_SECONDARY = "db.merge.secondary";
+  String DB_OPTIMISE_RELOADING = "db.optimiseReloading";
 
 
   Connection getTemporaryConnection();
