@@ -568,6 +568,9 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
   }
 
+  @Override
+  protected abstract boolean isTransactionValid() throws SQLException;
+  
   protected abstract void updateVersion(int oldVersion, List<Long> parentEventIds, List<Long> oldParentEventIds) throws SQLException;
 
   protected abstract long storeVersion(EventType eventType) throws SQLException;

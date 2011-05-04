@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.openitech.sql.util;
 
 import com.openitech.db.connection.ConnectionManager;
@@ -22,11 +21,11 @@ import java.util.logging.Logger;
  * @author uros
  */
 public class TransactionManager {
+
   private java.util.Stack<Savepoint> activeSavepoints = new java.util.Stack<Savepoint>();
   protected boolean autocommit;
   private final Connection connection;
   private final ReentrantLock lock = new ReentrantLock();
-
   private static Map<Connection, TransactionManager> managers = Collections.synchronizedMap(new WeakHashMap<Connection, TransactionManager>());
 
   protected TransactionManager() {
@@ -94,43 +93,54 @@ public class TransactionManager {
 
   public boolean endTransaction(boolean commit, Savepoint savepoint) throws SQLException {
     if (!connection.getAutoCommit()) {
-      if (commit) {
-        if (savepoint != null) {
-          try {
-            connection.releaseSavepoint(savepoint);
-          } catch (SQLException err) {
-            Logger.getLogger(SqlUtilities.class.getName()).log(Level.WARNING, err.getMessage(), err);
+      if (isTransactionValid()) {
+        if (commit) {
+          if (savepoint != null) {
+            try {
+              connection.releaseSavepoint(savepoint);
+            } catch (SQLException err) {
+              Logger.getLogger(SqlUtilities.class.getName()).log(Level.WARNING, err.getMessage(), err);
+            }
           }
-        }
-        if (activeSavepoints.empty()) {
-          connection.commit();
-          if (DbDataSource.DUMP_SQL) {
-            System.err.println("-- COMMIT TRANSACTION -- ");
+          if (activeSavepoints.empty()) {
+            connection.commit();
+            if (DbDataSource.DUMP_SQL) {
+              System.err.println("-- COMMIT TRANSACTION -- ");
+            }
+          } else if (savepoint != null) {
+            System.err.println("-- RELEASE SAVEPOINT (" + savepoint.toString() + ") -- ");
           }
         } else if (savepoint != null) {
-          System.err.println("-- RELEASE SAVEPOINT (" + savepoint.toString() + ") -- ");
+          connection.rollback(savepoint);
+        } else {
+          activeSavepoints.clear();
+          connection.rollback();
         }
-      } else if (savepoint != null) {
-        connection.rollback(savepoint);
+        if (savepoint != null) {
+          activeSavepoints.remove(savepoint);
+        }
+        if (!commit) {
+          if (activeSavepoints.empty()) {
+            System.err.println("-- ROLLBACK TRANSACTION -- ");
+          } else {
+            System.err.println("-- ROLLBACK TO SAVEPOINT (" + savepoint.toString() + ") -- ");
+          }
+        }
+
+        if (activeSavepoints.empty()) {
+          connection.setAutoCommit(autocommit);
+        }
+        return true;
       } else {
         activeSavepoints.clear();
-        connection.rollback();
-      }
-      if (savepoint != null) {
-        activeSavepoints.remove(savepoint);
-      }
-      if (!commit) {
-        if (activeSavepoints.empty()) {
-          System.err.println("-- ROLLBACK TRANSACTION -- ");
-        } else {
-          System.err.println("-- ROLLBACK TO SAVEPOINT (" + savepoint.toString() + ") -- ");
-        }
-      }
-
-      if (activeSavepoints.empty()) {
         connection.setAutoCommit(autocommit);
+        if (commit) {
+          throw new SQLException("Trying to commit an invalid transaction!");
+        } else {
+          System.err.println("-- TRANSACTION CLEARED [CAUSE:INVALID TRANSACTION] -- ");
+        }
+        return false;
       }
-      return true;
     } else {
       return false;
     }
@@ -141,7 +151,7 @@ public class TransactionManager {
       endTransaction(false, true);
     } catch (SQLException ex) {
       //ignore it
-       Logger.getLogger(SqlUtilities.class.getName()).info(ex.getSQLState()+":"+ex.getMessage());
+      Logger.getLogger(SqlUtilities.class.getName()).info(ex.getSQLState() + ":" + ex.getMessage());
       activeSavepoints.clear();
       connection.setAutoCommit(autocommit);
       System.err.println("-- TRANSACTION CLEARED -- ");
@@ -152,4 +162,7 @@ public class TransactionManager {
     return !activeSavepoints.empty();
   }
 
+  protected boolean isTransactionValid() throws SQLException {
+    return true;
+  }
 }

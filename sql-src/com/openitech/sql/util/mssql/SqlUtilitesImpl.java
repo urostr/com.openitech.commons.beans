@@ -132,6 +132,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement search_by_PK;
   PreparedStatement find_event_by_PK;
   PreparedStatement findIdentityEventId;
+  PreparedStatement is_transaction_valid;
+  PreparedStatement is_valueid_valid;
   Map<CaseInsensitiveString, Field> preparedFields;
   Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
 
@@ -777,7 +779,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 Long valueId = null;
                 //ce ze imamo valueId, potem ne rabimo vec shranjevat,
                 //ker se vrednosti in valueId ne spreminja
-                if (value.getValueId() == null || value.getValueId() <= 0) {
+                if (!isValidValueId(value)) {
                   valueId = storeValue(value.getValueType(), value.getValue());
                   value.setValueId(valueId);
                 } else {
@@ -1906,6 +1908,43 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     }
     return result;
+  }
+
+  @Override
+  protected boolean isTransactionValid() throws SQLException {
+    if (is_transaction_valid == null) {
+      is_transaction_valid = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "isTransationValid.sql", "cp1250"));
+    }
+
+    boolean result = true;
+
+    synchronized (is_transaction_valid) {
+      ResultSet rs = is_transaction_valid.executeQuery();
+      try {
+        if (rs.next()) {
+          result = (rs.getInt(1) != -1);
+        }
+      } finally {
+        rs.close();
+      }
+    }
+
+    return result;
+  }
+
+  private Boolean useValueId;
+
+  private boolean isValidValueId(FieldValue fv) throws SQLException {
+    if (useValueId==null) {
+      useValueId = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_VALUEID, "false"));
+    }
+    if (fv == null
+            || fv.getValueId() == null
+            || fv.getValueId() <= 0) {
+      return false;
+    } else {
+      return useValueId;
+    }
   }
 
   @Override
