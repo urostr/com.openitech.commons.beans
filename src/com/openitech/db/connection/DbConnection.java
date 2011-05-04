@@ -47,6 +47,7 @@ public interface DbConnection {
   String DB_STOP_LOADING_THREAD= "db.thread.kill";
   String DB_OVERRIDE_CACHED_VIEWS= "db.override.cached";
   String DB_CONVERT_TO_VARCHAR= "db.convert.varchar";
+  String DB_USE_VALUEID= "events.use.valueid";
   
   String DB_ENTRY_SERVICE = "ws.entry";
   

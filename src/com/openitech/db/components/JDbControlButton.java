@@ -14,6 +14,7 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.ref.events.ActionWeakListener;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -63,16 +64,11 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
 
   private ActionListener getControlActionListener() {
     if (controlActionListener == null) {
-      controlActionListener = new ActionListener() {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          String command = e.getActionCommand();
-          if (command.equals(DbDataSource.UPDATING_STARTED)) {
-            checkButton();
-          }
-        }
-      };
+      try {
+        controlActionListener = new ActionWeakListener(this, "dbDataSource_actionPerformed");
+      } catch (NoSuchMethodException ex) {
+        Logger.getLogger(JDbControlButton.class.getName()).log(Level.SEVERE, null, ex);
+      }
     }
     return controlActionListener;
   }
@@ -89,6 +85,13 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
   @Override
   public void fieldValueChanged(ActiveRowChangeEvent event) {
     checkButton();
+  }
+
+  public void dbDataSource_actionPerformed(ActionEvent e) {
+    String command = e.getActionCommand();
+    if (command.equals(DbDataSource.UPDATING_STARTED)) {
+      checkButton();
+    }
   }
 
   private void checkButton() {
