@@ -668,6 +668,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract String getPPJoinFields();
 
+  public abstract Clob getWorkArea(int workAreaId) throws SQLException;
+  
   public static enum Operation {
 
     INSERT,
