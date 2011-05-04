@@ -235,6 +235,24 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
 
+  @Override
+  public Clob getWorkArea(int workAreaId) throws SQLException {
+    Clob result = null;
+    PreparedStatement ps_getWorkArea = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getWorkArea.sql", "cp1250"));
+
+    int param = 1;
+    ps_getWorkArea.clearParameters();
+    ps_getWorkArea.setInt(param++, workAreaId);
+    ResultSet rs_getWorkArea = ps_getWorkArea.executeQuery();
+    if (rs_getWorkArea.next()) {
+      result = rs_getWorkArea.getClob(1);
+    }
+    rs_getWorkArea.close();
+    ps_getWorkArea.close();
+
+    return result;
+  }
+
   private static class VersionType extends EventType {
 
     public VersionType(int sifrant, String sifra, Integer versionId) {
@@ -1931,11 +1949,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     return result;
   }
-
   private Boolean useValueId;
 
   private boolean isValidValueId(FieldValue fv) throws SQLException {
-    if (useValueId==null) {
+    if (useValueId == null) {
       useValueId = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_VALUEID, "false"));
     }
     if (fv == null
