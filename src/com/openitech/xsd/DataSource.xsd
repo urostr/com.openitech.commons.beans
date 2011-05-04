@@ -7,7 +7,7 @@
   <xsd:element name="Workarea">
     <xsd:complexType>
       <xsd:all>
-        <xsd:element name="DataSource">
+        <xsd:element name="DataSource" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
               <xsd:element name="SQL" type="xsd:string"/>
@@ -57,7 +57,7 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
-        <xsd:element name="DataModel" type="tns:DataModel"></xsd:element>
+        <xsd:element name="DataModel" type="tns:DataModel" minOccurs="0"></xsd:element>
         <xsd:element name="Information" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
@@ -103,7 +103,21 @@
             <xsd:attribute name="Title" type="xsd:string"/>
           </xsd:complexType>
         </xsd:element>
-        <xsd:element name="LookupDataModel" type="tns:LookupModel"></xsd:element>
+        <xsd:element name="LookupDataModel" type="tns:LookupModel" minOccurs="0"></xsd:element>
+        <xsd:element name="ExtendWorkarea" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="WorkareaID" type="xsd:int" maxOccurs="unbounded"></xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="IncludeWorkarea" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="WorkareaID" type="xsd:int" maxOccurs="unbounded"></xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
       </xsd:all>
       <xsd:attribute name="readOnly" type="xsd:boolean" default="false"/>
       <xsd:attribute name="CanExportData" type="xsd:boolean" default="true"/>
@@ -655,10 +669,3 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
-
-
-
-
-
-
-
