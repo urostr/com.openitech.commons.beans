@@ -13,10 +13,7 @@ import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.db.model.DbFieldObserver;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.DataModel;
-import com.openitech.db.model.xml.config.DataModel.TableColumns;
 import com.openitech.db.model.xml.config.Factory;
-import com.openitech.db.model.xml.config.Workarea.AssociatedTasks;
-import com.openitech.db.model.xml.config.Workarea.DataSource;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners.Listener;
@@ -30,7 +27,6 @@ import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefin
 import com.openitech.db.model.xml.config.DataSourceFilter;
 import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Sharing;
-import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
@@ -42,7 +38,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.event.ListDataListener;
-import javax.xml.bind.JAXBException;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.jdesktop.swingx.JXTaskPane;
 
@@ -56,8 +51,6 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   public static final String DB_ROW_SORTER = "<%DB_ROW_SORTER%>";
   private DataSourceLimit dataSourceLimit;
   private List<String> namedParameters = new ArrayList<String>();
-  private Workarea root;
-  private CreationParameters creationParameters;
 
   public DataSourceFactory(DbDataModel dbDataModel) {
     super(dbDataModel);
@@ -65,118 +58,65 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   @Override
   public void configure() throws SQLException, ClassNotFoundException {
-    if (root==null) {
-      root = dataSourceXML;
-    }
-    Workarea original = dataSourceXML;
+    this.dataSource = createDataSource();
+
+    dataSource.lock();
     try {
-      if (dataSourceXML.getExtendWorkarea() != null) {
-        try {
-          List<Integer> workareaIDs = dataSourceXML.getExtendWorkarea().getWorkareaID();
-          for (Integer workAreaId : workareaIDs) {
-            configure(opis, SqlUtilities.getInstance().getWorkArea(workAreaId), config);
-          }
-        } catch (JAXBException ex) {
-          Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        dataSourceXML = original;
+      dataSource.setQueuedDelay(0);
+      this.dataSourceLimit = createDataSourceLimit();
+      dataSource.setParameters(createDataSourceParameters());
+
+      if (dataSourceXML.getDataSource().getCOUNTSQL() != null) {
+        dataSource.setCountSql(getReplacedSql(dataSourceXML.getDataSource().getCOUNTSQL()));
       }
+      dataSource.setSelectSql(getReplacedSql(dataSourceXML.getDataSource().getSQL()));
 
-      final DataSource dataSourceElement = dataSourceXML.getDataSource();
-
-      if (dataSourceElement != null) {
-        this.dataSource = createDataSource();
-
-        dataSource.lock();
-        try {
-          dataSource.setQueuedDelay(0);
-          this.dataSourceLimit = createDataSourceLimit();
-
-          List<Object> parameters = new ArrayList<Object>();
-          parameters.addAll(dataSource.getParameters());
-          parameters.addAll(createDataSourceParameters());
-
-          dataSource.setParameters(parameters);
-
-          if (dataSourceElement.getCOUNTSQL() != null) {
-            dataSource.setCountSql(getReplacedSql(dataSourceElement.getCOUNTSQL()));
-          }
-          dataSource.setSelectSql(getReplacedSql(dataSourceElement.getSQL()));
-
-          if (dataSourceElement.getQueryHints() != null) {
-            dataSource.setCountSql(dataSource.getCountSql() + '\n' + dataSourceElement.getQueryHints());
-            dataSource.setSelectSql(dataSource.getSelectSql() + '\n' + dataSourceElement.getQueryHints());
-          }
-          addListeners();
-
-          createEventColumns();
-          suspendDataSource();
-          limitDataSource();
-          setDataSourceQueuedDelay();
-
-          if (dataSourceLimit != null) {
-            dataSourceLimit.reloadDataSources();
-          }
-          storeCachedTemporaryTables();
-
-          creationParameters  = dataSourceElement.getCreationParameters();
-        } catch (Throwable ex) {
-          Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-          dataSource.unlock();
-        }
+      if (dataSourceXML.getDataSource().getQueryHints() != null) {
+        dataSource.setCountSql(dataSource.getCountSql() + '\n' + dataSourceXML.getDataSource().getQueryHints());
+        dataSource.setSelectSql(dataSource.getSelectSql() + '\n' + dataSourceXML.getDataSource().getQueryHints());
       }
-      
-      dataSource.lock();
-      try {
-        this.tableModel = createTableModel();
+      addListeners();
 
+      createEventColumns();
+      suspendDataSource();
+      limitDataSource();
+      setDataSourceQueuedDelay();
 
-        if (dataSourceXML.getInformation() != null) {
-          createInformationPanels();
-        }
-        getTaskPanes().addAll(createTaskPanes(dataSourceXML));
-
-        if (dataSourceXML.getDataEntryPanel() != null) {
-          createDataEntryPanel();
-        }
-      } catch (Throwable ex) {
-        Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
-      } finally {
-        dataSource.unlock();
+      if (dataSourceLimit != null) {
+        dataSourceLimit.reloadDataSources();
       }
-      if (dataSourceXML.getIncludeWorkarea() != null) {
-        try {
-          List<Integer> workareaIDs = dataSourceXML.getIncludeWorkarea().getWorkareaID();
-          for (Integer workAreaId : workareaIDs) {
-            configure(opis, SqlUtilities.getInstance().getWorkArea(workAreaId), config);
-          }
+      storeCachedTemporaryTables();
 
-        } catch (JAXBException ex) {
-          Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-        }
+      this.tableModel = createTableModel();
+
+
+      if (dataSourceXML.getInformation() != null) {
+        createInformationPanels();
       }
+      getTaskPanes().addAll(createTaskPanes(dataSourceXML));
+
+      if (dataSourceXML.getDataEntryPanel() != null) {
+        createDataEntryPanel();
+      }
+    } catch (Throwable ex) {
+      Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
     } finally {
-      dataSourceXML = original;
-      if (root.equals(dataSourceXML)) {
-        resumeDataSource();
-      }
+      resumeDataSource();
+      dataSource.unlock();
     }
+
   }
 
   protected void storeCachedTemporaryTables() {
     if (cachedTemporaryTables == null) {
       cachedTemporaryTables = SqlUtilities.getInstance().getCachedTemporaryTables();
     }
-    final DataSource dataSourceElement = dataSourceXML.getDataSource();
-    if (dataSourceElement != null) {
-      for (QueryParameter parameter : dataSourceElement.getParameters()) {
-        if (parameter.getTemporaryTable() != null) {
-          TemporaryTable tt = parameter.getTemporaryTable();
-          if (tt.getMaterializedView() != null) {
-            if (!cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue())) {
-              SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
-            }
+    for (QueryParameter parameter : dataSourceXML.getDataSource().getParameters()) {
+      if (parameter.getTemporaryTable() != null) {
+        TemporaryTable tt = parameter.getTemporaryTable();
+        if (tt.getMaterializedView() != null) {
+          if (!cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue())) {
+            SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
           }
         }
       }
@@ -192,67 +132,62 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (additionalParameters != null) {
       parameters.addAll(additionalParameters);
     }
-    final DataSource dataSourceElement = dataSourceXML.getDataSource();
-    if (dataSourceElement != null) {
-      for (QueryParameter parameter : dataSourceElement.getParameters()) {
-        Object queryParameter = createQueryParameter(parameter);
-        if (parameter.getNamedParameter() != null) {
-          namedParameters.add((String) queryParameter);
-        } else if (parameter.getTemporaryTable() != null) {
-          temporaryTables.add((TemporarySubselectSqlParameter) queryParameter);
-          parameters.add(queryParameter);
-        } else if (parameter.getTemporaryTableGroup() != null) {
-          temporaryTables.addAll((java.util.List<TemporarySubselectSqlParameter>) queryParameter);
-          parameters.addAll((java.util.List<TemporarySubselectSqlParameter>) queryParameter);
-        } else if ((parameter.getDataSourceParametersFactory() != null) || (parameter.getDataSourceFilterFactory() != null)) {
-          try {
-            DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
-            Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), dsf.getFactory(), DbDataSource.class, config.getClass()).newInstance(dataSource, config);
-            if (newInstance != null) {
-              if (newInstance instanceof AbstractDataSourceParametersFactory) {
-                AbstractDataSourceParametersFactory instance = (AbstractDataSourceParametersFactory) newInstance;
-                instance.setDataSourceParametersFactory(dsf);
-                instance.configure();
-                this.filtersMap = instance.getFiltersMap();
-                this.filterPanel = instance.getFilterPanel();
-                this.viewMenuItems.addAll(instance.getViewMenuItems());
-                parameters.addAll(instance.getParameters());
-              }
+    for (QueryParameter parameter : dataSourceXML.getDataSource().getParameters()) {
+      Object queryParameter = createQueryParameter(parameter);
+      if (parameter.getNamedParameter() != null) {
+        namedParameters.add((String) queryParameter);
+      } else if (parameter.getTemporaryTable() != null) {
+        temporaryTables.add((TemporarySubselectSqlParameter) queryParameter);
+        parameters.add(queryParameter);
+      } else if (parameter.getTemporaryTableGroup() != null) {
+        temporaryTables.addAll((java.util.List<TemporarySubselectSqlParameter>) queryParameter);
+        parameters.addAll((java.util.List<TemporarySubselectSqlParameter>) queryParameter);
+      } else if ((parameter.getDataSourceParametersFactory() != null) || (parameter.getDataSourceFilterFactory() != null)) {
+        try {
+          DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
+          Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), dsf.getFactory(), DbDataSource.class, config.getClass()).newInstance(dataSource, config);
+          if (newInstance != null) {
+            if (newInstance instanceof AbstractDataSourceParametersFactory) {
+              AbstractDataSourceParametersFactory instance = (AbstractDataSourceParametersFactory) newInstance;
+              instance.setDataSourceParametersFactory(dsf);
+              instance.configure();
+              this.filtersMap = instance.getFiltersMap();
+              this.filterPanel = instance.getFilterPanel();
+              this.viewMenuItems.addAll(instance.getViewMenuItems());
+              parameters.addAll(instance.getParameters());
             }
-          } catch (Exception ex) {
-            Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, "Can't create " + config.getClass(), ex);
           }
-        } else if (queryParameter != null) {
-          parameters.add(queryParameter);
+        } catch (Exception ex) {
+          Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, "Can't create " + config.getClass(), ex);
         }
+      } else if (queryParameter != null) {
+        parameters.add(queryParameter);
       }
-      SQLOrderByParameter orderByParameter = new SQLOrderByParameter(DB_ROW_SORTER, dataSource);
-
-      if (dataSourceElement.getOrderBy() != null) {
-        orderByParameter.setOrderBy(dataSourceElement.getOrderBy());
-      }
-
-      parameters.add(orderByParameter);
-
-      List<SQLMaterializedView> mvParameters = new ArrayList<SQLMaterializedView>(temporaryTables.size());
-      for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
-        if (temporarySubselectSqlParameter.getSqlMaterializedView() != null) {
-          mvParameters.add(temporarySubselectSqlParameter.getSqlMaterializedView());
-        }
-      }
-
-      for (SQLMaterializedView sqlMaterializedView : mvParameters) {
-        for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
-          if (!sqlMaterializedView.equals(temporarySubselectSqlParameter.getSqlMaterializedView())) {
-            temporarySubselectSqlParameter.addParameter(sqlMaterializedView);
-          }
-        }
-      }
-
-      return parameters;
-    } else {
-      return this.dataSource.getParameters();
     }
+    SQLOrderByParameter orderByParameter = new SQLOrderByParameter(DB_ROW_SORTER, dataSource);
+
+    if (dataSourceXML.getDataSource().getOrderBy()!=null) {
+      orderByParameter.setOrderBy(dataSourceXML.getDataSource().getOrderBy());
+    }
+
+    parameters.add(orderByParameter);
+
+    List<SQLMaterializedView> mvParameters = new ArrayList<SQLMaterializedView>(temporaryTables.size());
+    for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
+      if (temporarySubselectSqlParameter.getSqlMaterializedView() != null) {
+        mvParameters.add(temporarySubselectSqlParameter.getSqlMaterializedView());
+      }
+    }
+
+    for (SQLMaterializedView sqlMaterializedView : mvParameters) {
+      for (TemporarySubselectSqlParameter temporarySubselectSqlParameter : temporaryTables) {
+        if (!sqlMaterializedView.equals(temporarySubselectSqlParameter.getSqlMaterializedView())) {
+          temporarySubselectSqlParameter.addParameter(sqlMaterializedView);
+        }
+      }
+    }
+
+    return parameters;
   }
 
   public List<String> getNamedParameters() {
@@ -267,6 +202,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void resumeDataSource() {
+    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
+
     Boolean resume = null;
     if (creationParameters != null) {
       resume = creationParameters.isResumeAfterCreation();
@@ -281,121 +218,100 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected DbDataSource createDataSource() throws ClassNotFoundException {
-    final DataSource dataSourceElement = dataSourceXML.getDataSource();
-    if (dataSourceElement != null) {
-      CreationParameters creationParameters = dataSourceElement.getCreationParameters();
+    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
 
-      String className = null;
-      String provider = null;
-      if (creationParameters != null) {
-        className = creationParameters.getClassName();
-        provider = creationParameters.getProviderClassName();
-      } else {
-        className = dataSourceElement.getClassName();
-        provider = dataSourceElement.getProviderClassName();
-      }
-      final DbDataSource dataSource = this.dataSource != null ? this.dataSource : (className == null ? new DbDataSource() : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className)));
-      if (provider != null) {
-        dataSource.setProvider(provider);
-      }
+    String className = null;
+    String provider = null;
+    if (creationParameters != null) {
+      className = creationParameters.getClassName();
+      provider = creationParameters.getProviderClassName();
+    } else {
+      className = dataSourceXML.getDataSource().getClassName();
+      provider = dataSourceXML.getDataSource().getProviderClassName();
+    }
+    final DbDataSource dataSource = className == null ? new DbDataSource() : new DbDataSource("", "", (Class<? extends DbDataSourceImpl>) Class.forName(className));
+    if (provider != null) {
+      dataSource.setProvider(provider);
+    }
 
-      Boolean canAddRows = null;
-      Boolean canDeleteRows = null;
-      if (creationParameters != null) {
-        canAddRows = creationParameters.isCanAddRows();
-        canDeleteRows = creationParameters.isCanDeleteRows();
-      } else {
-        canAddRows = dataSourceElement.isCanAddRows();
-        canDeleteRows = dataSourceElement.isCanDeleteRows();
-      }
+    Boolean canAddRows = null;
+    Boolean canDeleteRows = null;
+    if (creationParameters != null) {
+      canAddRows = creationParameters.isCanAddRows();
+      canDeleteRows = creationParameters.isCanDeleteRows();
+    } else {
+      canAddRows = dataSourceXML.getDataSource().isCanAddRows();
+      canDeleteRows = dataSourceXML.getDataSource().isCanDeleteRows();
+    }
+    setCanExportData(dataSourceXML.isCanExportData());
 
-      setCanExportData(dataSourceXML.isCanExportData());
+    dataSource.setCanAddRows(canAddRows == null ? false : canAddRows);
+    dataSource.setCanDeleteRows(canDeleteRows == null ? false : canDeleteRows);
+    dataSource.setCanExportData(isCanExportData());
 
-      dataSource.setCanAddRows(canAddRows == null ? (this.dataSource != null ? this.dataSource.isCanAddRows() : false) : canAddRows);
-      dataSource.setCanDeleteRows(canDeleteRows == null ? (this.dataSource != null ? this.dataSource.isCanDeleteRows() : false) : canDeleteRows);
-
-      dataSource.setCanExportData(isCanExportData());
-
-      if (creationParameters != null) {
-        Sharing sharing = creationParameters.getSharing();
-        if (sharing != null) {
-          switch (sharing) {
-            case SHARING_GLOBAL:
-              dataSource.setSharing(DbDataSource.SHARING_GLOBAL);
-              break;
-            case SHARING_LOCAL:
-              dataSource.setSharing(DbDataSource.SHARING_LOCAL);
-              break;
-            case SHARING_OFF:
-              dataSource.setSharing(DbDataSource.SHARING_OFF);
-              break;
-          }
+    if (creationParameters != null) {
+      Sharing sharing = creationParameters.getSharing();
+      if (sharing != null) {
+        switch (sharing) {
+          case SHARING_GLOBAL:
+            dataSource.setSharing(DbDataSource.SHARING_GLOBAL);
+            break;
+          case SHARING_LOCAL:
+            dataSource.setSharing(DbDataSource.SHARING_LOCAL);
+            break;
+          case SHARING_OFF:
+            dataSource.setSharing(DbDataSource.SHARING_OFF);
+            break;
         }
       }
-      dataSource.setName("DS:FACTORY:" + this.getOpis());
-
-      return dataSource;
-    } else {
-      return this.dataSource;
     }
+    dataSource.setName("DS:FACTORY:" + this.getOpis());
+    return dataSource;
   }
 
   protected void setDataSourceQueuedDelay() {
-    final DataSource dataSourceElement = dataSourceXML.getDataSource();
-    if (dataSourceElement != null) {
-      CreationParameters creationParameters = dataSourceElement.getCreationParameters();
+    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
 
-      Long delay = null;
-      if (creationParameters != null) {
-        delay = creationParameters.getQueuedDelay();
-      } else {
-        delay = dataSourceElement.getQueuedDelay();
-      }
-      if (delay != null) {
-        this.dataSource.setQueuedDelay(delay.longValue());
-      }
+    Long delay = null;
+    if (creationParameters != null) {
+      delay = creationParameters.getQueuedDelay();
+    } else {
+      delay = dataSourceXML.getDataSource().getQueuedDelay();
     }
+    dataSource.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
   }
 
   protected DataSourceLimit createDataSourceLimit() {
-    final DataSource dataSourceElement = dataSourceXML.getDataSource();
-    if (dataSourceElement != null) {
-      CreationParameters creationParameters = dataSourceElement.getCreationParameters();
+    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
 
-      Boolean useLimitParameter = null;
-      if (creationParameters != null) {
-        useLimitParameter = creationParameters.isUseLimitParameter();
-      }
-
-      if (dataSourceElement.getSQL().indexOf(DATA_SOURCE_LIMIT) == -1) {
-        useLimitParameter = Boolean.FALSE;
-      }
-
-      DataSourceLimit dataSourceLimit = null;
-      if (useLimitParameter == null || useLimitParameter.booleanValue()) {
-        dataSourceLimit = new DataSourceLimit(DATA_SOURCE_LIMIT);
-        dataSourceLimit.setValue(" TOP 0 ");
-        dataSourceLimit.addDataSource(dataSource);
-      }
-
-      return dataSourceLimit;
-    } else {
-      return this.dataSourceLimit;
+    Boolean useLimitParameter = null;
+    if (creationParameters != null) {
+      useLimitParameter = creationParameters.isUseLimitParameter();
     }
+
+    if (dataSourceXML.getDataSource().getSQL().indexOf(DATA_SOURCE_LIMIT) == -1) {
+      useLimitParameter = Boolean.FALSE;
+    }
+
+    DataSourceLimit dataSourceLimit = null;
+    if (useLimitParameter == null || useLimitParameter.booleanValue()) {
+      dataSourceLimit = new DataSourceLimit(DATA_SOURCE_LIMIT);
+      dataSourceLimit.setValue(" TOP 0 ");
+      dataSourceLimit.addDataSource(dataSource);
+    } //        dsNaslovPendingSql.setPendingSQL(ReadInputStream.getResourceAsString(getClass(), "sql/PP.Pending.sql", "cp1250"),
+    //                "Ulica", "HisnaStevilka", "PostnaStevilka", "Posta", "Naselje", "TipNaslova_Opis", "PPIzvori_Izvor");
+    return dataSourceLimit;
   }
 
   protected void suspendDataSource() {
-    final DataSource dataSourceElement = dataSourceXML.getDataSource();
-    if (dataSourceElement != null) {
-      CreationParameters creationParameters = dataSourceElement.getCreationParameters();
+    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
 
-      Boolean suspend = null;
-      if (creationParameters != null) {
-        suspend = creationParameters.isSuspend();
-      }
-      if (suspend == null || suspend.booleanValue()) {
-        DataSourceEvent.suspend(dataSource);
-      }
+    Boolean suspend = null;
+    if (creationParameters != null) {
+      suspend = creationParameters.isSuspend();
+    }
+    if (suspend == null || suspend.booleanValue()) {
+      DataSourceEvent.suspend(dataSource);
     }
   }
 
@@ -419,29 +335,25 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected DbTableModel createTableModel() {
-    com.openitech.db.model.DbTableModel tableModel = this.tableModel != null ? this.tableModel : new com.openitech.db.model.DbTableModel();
+    com.openitech.db.model.DbTableModel tableModel = new com.openitech.db.model.DbTableModel();
     final DataModel dataModel = dataSourceXML.getDataModel();
-    if (dataModel != null) {
-      final TableColumns tableColumnsElement = dataModel.getTableColumns();
-      if (tableColumnsElement != null) {
-        List<TableColumnDefinition> tableColumnDefinitions = tableColumnsElement.getTableColumnDefinition();
-        List<String[]> tableColumns = new ArrayList<String[]>();
-        for (TableColumnDefinition tableColumnDefinition : tableColumnDefinitions) {
-          tableColumns.add(tableColumnDefinition.getTableColumnEntry().toArray(new String[tableColumnDefinition.getTableColumnEntry().size()]));
-        }
-        tableModel.setColumns(tableColumns.toArray(new String[tableColumns.size()][]));
-        if (dataModel.getSeparator() != null) {
-          tableModel.setSeparator(dataModel.getSeparator());
-        }
-      }
+    if(dataModel != null){
+    List<TableColumnDefinition> tableColumnDefinitions = dataModel.getTableColumns().getTableColumnDefinition();
+    List<String[]> tableColumns = new ArrayList<String[]>();
+    for (TableColumnDefinition tableColumnDefinition : tableColumnDefinitions) {
+      tableColumns.add(tableColumnDefinition.getTableColumnEntry().toArray(new String[tableColumnDefinition.getTableColumnEntry().size()]));
+    }
+    tableModel.setColumns(tableColumns.toArray(new String[tableColumns.size()][]));
+    if (dataSourceXML.getDataModel().getSeparator() != null) {
+      tableModel.setSeparator(dataSourceXML.getDataModel().getSeparator());
+    }
     }
     tableModel.setDataSource(dataSource);
     return tableModel;
-
   }
 
   protected void createEventColumns() throws SQLException {
-    List<String> eventColumns = dataSourceXML.getDataSource().getEventColumns();
+  List<String> eventColumns = dataSourceXML.getDataSource().getEventColumns();
     if (eventColumns.size() > 0) {
       dataSource.setSafeMode(false);
       dataSource.setQueuedDelay(0);
@@ -454,10 +366,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         DbFieldObserver fieldObserver = new DbFieldObserver();
         fieldObserver.setColumnName(imePolja);
         fieldObserver.setDataSource(dataSource);
-        final FieldValueProxy fieldValueProxy = new FieldValueProxy(imePolja, tipPolja, fieldObserver, dataSource.getObject(imePolja));
-        if (!this.dataEntryValues.contains(fieldValueProxy)) {
-          this.dataEntryValues.add(fieldValueProxy);
-        }
+        this.dataEntryValues.add(new FieldValueProxy(imePolja, tipPolja, fieldObserver, dataSource.getObject(imePolja)));
       }
     }
   }
@@ -477,12 +386,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   protected List<JXTaskPane> createTaskPanes(com.openitech.db.model.xml.config.Workarea dataSourceXML) throws ClassNotFoundException {
     List<JXTaskPane> result = new ArrayList<JXTaskPane>();
     try {
-      final AssociatedTasks associatedTasks = dataSourceXML.getAssociatedTasks();
-      if ((associatedTasks != null) && !associatedTasks.getTaskPanes().isEmpty()) {
-        for (TaskPanes taskPane : associatedTasks.getTaskPanes()) {
+      if ((dataSourceXML.getAssociatedTasks() != null) && !dataSourceXML.getAssociatedTasks().getTaskPanes().isEmpty()) {
+        for (TaskPanes taskPane : dataSourceXML.getAssociatedTasks().getTaskPanes()) {
           Object newInstance = null;
           if (taskPane.getFactory() != null) {
-            newInstance = ClassInstanceFactory.getInstance("wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis(), taskPane.getFactory().getGroovy(), taskPane.getFactory().getClassName(), config.getClass()).newInstance(config);
+            ClassInstanceFactory.getInstance("wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis(), taskPane.getFactory().getGroovy(), taskPane.getFactory().getClassName(), config.getClass()).newInstance(config);
           } else if (taskPane.getTaskList() != null && !taskPane.getTaskList().getTasks().isEmpty()) {
             newInstance = new JXDataSourceTaskPane(config, dataSource);
             ((JXDataSourceTaskPane) newInstance).setTitle(taskPane.getTitle());
@@ -540,23 +448,20 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   private void addListeners() {
     try {
-      final DataSource dataSourceElement = dataSourceXML.getDataSource();
-      if (dataSourceElement != null) {
-        Listeners listeners = dataSourceElement.getListeners();
-        if (listeners != null) {
-          for (Listener listener : listeners.getListener()) {
-            Object value = null;
-            if (listener.getActionListener() != null) {
-              dataSource.addActionListener((ActionListener) (value = ClassInstanceFactory.getInstance(listener.getActionListener(), new Class[]{}).newInstance(new Object[]{})));
-            } else if (listener.getActiveRowChangeListener() != null) {
-              dataSource.addActiveRowChangeListener((ActiveRowChangeListener) (value = ClassInstanceFactory.getInstance(listener.getActiveRowChangeListener(), new Class[]{}).newInstance(new Object[]{})));
-            } else if (listener.getListDataListener() != null) {
-              dataSource.addListDataListener((ListDataListener) (value = ClassInstanceFactory.getInstance(listener.getListDataListener(), new Class[]{}).newInstance(new Object[]{})));
-            }
+      Listeners listeners = dataSourceXML.getDataSource().getListeners();
+      if (listeners!=null) {
+        for (Listener listener : listeners.getListener()) {
+          Object value = null;
+          if (listener.getActionListener() != null) {
+            dataSource.addActionListener((ActionListener) (value = ClassInstanceFactory.getInstance(listener.getActionListener(), new Class[] {}).newInstance(new Object[] {})));
+          } else if (listener.getActiveRowChangeListener() != null) {
+            dataSource.addActiveRowChangeListener((ActiveRowChangeListener) (value = ClassInstanceFactory.getInstance(listener.getActiveRowChangeListener(), new Class[] {}).newInstance(new Object[] {})));
+          } else if (listener.getListDataListener() != null) {
+            dataSource.addListDataListener((ListDataListener) (value = ClassInstanceFactory.getInstance(listener.getListDataListener(), new Class[] {}).newInstance(new Object[] {})));
+          }
 
-            if (value instanceof DataSourceObserver) {
-              ((DataSourceObserver) value).setDataSource(dataSource);
-            }
+          if (value instanceof DataSourceObserver) {
+            ((DataSourceObserver) value).setDataSource(dataSource);
           }
         }
       }
