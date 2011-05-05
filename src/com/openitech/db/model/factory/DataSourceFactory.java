@@ -65,7 +65,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   @Override
   public void configure() throws SQLException, ClassNotFoundException {
-    if (root==null) {
+    if (root == null) {
       root = dataSourceXML;
     }
     Workarea original = dataSourceXML;
@@ -119,7 +119,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           }
           storeCachedTemporaryTables();
 
-          creationParameters  = dataSourceElement.getCreationParameters();
+          creationParameters = dataSourceElement.getCreationParameters();
         } catch (Throwable ex) {
           Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -341,26 +341,37 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void setDataSourceQueuedDelay() {
-    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
+    final DataSource dataSourceElement = dataSourceXML.getDataSource();
+    if (dataSourceElement != null) {
+      CreationParameters creationParameters = dataSourceElement.getCreationParameters();
 
       Long delay = null;
       if (creationParameters != null) {
         delay = creationParameters.getQueuedDelay();
       } else {
-      delay = dataSourceXML.getDataSource().getQueuedDelay();
+        delay = dataSourceElement.getQueuedDelay();
       }
-    dataSource.setQueuedDelay(delay == null ? DbDataSource.DEFAULT_QUEUED_DELAY : delay.longValue());
+      if (delay != null) {
+        this.dataSource.setQueuedDelay(delay.longValue());
+      } else {
+        if (this.dataSource.getQueuedDelay() <= 0) {
+          this.dataSource.setQueuedDelay(DbDataSource.DEFAULT_QUEUED_DELAY);
+        }
       }
+    }
+  }
 
   protected DataSourceLimit createDataSourceLimit() {
-    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
+    final DataSource dataSourceElement = dataSourceXML.getDataSource();
+    if (dataSourceElement != null) {
+      CreationParameters creationParameters = dataSourceElement.getCreationParameters();
 
       Boolean useLimitParameter = null;
       if (creationParameters != null) {
         useLimitParameter = creationParameters.isUseLimitParameter();
       }
 
-    if (dataSourceXML.getDataSource().getSQL().indexOf(DATA_SOURCE_LIMIT) == -1) {
+      if (dataSourceElement.getSQL().indexOf(DATA_SOURCE_LIMIT) == -1) {
         useLimitParameter = Boolean.FALSE;
       }
 
@@ -369,10 +380,13 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         dataSourceLimit = new DataSourceLimit(DATA_SOURCE_LIMIT);
         dataSourceLimit.setValue(" TOP 0 ");
         dataSourceLimit.addDataSource(dataSource);
-    } //        dsNaslovPendingSql.setPendingSQL(ReadInputStream.getResourceAsString(getClass(), "sql/PP.Pending.sql", "cp1250"),
-    //                "Ulica", "HisnaStevilka", "PostnaStevilka", "Posta", "Naselje", "TipNaslova_Opis", "PPIzvori_Izvor");
+      }
+
       return dataSourceLimit;
+    } else {
+      return this.dataSourceLimit;
     }
+  }
 
   protected void suspendDataSource() {
     final DataSource dataSourceElement = dataSourceXML.getDataSource();
