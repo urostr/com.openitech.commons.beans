@@ -573,6 +573,11 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     return (getDataSource() != null) ? getDataSource().getRow() : 0;
   }
 
+  @Override
+  public boolean hasCurrentRow() {
+    return (getDataSource() != null) ? getDataSource().hasCurrentRow() : false;
+  }
+
   public boolean isEnableSorting() {
     return enableSorting;
   }

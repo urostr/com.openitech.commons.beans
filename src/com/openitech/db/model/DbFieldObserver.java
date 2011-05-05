@@ -114,7 +114,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
     if (dataSource != null && getColumnName() != null) {
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       try {
-        if (dataSource.getRowCount() > 0) {
+        if (dataSource.hasCurrentRow()) {
           int type = dataSource.getType(getColumnName());
           switch (type) {
             case Types.BIGINT:
@@ -180,7 +180,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
         try {
-          if (dataSource.getRowCount() > 0) {
+          if (dataSource.hasCurrentRow()) {
             result = dataSource.getObject(columnName);
             if (wasNull = dataSource.wasNull()) {
               result = null;
@@ -219,7 +219,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
         try {
-          if (dataSource.getRowCount() > 0) {
+          if (dataSource.hasCurrentRow()) {
             result = dataSource.getInt(columnName);
             wasNull = dataSource.wasNull();
           }
@@ -245,7 +245,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
         try {
-          if (dataSource.getRowCount() > 0) {
+          if (dataSource.hasCurrentRow()) {
             result = dataSource.getDouble(columnName);
             wasNull = dataSource.wasNull();
           }
@@ -271,7 +271,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
       if (dataSource.isDataLoaded()) {
         try {
-          if (dataSource.getRowCount() > 0) {
+          if (dataSource.hasCurrentRow()) {
             try {
               result = dataSource.getTimestamp(columnName);
               wasNull = dataSource.wasNull();
@@ -296,7 +296,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       if (dataSource.isDataLoaded()) {
         try {
           int type = dataSource.getType(columnName);
-          if (dataSource.getRowCount() > 0) {
+          if (dataSource.hasCurrentRow()) {
             switch (type) {
               case Types.BIGINT:
               case Types.DECIMAL:
@@ -368,7 +368,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
         //dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
         if (dataSource.isDataLoaded()) {
           try {
-            if (dataSource.getRowCount() > 0) {
+            if (dataSource.hasCurrentRow()) {
               result = dataSource.getBytes(columnName);
               wasNull = dataSource.wasNull();
             }
@@ -404,7 +404,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
     if (dataSource != null && columnName != null) {
       activeRowChangeWeakListener.setEnabled(false);
       try {
-        if (dataSource.getRowCount() > 0) {
+        if (dataSource.hasCurrentRow()) {
           int type = dataSource.getType(columnName);
           switch (type) {
             case Types.BIT:
@@ -514,7 +514,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
   public boolean wasNull() {
     return wasNull;
 //    boolean result = true;
-//    if (this.dataSource != null && dataSource.getRowCount() > 0) {
+//    if (this.dataSource != null && dataSource.hasCurrentRow()) {
 //      try {
 //        result = this.dataSource.wasNull();
 //      } catch (SQLException ex) {

@@ -33,7 +33,6 @@ import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.sql.util.SqlUtilities;
-import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
@@ -57,6 +56,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   public static final String DB_ROW_SORTER = "<%DB_ROW_SORTER%>";
   private DataSourceLimit dataSourceLimit;
   private List<String> namedParameters = new ArrayList<String>();
+  private Workarea root;
+  private CreationParameters creationParameters;
 
   public DataSourceFactory(DbDataModel dbDataModel) {
     super(dbDataModel);
@@ -64,58 +65,70 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   @Override
   public void configure() throws SQLException, ClassNotFoundException {
-    Workarea original = dataSourceXML;
-
-    if (dataSourceXML.getExtendWorkarea() != null) {
-      try {
-        List<Integer> workareaIDs = dataSourceXML.getExtendWorkarea().getWorkareaID();
-        for (Integer workAreaId : workareaIDs) {
-          configure("", SqlUtilities.getInstance().getWorkArea(workAreaId));
-        }
-
-      } catch (JAXBException ex) {
-        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-      }
+    if (root==null) {
+      root = dataSourceXML;
     }
-    dataSourceXML = original;
+    Workarea original = dataSourceXML;
+    try {
+      if (dataSourceXML.getExtendWorkarea() != null) {
+        try {
+          List<Integer> workareaIDs = dataSourceXML.getExtendWorkarea().getWorkareaID();
+          for (Integer workAreaId : workareaIDs) {
+            configure(opis, SqlUtilities.getInstance().getWorkArea(workAreaId), config);
+          }
+        } catch (JAXBException ex) {
+          Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        dataSourceXML = original;
+      }
 
-    final DataSource dataSourceElement = dataSourceXML.getDataSource();
+      final DataSource dataSourceElement = dataSourceXML.getDataSource();
 
-    if (dataSourceElement != null) {
-      this.dataSource = createDataSource();
+      if (dataSourceElement != null) {
+        this.dataSource = createDataSource();
 
+        dataSource.lock();
+        try {
+          dataSource.setQueuedDelay(0);
+          this.dataSourceLimit = createDataSourceLimit();
+
+          List<Object> parameters = new ArrayList<Object>();
+          parameters.addAll(dataSource.getParameters());
+          parameters.addAll(createDataSourceParameters());
+
+          dataSource.setParameters(parameters);
+
+          if (dataSourceElement.getCOUNTSQL() != null) {
+            dataSource.setCountSql(getReplacedSql(dataSourceElement.getCOUNTSQL()));
+          }
+          dataSource.setSelectSql(getReplacedSql(dataSourceElement.getSQL()));
+
+          if (dataSourceElement.getQueryHints() != null) {
+            dataSource.setCountSql(dataSource.getCountSql() + '\n' + dataSourceElement.getQueryHints());
+            dataSource.setSelectSql(dataSource.getSelectSql() + '\n' + dataSourceElement.getQueryHints());
+          }
+          addListeners();
+
+          createEventColumns();
+          suspendDataSource();
+          limitDataSource();
+          setDataSourceQueuedDelay();
+
+          if (dataSourceLimit != null) {
+            dataSourceLimit.reloadDataSources();
+          }
+          storeCachedTemporaryTables();
+
+          creationParameters  = dataSourceElement.getCreationParameters();
+        } catch (Throwable ex) {
+          Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+          dataSource.unlock();
+        }
+      }
+      
       dataSource.lock();
       try {
-        dataSource.setQueuedDelay(0);
-        this.dataSourceLimit = createDataSourceLimit();
-
-        List<Object> parameters = new ArrayList<Object>();
-        parameters.addAll(dataSource.getParameters());
-        parameters.addAll(createDataSourceParameters());
-
-        dataSource.setParameters(parameters);
-
-        if (dataSourceElement.getCOUNTSQL() != null) {
-          dataSource.setCountSql(getReplacedSql(dataSourceElement.getCOUNTSQL()));
-        }
-        dataSource.setSelectSql(getReplacedSql(dataSourceElement.getSQL()));
-
-        if (dataSourceElement.getQueryHints() != null) {
-          dataSource.setCountSql(dataSource.getCountSql() + '\n' + dataSourceElement.getQueryHints());
-          dataSource.setSelectSql(dataSource.getSelectSql() + '\n' + dataSourceElement.getQueryHints());
-        }
-        addListeners();
-
-        createEventColumns();
-        suspendDataSource();
-        limitDataSource();
-        setDataSourceQueuedDelay();
-
-        if (dataSourceLimit != null) {
-          dataSourceLimit.reloadDataSources();
-        }
-        storeCachedTemporaryTables();
-
         this.tableModel = createTableModel();
 
 
@@ -130,22 +143,25 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       } catch (Throwable ex) {
         Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
       } finally {
-        resumeDataSource();
         dataSource.unlock();
       }
-    }
-    if (dataSourceXML.getIncludeWorkarea() != null) {
-      try {
-        List<Integer> workareaIDs = dataSourceXML.getIncludeWorkarea().getWorkareaID();
-        for (Integer workAreaId : workareaIDs) {
-          configure("", SqlUtilities.getInstance().getWorkArea(workAreaId));
-        }
+      if (dataSourceXML.getIncludeWorkarea() != null) {
+        try {
+          List<Integer> workareaIDs = dataSourceXML.getIncludeWorkarea().getWorkareaID();
+          for (Integer workAreaId : workareaIDs) {
+            configure(opis, SqlUtilities.getInstance().getWorkArea(workAreaId), config);
+          }
 
-      } catch (JAXBException ex) {
-        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (JAXBException ex) {
+          Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      }
+    } finally {
+      dataSourceXML = original;
+      if (root.equals(dataSourceXML)) {
+        resumeDataSource();
       }
     }
-
   }
 
   protected void storeCachedTemporaryTables() {
@@ -251,8 +267,6 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void resumeDataSource() {
-    CreationParameters creationParameters = dataSourceXML.getDataSource().getCreationParameters();
-
     Boolean resume = null;
     if (creationParameters != null) {
       resume = creationParameters.isResumeAfterCreation();
@@ -468,7 +482,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         for (TaskPanes taskPane : associatedTasks.getTaskPanes()) {
           Object newInstance = null;
           if (taskPane.getFactory() != null) {
-            ClassInstanceFactory.getInstance("wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis(), taskPane.getFactory().getGroovy(), taskPane.getFactory().getClassName(), config.getClass()).newInstance(config);
+            newInstance = ClassInstanceFactory.getInstance("wa" + (taskPane.getTitle() == null ? "" : taskPane.getTitle()) + "_" + System.currentTimeMillis(), taskPane.getFactory().getGroovy(), taskPane.getFactory().getClassName(), config.getClass()).newInstance(config);
           } else if (taskPane.getTaskList() != null && !taskPane.getTaskList().getTasks().isEmpty()) {
             newInstance = new JXDataSourceTaskPane(config, dataSource);
             ((JXDataSourceTaskPane) newInstance).setTitle(taskPane.getTitle());

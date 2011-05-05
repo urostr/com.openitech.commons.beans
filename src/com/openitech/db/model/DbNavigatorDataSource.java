@@ -238,6 +238,8 @@ public interface DbNavigatorDataSource {
 
   public int getRowCount();
 
+  public boolean hasCurrentRow();
+
   /**
    * Adds a PropertyChangeListener to the listener list. The listener is
    * registered for all bound properties of this class, including the

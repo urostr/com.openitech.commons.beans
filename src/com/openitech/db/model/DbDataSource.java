@@ -3162,6 +3162,15 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   @Override
+  public boolean hasCurrentRow() {
+    try {
+      return getRow()>0;
+    } catch (SQLException ex) {
+      return false;
+    }
+  }
+
+  @Override
   public boolean lock() {
     return lock(true);
   }
