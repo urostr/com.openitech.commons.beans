@@ -90,6 +90,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
 
     dbDataSourceFilter = new com.openitech.db.filters.JPDbDataSourceFilter();
 
+    setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
     setLayout(new java.awt.GridBagLayout());
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
