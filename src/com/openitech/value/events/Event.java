@@ -25,7 +25,7 @@ import java.util.logging.Logger;
  *
  * @author uros
  */
-public class Event extends EventType {
+public class Event extends EventType implements Cloneable {
 
   public static final Field EVENT_SOURCE = new Field("EVENT_SOURCE", java.sql.Types.INTEGER);
   public static final Field EVENT_DATE = new Field("EVENT_DATE", java.sql.Types.DATE);
@@ -500,6 +500,50 @@ public class Event extends EventType {
    */
   public void setVersionParent(Event versionParent) {
     this.versionParent = versionParent;
+  }
+
+  @Override
+  public Event clone() {
+    Event result = new Event(sifrant, sifra);
+    result.setDatum(datum);
+    result.setEventSource(eventSource);
+
+    java.util.Map<Field, java.util.List<FieldValue>> eventValuesCopy = new java.util.LinkedHashMap<Field, java.util.List<FieldValue>>();
+    for (Field field : this.eventValues.keySet()) {
+      List<FieldValue> fieldValues = this.eventValues.get(field);
+      List<FieldValue> fieldValuesCopy = new ArrayList<FieldValue>(fieldValues.size());
+      for (FieldValue fieldValue : fieldValues) {
+        fieldValuesCopy.add(fieldValue.clone());
+      }
+      eventValuesCopy.put(new Field(field), fieldValuesCopy);
+    }
+
+    result.setEventValues(eventValuesCopy);
+    result.setId(id);
+    result.setOperation(operation);
+    result.setOpomba(opomba);
+    result.setPreparedFields(preparedFields);
+    Field[] primaryKeyCopy = null;
+    if(this.primaryKey != null){
+      primaryKeyCopy = new Field[this.primaryKey.length];
+      for (int i = 0; i < this.primaryKey.length; i++) {
+        Field field = this.primaryKey[i];
+        primaryKeyCopy[i] = new Field(field);
+      }
+    }
+    result.setPrimaryKey(primaryKeyCopy);
+    result.setVeljavnost(veljavnost);
+    result.setVersionParent(versionParent);
+    result.setVersioned(versioned);
+    if (this.updateEventFields != null) {
+      List<UpdateEventFields> updateEventFieldsesCopy = new ArrayList<UpdateEventFields>(this.updateEventFields);
+      result.updateEventFields = updateEventFieldsesCopy;
+    }
+    for (Event child : getChildren()) {
+      result.getChildren().add(child.clone());
+    }
+
+    return result;
   }
 
   public static enum EventOperation {

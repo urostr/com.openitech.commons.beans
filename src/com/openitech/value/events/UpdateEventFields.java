@@ -9,6 +9,9 @@ import java.sql.SQLException;
 
 /**
  *
+ * Se klièe iz sqlUtilities pred storeEvent()<b/>
+ * Return value je nepomemben
+ *
  * @author domenbasic
  */
 public interface UpdateEventFields {
