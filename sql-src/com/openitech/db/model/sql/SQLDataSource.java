@@ -1308,7 +1308,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public boolean absolute(int row) throws SQLException {
     if (loadData()) {
-      if (rowUpdated()) {
+      if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -1582,7 +1582,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public boolean relative(int rows) throws SQLException {
     if (loadData()) {
-      if (rowUpdated()) {
+     if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -2515,7 +2515,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public boolean first() throws SQLException {
     if (loadData()) {
-      if (rowUpdated()) {
+      if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -2822,7 +2822,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public void beforeFirst() throws SQLException {
     if (loadData()) {
-      if (rowUpdated()) {
+      if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -2851,7 +2851,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public void afterLast() throws SQLException {
     if (loadData()) {
-      if (rowUpdated()) {
+      if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -3106,7 +3106,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public boolean last() throws SQLException {
     if (loadData()) {
-      if (rowUpdated()) {
+      if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -3137,7 +3137,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public void moveToCurrentRow() throws SQLException {
     if (loadData()) {
-      if (rowUpdated()) {
+      if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -3181,7 +3181,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
     //TODO isreadOnly()?  zakaj ne uporabljamo moveToInsertRow() od resultset?
     if (owner.isCanAddRows()) {
       if (loadData()) {
-        if (rowUpdated()) {
+        if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
           if (shouldSaveChanges()) {
             updateRow();
           } else {
@@ -3236,7 +3236,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public boolean next() throws SQLException {
     if (loadData()) {
-      if (rowUpdated()) {
+      if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -3273,7 +3273,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   public boolean previous() throws SQLException {
     if (loadData()) {
       if (rowUpdated()) {
-        if (shouldSaveChanges()) {
+        if (!owner.isDisableClearChangesOnMove() && rowUpdated()) {
           updateRow();
         } else {
           cancelRowUpdates();
