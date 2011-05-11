@@ -4737,14 +4737,14 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   public void loadData(DbDataSource dataSource, int oldRow) {
     implementation.loadData(dataSource.implementation, oldRow);
   }
-  private boolean disableClearChangesOnMove = false;
+  private boolean saveChangesOnMove = true;
 
-  public void setDisableClearChangesOnMove(boolean disable) {
-    disableClearChangesOnMove = disable;
+  public void setSaveChangesOnMove(boolean saveChangesOnMove) {
+    this.saveChangesOnMove = saveChangesOnMove;
   }
 
-  public boolean isDisableClearChangesOnMove() {
-    return disableClearChangesOnMove;
+  public boolean isSaveChangesOnMove() {
+    return saveChangesOnMove;
   }
 
   public static class SqlParameter<T> {
