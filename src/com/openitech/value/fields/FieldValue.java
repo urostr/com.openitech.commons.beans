@@ -5,7 +5,7 @@ import com.openitech.util.Equals;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class FieldValue extends Field {
+public class FieldValue extends Field implements Cloneable{
 
   public FieldValue(Field field) {
     this(field.idPolja, field.name, field.type, field.fieldIndex, null);
@@ -124,5 +124,16 @@ public class FieldValue extends Field {
   @Override
   public String toString() {
     return name + ":" + fieldIndex + ":" + type + ":" + ValueType.getType(type) + (lookupType != null ? (":" + lookupType.toString()) : "") + ":" + value;
+  }
+
+  @Override
+  public FieldValue clone() {
+    FieldValue result = new FieldValue(name, type, fieldIndex, value);
+    result.setLookupType(lookupType);
+    result.setLogAlways(logAlways);
+    result.setIdPolja(idPolja);
+    result.setOpis(opis);
+    result.setValueId(valueId);
+    return result;
   }
 }
