@@ -239,8 +239,6 @@
               END AS [FieldLayout],
 
               CASE
-                WHEN SifrantiPolja.[Persisted] = 0
-                THEN 1
                 WHEN ActivityEventsPolja.[ReadOnly] IS NOT NULL
                 THEN ActivityEventsPolja.[ReadOnly]
                 ELSE SifrantiPolja.[ReadOnly]
