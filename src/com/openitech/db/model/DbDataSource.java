@@ -3164,7 +3164,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   @Override
   public boolean hasCurrentRow() {
     try {
-      return getRow()>0;
+      return getRow() > 0;
     } catch (SQLException ex) {
       return false;
     }
@@ -4736,6 +4736,15 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
 
   public void loadData(DbDataSource dataSource, int oldRow) {
     implementation.loadData(dataSource.implementation, oldRow);
+  }
+  private boolean disableClearChangesOnMove = false;
+
+  public void setDisableClearChangesOnMove(boolean disable) {
+    disableClearChangesOnMove = disable;
+  }
+
+  public boolean isDisableClearChangesOnMove() {
+    return disableClearChangesOnMove;
   }
 
   public static class SqlParameter<T> {
