@@ -333,7 +333,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         //seznam verzij, ki jih bo potrebno updejtat
         Map<VersionType, List<EventPK>> updateEventVersions = new HashMap<VersionType, List<EventPK>>();
 
-        //cez vse shranjene EventId-je, vkljuèno s starimi
+        //cez vse shranjene EventId-je, vkljuËno s starimi
         for (EventPK eventPK : eventPKs) {
           if (eventPK.getOldEventId() != null) {
             List<VersionType> versionTypes = versionTypesMap.get(eventPK.getOldEventId());//findVersionTypes(eventPK.getOldEventId());
@@ -432,7 +432,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       insertEventVersion.clearParameters();
       insertEventVersion.setLong(param++, versionId);
       insertEventVersion.setLong(param++, eventID);
-      System.out.println("versionId = " + versionId + ", eventId = " + eventID);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("versionId = " + versionId + ", eventId = " + eventID);
       insertEventVersion.executeUpdate();
     }
   }
@@ -578,7 +578,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     if (eventObjects.containsKey(key)) {
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("Caching:" + key);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Caching:" + key);
       }
       final Connection txConnection = ConnectionManager.getInstance().getTxConnection();
 
@@ -674,7 +674,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           boolean insert = (event.getId() == null) || (event.getId() == -1) || event.isVersioned();
 
           if (insert) {
-//        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("event:" + event.getSifrant() + "-" + event.getSifra() + ":inserting");
 
             if (event.isVersioned() && (oldEvent != null)) {
               //updataj stari event
@@ -738,14 +738,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
               if (success) {
                 events_ID = getLastIdentity();
               } else {
-                throw new SQLException("Neuspešno dodajanje dogodka!");
+                throw new SQLException("Neuspeöno dodajanje dogodka!");
               }
             }
 
 
           } else {
             events_ID = event.getId();
-//        System.out.println("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
             synchronized (updateEvents) {
               param = 1;
               updateEvents.clearParameters();
@@ -1809,7 +1809,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           insert_eventPK_versions.setInt(param++, idSifranta);
           insert_eventPK_versions.setString(param++, idSifre);
           insert_eventPK_versions.setString(param++, primaryKey);
-          System.out.println(eventId + "," + versionId + "," + idSifranta + "," + idSifre + "," + primaryKey);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(eventId + "," + versionId + "," + idSifranta + "," + idSifre + "," + primaryKey);
           success = success && insert_eventPK_versions.executeUpdate() > 0;
         }
       }
@@ -2510,8 +2510,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
           for (String sql : getCreateTableSqls()) {
             String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
             if (DbDataSource.DUMP_SQL) {
-              System.out.println(createSQL + ";");
-              System.out.println("-- -- -- --");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(createSQL + ";");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("-- -- -- --");
             }
             statement.execute(createSQL);
           }
@@ -2544,15 +2544,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
 
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("############## empty");
-              System.out.println(this.qEmptyTable);
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## empty");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qEmptyTable);
             }
             int rowsDeleted = 0;
             for (PreparedStatement preparedStatement : psEmptyTable) {
               rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
             }
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("Rows deleted:" + rowsDeleted);
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows deleted:" + rowsDeleted);
             }
           }
 
@@ -2570,10 +2570,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           if (DbDataSource.DUMP_SQL) {
-            System.out.println("############## fill");
-            System.out.println(this.qFillTable);
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## fill");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qFillTable);
           }
-          System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
           if (getCleanTableSqls() != null) {
             List<String> queries = new ArrayList<String>(getCleanTableSqls().length);
             for (String sql : getCleanTableSqls()) {
@@ -2596,9 +2596,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
 
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("############## cleanup/update");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## cleanup/update");
               for (String string : queries) {
-                System.out.println(string);
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
               }
             }
             int rowsAffected = 0;
@@ -2606,15 +2606,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
               rowsAffected += SQLDataSource.executeUpdate(preparedStatement, qparams);
             }
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("Rows cleaned/updated:" + rowsAffected);
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows cleaned/updated:" + rowsAffected);
             }
           }
           if ((sqlMaterializedView != null) && (sqlMaterializedView.getSetViewVersionSql() != null)) {
             SQLDataSource.execute(connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.getSetViewVersionSql(), qparams)), qparams);
           }
           if (DbDataSource.DUMP_SQL) {
-            System.out.println("cached:event:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
-            System.out.println("##############");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("cached:event:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
           }
 
 
@@ -3094,7 +3094,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           ((com.openitech.sql.rowset.CachedRowSetImpl) rs).populate(crsAllGeneratedFields, rows);
 
           long end = System.currentTimeMillis();
-          System.out.println("getGeneratedFields::" + (end - start) + " ms.");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("getGeneratedFields::" + (end - start) + " ms.");
 
           return rs;
         } else {
@@ -3124,7 +3124,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             rs_generatedFields.close();
           }
           long end = System.currentTimeMillis();
-          System.out.println("getGeneratedFields::" + (end - start) + " ms.");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("getGeneratedFields::" + (end - start) + " ms.");
 
 
           return rs;
@@ -3204,7 +3204,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public FieldValue getNextIdentity(Field field, Object initValue) throws SQLException {
     try {
-      //ta motoda mora imeti lock, èeprav se zaenkrat naj nebi klicala iz veè threadov
+      //ta motoda mora imeti lock, Ëeprav se zaenkrat naj nebi klicala iz veË threadov
       lock.acquire();
 
       if (field.getFieldIndex() < 1) {

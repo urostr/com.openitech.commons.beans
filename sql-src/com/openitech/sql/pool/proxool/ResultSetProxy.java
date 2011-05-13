@@ -144,7 +144,7 @@ public class ResultSetProxy implements ResultSet {
         target.getWarnings();
         resultSet.getWarnings();
       } catch (Throwable ex) {
-        System.out.println(getClass() + ":recreating result set:cause [" + ex.getMessage() + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":recreating result set:cause [" + ex.getMessage() + "]");
         resultSet = null;
         create = true;
       }
@@ -180,7 +180,7 @@ public class ResultSetProxy implements ResultSet {
           }
         }
       } catch (InvocationTargetException err) {
-        System.out.println(getClass() + ":failed to recreate statement:cause [" + err.getMessage() + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":failed to recreate statement:cause [" + err.getMessage() + "]");
         throw (err.getCause() instanceof SQLException) ? (SQLException) err.getCause() : new SQLException(err);
       }
 
@@ -254,7 +254,7 @@ public class ResultSetProxy implements ResultSet {
         Logger.getLogger(StatementProxy.class.getName()).finest(invocation.getMethod().getName() + "=" + result);
         return result;
       } catch (Throwable err) {
-        System.out.println(getClass().getName() + ":failed to invoke [" + invocation.method.getName() + "]:reason:" + err.getMessage());
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass().getName() + ":failed to invoke [" + invocation.method.getName() + "]:reason:" + err.getMessage());
         boolean problematic = false;
         try {
           target.testStatement();
@@ -268,7 +268,7 @@ public class ResultSetProxy implements ResultSet {
           problematic = true;
         }
         if (problematic&&(trys<PooledConnection.RETRYS_LIMIT)) {
-          System.out.println(getClass() + ":retrying:" + (trys++) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":retrying:" + (trys++) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
         } else {
           if (!(err instanceof SQLException) &&
                   (err.getCause() instanceof SQLException)) {

@@ -139,7 +139,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
           FieldValue... fieldValues) throws SQLException {
     synchronized (statement) {
       statement.clearParameters();
-      System.out.println("Setting parameters");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Setting parameters");
       for (int pos = 1; pos <= fieldValues.length; pos++) {
         FieldValue fieldValue = fieldValues[pos - 1];
         final String fieldName = fieldValue.getName();
@@ -148,7 +148,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
         final boolean wasNull = fieldValue.isNull();
 
 
-        System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
         if (wasNull) {
           statement.setNull(pos, type);
         } else {
@@ -215,7 +215,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
           FieldValue... fieldValues) throws SQLException {
     synchronized (statement) {
       statement.clearParameters();
-      System.out.println("-- Setting parameters");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("-- Setting parameters");
       for (int pos = 1; pos <= fieldValues.length; pos++) {
         FieldValue fieldValue = fieldValues[pos - 1];
         final String fieldName = fieldValue.getName();
@@ -224,7 +224,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
         final boolean wasNull = fieldValue.isNull();
 
 
-        System.out.println("--" + pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--" + pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
         if (wasNull) {
           statement.setNull(pos, type);
         } else {
@@ -278,7 +278,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
           FieldValue... fieldValues) throws SQLException {
     synchronized (statement) {
       statement.clearParameters();
-      System.out.println("Setting parameters");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Setting parameters");
       for (int pos = 1; pos <= fieldValues.length; pos++) {
         FieldValue fieldValue = fieldValues[pos - 1];
         final String fieldName = fieldValue.getName();
@@ -287,7 +287,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
         final boolean wasNull = fieldValue.isNull();
 
 
-        System.out.println(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(pos + ":" + fieldName + ":" + type + ":" + (wasNull ? "null" : value.toString()));
         if (wasNull) {
           statement.setNull(pos, type);
         } else {

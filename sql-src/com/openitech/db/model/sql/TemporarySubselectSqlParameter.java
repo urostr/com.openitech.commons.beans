@@ -310,8 +310,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         boolean result = true;
 
         if (DbDataSource.DUMP_SQL) {
-          System.out.println("##############");
-          System.out.println(this.qIsTableDataValidSql);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qIsTableDataValidSql);
         }
         for (PreparedStatement preparedStatement : psIsTableDataValidSql) {
           ResultSet executeQuery = SQLDataSource.executeQuery(preparedStatement, parameters);
@@ -327,8 +327,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           }
         }
         if (DbDataSource.DUMP_SQL) {
-          System.out.println("tt:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
-          System.out.println("##############");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("tt:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
         }
         return result;
       } catch (SQLException ex) {
@@ -398,8 +398,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             for (String sql : createTableSqls) {
               String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
               if (DbDataSource.DUMP_SQL) {
-                System.out.println(createSQL + ";");
-                System.out.println("-- -- -- --");
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(createSQL + ";");
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("-- -- -- --");
               }
               try {
                 statement.execute(createSQL);
@@ -477,15 +477,15 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 }
 
                 if (DbDataSource.DUMP_SQL) {
-                  System.out.println("############## empty");
-                  System.out.println(this.qEmptyTable);
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## empty");
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qEmptyTable);
                 }
                 int rowsDeleted = 0;
                 for (PreparedStatement preparedStatement : psEmptyTable) {
                   rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
                 }
                 if (DbDataSource.DUMP_SQL) {
-                  System.out.println("Rows deleted:" + rowsDeleted);
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows deleted:" + rowsDeleted);
                 }
               }
               if (fillTableSql != null) {
@@ -503,11 +503,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 }
 
                 if (DbDataSource.DUMP_SQL) {
-                  System.out.println("############## fill");
-                  System.out.println(this.qFillTable);
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## fill");
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qFillTable);
                 }
                 try {
-                  System.out.println("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
                 } catch (SQLException ex1) {
                   Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
                   throw new SQLException(ex1);
@@ -535,9 +535,9 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 }
 
                 if (DbDataSource.DUMP_SQL) {
-                  System.out.println("############## cleanup/update");
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## cleanup/update");
                   for (String string : queries) {
-                    System.out.println(string);
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
                   }
                 }
                 int rowsAffected = 0;
@@ -545,7 +545,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   rowsAffected += SQLDataSource.executeUpdate(preparedStatement, qparams);
                 }
                 if (DbDataSource.DUMP_SQL) {
-                  System.out.println("Rows cleaned/updated:" + rowsAffected);
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows cleaned/updated:" + rowsAffected);
                 }
               }
               if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
@@ -557,8 +557,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 }
               }
               if (DbDataSource.DUMP_SQL) {
-                System.out.println("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
-                System.out.println("##############");
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
               }
 
 

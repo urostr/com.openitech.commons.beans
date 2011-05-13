@@ -211,8 +211,8 @@ public class SQLCache implements Serializable {
           Connection connection = (this.connection == null) ? ConnectionManager.getInstance().getTemporaryConnection() : this.connection;
           try {
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("Reloading cached entry ####################);");
-              System.out.println(query);
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Reloading cached entry ####################);");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(query);
             }
             long start = System.currentTimeMillis();
             final ResultSet rs = SQLDataSource.executeQuery(getStatement(connection), parameters);
@@ -222,14 +222,14 @@ public class SQLCache implements Serializable {
               rs.close();
             }
             long end = System.currentTimeMillis();
-            System.out.println("reloadEntry::" + (end - start) + " ms.");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("reloadEntry::" + (end - start) + " ms.");
           } finally {
             if (this.connection == null) {
               connection.close();
             }
           }
           timestamp = System.currentTimeMillis();
-          System.out.println("Reloaded cache entry ###########################");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Reloaded cache entry ###########################");
         } finally {
           lock.release();
         }

@@ -18,6 +18,8 @@ import javax.sql.rowset.spi.*;
 import javax.sql.rowset.serial.*;
 import com.openitech.sql.rowset.internal.*;
 import com.openitech.sql.rowset.providers.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The standard implementation of the <code>CachedRowSet</code> interface.
@@ -965,7 +967,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     } catch (SyncProviderException spe) {
       throw spe;
     } catch (SQLException e) {
-      e.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
       throw new SyncProviderException(e.getMessage());
     } catch (SecurityException e) {
       throw new SyncProviderException(e.getMessage());
@@ -3738,7 +3740,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
    *         String name = crs.getString(1);
    *         int age = crs.getInt(2);
    *         short ssn = crs.getShort(3);
-   *         System.out.println(name + "   " + age + "   " + ssn);
+   *         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(name + "   " + age + "   " + ssn);
    *     }
    *
    * </code> </PRE>
@@ -5867,7 +5869,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     checkCursor();
 
     if (RowSetMD.getColumnType(columnIndex) != java.sql.Types.BLOB) {
-      System.out.println(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.type").toString(), RowSetMD.getColumnType(columnIndex)));
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.type").toString(), RowSetMD.getColumnType(columnIndex)));
       throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
     }
 
@@ -5907,7 +5909,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     checkCursor();
 
     if (RowSetMD.getColumnType(columnIndex) != java.sql.Types.CLOB) {
-      System.out.println(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.type").toString(), RowSetMD.getColumnType(columnIndex)));
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.type").toString(), RowSetMD.getColumnType(columnIndex)));
       throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
     }
 

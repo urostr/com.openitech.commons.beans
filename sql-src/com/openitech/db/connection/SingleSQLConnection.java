@@ -112,7 +112,7 @@ public class SingleSQLConnection implements DbConnection {
           connection = sqlConnectionInitializer.initConnection();
         }
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get a connection to the database", ex);
         connection = null;
       }
 

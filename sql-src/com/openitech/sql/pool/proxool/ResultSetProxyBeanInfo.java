@@ -6,6 +6,8 @@
 package com.openitech.sql.pool.proxool;
 
 import java.beans.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -119,7 +121,7 @@ public class ResultSetProxyBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_warnings] = new PropertyDescriptor ( "warnings", com.openitech.sql.pool.proxool.ResultSetProxy.class, "getWarnings", null ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Properties
 
     // Here you can add code for customizing the properties array.

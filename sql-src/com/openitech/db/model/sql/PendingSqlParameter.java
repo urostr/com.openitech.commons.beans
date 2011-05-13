@@ -277,13 +277,13 @@ public class PendingSqlParameter extends DbDataSource.SubstSqlParameter implemen
 
        long timer = System.currentTimeMillis();
      if (DbDataSource.DUMP_SQL) {
-        System.out.println("##############");
-        System.out.println(deferredSQL);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(deferredSQL);
       }
       ResultSet executeQuery = DbDataSource.executeQuery(deferredStatement, parameters);
         if (DbDataSource.DUMP_SQL) {
-          System.out.println("pending:deffered:" + (System.currentTimeMillis() - timer) + "ms");
-          System.out.println("##############");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("pending:deffered:" + (System.currentTimeMillis() - timer) + "ms");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
         }
       try {
 

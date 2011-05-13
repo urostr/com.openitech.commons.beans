@@ -11,7 +11,6 @@ import java.sql.*;
 import javax.sql.*;
 import javax.naming.*;
 import java.io.*;
-import java.lang.reflect.*;
 
 import com.openitech.sql.rowset.*;
 import javax.sql.rowset.*;

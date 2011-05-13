@@ -180,7 +180,7 @@ public class ProxoolSQLConnection implements DbConnection {
                         replaceAll("\\{file.separator\\}", fileSeparator).
                         replaceAll("\\{path.separator\\}", System.getProperty("path.separator"));
                 String exec = MessageFormat.format(dbStartupNetCommand, settings.getProperty("db.jdbc.net.port"));
-                Logger.getLogger(Settings.LOGGER).info("Executing:\n" + exec);
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Executing:\n" + exec);
                 databaseProcess = Runtime.getRuntime().exec(exec);
                 Thread.currentThread().sleep(3000);
               }
@@ -217,14 +217,14 @@ public class ProxoolSQLConnection implements DbConnection {
                 try {
                   Runtime.getRuntime().addShutdownHook((Thread) Class.forName(settings.getProperty(ConnectionManager.DB_SHUTDOWN_HOOK), true, this.getClass().getClassLoader()).newInstance());
                 } catch (Exception ex) {
-                  Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't attach a shutdown hook", ex);
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't attach a shutdown hook", ex);
                 }
               }
             } catch (SQLException ex) {
-              Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't get a connection to '" + DB_URL + "' [" + ex.getMessage() + "]");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't get a connection to '" + DB_URL + "' [" + ex.getMessage() + "]");
               result = null;
               if (!settings.containsKey(ConnectionManager.DB_DRIVER_EMBEDDED)) {
-                throw (SQLException) (new SQLException("Neuspešna prijava na bazo").initCause(ex));
+                throw (SQLException) (new SQLException("Neuspeöna prijava na bazo").initCause(ex));
               }
             }
           }
@@ -260,7 +260,7 @@ public class ProxoolSQLConnection implements DbConnection {
               try {
                 Runtime.getRuntime().addShutdownHook((Thread) Class.forName(settings.getProperty(ConnectionManager.DB_SHUTDOWN_HOOK), true, this.getClass().getClassLoader()).newInstance());
               } catch (Exception ex) {
-                Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't attach a shutdown hook", ex);
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't attach a shutdown hook", ex);
               }
             }
           }
@@ -271,7 +271,7 @@ public class ProxoolSQLConnection implements DbConnection {
           connection = result;
         }
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get a connection to the database", ex);
         connection = null;
       }
 

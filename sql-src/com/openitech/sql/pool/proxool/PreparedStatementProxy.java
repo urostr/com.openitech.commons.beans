@@ -87,7 +87,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
         proxy.connection.getWarnings();
         statement.getWarnings();
       } catch (Throwable ex) {
-        System.out.println(getClass() + ":recreating statement:cause [" + ex.getMessage() + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":recreating statement:cause [" + ex.getMessage() + "]");
         statement = null;
         create = true;
       }
@@ -127,7 +127,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
               statement.addBatch(sql);
             }
           } catch (InvocationTargetException ex) {
-            System.out.println(getClass() + ":failed to recreate statement:cause [" + ex.getMessage() + "]");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":failed to recreate statement:cause [" + ex.getMessage() + "]");
             throw (ex.getCause() instanceof SQLException) ? (SQLException) ex.getCause() : new SQLException(ex);
           }
         }

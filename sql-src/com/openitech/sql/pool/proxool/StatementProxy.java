@@ -84,7 +84,7 @@ public class StatementProxy implements java.sql.Statement {
         proxy.connection.getWarnings();
         statement.getWarnings();
       } catch (Throwable ex) {
-        System.out.println(getClass() + ":recreating statement:cause [" + ex.getMessage() + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":recreating statement:cause [" + ex.getMessage() + "]");
         statement = null;
         create = true;
       }
@@ -111,7 +111,7 @@ public class StatementProxy implements java.sql.Statement {
               element.invoke(statement);
             }
           } catch (InvocationTargetException err) {
-            System.out.println(getClass() + ":failed to recreate statement:cause [" + err.getMessage() + "]");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":failed to recreate statement:cause [" + err.getMessage() + "]");
             throw (err.getCause() instanceof SQLException) ? (SQLException) err.getCause() : new SQLException(err);
           }
           for (String sql : batch) {
@@ -188,7 +188,7 @@ public class StatementProxy implements java.sql.Statement {
       try {
         return invocation.invoke(getStatement(invocation));
       } catch (Throwable err) {
-        System.out.println(getClass().getName() + ":failed to invoke [" + invocation.method.getName() + "]:reason:" + err.getMessage());
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass().getName() + ":failed to invoke [" + invocation.method.getName() + "]:reason:" + err.getMessage());
         boolean problematic = false;
         try {
           testStatement();
@@ -204,10 +204,10 @@ public class StatementProxy implements java.sql.Statement {
 //          if (trys < 2) {
 //            statement = null;
 //          }
-//          System.out.println(getClass() + ":retrying:" + (3 - trys) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
+//          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":retrying:" + (3 - trys) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
 //        } else {
         if (problematic&&(trys<PooledConnection.RETRYS_LIMIT)) {
-          System.out.println(getClass() + ":retrying:" + (trys++) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass() + ":retrying:" + (trys++) + ":" + invocation.getMethod().getName() + ":cause [" + err.getMessage() + "]");
         } else {
           if (!(err instanceof SQLException) &&
                   (err.getCause() instanceof SQLException)) {

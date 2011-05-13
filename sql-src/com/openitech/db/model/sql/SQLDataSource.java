@@ -219,7 +219,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
    */
   @Override
   public void updateFloat(String columnName, float x) throws SQLException {
-    //TODO float ni natanèen 7.45f se v bazo zapiše 7.449999809265137
+    //TODO float ni natan?en 7.45f se v bazo zapi?e 7.449999809265137
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
     } else {
@@ -513,7 +513,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
    */
   @Override
   public float getFloat(String columnName) throws SQLException {
-    //TODO nenatanèno èe roèno vneseš v bazo. èe gre pisanje in branje preko programa potem je uredu
+    //TODO nenatan?no ?e ro?no vnese? v bazo. ?e gre pisanje in branje preko programa potem je uredu
     if (checkedLoadData()) {
       Number value = getStoredValue(getRow(), columnName, 0f, Number.class);
       return value == null ? null : value.floatValue();
@@ -908,7 +908,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
    */
   @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
-    //TODO ne dela napaèno castanje. Oèitno èe hoèem date potem dela
+    //TODO ne dela napa?no castanje. O?itno ?e ho?em date potem dela
     if (checkedLoadData()) {
       return getStoredValue(getRow(), columnName, null, Timestamp.class);
     } else {
@@ -2290,7 +2290,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           throw (SQLNotificationException) err.getCause();
         }
       } else {
-        err.printStackTrace();
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
       }
       storeUpdates = false;
     }
@@ -2565,16 +2565,16 @@ public class SQLDataSource extends AbstractDataSourceImpl {
     try {
       Connection connection = getConnection();
       try {
-        Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedSelectSql + "'");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).fine("Executing '" + preparedSelectSql + "'");
         if (DbDataSource.DUMP_SQL) {
-          System.out.println("##############");
-          System.out.println(preparedSelectSql);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(preparedSelectSql);
         }
         long timer = System.currentTimeMillis();
         currentResultSet = new CurrentResultSet(owner.isShareResults() ? getSqlCache().getSharedResult(preparedSelectSql, owner.getParameters(), reload) : executeSql(getSelectStatement(preparedSelectSql, connection), owner.getParameters()));
-        System.out.println(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
         if (DbDataSource.DUMP_SQL) {
-          System.out.println("##############");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
         }
         currentResultSet.currentResultSet.first();
       } finally {
@@ -2583,7 +2583,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from " + owner.getName(), ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get a result from " + owner.getName(), ex);
       currentResultSet = null;
     } finally {
       owner.unlock();
@@ -2638,7 +2638,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         if (cachedStatements.containsKey(sql)) {
           selectStatement = cachedStatements.get(sql);
           if (DbDataSource.DUMP_SQL) {
-            System.out.println("getSelectStatement:" + owner.getName() + ":cached");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("getSelectStatement:" + owner.getName() + ":cached");
           }
         } else {
 
@@ -2652,12 +2652,12 @@ public class SQLDataSource extends AbstractDataSourceImpl {
             cachedStatements.put(sql, selectStatement);
           }
           owner.setName();
-          Logger.getLogger(Settings.LOGGER).info("Successfully prepared the selectSql.");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Successfully prepared the selectSql.");
         }
       }
       if (DbDataSource.DUMP_SQL) {
         long end = System.currentTimeMillis();
-        System.out.println("getSelectStatement:" + owner.getName() + ":" + (end - start) + " ms.");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("getSelectStatement:" + owner.getName() + ":" + (end - start) + " ms.");
       }
       return selectStatement;
     }
@@ -2899,7 +2899,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
    */
   @Override
   public int getRow() throws SQLException {
-    //TODO tukaj paše motoda isDataLodaded() in èe ni mogoèe load data oz. napaka
+    //TODO tukaj pa?e motoda isDataLodaded() in ?e ni mogo?e load data oz. napaka
     if (checkedLoadData()) {
       if (SELECT_1.equalsIgnoreCase(preparedCountSql)) {
         return 1;
@@ -3435,7 +3435,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
 
   @Override
   public void doStoreUpdates(boolean insert, Map<String, Object> columnValues, Map<Integer, Object> oldValues, Integer row) throws SQLException {
-    Logger.getLogger(Settings.LOGGER).entering(this.getClass().toString(), "storeUpdates", insert);
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).entering(this.getClass().toString(), "storeUpdates", insert);
     Scale scaledValue;
     Entry<String, Object> entry;
 
@@ -3482,7 +3482,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
             throw new SQLException("Insert on different schemas not supported. Shema: " + schemaName + " != " + metaData.getSchemaName(columnIndex));
           }
           if (tableName == null) {
-            //TODO ne dela. vedno vraèa null
+            //TODO ne dela. vedno vra?a null
             tableName = metaData.getTableName(columnIndex);
           } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
             if (updateTableName == null) {
@@ -3495,7 +3495,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           values.append(values.length() > 0 ? "," : "").append("?");
         } else {
           skipValues.add(entry.getKey());
-          Logger.getLogger(Settings.LOGGER).info("Skipping null value: '" + entry.getKey() + "'");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Skipping null value: '" + entry.getKey() + "'");
         }
       }
 
@@ -3538,14 +3538,14 @@ public class SQLDataSource extends AbstractDataSourceImpl {
                 insertStatement.setObject(p++, scale.x, scale.scale);
               }
             } else {
-              //TODO preveriti èe je timestamp in dati setTimestamp
+              //TODO preveriti ?e je timestamp in dati setTimestamp
               insertStatement.setObject(p++, entry.getValue(), getType(entry.getKey()));
 
             }
             oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
           }
         }
-        Logger.getLogger(Settings.LOGGER).info("Executing insert : '" + sql + "'");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Executing insert : '" + sql + "'");
         insertStatement.setQueryTimeout(15);
         insertStatement.executeUpdate();
       } finally {
@@ -3562,7 +3562,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
             Object value = openSelectResultSet.getObject(c);
             oldValues.put(c, value);
           } catch (Exception err) {
-            Logger.getLogger(Settings.LOGGER).info("Skipping illegal value for: '" + columnName + "'");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Skipping illegal value for: '" + columnName + "'");
             skipColumns.add(columnName);
           }
         } else {
@@ -3673,7 +3673,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
                 }
                 oldValues.put(columnMapping.checkedGet(c).intValue(), value);
               }
-              Logger.getLogger(Settings.LOGGER).info("Executing update : '" + sql + "'");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Executing update : '" + sql + "'");
               updateStatement.setQueryTimeout(15);
               updateStatement.executeUpdate();
             } finally {
@@ -3719,7 +3719,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getPrimaryKeys from '" + selectSql + "'", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't getPrimaryKeys from '" + selectSql + "'", ex);
       result = new ArrayList<PrimaryKey>();
     }
     if ((getUniqueID() != null) && (getUniqueID().length > 0) && (getUpdateTableName() != null) && (getUpdateTableName().length() > 0)) {
@@ -3746,7 +3746,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         semaphore.acquire();
         this.selectSql = selectSql;
         String sql = substParameters(selectSql, owner.getParameters());
-        Logger.getLogger(Settings.LOGGER).finest(
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finest(
                 "\n################# SELECT SQL #################\n" + sql + "\n################# ########## #################");
         selectStatementReady = false;
         preparedSelectSql = null;
@@ -3784,7 +3784,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
         currentResultSet = null;
       } catch (InterruptedException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
       } finally {
         semaphore.release();
         if (countSql == null) {
@@ -3839,7 +3839,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
       semaphore.acquire();
       this.countSql = countSql;
       String sql = substParameters(countSql, getCountParameters(owner.getParameters()));
-      Logger.getLogger(Settings.LOGGER).finest(
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finest(
               "\n################# COUNT SQL #################\n" + sql + "\n################# ######### #################");
       preparedCountSql = null;
       final Connection connection = getConnection();
@@ -3853,7 +3853,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
       }
     } catch (InterruptedException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + countSql + "'", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Interrupted while preparing '" + countSql + "'", ex);
       ;
     } finally {
       semaphore.release();
@@ -3923,7 +3923,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           //TODO ne dela pravilno pri shared results
           newCount = ((CachedRowSet) currentResultSet.currentResultSet).size();
         } else if (((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) && owner.isCacheRowSet()) {
-          //Moral bi vrniti CachedRowSet count, tako da naj poskusi še enkrat z eksplicitnim loadData()
+          //Moral bi vrniti CachedRowSet count, tako da naj poskusi ?e enkrat z eksplicitnim loadData()
           if (loadData()) {
             return getRowCount();
           } else {
@@ -3951,16 +3951,16 @@ public class SQLDataSource extends AbstractDataSourceImpl {
                 if (preparedCountSql.equalsIgnoreCase(SELECT_1)) {
                   newCount = 1;
                 } else {
-                  Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedCountSql + "'");
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).fine("Executing '" + preparedCountSql + "'");
                   if (DbDataSource.DUMP_SQL) {
-                    System.out.println("############## count(*) ");
-                    System.out.println(preparedCountSql);
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## count(*) ");
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(preparedCountSql);
                   }
                   Connection connection = getConnection();
                   try {
                     ResultSet rs = owner.isShareResults() && ((owner.getSharing() & DbDataSource.DISABLE_COUNT_CACHING) == 0) ? getSqlCache().getSharedResult(preparedCountSql, owner.getParameters()) : executeSql(getCountStatement(preparedCountSql, connection), owner.getParameters());
                     if (DbDataSource.DUMP_SQL) {
-                      System.out.println("##############");
+                      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
                     }
                     if (rs.first()) {
                       newCount = rs.getInt(1);
@@ -3987,7 +3987,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
               }
             }
           } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count for " + owner.getName(), ex);
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get row count for " + owner.getName(), ex);
             newCount = this.count;
           } finally {
             owner.unlock();
@@ -4069,7 +4069,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           currentResultSet.close();
         }
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
       } finally {
         currentResultSet = null;
         owner.unlock();
@@ -4095,13 +4095,13 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           }
           reloaded = true;
           owner.unlock();
-          Logger.getLogger(Settings.LOGGER).finer("Permit unlocked '" + selectSql + "'");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finer("Permit unlocked '" + selectSql + "'");
         }
         if (oldRow > 0 && getRowCount() > 0) {
           try {
             currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
           } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't change rowset position", ex);
           }
         }
         owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
@@ -4116,7 +4116,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         try {
           EventQueue.invokeAndWait(events);
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
         }
       }
     }
@@ -4188,13 +4188,13 @@ public class SQLDataSource extends AbstractDataSourceImpl {
       }
       reloaded = true;
       owner.unlock();
-      Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finer("Permit unlockd '" + selectSql + "'");
     }
     if (oldRow > 0 && getRowCount() > 0) {
       try {
         currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't change rowset position", ex);
       }
     }
     owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
@@ -4206,7 +4206,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         try {
           EventQueue.invokeAndWait(events);
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
         }
       }
     }
@@ -4291,7 +4291,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
       metaData = statement.getParameterMetaData();
       parameterCount = metaData.getParameterCount();
     } catch (SQLException err) {
-      err.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
     }
     Object value;
     Integer type;
@@ -4305,12 +4305,12 @@ public class SQLDataSource extends AbstractDataSourceImpl {
             statement.setObject(pos++, ((DbDataSource.SqlParameter) value).getValue(),
                     ((DbDataSource.SqlParameter) value).getType());
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("--[" + (pos - 1) + "]=" + ((DbDataSource.SqlParameter) value).getValue().toString());
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--[" + (pos - 1) + "]=" + ((DbDataSource.SqlParameter) value).getValue().toString());
             }
           } else {
             statement.setNull(pos++, ((DbDataSource.SqlParameter) value).getType());
             if (DbDataSource.DUMP_SQL) {
-              System.out.println("--[" + (pos - 1) + "]=null");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--[" + (pos - 1) + "]=null");
             }
           }
         } else if ((value instanceof DbDataSource.SubstSqlParameter) && (((DbDataSource.SubstSqlParameter) value).getParameters().size() > 0)) {
@@ -4320,12 +4320,12 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         if (value == null) {
           statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
           if (DbDataSource.DUMP_SQL) {
-            System.out.println("--[" + (pos - 1) + "]=null");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--[" + (pos - 1) + "]=null");
           }
         } else {
           statement.setObject(pos++, value);
           if (DbDataSource.DUMP_SQL) {
-            System.out.println("--[" + (pos - 1) + "]=" + value.toString());
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--[" + (pos - 1) + "]=" + value.toString());
           }
         }
       }
@@ -4371,13 +4371,13 @@ public class SQLDataSource extends AbstractDataSourceImpl {
 
     try {
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("##############");
-        System.out.println(sql);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(sql);
       }
       return executeQuery(statement, parameters);
     } finally {
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("##############");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
       }
     }
   }
@@ -4429,13 +4429,13 @@ public class SQLDataSource extends AbstractDataSourceImpl {
 
     try {
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("##############");
-        System.out.println(sql);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(sql);
       }
       return executeUpdate(statement, parameters);
     } finally {
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("##############\n");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############\n");
       }
     }
   }
@@ -4517,15 +4517,15 @@ public class SQLDataSource extends AbstractDataSourceImpl {
             int max = Math.min(rowIndex + getFetchSize(), getRowCount());
             int min = Math.max(rowIndex - getFetchSize(), 1);
             if (DbDataSource.DUMP_SQL) {
-              System.out.println(owner.getName() + ":getValueAt [" + min + "-" + max + "]");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "{0}:getValueAt [{1}-{2}]", new Object[]{owner.getName(), min, max});
             }
-            if (SELECT_1.equals(preparedCountSql) && openSelectResultSet.absolute(min)) {
-              System.out.println();
-            }
+//            if (SELECT_1.equals(preparedCountSql) && openSelectResultSet.absolute(min)) {
+//              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info();
+//            }
             if (!openSelectResultSet.absolute(min)) {
               return null;
-            } else {
-              System.out.println();
+//            } else {
+//              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info();
             }
             String cn;
             Object value;
@@ -4592,7 +4592,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
                         java.util.Map<CollectionKey<NamedValue>, java.util.List<Object>> query = new java.util.HashMap<CollectionKey<NamedValue>, java.util.List<Object>>();
                         query.put(queryKey, parameters);
                         pendingValuesCache.putAll(pendingSqlParameter.getPendingValues(query, pendingValuesCache.size() > 0));
-                        //nismo ga našli
+                        //nismo ga na?li
                         if (!pendingValuesCache.containsKey(queryKey)) {
                           if (pendingSqlParameter.isSupportsMultipleKeys() && pendingSqlParameter.getMultipleKeysLimit() == Integer.MIN_VALUE) {
                             fetchcached.add(pendingSqlParameter);
@@ -4641,7 +4641,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
                     }
                   }
 
-                  //nismo ga našli
+                  //nismo ga na?li
                   if (!pendingValuesCache.containsKey(queryKey)) {
                     pendingValuesCache.put(queryKey, new java.util.ArrayList<PendingValue>());
                     for (int c = 0; c < columnNames.length; c++) {
@@ -4678,8 +4678,8 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public ResultSet getResultSet() throws SQLException {
     if (DbDataSource.DUMP_SQL) {
-      System.out.println("##############");
-      System.out.println(preparedSelectSql);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(preparedSelectSql);
     }
     long start = System.currentTimeMillis();
     ResultSet result;
@@ -4705,8 +4705,8 @@ public class SQLDataSource extends AbstractDataSourceImpl {
     }
     if (DbDataSource.DUMP_SQL) {
       long end = System.currentTimeMillis();
-      System.out.println("##############");
-      System.out.println("getResultSet:" + owner.getName() + ":" + (end - start) + " ms.");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("getResultSet:" + owner.getName() + ":" + (end - start) + " ms.");
     }
 
     return result;
@@ -4724,7 +4724,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         try {
           oldRow = currentResultSet.currentResultSet.getRow();
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, ex.getMessage());
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage());
           check = true;
         }
         if (check) {
@@ -4732,7 +4732,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           try {
             currentResultSet.currentResultSet.relative(0);
           } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
             createCurrentResultSet();
           } finally {
             owner.unlock();
@@ -4775,7 +4775,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
 //          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, row, row));
 //        }
 //      } catch (SQLException ex) {
-//        Logger.getLogger(Settings.LOGGER).warning("Couldn't update pending refresh.");
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning("Couldn't update pending refresh.");
 //      }
 //    }
   }
@@ -4983,7 +4983,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         return (T) result;
       }
     }
-    //TODO ne vem èe je to uredu. mogoèe bi bilo potrebno dati napako
+    //TODO ne vem ?e je to uredu. mogo?e bi bilo potrebno dati napako
     if (row == 0) {
       storedResult[0] = true;
     } else if (isPending(columnName, row)) {
@@ -5198,7 +5198,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           try {
             openSelectResultSet.last();
           } catch (Exception ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, null, ex);
           }
         }
 
@@ -5206,7 +5206,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           try {
             openSelectResultSet.first();
           } catch (Exception ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, null, ex);
           }
         }
 
@@ -5214,7 +5214,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
 
         owner.fireContentsChanged(new ListDataEvent(owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
         owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), -1));
-        Logger.getLogger(Settings.LOGGER).exiting(this.getClass().toString(), "storeUpdates", insert);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).exiting(this.getClass().toString(), "storeUpdates", insert);
       }
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -5371,7 +5371,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
           }
         } catch (SQLException ex) {
           this.columnNames.clear();
-          Logger.getLogger(Settings.LOGGER).log(Level.FINE, "Couldn't retrieve primary keys for '" + table + "'");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.FINE, "Couldn't retrieve primary keys for '" + table + "'");
         }
       }
       return columnNames;
@@ -5436,7 +5436,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
             result = update.executeQuery();
             result.next();
           } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.INFO, "The table '" + table + "' can't be updated with through a resulSet");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "The table '" + table + "' can't be updated with through a resulSet");
             updateFailed = true;
           }
         }
@@ -5502,7 +5502,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
             }
           } catch (SQLException ex) {
             equals = false;
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error comparing the primary key values.", ex);
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Error comparing the primary key values.", ex);
           }
         }
         return equals;
@@ -5675,7 +5675,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
 
     @Override
     public void run() {
-      Logger.getLogger(Settings.LOGGER).fine("Firing events '" + owner.selectSql + "'");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).fine("Firing events '" + owner.selectSql + "'");
       owner.refreshPending = DataSourceEvent.isRefreshing(owner.owner);
       owner.owner.fireContentsChanged(new ListDataEvent(owner.owner, ListDataEvent.CONTENTS_CHANGED, -1, -1));
       int pos = 0;

@@ -186,8 +186,8 @@ public class SQLMaterializedView extends SubstSqlParameter {
       boolean result = true;
 
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("##############");
-        System.out.println(this.qIsViewValid);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qIsViewValid);
       }
       for (PreparedStatement preparedStatement : isViewValid) {
         ResultSet executeQuery = SQLDataSource.executeQuery(preparedStatement, parameters);
@@ -203,8 +203,8 @@ public class SQLMaterializedView extends SubstSqlParameter {
         }
       }
       if (DbDataSource.DUMP_SQL) {
-        System.out.println("materialized:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
-        System.out.println("##############");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("materialized:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
       }
       return result;
     } catch (SQLException ex) {

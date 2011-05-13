@@ -119,7 +119,7 @@ public class ReconnectableSQLConnection implements DbConnection {
       try {
         openConnection();
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get a connection to the database", ex);
         connection = null;
       }
     }
@@ -133,7 +133,7 @@ public class ReconnectableSQLConnection implements DbConnection {
       try {
         openConnection();
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a connection to the database", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get a connection to the database", ex);
         connection = null;
       }
     }
@@ -220,7 +220,7 @@ public class ReconnectableSQLConnection implements DbConnection {
       try {
         this.connectionPool = new ConnectionPool(dataSource, Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")), Integer.parseInt(settings.getProperty(DB_POOL_SIZE, "0")), Integer.parseInt(settings.getProperty(DB_MAX_POOL_SIZE, "3")), executeOnCreate);
       } catch (Exception ex) {
-        ex.printStackTrace();
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
       }
     }
 

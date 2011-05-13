@@ -14,6 +14,8 @@ import java.io.*;
 
 import com.openitech.sql.rowset.*;
 import java.text.MessageFormat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sql.rowset.*;
 import javax.sql.rowset.serial.SQLInputImpl;
 import javax.sql.rowset.serial.SerialArray;
@@ -778,7 +780,7 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
                 return true;
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
             // if executeUpdate fails it will come here,
             // update crsResolve with null rows
             this.crsResolve.moveToInsertRow();

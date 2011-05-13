@@ -17,6 +17,8 @@ import javax.xml.parsers.*;
 
 import com.openitech.sql.rowset.*;
 import java.text.MessageFormat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
 
@@ -91,8 +93,8 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
             reader1.parse(is);
 
         } catch (SAXParseException err) {
-            System.out.println (MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{ err.getMessage (), err.getLineNumber(), err.getSystemId()})); 
-            err.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info (MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{ err.getMessage (), err.getLineNumber(), err.getSystemId()})); 
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
 	    throw new SQLException(err.getMessage());
             
         } catch (SAXException e) {
@@ -165,9 +167,9 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
             reader1.parse(is);
 
         } catch (SAXParseException err) {
-            System.out.println (MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getLineNumber(), err.getSystemId() })); 
-            System.out.println("   " + err.getMessage ());
-            err.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info (MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getLineNumber(), err.getSystemId() })); 
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "   {0}", err.getMessage ());
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
 	    throw new SQLException(err.getMessage());
             
         } catch (SAXException e) {

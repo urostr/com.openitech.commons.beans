@@ -1090,7 +1090,7 @@ public class DataSourceProxy extends AbstractDataSourceImpl {
    */
   @Override
   public float getFloat(String columnName) throws SQLException {
-    //TODO nenatanèno èe roèno vneseš v bazo. èe gre pisanje in branje preko programa potem je uredu
+    //TODO nenatan?no ?e ro?no vnese? v bazo. ?e gre pisanje in branje preko programa potem je uredu
     if (isDataLoaded()) {
       Number value = getStoredValue(getRow(), columnName, 0f, Number.class);
       return value == null ? null : value.floatValue();
@@ -1485,7 +1485,7 @@ public class DataSourceProxy extends AbstractDataSourceImpl {
    */
   @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
-    //TODO ne dela napaèno castanje. Oèitno èe hoèem date potem dela
+    //TODO ne dela napa?no castanje. O?itno ?e ho?em date potem dela
     if (isDataLoaded()) {
       return getStoredValue(getRow(), columnName, null, Timestamp.class);
     } else {
@@ -1902,7 +1902,7 @@ public class DataSourceProxy extends AbstractDataSourceImpl {
           throw (SQLNotificationException) err.getCause();
         }
       } else {
-        err.printStackTrace();
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
       }
       storeUpdates = false;
     }
@@ -2549,7 +2549,7 @@ public class DataSourceProxy extends AbstractDataSourceImpl {
         return (T) result;
       }
     }
-    //TODO ne vem èe je to uredu. mogoèe bi bilo potrebno dati napako
+    //TODO ne vem ?e je to uredu. mogo?e bi bilo potrebno dati napako
     if (row == 0) {
       storedResult[0] = true;
     } else {
@@ -2575,8 +2575,7 @@ public class DataSourceProxy extends AbstractDataSourceImpl {
           result = castValue(dataSource.getValueAt(ds_row, columnName), nullValue, type);
         }
       } catch (Exception ex) {
-        ex.printStackTrace();
-        System.out.println();
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
       }
     }
     //Thread.dumpStack();

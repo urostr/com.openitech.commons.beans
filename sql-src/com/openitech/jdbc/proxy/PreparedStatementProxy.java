@@ -6,7 +6,6 @@ package com.openitech.jdbc.proxy;
 
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.connection.DbConnection;
-import com.openitech.db.model.DbDataSource;
 import com.openitech.jdbc.values.SQLValue;
 import java.io.InputStream;
 import java.io.Reader;

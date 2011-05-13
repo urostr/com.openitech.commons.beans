@@ -242,9 +242,9 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
         Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
 //        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 //
-//        System.out.println("StackTrace:::");
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("StackTrace:::");
 //        for (StackTraceElement element : stackTrace) {
-//          System.out.println(element.toString());
+//          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(element.toString());
 //        }
       }
     } finally {

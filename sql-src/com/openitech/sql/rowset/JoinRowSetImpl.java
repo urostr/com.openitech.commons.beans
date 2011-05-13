@@ -9,10 +9,11 @@ package com.openitech.sql.rowset;
 
 import java.sql.*;
 import javax.sql.*;
-import javax.naming.*;
 import java.io.*;
 import java.math.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.sql.rowset.*;
 
@@ -832,10 +833,10 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
 	    } //end if	 
 	} catch(SQLException sqle) {
 	    // %%% Exception should not dump here:
-	    sqle.printStackTrace();
+	    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, sqle.getMessage(), sqle);
 	    throw new SQLException(resBundle.handleGetObject("joinrowsetimpl.initerror").toString() + sqle);
 	} catch (Exception e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
 	    throw new SQLException(resBundle.handleGetObject("joinrowsetimpl.genericerr").toString() + e);
 	}
     }
@@ -2111,7 +2112,7 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
      *         String name = crs.getString(1);
      *         int age = crs.getInt(2);
      *         short ssn = crs.getShort(3);
-     *         System.out.println(name + "   " + age + "   " + ssn);
+     *         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(name + "   " + age + "   " + ssn);
      *     }
      *
      * </code> </PRE>

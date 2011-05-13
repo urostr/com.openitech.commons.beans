@@ -142,12 +142,12 @@ public class PooledConnection {
           }
         }
 
-        System.out.println("proxool:connection created:" + (readonly ? "readonly" : "TX"));
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("proxool:connection created:" + (readonly ? "readonly" : "TX"));
       }
 
       @Override
       public void onDeath(Connection arg0, int arg1) throws SQLException {
-        System.out.println("proxool:connection killed");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("proxool:connection killed");
       }
 
       @Override
@@ -170,7 +170,7 @@ public class PooledConnection {
             } catch (ProxoolException ex1) {
               Logger.getLogger(PooledConnection.class.getName()).log(Level.SEVERE, null, ex1);
             }
-            System.out.println("proxool:the current TX connection is not valid. resetting.");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("proxool:the current TX connection is not valid. resetting.");
             valid = false;
           }
         }
@@ -197,16 +197,16 @@ public class PooledConnection {
       public void onBirth(Connection arg0) throws SQLException {
         arg0.setReadOnly(true);
         if (execute_on_crate.length()>0) {
-          System.out.println("proxool:temp:executing:"+execute_on_crate);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("proxool:temp:executing:"+execute_on_crate);
           arg0.createStatement().execute(execute_on_crate);
         }
 
-        System.out.println("proxool:temp:connection created:readonly");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("proxool:temp:connection created:readonly");
       }
 
       @Override
       public void onDeath(Connection arg0, int arg1) throws SQLException {
-        System.out.println("proxool:temp:connection killed");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("proxool:temp:connection killed");
       }
 
       @Override
@@ -226,7 +226,7 @@ public class PooledConnection {
     if (result != null) {
       this.proxoolPool = "proxool."+pool_name;
       this.proxoolTemporary = "proxool."+pool_name+"_temporary";
-      System.out.println("Using proxool pool");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Using proxool pool");
 
       pool.add(new ConnectionProxy(proxoolPool, connectionTest, result));
 

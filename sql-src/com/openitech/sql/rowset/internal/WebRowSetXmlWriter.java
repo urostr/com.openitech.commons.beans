@@ -13,6 +13,7 @@ import javax.sql.*;
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Logger;
 
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
@@ -428,7 +429,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
                     writeStringData(caller.getString(idx));
                     break;
                 default:
-                    System.out.println(resBundle.handleGetObject("wsrxmlwriter.notproper").toString());
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(resBundle.handleGetObject("wsrxmlwriter.notproper").toString());
                     //Need to take care of BLOB, CLOB, Array, Ref here
             }
         } catch (SQLException ex) {

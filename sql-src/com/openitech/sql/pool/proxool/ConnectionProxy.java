@@ -82,7 +82,7 @@ public class ConnectionProxy implements java.sql.Connection {
       try {
         testConnection();
       } catch (Throwable ex) {
-        System.out.println(ConnectionProxy.class.getName() + ":reopening connection:cause [" + ex.getMessage() + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(ConnectionProxy.class.getName() + ":reopening connection:cause [" + ex.getMessage() + "]");
         create = true;
       }
     }
@@ -97,7 +97,7 @@ public class ConnectionProxy implements java.sql.Connection {
               query.setQueryTimeout(5);
               try {
                 SnapshotIF snapshot = ProxoolFacade.getSnapshot(proxoolPool.replace("proxool.", ""), true);
-                System.out.println(ConnectionProxy.class.getName() + ":connection created:active:" + snapshot.getActiveConnectionCount() + ":available:" + snapshot.getAvailableConnectionCount() + ":total:" + snapshot.getConnectionCount());
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(ConnectionProxy.class.getName() + ":connection created:active:" + snapshot.getActiveConnectionCount() + ":available:" + snapshot.getAvailableConnectionCount() + ":total:" + snapshot.getConnectionCount());
               } catch (ProxoolException ex) {
                 Logger.getLogger(ConnectionProxy.class.getName()).log(Level.SEVERE, ex.getMessage());
               }
