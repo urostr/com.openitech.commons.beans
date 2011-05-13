@@ -167,7 +167,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   private void init(final DbDataSourceImpl implementation, final String countSql, final String selectSql) throws IllegalArgumentException {
-    //TODO ko spreminaniš eno spremenljivko, npr. cacheRowSet, ne veš, kako druge vplivajo. Še vedno se lahko dela cache.
+    //TODO ko spreminani? eno spremenljivko, npr. cacheRowSet, ne ve?, kako druge vplivajo. ‰e vedno se lahko dela cache.
     this.connectOnDemand = ConnectionManager.getInstance().isPooled() && ConnectionManager.getInstance().isConnectOnDemand();
     this.cacheRowSet = ConnectionManager.getInstance().isCacheRowSet();
     this.implementation = implementation;
@@ -2918,7 +2918,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         try {
           java.awt.EventQueue.invokeAndWait(new FireIntervalAdded(this, e));
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireIntervalAdded from '" + componentName + "'", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireIntervalAdded from '" + componentName + "'", ex);
         }
       }
     }
@@ -2936,7 +2936,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         try {
           java.awt.EventQueue.invokeAndWait(new FireIntervalRemoved(this, e));
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireIntervalRemoved from '" + componentName + "'", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireIntervalRemoved from '" + componentName + "'", ex);
         }
       }
     }
@@ -2954,7 +2954,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         try {
           java.awt.EventQueue.invokeAndWait(new FireContentsChanged(this, e));
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireContentsChanged from '" + componentName + "'", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireContentsChanged from '" + componentName + "'", ex);
         }
       }
     }
@@ -3047,7 +3047,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         try {
           java.awt.EventQueue.invokeAndWait(new FireActiveRowChanged(this, e));
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't fireActiveRowChange from '" + componentName + "'", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireActiveRowChange from '" + componentName + "'", ex);
           ;
         }
       }
@@ -3199,13 +3199,13 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     boolean result = false;
     try {
       if (DUMP_SQL) {
-        System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + (available.isHeldByCurrentThread() ? "owner:current:" + available.getHoldCount() : "queued:" + available.getQueueLength()));
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + (available.isHeldByCurrentThread() ? "owner:current:" + available.getHoldCount() : "queued:" + available.getQueueLength()));
 
         StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
         if (stackTrace.getMethodName().equals("lock")) {
           stackTrace = Thread.currentThread().getStackTrace()[4];
         }
-        System.out.println(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getName() + ":locking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
       }
       if (force) {
         available.lock();
@@ -3224,7 +3224,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     }
     if (DUMP_SQL) {
       long end = System.currentTimeMillis();
-      System.out.println(getName() + " :locking time: " + (end - begin) + " ms.");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getName() + " :locking time: " + (end - begin) + " ms.");
     }
     return result;
   }
@@ -3234,8 +3234,8 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     available.unlock();
     if (false) {//if (DUMP_SQL) {
       StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[3];
-      System.out.println(getName() + ":unlocking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
-      System.out.println(getName() + ":unlocking:[" + Thread.currentThread().getName() + "]:" + available.getHoldCount());
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getName() + ":unlocking:[" + Thread.currentThread().getName() + "]:" + stackTrace.getClassName() + "." + stackTrace.getMethodName() + ":" + stackTrace.getLineNumber());
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getName() + ":unlocking:[" + Thread.currentThread().getName() + "]:" + available.getHoldCount());
     }
   }
 
@@ -3516,7 +3516,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     implementation.storeUpdates(insert);
   }
 
-  //TODO a ne paše zraven tudi isreadOnly()?
+  //TODO a ne pa?e zraven tudi isreadOnly()?
   public boolean isCanAddRows() {
     return canAddRows && !DataSourceEvent.isRefreshing(this);
   }
@@ -3740,7 +3740,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
       try {
         java.awt.EventQueue.invokeAndWait(new FirePropertyChanged(this, propertyName, oldValue, newValue));
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't firePropertyChange from '" + componentName + "'", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't firePropertyChange from '" + componentName + "'", ex);
         ;
       }
     }
@@ -4020,7 +4020,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
 
   @Override
   public void setNull(String parameterName, int sqlType) throws SQLException {
-    //TODO zakaj ni veè setNull?
+    //TODO zakaj ni ve? setNull?
     throw new UnsupportedOperationException("Not supported yet.");
   }
 

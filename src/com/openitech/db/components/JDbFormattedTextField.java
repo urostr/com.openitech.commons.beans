@@ -235,7 +235,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
 
       if (!valid) {
-        throw new IllegalStateException("Polje vsebuje napaèno vrednost");
+        throw new IllegalStateException("Polje vsebuje napaËno vrednost");
       }
     }
   }
@@ -272,7 +272,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
             setValue(value);
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't display the '" + dbFieldObserver.getColumnName() + "' value.  " + ex.toString() + " [" + ex.getMessage() + "] Object = " + dbFieldObserver.getValue());
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't display the '" + dbFieldObserver.getColumnName() + "' value.  " + ex.toString() + " [" + ex.getMessage() + "] Object = " + dbFieldObserver.getValue());
         }
       }
     }
@@ -384,7 +384,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
             dbFieldObserver.updateValue(value);
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
         } finally {
           activeRowChangeWeakListener.setEnabled(true);
         }
@@ -527,7 +527,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       super.commitEdit();
     } catch (ParseException ex) {
       if (getText().length() > 0) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error updating the value. [" + ex.getMessage() + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error updating the value. [" + ex.getMessage() + "]");
         StringBuilder message = new StringBuilder();
         message.append("Napaka pri vnosu podatkov!\n");
         message.append(getText().substring(0, ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n");

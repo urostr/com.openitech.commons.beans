@@ -87,7 +87,7 @@ public class JDbLabel extends JLabel implements FieldObserver {
         } else
           this.setText(format.format(value));
       } catch(Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't display the '"+dbFieldObserver.getColumnName()+"' value. ["+ex.getMessage()+"]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't display the '"+dbFieldObserver.getColumnName()+"' value. ["+ex.getMessage()+"]");
       }
     }
   }

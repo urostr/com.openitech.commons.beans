@@ -12,6 +12,7 @@ import javax.sql.*;
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Logger;
 
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
@@ -224,7 +225,7 @@ public class DbWebRowSetXmlWriter implements XmlWriter, Serializable {
       // Remove the string after "@xxxx"
       // before writing it to the xml file.
       String strProviderInstance = (caller.getSyncProvider()).toString();
-      //toString vraèa ime razreda + @ + hex
+      //toString vraËa ime razreda + @ + hex
       String strProvider = strProviderInstance.substring(0, (caller.getSyncProvider()).toString().indexOf("@"));
       String vendor = caller.getSyncProvider().getVendor();
       String version = caller.getSyncProvider().getVersion();
@@ -445,7 +446,7 @@ public class DbWebRowSetXmlWriter implements XmlWriter, Serializable {
 //          writeStringData(clob);
 //          break;
         default:
-          System.out.println(resBundle.handleGetObject("wsrxmlwriter.notproper").toString());
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(resBundle.handleGetObject("wsrxmlwriter.notproper").toString());
         //Need to take care of BLOB, CLOB, Array, Ref here
       }
     } catch (SQLException ex) {

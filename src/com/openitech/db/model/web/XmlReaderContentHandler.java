@@ -6,7 +6,6 @@
  */
 package com.openitech.db.model.web;
 
-import com.openitech.db.model.web.DbWebRowSetImpl;
 import java.util.*;
 
 import org.xml.sax.*;
@@ -19,8 +18,8 @@ import javax.sql.rowset.*;
 import com.sun.rowset.*;
 import com.sun.rowset.internal.Row;
 import java.io.IOException;
-import java.io.StringReader;
 import java.text.MessageFormat;
+import java.util.logging.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
@@ -1080,7 +1079,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
       case SyncProviderNameTag:
         if (nullValue) {
           //rs.setSyncProvider(null);
-          //uporabi paè default providerja
+          //uporabi paË default providerja
         } else {
 //          String str = s;//s.substring(0,s.indexOf("@")+1);
 //          rs.setSyncProvider(str);
@@ -1238,7 +1237,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
         }
         break;
       default:
-        //System.out.println("MetaData: Unknown Tag: (" + getTag() + ")");
+        //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("MetaData: Unknown Tag: (" + getTag() + ")");
         break;
 
     }
@@ -1376,7 +1375,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
    */
   @Override
   public void warning(SAXParseException err) throws SAXParseException {
-    System.out.println(MessageFormat.format(resBundle.handleGetObject("xmlrch.warning").toString(), new Object[]{err.getMessage(), err.getLineNumber(), err.getSystemId()}));
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(MessageFormat.format(resBundle.handleGetObject("xmlrch.warning").toString(), new Object[]{err.getMessage(), err.getLineNumber(), err.getSystemId()}));
   }
 
   /**

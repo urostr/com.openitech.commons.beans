@@ -108,7 +108,7 @@ public class JDbCheckBox extends JCheckBox implements ActionListener, FieldObser
       if ((validator==null)||(validator!=null&&validator.isValid(this.isSelected())))
         dbFieldObserver.updateValue(this.isSelected());
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
     } finally {
       activeRowChangeWeakListener.setEnabled(true);
     }

@@ -93,7 +93,7 @@ public class ReadInputStream {
       }
       return result.toArray(new String[result.size()]);
     } catch (IOException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reading the file.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error reading the file.", ex);
       return null;
     }
   }

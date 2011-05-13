@@ -1,18 +1,18 @@
 package com.openitech.ref.events;
 
-import javax.swing.event.*;
-import com.openitech.ref.WeakMethodReference;
 import java.awt.event.*;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>Title: </p>
  * <p>Description: </p>
  * <p>Copyright: Copyright (c) 2006</p>
- * <p>Company: Odprte Informacijske Tehnologije Uro≈° Trojar s.p.</p>
- * @author Uro≈° Trojar
+ * <p>Company: Odprte Informacijske Tehnologije Uro?∞ Trojar s.p.</p>
+ * @author Uro?∞ Trojar
  * @version $Revision: 1.1.1.1 $
  */
 
@@ -46,7 +46,7 @@ public class WindowWeakAdapter extends WindowWeakListener implements WindowListe
       execute(e);
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
     catch (java.lang.reflect.InvocationTargetException ex) {
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
@@ -62,7 +62,7 @@ public class WindowWeakAdapter extends WindowWeakListener implements WindowListe
      throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
    }
    catch (IllegalAccessException ex) {
-     ex.printStackTrace();
+     Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
    }
  }
 
@@ -75,7 +75,7 @@ public class WindowWeakAdapter extends WindowWeakListener implements WindowListe
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 
@@ -88,7 +88,7 @@ public class WindowWeakAdapter extends WindowWeakListener implements WindowListe
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 }

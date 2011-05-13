@@ -282,7 +282,7 @@ public class DbNaslovDataModel {
         findHS_MID_1.setString(param++, ul_ime);
         timer = System.currentTimeMillis();
         ResultSet rsHS_MID = findHS_MID_1.executeQuery();
-        System.out.println("izbiranaslova:findHS_MID_1: " + (System.currentTimeMillis() - timer) + "ms");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("izbiranaslova:findHS_MID_1: " + (System.currentTimeMillis() - timer) + "ms");
         if (rsHS_MID.next() && rsHS_MID.isLast()) {
           result = rsHS_MID.getInt(1);
         }
@@ -297,7 +297,7 @@ public class DbNaslovDataModel {
           findHS_MID_2.setObject(param++, pt_id, Types.INTEGER);
           timer = System.currentTimeMillis();
           ResultSet rsHS_MID_2 = findHS_MID_2.executeQuery();
-          System.out.println("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("izbiranaslova:findHS_MID_2: " + (System.currentTimeMillis() - timer) + "ms");
           if (rsHS_MID_2.next() && rsHS_MID_2.isLast()) {
             result = rsHS_MID_2.getInt(1);
           }
@@ -314,7 +314,7 @@ public class DbNaslovDataModel {
         findHS_MID_3.setString(param++, na_ime);
         timer = System.currentTimeMillis();
         ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
-        System.out.println("izbiranaslova:findHS_MID_3: " + (System.currentTimeMillis() - timer) + "ms");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("izbiranaslova:findHS_MID_3: " + (System.currentTimeMillis() - timer) + "ms");
         if (rsHS_MID_3.next() && rsHS_MID_3.isLast()) {
           result = rsHS_MID_3.getInt(1);
         }
@@ -345,7 +345,7 @@ public class DbNaslovDataModel {
       findUL_MID.setString(param++, na_ime);
       timer = System.currentTimeMillis();
       ResultSet rsUL_MID = findUL_MID.executeQuery();
-      System.out.println("izbiranaslova:findUL_MID: " + (System.currentTimeMillis() - timer) + "ms");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("izbiranaslova:findUL_MID: " + (System.currentTimeMillis() - timer) + "ms");
       if (rsUL_MID.next()) {
         result = rsUL_MID.getInt(1);
       }
@@ -372,7 +372,7 @@ public class DbNaslovDataModel {
       findPT_MID.setString(param++, pt_ime);
       timer = System.currentTimeMillis();
       ResultSet rsPT_MID = findPT_MID.executeQuery();
-      System.out.println("izbiranaslova:findPT_MID: " + (System.currentTimeMillis() - timer) + "ms");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("izbiranaslova:findPT_MID: " + (System.currentTimeMillis() - timer) + "ms");
       if (rsPT_MID.next() && rsPT_MID.isLast()) {
         result = rsPT_MID.getInt(1);
       }
@@ -399,7 +399,7 @@ public class DbNaslovDataModel {
       findNA_MID.setString(param++, na_ime);
       timer = System.currentTimeMillis();
       ResultSet rsNA_MID = findNA_MID.executeQuery();
-      System.out.println("izbiranaslova:findNA_MID: " + (System.currentTimeMillis() - timer) + "ms");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("izbiranaslova:findNA_MID: " + (System.currentTimeMillis() - timer) + "ms");
       if (rsNA_MID.next() && rsNA_MID.isLast()) {
         result = rsNA_MID.getInt(1);
       }

@@ -7,6 +7,8 @@
 package com.openitech.db.components;
 
 import java.beans.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author uros
@@ -56,7 +58,7 @@ public class JDbFormattedTextFieldBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_validator] = new PropertyDescriptor ( "validator", com.openitech.db.components.JDbFormattedTextField.class, "getValidator", "setValidator" ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Properties
 
     // Here you can add code for customizing the properties array.
@@ -75,7 +77,7 @@ public class JDbFormattedTextFieldBeanInfo extends SimpleBeanInfo {
             eventSets[EVENT_itemListener] = new EventSetDescriptor ( com.openitech.db.components.JDbFormattedTextField.class, "itemListener", java.awt.event.ItemListener.class, new String[] {"itemStateChanged"}, "addItemListener", "removeItemListener" ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Events
 
     // Here you can add code for customizing the event sets array.

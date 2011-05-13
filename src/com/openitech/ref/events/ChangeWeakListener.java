@@ -2,6 +2,8 @@ package com.openitech.ref.events;
 
 import javax.swing.event.*;
 import com.openitech.ref.WeakMethodReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>Title: </p>
@@ -19,7 +21,7 @@ public class ChangeWeakListener extends WeakMethodReference<Object> implements C
       init(owner.getClass(), "stateChanged", new Class[] {ChangeEvent.class});
     }
     catch (NoSuchMethodException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 
@@ -33,7 +35,7 @@ public class ChangeWeakListener extends WeakMethodReference<Object> implements C
       execute(changeEvent);
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
     catch (java.lang.reflect.InvocationTargetException ex) {
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());

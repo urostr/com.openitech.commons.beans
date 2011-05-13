@@ -213,7 +213,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 
   protected JButton getAddImageButton() {
     if (jbAddImage == null) {
-      jbAddImage = new JButton("Naloži sliko");
+      jbAddImage = new JButton("Nalo?i sliko");
       jbAddImage.addActionListener(new ActionListener() {
 
         @Override
@@ -317,7 +317,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
           dbFieldObserver.updateValue(new byte[]{});
         }
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
       } finally {
         activeRowChangeWeakListener.setEnabled(true);
       }

@@ -157,7 +157,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
       boolean valid = isValid(this.getText());
 
       if (!valid) {
-        throw new IllegalStateException("Polje vsebuje napaèno vrednost");
+        throw new IllegalStateException("Polje vsebuje napaËno vrednost");
       }
     }
   }
@@ -220,7 +220,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
           dbFieldObserver.updateValue(text);
         }
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
       } finally {
         activeRowChangeWeakListener.setEnabled(true);
       }

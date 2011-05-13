@@ -193,7 +193,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
             try {
               updateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
             } catch (Exception ex) {
-              Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries.", ex);
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update combo box entries.", ex);
             }
           }
         });
@@ -205,13 +205,13 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
             try {
               updateEntries(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
             } catch (Exception ex) {
-              Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries.", ex);
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update combo box entries.", ex);
             }
           }
         });
       }
     } catch (Exception ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update combo box entries.", ex);
     }
   }
 
@@ -303,7 +303,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
           updatingEntries = false;
         }
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update combo box entries from the dataSource (" + dataSource.getName() + ").", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update combo box entries from the dataSource (" + dataSource.getName() + ").", ex);
       } finally {
         dataSource.setSafeMode(safeMode);
         dataSource.unlock();
@@ -460,7 +460,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
         result = true;
       }
     } catch (Exception ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, null, ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, null, ex);
       result = true;
     }
     return result;

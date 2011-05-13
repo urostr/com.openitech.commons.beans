@@ -7,6 +7,8 @@
 package com.openitech.db.components;
 
 import java.beans.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author uros
@@ -46,7 +48,7 @@ public class JDbPasswordFieldBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_validator] = new PropertyDescriptor ( "validator", com.openitech.db.components.JDbPasswordField.class, "getValidator", "setValidator" ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Properties
 
     // Here you can add code for customizing the properties array.

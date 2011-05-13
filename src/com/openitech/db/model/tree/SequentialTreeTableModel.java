@@ -165,7 +165,7 @@ public class SequentialTreeTableModel extends DbTableModel implements TreeTableM
       }
       updateRoot();
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change the tree structure. [" + ex.getMessage() + "]");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't change the tree structure. [" + ex.getMessage() + "]");
     }
   }
 
@@ -181,8 +181,8 @@ public class SequentialTreeTableModel extends DbTableModel implements TreeTableM
         root.add(node);
       }
     }
-    //System.out.println();
-    //System.out.println();
+    //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info();
+    //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info();
     modelSupport.fireNewRoot();
   }
 
@@ -194,7 +194,7 @@ public class SequentialTreeTableModel extends DbTableModel implements TreeTableM
     if (level < indices.size()) {
       Set<Integer> rows = parentIndex.findRows(parent.key);
 
-      /*System.out.println();
+      /*Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info();
       for (int i=0;i<level;i++)
       System.out.print("  ");
       System.out.print(parent.key.toString()+":");
@@ -204,7 +204,7 @@ public class SequentialTreeTableModel extends DbTableModel implements TreeTableM
       System.out.print(row);
       System.out.print(" ");
       }
-      System.out.println();//*/
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info();//*/
 
       Set<Integer> excluded = new HashSet<Integer>();
       excluded.addAll(excludeRows);

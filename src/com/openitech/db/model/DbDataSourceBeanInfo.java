@@ -7,6 +7,8 @@
 package com.openitech.db.model;
 
 import java.beans.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author uros
@@ -71,7 +73,7 @@ public class DbDataSourceBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_updateTableName].setPreferred ( true );
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Properties
     
     // Here you can add code for customizing the properties array.
@@ -98,7 +100,7 @@ public class DbDataSourceBeanInfo extends SimpleBeanInfo {
             eventSets[EVENT_storeUpdatesListener] = new EventSetDescriptor ( com.openitech.db.model.DbDataSource.class, "storeUpdatesListener", com.openitech.db.events.StoreUpdatesListener.class, new String[] {"deleteRow", "storeUpdates"}, "addStoreUpdatesListener", "removeStoreUpdatesListener" ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Events
     
     // Here you can add code for customizing the event sets array.

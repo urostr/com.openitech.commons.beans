@@ -48,7 +48,7 @@ public class JDbXTable extends JXTable implements ListSelectionListener, DbNavig
     try {
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, null, "tableModel_activeRowChanged");
     } catch (NoSuchMethodException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
     }
   }
 
@@ -90,7 +90,7 @@ public class JDbXTable extends JXTable implements ListSelectionListener, DbNavig
           updateViewPosition();
         }
         catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't adjust the selection.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Can't adjust the selection.", ex);
         }
      }
    }
@@ -111,7 +111,7 @@ public class JDbXTable extends JXTable implements ListSelectionListener, DbNavig
             dbTableModel.getDataSource().absolute(newRowNumber);
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't read from the tableModel.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Can't read from the tableModel.", ex);
         } finally {
           selectionChanged = false;
         }

@@ -6,6 +6,8 @@
 package com.openitech.db.model.tree;
 
 import java.beans.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -84,7 +86,7 @@ public class DbTreeNodeBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_userObjectPath] = new PropertyDescriptor ( "userObjectPath", com.openitech.db.model.tree.DbTreeNode.class, "getUserObjectPath", null ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Properties
 
     // Here you can add code for customizing the properties array.

@@ -17,9 +17,9 @@ import java.util.logging.Logger;
  *
  * <p>Copyright: Copyright (c) 2006</p>
  *
- * <p>Company: Odprte Informacijske Tehnologije Uro≈° Trojar s.p.</p>
+ * <p>Company: Odprte Informacijske Tehnologije Uro?∞ Trojar s.p.</p>
  *
- * @author Uro≈° Trojar
+ * @author Uro?∞ Trojar
  * @version $Revision: 1.2 $
  */
 public final class WeakListenerList
@@ -398,7 +398,7 @@ public final class WeakListenerList
       wr = (WeakReference) queue.poll();
     }
     if (count>0) {
-      Logger.getLogger(Settings.LOGGER).info(getClass().getName()+" "+Integer.toString(count)+" weak references removed");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass().getName()+" "+Integer.toString(count)+" weak references removed");
     }
   }
 
@@ -575,7 +575,7 @@ public final class WeakListenerList
           wr = (WeakReference) weakListenerQueue.poll();
         }
         if (count>0) {
-          Logger.getLogger(Settings.LOGGER).info(getClass().getName()+" "+Integer.toString(count)+" weak listener references removed");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass().getName()+" "+Integer.toString(count)+" weak listener references removed");
         }
       } finally {
         lock.unlock();

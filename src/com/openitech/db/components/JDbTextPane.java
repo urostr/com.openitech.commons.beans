@@ -224,7 +224,7 @@ public class JDbTextPane extends JTextPane implements DocumentListener, FieldObs
           dbFieldObserver.updateValue(this.getText());
         }
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
       } finally {
         activeRowChangeWeakListener.setEnabled(true);
       }

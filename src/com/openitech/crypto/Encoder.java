@@ -51,7 +51,7 @@ public final class Encoder {
 //    for (byte bt:b) {
 //      System.out.print(bt);System.out.print(",");
 //    }
-//    System.out.println("}");
+//    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("}");
     
     return out.toByteArray();
   }
@@ -68,7 +68,7 @@ public final class Encoder {
       
       return desCipher.doFinal(data);
     } catch (Exception ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't encrypt data", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't encrypt data", ex);
       return null;
     }
   }
@@ -77,7 +77,7 @@ public final class Encoder {
     try {
       return encrypt(data, getDefaultKey());
     } catch (IOException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't encrypt data", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't encrypt data", ex);
       return null;
     }
   }
@@ -90,7 +90,7 @@ public final class Encoder {
     try {
       return decrypt(data, getDefaultKey());
     } catch (IOException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't encrypt data", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't encrypt data", ex);
       return null;
     }
   }

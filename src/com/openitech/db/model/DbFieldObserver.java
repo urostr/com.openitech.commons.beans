@@ -1,7 +1,7 @@
 /*
  * DbFieldObserver.java
  *
- * Created on Èetrtek, 6 april 2006, 18:40
+ * Created on ?etrtek, 6 april 2006, 18:40
  *
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
@@ -157,7 +157,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
           }
         }
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can''t read the value ''{0}'' from the dataSource ''{1}''. [{2}]", new Object[]{getColumnName(), dataSource.getName(), ex.getMessage()});
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can''t read the value ''{0}'' from the dataSource ''{1}''. [{2}]", new Object[]{getColumnName(), dataSource.getName(), ex.getMessage()});
         result = false;
       }
       //dataSource.addActiveRowChangeListener(activeRowChangeWeakListener);
@@ -187,7 +187,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             }
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can''t read the value ''{0}'' from the dataSource {1} sql:''{2}''. {3}", new Object[]{columnName, dataSource.getName(), dataSource.getSelectSql(), ex.getMessage()});
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can''t read the value ''{0}'' from the dataSource {1} sql:''{2}''. {3}", new Object[]{columnName, dataSource.getName(), dataSource.getSelectSql(), ex.getMessage()});
           result = null;
         }
       }
@@ -224,12 +224,12 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             wasNull = dataSource.wasNull();
           }
 
-          //TODO zakaj pa to? èe da datasource 0 potem bi moral tudi fieldObserver vrniti 0
+          //TODO zakaj pa to? ?e da datasource 0 potem bi moral tudi fieldObserver vrniti 0
           if (wasNull) {
             result = Integer.MIN_VALUE;
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
           result = 0;
         }
       }
@@ -254,7 +254,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             result = Double.MIN_VALUE;
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
           result = 0;
         }
       }
@@ -262,7 +262,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
     }
     return result;
   }
-  //TODO motoda ki vraèa date in ne timestamp
+  //TODO motoda ki vra?a date in ne timestamp
 
   public Date getValueAsDate() {
     Date result = null;
@@ -280,7 +280,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             }
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'.  [" + ex.getMessage() + "]");
           result = null;
         }
       }
@@ -337,7 +337,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             }
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql: '" + dataSource.getSelectSql() + "'. [" + ex.getMessage() + "]", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql: '" + dataSource.getSelectSql() + "'. [" + ex.getMessage() + "]", ex);
           result = false;
         }
       }
@@ -359,7 +359,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
             result = blob.getBytes(1, (int) blob.length());
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
           result = new byte[]{};
         }
       } else if (value instanceof byte[]) {
@@ -373,7 +373,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
               wasNull = dataSource.wasNull();
             }
           } catch (Exception ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't read the value '" + columnName + "' from the dataSource " + dataSource.getName() + " sql:'" + dataSource.getSelectSql() + "'. " + ex.getMessage());
             result = new byte[]{};
           }
         }
@@ -529,7 +529,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       try {
         this.dataSource.startUpdate();
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).warning("can't start updating the row");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning("can't start updating the row");
       }
     }
   }
@@ -577,7 +577,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
         updatingActiveRow = false;
       }
 //      }else{
-//        System.out.println("Column="+columnName + " hasValueChanged() = false");
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Column="+columnName + " hasValueChanged() = false");
 //      }
     }
   }

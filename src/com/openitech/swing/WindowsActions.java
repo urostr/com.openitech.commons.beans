@@ -6,6 +6,7 @@ package com.openitech.swing;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.KeyStroke;
@@ -26,7 +27,7 @@ public class WindowsActions {
       @Override
       public void actionPerformed(ActionEvent e) {
         component.copy();
-        System.out.println("Copy Pressed");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).fine("Copy Pressed");
       }
     };
     Action pasteAction = new AbstractAction() {
@@ -34,7 +35,7 @@ public class WindowsActions {
       @Override
       public void actionPerformed(ActionEvent e) {
         component.paste();
-        System.out.println("Paste Pressed");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).fine("Paste Pressed");
       }
     };
     Action cutAction = new AbstractAction() {
@@ -42,7 +43,7 @@ public class WindowsActions {
       @Override
       public void actionPerformed(ActionEvent e) {
         component.cut();
-        System.out.println("Cut Pressed");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).fine("Cut Pressed");
       }
     };
     KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_MASK);

@@ -7,6 +7,8 @@ package com.openitech.swing.style;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.GraphicsEnvironment;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -33,7 +35,7 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
   private Style styleCommentaire;
 
   /**
-   * Buffer de caractères du document
+   * Buffer de caract?res du document
    */
   class Buffer {
 
@@ -53,10 +55,10 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
       try {
         StringBuilder = srcdoc.getText(ind, lg);
       } catch (final BadLocationException ex) {
-        ex.printStackTrace();
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
       }
       if (StringBuilder.length() != lg) {
-        System.out.println("Buffer.read: error: " + StringBuilder.length() + " != " + lg);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Buffer.read: error: " + StringBuilder.length() + " != " + lg);
       }
       goal = ind;
       end = ind + lg;
@@ -80,14 +82,14 @@ public class XMLDocumentStyleFormatter implements JTextPaneStyleFormatter {
 
     public boolean subEquals(final String s, final int ind) {
       if (ind >= srcdoc.getLength()) {
-        System.out.println("Error in Buffer.subEquals: ind >= srcdoc.getLength() : " + ind + " >= " + srcdoc.getLength());
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Error in Buffer.subEquals: ind >= srcdoc.getLength() : {0} >= {1}", new Object[]{ind, srcdoc.getLength()});
       }
       final int lg = s.length();
       if (ind + lg >= srcdoc.getLength()) {
         return (false);
       }
       if (lg > maxSize) {
-        System.out.println("Error in Buffer.subEquals: " + lg + " >  max size(" + maxSize + ")");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Error in Buffer.subEquals: {0} >  max size({1})", new Object[]{lg, maxSize});
       }
       if (ind < goal || ind + lg > end) {
         read(ind);

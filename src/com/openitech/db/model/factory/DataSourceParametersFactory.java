@@ -183,7 +183,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     final boolean cached = !override && (tt.getMaterializedView() != null) && cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue());
     if (cached) {
       tt = cachedTemporaryTables.get(tt.getMaterializedView().getValue());
-      System.out.println("CACHED:TT:" + tt.getMaterializedView().getValue());
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("CACHED:TT:" + tt.getMaterializedView().getValue());
     } else if (tt.getMaterializedView() != null) {
       SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
       cachedTemporaryTables.put(tt.getMaterializedView().getValue(), tt);

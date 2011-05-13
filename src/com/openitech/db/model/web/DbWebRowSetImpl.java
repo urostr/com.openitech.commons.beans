@@ -14,6 +14,8 @@ import java.sql.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 import javax.sql.RowSetMetaData;
@@ -169,7 +171,7 @@ public class DbWebRowSetImpl extends DbChachedRowSetImpl implements WebRowSet {
             colIndex++;
         }
         setMetaData(md);
-        //System.out.println("Number of rows = " + webRowSet.getRow().size());
+        //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Number of rows = " + webRowSet.getRow().size());
         for (com.openitech.xml.wrs.WebRowSet.Row row : webRowSet.getRow()) {
 
 
@@ -184,7 +186,7 @@ public class DbWebRowSetImpl extends DbChachedRowSetImpl implements WebRowSet {
                     continue;
                 }
                 int type = getMetaData().getColumnType(colIndex);
-                //System.out.println("Tip=" + type + " object=" + object);
+                //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Tip=" + type + " object=" + object);
                 switch (type) {
                     case java.sql.Types.BOOLEAN:
                         updateBoolean(colIndex, (Boolean) object);
@@ -222,7 +224,7 @@ public class DbWebRowSetImpl extends DbChachedRowSetImpl implements WebRowSet {
                         break;
                     case java.sql.Types.CLOB:
                         updateClob(colIndex, new DbClobImpl((String) object));
-                        //System.out.println("Updating clob with value: " + ((String) object));
+                        //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Updating clob with value: " + ((String) object));
                         break;
 
                     default:
@@ -267,7 +269,7 @@ public class DbWebRowSetImpl extends DbChachedRowSetImpl implements WebRowSet {
                 throw new SQLException(resBundle.handleGetObject("webrowsetimpl.invalidrd").toString());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
             throw new SQLException(e.getMessage());
         }
     }

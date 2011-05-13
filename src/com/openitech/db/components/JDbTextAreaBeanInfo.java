@@ -7,6 +7,8 @@
 package com.openitech.db.components;
 
 import java.beans.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author uros
@@ -46,7 +48,7 @@ public class JDbTextAreaBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_validator] = new PropertyDescriptor ( "validator", com.openitech.db.components.JDbTextArea.class, "getValidator", "setValidator" ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Properties
 
     // Here you can add code for customizing the properties array.
@@ -91,7 +93,7 @@ public class JDbTextAreaBeanInfo extends SimpleBeanInfo {
             eventSets[EVENT_vetoableChangeListener] = new EventSetDescriptor ( com.openitech.db.components.JDbTextArea.class, "vetoableChangeListener", java.beans.VetoableChangeListener.class, new String[] {"vetoableChange"}, "addVetoableChangeListener", "removeVetoableChangeListener" ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Events
 
     // Here you can add code for customizing the event sets array.

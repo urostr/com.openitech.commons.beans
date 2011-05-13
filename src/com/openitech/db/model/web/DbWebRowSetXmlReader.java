@@ -7,6 +7,7 @@
 package com.openitech.db.model.web;
 
 import java.sql.*;
+import java.util.logging.Level;
 import javax.sql.*;
 import java.io.*;
 
@@ -19,6 +20,7 @@ import com.sun.rowset.internal.XmlErrorHandler;
 
 import com.sun.rowset.internal.XmlResolver;
 import java.text.MessageFormat;
+import java.util.logging.Logger;
 import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
 
@@ -93,11 +95,11 @@ public class DbWebRowSetXmlReader implements XmlReader, Serializable {
       reader1.parse(is);
 
     }catch(Exception ex){
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
 //    catch (SAXParseException err) {
-//      System.out.println(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getMessage(), err.getLineNumber(), err.getSystemId()}));
-//      err.printStackTrace();
+//      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getMessage(), err.getLineNumber(), err.getSystemId()}));
+//      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
 //      throw new SQLException(err.getMessage());
 //
 //    } catch (SAXException e) {
@@ -166,9 +168,9 @@ public class DbWebRowSetXmlReader implements XmlReader, Serializable {
       reader1.parse(is);
 
     } catch (SAXParseException err) {
-      System.out.println(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getLineNumber(), err.getSystemId()}));
-      System.out.println("   " + err.getMessage());
-      err.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getLineNumber(), err.getSystemId()}));
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "   {0}", err.getMessage());
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
       throw new SQLException(err.getMessage());
 
     } catch (SAXException e) {

@@ -1,16 +1,17 @@
 package com.openitech.ref.events;
 
-import javax.swing.event.*;
 import com.openitech.ref.WeakMethodReference;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>Title: </p>
  * <p>Description: </p>
  * <p>Copyright: Copyright (c) 2006</p>
- * <p>Company: Odprte Informacijske Tehnologije Uro≈° Trojar s.p.</p>
- * @author Uro≈° Trojar
+ * <p>Company: Odprte Informacijske Tehnologije Uro?∞ Trojar s.p.</p>
+ * @author Uro?∞ Trojar
  * @version $Revision: 1.1.1.1 $
  */
 
@@ -21,7 +22,7 @@ public class ActionWeakListener extends WeakMethodReference<Object> implements A
       init(owner.getClass(), "actionPerformed", new Class[] {ActionEvent.class});
     }
     catch (NoSuchMethodException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 
@@ -35,7 +36,7 @@ public class ActionWeakListener extends WeakMethodReference<Object> implements A
       execute(e);
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
     catch (java.lang.reflect.InvocationTargetException ex) {
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());

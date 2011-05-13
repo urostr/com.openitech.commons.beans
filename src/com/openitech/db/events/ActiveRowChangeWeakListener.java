@@ -11,6 +11,8 @@ package com.openitech.db.events;
 import com.openitech.ref.WeakMethodReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -58,7 +60,7 @@ public class ActiveRowChangeWeakListener extends WeakMethodReference<Object> imp
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 
@@ -71,7 +73,7 @@ public class ActiveRowChangeWeakListener extends WeakMethodReference<Object> imp
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
  }
 }

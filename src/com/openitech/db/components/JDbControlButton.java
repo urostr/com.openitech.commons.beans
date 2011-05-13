@@ -153,7 +153,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.first();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the first record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the first record.", ex);
         }
       }
 
@@ -177,7 +177,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.previous();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the previous record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the previous record.", ex);
         }
       }
 
@@ -201,7 +201,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.next();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the next record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the next record.", ex);
         }
       }
 
@@ -225,7 +225,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.last();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the last record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the last record.", ex);
         }
       }
 
@@ -249,7 +249,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.moveToInsertRow();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error adding the record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error adding the record.", ex);
         }
       }
 
@@ -280,7 +280,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.deleteRow();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error deleting the record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error deleting the record.", ex);
           StringBuilder message = new StringBuilder();
           message.append("Napaka pri brisanju zapisa!\n\n");
           message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());
@@ -308,7 +308,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.updateRow();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error storing the updated record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error storing the updated record.", ex);
           StringBuilder message = new StringBuilder();
           message.append("Napaka pri potrjevanju vnosa!\n\n");
           message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());
@@ -336,7 +336,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.cancelRowUpdates();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error cancelling updates on the record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error cancelling updates on the record.", ex);
         }
       }
 

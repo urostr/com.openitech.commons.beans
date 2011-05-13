@@ -234,7 +234,7 @@ public class PropertyChanges {
       try {
         java.awt.EventQueue.invokeAndWait(new FirePropertyChanged(this, propertyName, oldValue, newValue));
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't firePropertyChange for '"+propertyName+"'", ex);;
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't firePropertyChange for '"+propertyName+"'", ex);;
       }
   }
   

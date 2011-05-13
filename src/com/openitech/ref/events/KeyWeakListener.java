@@ -1,18 +1,18 @@
 package com.openitech.ref.events;
 
-import javax.swing.event.*;
 import com.openitech.ref.WeakMethodReference;
-import java.lang.reflect.Method;
 import java.lang.reflect.*;
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>Title: </p>
  * <p>Description: </p>
  * <p>Copyright: Copyright (c) 2006</p>
- * <p>Company: Odprte Informacijske Tehnologije Uro≈° Trojar s.p.</p>
- * @author Uro≈° Trojar
+ * <p>Company: Odprte Informacijske Tehnologije Uro?∞ Trojar s.p.</p>
+ * @author Uro?∞ Trojar
  * @version $Revision: 1.1.1.1 $
  */
 
@@ -66,7 +66,7 @@ public class KeyWeakListener extends WeakMethodReference<Object> implements KeyL
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 
@@ -79,7 +79,7 @@ public class KeyWeakListener extends WeakMethodReference<Object> implements KeyL
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 
@@ -92,7 +92,7 @@ public class KeyWeakListener extends WeakMethodReference<Object> implements KeyL
       throw (RuntimeException) new RuntimeException().initCause(ex.getTargetException());
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 }

@@ -134,7 +134,7 @@ public class FormattedFilterPlainDocument extends PlainDocument {
 //          }
 //        });
 //      } catch (Exception ex) {
-//        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't notify document contents change", ex);
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't notify document contents change", ex);
 //      }
 //    }
 //  }

@@ -19,6 +19,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -58,7 +60,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
 
   protected void submit(DataSourceEvent event, boolean log) {
     if (log) {
-      System.out.println("SUBMITTING:" + event.event.dataSource.getName() + ":" + (event.isSuspended() ? "SUSPENDED" : "ACTIVE"));
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "SUBMITTING:{0}:{1}", new Object[]{event.event.dataSource.getName(), event.isSuspended() ? "SUSPENDED" : "ACTIVE"});
     }
     timestamps.remove(event.cancel);
     timestamps.put(event.event, event.timestamp);

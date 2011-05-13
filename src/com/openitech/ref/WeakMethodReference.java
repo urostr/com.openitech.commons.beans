@@ -3,6 +3,8 @@ package com.openitech.ref;
 import java.lang.ref.ReferenceQueue;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Weak reference objects, which do not prevent their referents from being
@@ -20,8 +22,8 @@ import java.lang.reflect.Method;
  * registered with reference queues.
 
  * <p>Copyright: Copyright (c) 2006</p>
- * <p>Company: Odprte Informacijske Tehnologije Uroï¿½ Trojar s.p.</p>
- * @author Uroï¿½ Trojar
+ * <p>Company: Odprte Informacijske Tehnologije UroÔ?? Trojar s.p.</p>
+ * @author UroÔ?? Trojar
  * @version $Revision: 1.1.1.1 $
  */
 
@@ -78,7 +80,7 @@ public class WeakMethodReference<T>  extends WeakObjectReference<T> {
       return execute(new Object[] {parameter});
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
       return null;
     }
     catch (InvocationTargetException ex) {
@@ -91,7 +93,7 @@ public class WeakMethodReference<T>  extends WeakObjectReference<T> {
       return execute(parameters);
     }
     catch (IllegalAccessException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
       return null;
     }
     catch (InvocationTargetException ex) {

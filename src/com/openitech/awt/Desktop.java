@@ -27,17 +27,17 @@ public class Desktop {
       try {
         Class desktop = Class.forName("org.jdesktop.jdic.desktop.Desktop");
         jdic_open = desktop.getMethod("open", java.io.File.class);
-        System.out.println("Using jdic to open files.");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Using jdic to open files.");
       } catch (java.lang.ClassNotFoundException ex) {
         Class desktop = Class.forName("java.awt.Desktop");
         if ((Boolean) (desktop.getMethod("isDesktopSupported", new Class[]{}).invoke(null, new Object[]{}))) {
           awt_desktop_manager = desktop.getMethod("getDesktop", new Class[]{}).invoke(null, new Object[]{});
           awt_open = desktop.getMethod("open", java.io.File.class);
-          System.out.println("Using awt to open files.");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Using awt to open files.");
         }
       }
     } catch (Exception ex) {
-      System.out.println("org.jdesktop.jdic.desktop.Desktop : " + ex.getMessage());
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("org.jdesktop.jdic.desktop.Desktop : " + ex.getMessage());
       jdic_open = null;
       awt_open = null;
       awt_desktop_manager = null;
@@ -53,7 +53,7 @@ public class Desktop {
   private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
   public static void open(final java.io.File file) {
-    System.out.println("Opening "+file.getAbsolutePath());
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Opening "+file.getAbsolutePath());
     if (file.exists()) {
       executorService.execute(new Runnable() {
 
@@ -75,7 +75,7 @@ public class Desktop {
         }
       });
     } else {
-      System.out.println("File does not exist.");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("File does not exist.");
     }
   }
 }

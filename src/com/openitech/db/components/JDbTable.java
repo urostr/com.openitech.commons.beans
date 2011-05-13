@@ -69,7 +69,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       setComparator = Class.forName("javax.swing.table.TableRowSorter").getMethod("setComparator", int.class, java.util.Comparator.class);
 
       if (convertRowIndexToModel != null && convertRowIndexToView != null) {
-        System.out.println("com.openitech.db.components.JDbTable is sortable.");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("com.openitech.db.components.JDbTable is sortable.");
         sortable = true;
       }
     } catch (Throwable ex) {
@@ -158,7 +158,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
     menu.add(copy);
 
-    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke", "RELOAD");
+    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osve?i podatke", "RELOAD");
     aReload.addActionListener(new ActionListener() {
 
       @Override
@@ -175,7 +175,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     try {
       activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, null, "tableModel_activeRowChanged");
     } catch (NoSuchMethodException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
     }
   }
 
@@ -184,7 +184,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       String value = getValueAt(getSelectedRow(), getSelectedColumn()).toString();
       Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
       clipboard.setContents(new StringSelection(value), null);
-      System.out.println("Copy Pressed. Value=" + value);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Copy Pressed. Value=" + value);
     } catch (Exception ex) {
       //ignore
     }
@@ -355,7 +355,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
           }
           updateViewPosition();
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't adjust the selection.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Can't adjust the selection.", ex);
         }
       }
     }
@@ -382,7 +382,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
             dbTableModel.getDataSource().absolute(newRowNumber);
           }
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.INFO, "Can't read from the tableModel.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Can't read from the tableModel.", ex);
         } finally {
           selectionChanged = false;
         }

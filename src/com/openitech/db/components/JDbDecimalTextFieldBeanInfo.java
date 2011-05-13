@@ -1,12 +1,14 @@
 /*
  * JDbDecimalTextFieldBeanInfo.java
  *
- * Created on Èetrtek, 10 januar 2008, 15:05
+ * Created on »etrtek, 10 januar 2008, 15:05
  */
 
 package com.openitech.db.components;
 
 import java.beans.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author uros
@@ -36,7 +38,7 @@ public class JDbDecimalTextFieldBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_decimals].setPreferred ( true );
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Properties
     
     // Here you can add code for customizing the properties array.

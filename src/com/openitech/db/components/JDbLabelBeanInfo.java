@@ -7,6 +7,8 @@
 package com.openitech.db.components;
 
 import java.beans.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author uros
@@ -41,7 +43,7 @@ public class JDbLabelBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_format] = new PropertyDescriptor ( "format", com.openitech.db.components.JDbLabel.class, "getFormat", "setFormat" ); // NOI18N
         }
         catch(IntrospectionException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         }//GEN-HEADEREND:Properties
     
     // Here you can add code for customizing the properties array.

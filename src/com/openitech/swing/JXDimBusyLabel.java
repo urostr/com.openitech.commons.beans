@@ -91,7 +91,7 @@ public class JXDimBusyLabel extends JXLabel {
           }
         });
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING,"couldn't set the busy label.", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING,"couldn't set the busy label.", ex);
       }
     }
   }

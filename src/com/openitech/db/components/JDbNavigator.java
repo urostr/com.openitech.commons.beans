@@ -250,7 +250,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         dataSource.cancelRowUpdates();
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error cancelling updates on the record.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error cancelling updates on the record.", ex);
     }
   }//GEN-LAST:event_jbCancelActionPerformed
 
@@ -261,7 +261,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         dataSource.updateRow();
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error storing the updated record.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error storing the updated record.", ex);
       StringBuilder message = new StringBuilder();
       message.append("Napaka pri potrjevanju vnosa!\n\n");
       message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());
@@ -282,7 +282,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         dataSource.deleteRow();
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error deleting the record.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error deleting the record.", ex);
       StringBuilder message = new StringBuilder();
       message.append("Napaka pri brisanju zapisa!\n\n");
       message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());
@@ -299,7 +299,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         navigatorFor.requestFocus();
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error adding the record.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error adding the record.", ex);
     }
   }//GEN-LAST:event_jbAddActionPerformed
 
@@ -309,7 +309,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         dataSource.last();
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the last record.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the last record.", ex);
     }
   }//GEN-LAST:event_jbLastActionPerformed
 
@@ -319,7 +319,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         dataSource.next();
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the next record.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the next record.", ex);
     }
   }//GEN-LAST:event_jbNextActionPerformed
 
@@ -329,7 +329,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         dataSource.previous();
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the previous record.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the previous record.", ex);
     }
 
   }//GEN-LAST:event_jbPrevActionPerformed
@@ -340,7 +340,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         dataSource.first();
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error moving to the first record.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the first record.", ex);
     }
   }//GEN-LAST:event_jbFirstActionPerformed
 
@@ -365,7 +365,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         }
       }
     } catch (Exception ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 
@@ -395,7 +395,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         jbCancel.setEnabled(updating);
         jbReload.setEnabled(this.dataSource != null);
         if (updating) {
-          Logger.getLogger(Settings.LOGGER).finest("Updating");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finest("Updating");
         }
       } catch (SQLException ex) {
         jbFirst.setEnabled(false);
@@ -407,7 +407,7 @@ public class JDbNavigator extends javax.swing.JPanel implements ActiveRowChangeL
         jbConfirm.setEnabled(false);
         jbCancel.setEnabled(false);
         jbReload.setEnabled(false);
-        Logger.getLogger(Settings.LOGGER).warning("Error setting navigator properties. [" + ex.getMessage() + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning("Error setting navigator properties. [" + ex.getMessage() + "]");
       } finally {
         dataSource.unlock();
       }

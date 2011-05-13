@@ -133,7 +133,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       for (String column : columnDescriptors[columnIndex].columnNames) {
         sb.append(sb.length() > 0 ? ":" : "").append(column);
       }
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] " + sb.toString());
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] " + sb.toString());
     }
     return null;
   }
@@ -445,7 +445,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       int row = dataSource.getRow();
       fireTableRowsUpdated(row, row);
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't read from the dataSource.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't read from the dataSource.", ex);
     }
 //    finally {
 //      dataSource.unlock();
@@ -886,7 +886,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           for (String column : columnNames) {
             sb.append(sb.length() > 0 ? ":" : "").append(column);
           }
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] " + sb.toString());
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't getValueAt(" + Integer.toString(rowIndex) + "," + Integer.toString(columnIndex) + ") from the dataSource. [" + ex.getMessage() + "] " + sb.toString());
         }
         return null;
       }
@@ -983,7 +983,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           try {
             return method.invoke(owner.get(), new Object[]{value});
           } catch (Exception ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't invoke function " + method.getName() + "(" + owner.getClass().getName() + "). [" + ex.getMessage() + "]");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't invoke function " + method.getName() + "(" + owner.getClass().getName() + "). [" + ex.getMessage() + "]");
             return "";
           }
         }

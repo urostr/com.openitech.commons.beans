@@ -26,6 +26,7 @@ import java.awt.event.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 import java.io.Serializable;
+import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.text.JTextComponent;
 
@@ -1317,7 +1318,7 @@ public class AutoCompleteTextComponentPopup extends JPopupMenu implements ComboP
       try {
         screenInsets = (Insets) Toolkit.class.getMethod("getScreenInsets", new Class[]{GraphicsConfiguration.class}).invoke(toolkit, new Object[]{gc});
       } catch (Exception e) {
-        //e.printStackTrace();
+        //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
         screenInsets = new Insets(22, 0, 0, 0);
       }
       // Note: We must create a new rectangle here, because method

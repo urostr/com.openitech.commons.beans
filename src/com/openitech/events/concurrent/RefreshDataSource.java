@@ -104,12 +104,12 @@ public final class RefreshDataSource extends DataSourceEvent {
           if (label != null && !label.equals("")) {
             busy.setText(label);
           } else {
-            busy.setText("Osvežujem podatke ...");
+            busy.setText("Osve?ujem podatke ...");
           }
         }
       });
     }
-//    System.out.println("Busy!");
+//    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Busy!");
   }
 
   public synchronized static void setReady() {
@@ -123,7 +123,7 @@ public final class RefreshDataSource extends DataSourceEvent {
           if (busyCount == 0) {
             busy.setBusy(false);
             busy.setText("Pripravljen...");
-//            System.out.println("Ready!");
+//            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Ready!");
           }
         }
       });
@@ -133,18 +133,18 @@ public final class RefreshDataSource extends DataSourceEvent {
 
   public void run() {
     if (isCanceled()) {
-      System.out.println(event.dataSource + " is canceled. Quitting.");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(event.dataSource + " is canceled. Quitting.");
       return;
     }
     if (isSuspended()) {
       try {
         Thread.sleep(27);
       } catch (InterruptedException ex) {
-        Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Thread interrupted [" + event.dataSource + "]");
       }
     }
     if (isCanceled()) {
-      System.out.println(event.dataSource + " is canceled. Quitting.");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(event.dataSource + " is canceled. Quitting.");
       return;
     }
     if (isSuspended()) { //re-queue
@@ -154,19 +154,19 @@ public final class RefreshDataSource extends DataSourceEvent {
         return;
       }
       try {
-        System.out.println("QUEUED DELAY:" + this.queuedDelay + "ms:" + event.dataSource + ":" + (isSuspended() ? "SUSPENDED" : "ACTIVE"));
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("QUEUED DELAY:" + this.queuedDelay + "ms:" + event.dataSource + ":" + (isSuspended() ? "SUSPENDED" : "ACTIVE"));
         Thread.sleep(this.queuedDelay);
       } catch (InterruptedException ex) {
-        Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Thread interrupted [" + event.dataSource + "]");
       }
       if (isCanceled()) {
-        System.out.println(event.dataSource + " is canceled. Quitting.");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(event.dataSource + " is canceled. Quitting.");
         return;
       }
       if (timestamps.get(event).longValue() <= timestamp.longValue()) {
         load();
       } else {
-        Logger.getLogger(Settings.LOGGER).warning("Skipped loading [" + event.dataSource + "...]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning("Skipped loading [" + event.dataSource + "...]");
       }
     }
   }
@@ -224,7 +224,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       loadCopy();
     } else {
       if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
-        System.out.println("trying to load on EQ:" + event.dataSource);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("trying to load on EQ:" + event.dataSource);
         try {
           EventQueue.invokeAndWait(new Runnable() {
 
@@ -233,7 +233,7 @@ public final class RefreshDataSource extends DataSourceEvent {
             }
           });
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Thread interrupted [" + event.dataSource + "]");
         }
       } else {
         loadOriginal();
@@ -242,14 +242,14 @@ public final class RefreshDataSource extends DataSourceEvent {
   }
 
   protected void loadOriginal() {
-    System.out.println("LOADING:" + event.dataSource);
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("LOADING:" + event.dataSource);
     event.dataSource.lock(true, true);
     try {
       if (filterChange) {
         try {
           event.dataSource.filterChanged();
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting [" + event.dataSource + "]", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error resetting [" + event.dataSource + "]", ex);
         }
       }
       if (this.defaults != null) {
@@ -272,12 +272,12 @@ public final class RefreshDataSource extends DataSourceEvent {
     } catch (SQLException ex) {
       event.dataSource.reload();
 //    } catch (IllegalStateException ex) {
-//      Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
+//      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Error reloading ["+event.dataSource+"]:"+ex.getMessage());
 //      if (isLastInQueue()) {
 //        resubmit();
 //      }
     } catch (Throwable thw) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + event.dataSource + "]", thw);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error reloading [" + event.dataSource + "]", thw);
     }
     setReady();
   }
@@ -290,12 +290,12 @@ public final class RefreshDataSource extends DataSourceEvent {
 
       dataSource.setSafeMode(false);
 
-      System.out.println("LOADING:" + dataSource);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("LOADING:" + dataSource);
       if (filterChange) {
         try {
           dataSource.filterChanged();
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error resetting [" + dataSource + "]", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error resetting [" + dataSource + "]", ex);
         }
       }
       if (this.defaults != null) {
@@ -315,12 +315,12 @@ public final class RefreshDataSource extends DataSourceEvent {
         if (reload) {
           row = dataSource.getRow();
         } else {
-          //Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Error refreshing [" + dataSource + "]");
+          //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Error refreshing [" + dataSource + "]");
         }
       } catch (SQLException ex) {
         dataSource.reload();
       } catch (Throwable thw) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Error reloading [" + dataSource + "]", thw);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error reloading [" + dataSource + "]", thw);
       }
       loading = false;
       tasks.remove(event);
@@ -328,7 +328,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       if (!Thread.interrupted()&&isLastInQueue()) {
         if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
           final int r = row;
-          System.out.println("trying to load on EQ:" + event.dataSource);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("trying to load on EQ:" + event.dataSource);
           try {
             EventQueue.invokeAndWait(new Runnable() {
 
@@ -337,7 +337,7 @@ public final class RefreshDataSource extends DataSourceEvent {
               }
             });
           } catch (Exception ex) {
-            Logger.getLogger(Settings.LOGGER).info("Thread interrupted [" + event.dataSource + "]");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Thread interrupted [" + event.dataSource + "]");
           }
         } else {
           event.dataSource.loadData(dataSource, row);

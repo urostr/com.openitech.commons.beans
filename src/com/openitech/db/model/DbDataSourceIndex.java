@@ -487,8 +487,7 @@ public class DbDataSourceIndex implements DbNavigatorDataSourceIndex<DbDataSourc
         try {
           value = row > dataSource.getRowCount() ? null : dataSource.getValueAt(row, column, keys.toArray(new String[keyFilters.size()]));
         } catch (Exception ex) {
-          ex.printStackTrace();
-          System.out.println();
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
         }
         for (Object allowedValue : keyFilters.get(column)) {
           valid = valid && Equals.equals(value, allowedValue);
