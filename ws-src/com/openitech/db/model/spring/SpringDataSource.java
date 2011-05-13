@@ -104,15 +104,15 @@ public class SpringDataSource implements DbDataSourceImpl {
     try {
       Connection connection = getConnection();
       try {
-        Logger.getLogger(Settings.LOGGER).log(Level.FINE, "Executing ''{0}''", preparedSelectSql);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.FINE, "Executing ''{0}''", preparedSelectSql);
         if (DbDataSource.DUMP_SQL) {
-          Logger.getLogger(Settings.LOGGER).log(Level.INFO, "\n##############\n ''{0}''", preparedSelectSql);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "\n##############\n ''{0}''", preparedSelectSql);
         }
         long timer = System.currentTimeMillis();
         currentResultSet = new CurrentResultSet(executeSql(getSelectStatement(preparedSelectSql, connection), owner.getParameters()));
-        Logger.getLogger(Settings.LOGGER).log(Level.INFO, "{0}:select:{1}ms", new Object[]{owner.getName(), System.currentTimeMillis() - timer});
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "{0}:select:{1}ms", new Object[]{owner.getName(), System.currentTimeMillis() - timer});
         if (DbDataSource.DUMP_SQL) {
-          Logger.getLogger(Settings.LOGGER).info("##############\n");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############\n");
         }
         currentResultSet.currentResultSet.first();
       } finally {
@@ -121,7 +121,7 @@ public class SpringDataSource implements DbDataSourceImpl {
         }
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get a result from " + owner.getName(), ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get a result from " + owner.getName(), ex);
       currentResultSet = null;
     } finally {
       owner.unlock();
@@ -817,7 +817,7 @@ public class SpringDataSource implements DbDataSourceImpl {
    */
   @Override
   public void updateFloat(String columnName, float x) throws SQLException {
-    //TODO float ni natanèen 7.45f se v bazo zapiše 7.449999809265137
+    //TODO float ni natanËen 7.45f se v bazo zapiöe 7.449999809265137
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
     } else {
@@ -1287,7 +1287,7 @@ public class SpringDataSource implements DbDataSourceImpl {
    */
   @Override
   public float getFloat(String columnName) throws SQLException {
-    //TODO nenatanèno èe roèno vneseš v bazo. èe gre pisanje in branje preko programa potem je uredu
+    //TODO nenatanËno Ëe roËno vneseö v bazo. Ëe gre pisanje in branje preko programa potem je uredu
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, 0f, Number.class);
       return value == null ? null : value.floatValue();
@@ -1682,7 +1682,7 @@ public class SpringDataSource implements DbDataSourceImpl {
    */
   @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
-    //TODO ne dela napaèno castanje. Oèitno èe hoèem date potem dela
+    //TODO ne dela napaËno castanje. OËitno Ëe hoËem date potem dela
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Timestamp.class);
     } else {
@@ -2821,7 +2821,7 @@ public class SpringDataSource implements DbDataSourceImpl {
     }
   }
 
-  //TODO a se lahko spremeni metodo v askToSaveChanges()? Bolj logièno mi je
+  //TODO a se lahko spremeni metodo v askToSaveChanges()? Bolj logiËno mi je
   public boolean askToSaveChanges() {
     return (JOptionPane.showOptionDialog(OwnerFrame.getInstance().getOwner(),
             "Ali naj shranim spremembe ?",
@@ -2859,7 +2859,7 @@ public class SpringDataSource implements DbDataSourceImpl {
 
 
   protected PreparedStatement getSelectStatement(String sql, Connection connection) throws SQLException {
-    //TODO ni logièna koda. Ne uprablja se owner.isCacheStatements()
+    //TODO ni logiËna koda. Ne uprablja se owner.isCacheStatements()
     if (this.selectStatement != null) {
       return this.selectStatement;
     } else {
@@ -2869,7 +2869,7 @@ public class SpringDataSource implements DbDataSourceImpl {
         selectStatement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
         selectStatement.setFetchSize(1008);
         this.selectStatement = selectStatement;
-        Logger.getLogger(Settings.LOGGER).info("Successfully prepared the selectSql.");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Successfully prepared the selectSql.");
 
       }
       return selectStatement;
@@ -3216,7 +3216,7 @@ public class SpringDataSource implements DbDataSourceImpl {
         semaphore.acquire();
         this.selectSql = selectSql;
         String sql = SQLDataSource.substParameters(selectSql, owner.getParameters());
-        Logger.getLogger(Settings.LOGGER).finest(
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finest(
                 "\n################# SELECT SQL #################\n" + sql + "\n################# ########## #################");
         selectStatementReady = false;
         preparedSelectSql = null;
@@ -3252,7 +3252,7 @@ public class SpringDataSource implements DbDataSourceImpl {
         }
         currentResultSet = null;
       } catch (Exception ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
       } finally {
         semaphore.release();
         if (countSql == null) {
@@ -3358,16 +3358,16 @@ public class SpringDataSource implements DbDataSourceImpl {
           if (newCount <= 0) {
             if (preparedCountSql != null) {
 
-              Logger.getLogger(Settings.LOGGER).fine("Executing '" + preparedCountSql + "'");
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).fine("Executing '" + preparedCountSql + "'");
               if (DbDataSource.DUMP_SQL) {
-                Logger.getLogger(Settings.LOGGER).info("############## count(*) \n" + preparedCountSql);
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## count(*) \n" + preparedCountSql);
 
               }
               Connection connection = getConnection();
               try {
                 ResultSet rs = executeSql(getCountStatement(preparedCountSql, connection), owner.getParameters());
                 if (DbDataSource.DUMP_SQL) {
-                  Logger.getLogger(Settings.LOGGER).info("##############");
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
                 }
                 if (rs.first()) {
                   newCount = rs.getInt(1);
@@ -3381,7 +3381,7 @@ public class SpringDataSource implements DbDataSourceImpl {
             }
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't get row count for " + owner.getName(), ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get row count for " + owner.getName(), ex);
           newCount = this.count;
         } finally {
           owner.unlock();
@@ -3463,7 +3463,7 @@ public class SpringDataSource implements DbDataSourceImpl {
           currentResultSet.close();
         }
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't properly close the for '" + selectSql + "'", ex);
       } finally {
         currentResultSet = null;
         owner.unlock();
@@ -3485,13 +3485,13 @@ public class SpringDataSource implements DbDataSourceImpl {
         }
         reloaded = true;
         owner.unlock();
-        Logger.getLogger(Settings.LOGGER).finer("Permit unlockd '" + selectSql + "'");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finer("Permit unlockd '" + selectSql + "'");
       }
       if (oldRow > 0 && getRowCount() > 0) {
         try {
           currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
         } catch (SQLException ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't change rowset position", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't change rowset position", ex);
         }
       }
       if (fireEvents) {
@@ -3579,7 +3579,7 @@ public class SpringDataSource implements DbDataSourceImpl {
         try {
           oldRow = currentResultSet.currentResultSet.getRow();
         } catch (Exception ex) {
-          Logger.getLogger(Settings.LOGGER).log(Level.WARNING, ex.getMessage());
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage());
           check = true;
         }
         if (check) {
@@ -3587,7 +3587,7 @@ public class SpringDataSource implements DbDataSourceImpl {
           try {
             currentResultSet.currentResultSet.relative(0);
           } catch (SQLException ex) {
-            Logger.getLogger(Settings.LOGGER).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "SelectResultSet seems closed. [" + ex.getMessage() + "]");
             createCurrentResultSet();
           } finally {
             owner.unlock();
@@ -3699,7 +3699,7 @@ public class SpringDataSource implements DbDataSourceImpl {
     Object result = nullValue;
     Integer r = new Integer(row);
 
-    //TODO ne vem èe je to uredu. mogoèe bi bilo potrebno dati napako
+    //TODO ne vem Ëe je to uredu. mogoËe bi bilo potrebno dati napako
 
       final ResultSet openSelectResultSet = openSelectResultSet();
 

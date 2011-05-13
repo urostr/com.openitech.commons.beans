@@ -780,7 +780,7 @@ public class DbRowSetWriter implements TransactionalWriter, Serializable {
         return true;
       }
     } catch (SQLException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
       // if executeUpdate fails it will come here,
       // update crsResolve with null rows
       this.crsResolve.moveToInsertRow();

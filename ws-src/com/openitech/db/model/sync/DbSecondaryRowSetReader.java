@@ -167,7 +167,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
 
 
 
-      //poklièi SP
+      //pokliËi SP
       String parametri = "";
       int steviloParametrov = 0;
       List<SqlParameter> param = new ArrayList<SqlParameter>();
@@ -177,7 +177,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
         steviloParametrov++;
       }
       if (steviloParametrov > 0) {
-        parametri = parametri.substring(0, parametri.length() - 1);//pobrišem zadnjo vejco
+        parametri = parametri.substring(0, parametri.length() - 1);//pobriöem zadnjo vejco
       }
       String exePrecedure = " [dbo].[" + procedureName + "] ( " + parametri + " ) ";
       Logger.getAnonymousLogger().info(exePrecedure);
@@ -201,7 +201,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
       if (rs.next()) {
 
         String xml = rs.getString(1);
-//        System.out.println(test);
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(test);
 
         Logger.getAnonymousLogger().warning(xml);
         if (xml.length() > 0) {
@@ -333,11 +333,11 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
       steviloParametrov++;
     }
     if (steviloParametrov > 0) {
-      parametri = parametri.substring(0, parametri.length() - 1);//pobrišem zadnjo vejco
+      parametri = parametri.substring(0, parametri.length() - 1);//pobriöem zadnjo vejco
     }
 
     String sql = getQuery("secondary_event");
-    sql = SQLDataSource.substParameters(sql, eq.getParameters());//mi pusti vprašaje
+    sql = SQLDataSource.substParameters(sql, eq.getParameters());//mi pusti vpraöaje
     sql = substParameters(sql, param);
 
 

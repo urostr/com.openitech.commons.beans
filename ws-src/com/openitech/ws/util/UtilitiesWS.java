@@ -104,7 +104,7 @@ public class UtilitiesWS {
 //
 //        } catch (Exception ex) {
 //        }
-//        System.out.println(stringWriter.toString());
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(stringWriter.toString());
 
     DbWebRowSetImpl wrs = new DbWebRowSetImpl();
     wrs.readXml(rowSet);
@@ -158,7 +158,7 @@ public class UtilitiesWS {
 
     } catch (Exception ex) {
     }
-    System.out.println(stringWriter.toString());
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(stringWriter.toString());
 
     entry.setJAXBXml(stringWriter.toString());
 
@@ -172,10 +172,10 @@ public class UtilitiesWS {
 
     } catch (Exception ex) {
     }
-    System.out.println(stringWriter.toString());
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(stringWriter.toString());
 
     Object post = webResource.accept(MediaType.APPLICATION_XML_TYPE).post(returnType, entry);
-    System.out.println(post);
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(post.toString());
     result = (T) post;
 
 

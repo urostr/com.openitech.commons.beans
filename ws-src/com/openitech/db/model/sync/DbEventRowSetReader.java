@@ -45,7 +45,7 @@ import javax.sql.rowset.spi.*;
  *     <code>IDSifre</code>
  * 
  * @version 1.0
- * @author Domen Bašiè
+ * @author Domen BaöiË
  * @see javax.sql.rowset.spi.SyncProvider
  * @see javax.sql.rowset.spi.SyncFactory
  * @see javax.sql.rowset.spi.SyncFactoryException
@@ -189,7 +189,7 @@ public class DbEventRowSetReader implements RowSetReader, Serializable {
       if (rs.next()) {
 
         String xml = rs.getString(1);
-//        System.out.println(test);
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(test);
 
         Logger.getAnonymousLogger().warning(xml);
         Logger.getAnonymousLogger().warning(param.toString());

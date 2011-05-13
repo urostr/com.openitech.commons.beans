@@ -18,6 +18,8 @@ import javax.sql.rowset.spi.*;
 import com.sun.rowset.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * There will be two sets of data which will be maintained by the rowset at the
@@ -246,7 +248,7 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
                           writeData(row);
 
                           //crw.writeData( (RowSetInternal)crsRow);
-                          //System.out.printlnt.println("12");
+                          //Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).infot.println("12");
 
                      } catch(SyncProviderException spe) {
                          /**
@@ -310,7 +312,7 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
              rsmdRow.setCatalogName(i, rsmdWrite.getCatalogName(i));
              rsmdRow.setSchemaName(i, rsmdWrite.getSchemaName(i));
           } catch(SQLException e) {
-               e.printStackTrace();
+               Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
           }
         } //end for
 
@@ -2394,7 +2396,7 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
      *         String name = crs.getString(1);
      *         int age = crs.getInt(2);
      *         short ssn = crs.getShort(3);
-     *         System.out.println(name + "   " + age + "   " + ssn);
+     *         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(name + "   " + age + "   " + ssn);
      *     }
      *
      * </code> </PRE>

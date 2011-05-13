@@ -6,9 +6,6 @@
  */
 package com.openitech.db.model.sync;
 
-import com.openitech.db.model.sync.DbEventRowSetReader;
-import com.openitech.db.model.sync.DbRowSetWriter;
-import com.openitech.db.model.sync.DbEventSyncProvider;
 import com.sun.rowset.JdbcRowSetResourceBundle;
 import java.sql.*;
 import javax.sql.*;
@@ -21,7 +18,8 @@ import javax.sql.rowset.*;
 import javax.sql.rowset.spi.*;
 import javax.sql.rowset.serial.*;
 import com.sun.rowset.internal.*;
-import com.sun.rowset.providers.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The standard implementation of the <code>CachedRowSet</code> interface.
@@ -840,7 +838,7 @@ public class DbChachedRowSetImpl extends BaseRowSet implements RowSet, RowSetInt
         } catch (SyncProviderException spe) {
             throw spe;
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
             throw new SyncProviderException(e.getMessage());
         } catch (SecurityException e) {
             throw new SyncProviderException(e.getMessage());
@@ -3614,7 +3612,7 @@ public class DbChachedRowSetImpl extends BaseRowSet implements RowSet, RowSetInt
      *         String name = crs.getString(1);
      *         int age = crs.getInt(2);
      *         short ssn = crs.getShort(3);
-     *         System.out.println(name + "   " + age + "   " + ssn);
+     *         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(name + "   " + age + "   " + ssn);
      *     }
      *
      * </code> </PRE>
@@ -5736,7 +5734,7 @@ public class DbChachedRowSetImpl extends BaseRowSet implements RowSet, RowSetInt
         checkCursor();
 
         if (RowSetMD.getColumnType(columnIndex) != java.sql.Types.BLOB) {
-            System.out.println(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.type").toString(), RowSetMD.getColumnType(columnIndex)));
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.type").toString(), RowSetMD.getColumnType(columnIndex)));
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
         }
 
@@ -5776,7 +5774,7 @@ public class DbChachedRowSetImpl extends BaseRowSet implements RowSet, RowSetInt
         checkCursor();
 
         if (RowSetMD.getColumnType(columnIndex) != java.sql.Types.CLOB) {
-            System.out.println(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.type").toString(), RowSetMD.getColumnType(columnIndex)));
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.type").toString(), RowSetMD.getColumnType(columnIndex)));
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
         }
 
