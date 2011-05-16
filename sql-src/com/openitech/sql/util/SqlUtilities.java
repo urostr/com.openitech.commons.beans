@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.serial.SerialClob;
@@ -416,6 +417,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
     logChanges(application, database, tableName, operation, newValues, oldValues);
   }
+  
+  public abstract void logActions(List<LogRecord> logRecords);
 
   protected abstract void logChanges(String application, String database, String tableName, Operation operation, List<FieldValue> newValues, List<FieldValue> oldValues) throws SQLException;
 

@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util.mssql;
 
+import com.openitech.Settings;
 import com.openitech.value.events.EventType;
 import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.TemporaryTable;
@@ -31,6 +32,7 @@ import com.openitech.io.ReadInputStream;
 import com.openitech.jdbc.proxy.DataSourceProxy;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
+import com.openitech.sql.logger.SQLLogger;
 import com.openitech.util.Equals;
 import com.openitech.value.StringValue;
 import com.openitech.value.VariousValue;
@@ -64,7 +66,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.logging.XMLFormatter;
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.JOptionPane;
 import javax.xml.bind.JAXBContext;
@@ -179,6 +183,36 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
+  public void logActions(List<LogRecord> logRecords) {
+    if (logRecords != null
+            && logRecords.size() > 0) {
+      ConnectionManager manager = ConnectionManager.getInstance();
+      if (manager != null) {
+        try {
+          final Connection connection = manager.getTemporaryConnection();
+          String application = manager.getProperty("db.connect.appName", "JAVA-CLIENT");
+          try {
+            PreparedStatement logAction = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "appendAppLog.sql", "cp1250"));
+            XMLFormatter formatter = new XMLFormatter();
+
+            for (LogRecord logRecord : logRecords) {
+              int param = 1;
+              logAction.setString(param++, application);
+              logAction.setString(param++, formatter.format(logRecord));
+
+              logAction.executeUpdate();
+            }
+          } finally {
+            connection.close();
+          }
+        } catch (SQLException ex) {
+          Logger.getLogger(SQLLogger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      }
+    }
+  }
+
+  @Override
   protected void logChanges(String application, String database, String tableName, Operation operation, List<FieldValue> newValues, List<FieldValue> oldValues) throws SQLException {
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (logChanges == null) {
@@ -214,11 +248,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Long oldValueId = storeValue(fieldType, oldValue.getValue());
 
       fieldValues = new FieldValue[]{
-                new FieldValue("ChangeId", Types.BIGINT, changeId),
-                new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
-                new FieldValue("NewValueId", Types.BIGINT, newValueId),
-                new FieldValue("OldValueId", Types.BIGINT, oldValueId)
-              };
+        new FieldValue("ChangeId", Types.BIGINT, changeId),
+        new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
+        new FieldValue("NewValueId", Types.BIGINT, newValueId),
+        new FieldValue("OldValueId", Types.BIGINT, oldValueId)
+      };
 
       executeUpdate(logChangedValues, fieldValues);
     }
