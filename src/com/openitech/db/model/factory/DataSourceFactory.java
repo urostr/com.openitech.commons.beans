@@ -7,6 +7,7 @@ package com.openitech.db.model.factory;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.filters.DataSourceLimit;
+import com.openitech.db.model.DataSourceConfigObserver;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
@@ -560,6 +561,10 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
             if (value instanceof DataSourceObserver) {
               ((DataSourceObserver) value).setDataSource(dataSource);
+            }
+
+            if (value instanceof DataSourceConfigObserver) {
+              ((DataSourceConfigObserver) value).setConfig(config);
             }
           }
         }
