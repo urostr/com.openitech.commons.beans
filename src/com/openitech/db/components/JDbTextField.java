@@ -157,7 +157,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
       boolean valid = isValid(this.getText());
 
       if (!valid) {
-        throw new IllegalStateException("Polje vsebuje napaËno vrednost");
+        throw new IllegalStateException("Polje vsebuje napa?no vrednost");
       }
     }
   }
@@ -180,7 +180,7 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     String tip = dbFieldObserverToolTip.getValueAsText();
     if (!dbFieldObserverToolTip.wasNull() && tip.length() > 0) {
-      this.setToolTipText("Pomo\u010d : " + tip);
+      this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP") + tip);
     } else {
       this.setToolTipText(null);
     }

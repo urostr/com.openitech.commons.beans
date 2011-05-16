@@ -103,7 +103,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
   /**
    * Text informing the user that clicking on this component will allow them to set the image
    */
-  private static final String TEXT = "<html><i><b>Click here<br>to set the image</b></i></html>";
+  private static final String TEXT = java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("CLICK_HERE_TO_SET_THE_IMAGE");
   /**
    * The image to draw
    */
@@ -128,7 +128,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
   public JDbJXImagePanel() {
     setLayout(new BorderLayout());
     try {
-      defaultImage = ImageIO.read(getClass().getResource("/com/openitech/icons/no_image.gif"));
+      defaultImage = ImageIO.read(getClass().getResource("/com/openitech/icons/no_image.gif")); //NOI18N
 
     } catch (Exception ex) {
       Logger.getLogger(JDbJXImagePanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -141,9 +141,9 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 
   private void addListeners() {
     try {
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
-      imagePropertyChangeWeakListener = new PropertyChangeWeakListener(this, "propertyChange");
-      addPropertyChangeListener("image", imagePropertyChangeWeakListener);
+      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null); //NOI18N
+      imagePropertyChangeWeakListener = new PropertyChangeWeakListener(this, "propertyChange"); //NOI18N
+      addPropertyChangeListener("image", imagePropertyChangeWeakListener); //NOI18N
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
     }
@@ -196,7 +196,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 
   protected JButton getRemoveImageButton() {
     if (jbRemoveImage == null) {
-      jbRemoveImage = new JButton("Odstrani sliko");
+      jbRemoveImage = new JButton(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("REMOVE_IMAGE"));
       jbRemoveImage.addActionListener(new ActionListener() {
 
         @Override
@@ -213,7 +213,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 
   protected JButton getAddImageButton() {
     if (jbAddImage == null) {
-      jbAddImage = new JButton("Nalo?i sliko");
+      jbAddImage = new JButton(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("LOAD_IMAGE"));
       jbAddImage.addActionListener(new ActionListener() {
 
         @Override
@@ -228,21 +228,21 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 
   protected JButton getOpenExternalButton() {
     if (jbOpenImage == null) {
-      jbOpenImage = new JButton("Odpri sliko");
+      jbOpenImage = new JButton(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("OPEN_IMAGE"));
       jbOpenImage.addActionListener(new ActionListener() {
 
         @Override
         public void actionPerformed(ActionEvent e) {
           try {
             if (img != null) {
-              String filename = System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "Image " + System.currentTimeMillis() + ".jpg";
+              String filename = System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "Image " + System.currentTimeMillis() + ".jpg"; //NOI18N
               java.io.File tempFile = new java.io.File(filename);
               if (tempFile.exists()) {
                 tempFile.delete();
               }
               tempFile.createNewFile();
 
-              ImageIO.write((BufferedImage) img, "jpg", tempFile);
+              ImageIO.write((BufferedImage) img, "jpg", tempFile); //NOI18N
               Desktop.open(tempFile);
             }
           } catch (IOException ex) {
@@ -280,7 +280,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
-    if (evt.getPropertyName().equals("image")) {
+    if (evt.getPropertyName().equals("image")) { //NOI18N
       updateColumn();
     }
   }
@@ -308,7 +308,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
         if (img != null) {
           ByteArrayOutputStream baos = new ByteArrayOutputStream(2000);
           BufferedImage bufferedImage = (BufferedImage) this.img;
-          ImageIO.write(bufferedImage, "jpg", baos);
+          ImageIO.write(bufferedImage, "jpg", baos); //NOI18N
           baos.flush();
           byte[] byteArray = baos.toByteArray();
           dbFieldObserver.updateValue(byteArray);
@@ -317,7 +317,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
           dbFieldObserver.updateValue(new byte[]{});
         }
       } catch (Exception ex) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex); //NOI18N
       } finally {
         activeRowChangeWeakListener.setEnabled(true);
       }
@@ -329,7 +329,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
       Image oldImage = img;
       img = image;
       try {
-        firePropertyChange("image", oldImage, img);
+        firePropertyChange("image", oldImage, img); //NOI18N
       } finally {
         EventQueue.invokeLater(repaint);
       }
@@ -362,8 +362,8 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
   public void setEditable(boolean editable) {
     if (editable != this.editable) {
       this.editable = editable;
-      setToolTipText(editable ? TEXT : "");
-      firePropertyChange("editable", !editable, editable);
+      setToolTipText(editable ? TEXT : ""); //NOI18N
+      firePropertyChange("editable", !editable, editable); //NOI18N
       repaint();
     }
   }
@@ -386,7 +386,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
     if (style != s) {
       Style oldStyle = style;
       style = s;
-      firePropertyChange("style", oldStyle, s);
+      firePropertyChange("style", oldStyle, s); //NOI18N
       repaint();
     }
   }
@@ -544,7 +544,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
           g2.drawImage(tempImage, 0, 0, tempImage.getWidth(this), tempImage.getHeight(this), null);
           break;
         default:
-          LOG.fine("unimplemented");
+          LOG.fine("unimplemented"); //NOI18N
           g2.drawImage(tempImage, insets.left, insets.top, this);
           break;
       }
@@ -562,16 +562,16 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
           @Override
           public boolean accept(File f) {
             return f.isDirectory()
-                    || f.getName().toLowerCase().endsWith(".jpg")
-                    || f.getName().toLowerCase().endsWith(".jpeg")
-                    || f.getName().toLowerCase().endsWith(".gif")
-                    || f.getName().toLowerCase().endsWith(".png")
-                    || f.getName().toLowerCase().endsWith(".tif");
+                    || f.getName().toLowerCase().endsWith(".jpg") //NOI18N
+                    || f.getName().toLowerCase().endsWith(".jpeg") //NOI18N
+                    || f.getName().toLowerCase().endsWith(".gif") //NOI18N
+                    || f.getName().toLowerCase().endsWith(".png") //NOI18N
+                    || f.getName().toLowerCase().endsWith(".tif"); //NOI18N
           }
 
           @Override
           public String getDescription() {
-            return "Image files";
+            return java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("IMAGE FILES");
           }
         });
       }

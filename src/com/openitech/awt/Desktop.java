@@ -37,7 +37,7 @@ public class Desktop {
         }
       }
     } catch (Exception ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("org.jdesktop.jdic.desktop.Desktop : " + ex.getMessage());
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "org.jdesktop.jdic.desktop.Desktop : {0}", ex.getMessage());
       jdic_open = null;
       awt_open = null;
       awt_desktop_manager = null;
@@ -53,7 +53,7 @@ public class Desktop {
   private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
   public static void open(final java.io.File file) {
-    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Opening "+file.getAbsolutePath());
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Opening {0}", file.getAbsolutePath());
     if (file.exists()) {
       executorService.execute(new Runnable() {
 

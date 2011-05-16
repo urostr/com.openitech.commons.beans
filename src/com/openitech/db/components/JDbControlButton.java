@@ -65,7 +65,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
   private ActionListener getControlActionListener() {
     if (controlActionListener == null) {
       try {
-        controlActionListener = new ActionWeakListener(this, "dbDataSource_actionPerformed");
+        controlActionListener = new ActionWeakListener(this, "dbDataSource_actionPerformed"); //NOI18N
       } catch (NoSuchMethodException ex) {
         Logger.getLogger(JDbControlButton.class.getName()).log(Level.SEVERE, null, ex);
       }
@@ -153,7 +153,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.first();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the first record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the first record.", ex); //NOI18N
         }
       }
 
@@ -177,7 +177,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.previous();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the previous record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the previous record.", ex); //NOI18N
         }
       }
 
@@ -201,7 +201,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.next();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the next record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the next record.", ex); //NOI18N
         }
       }
 
@@ -225,7 +225,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.last();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the last record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error moving to the last record.", ex); //NOI18N
         }
       }
 
@@ -249,7 +249,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.moveToInsertRow();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error adding the record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error adding the record.", ex); //NOI18N
         }
       }
 
@@ -270,21 +270,21 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
       void actionPerformed(DbDataSource dataSource, Component parentComponent) {
         try {
           if (dataSource != null && (JOptionPane.showOptionDialog(parentComponent,
-                  "Ali naj res zbri\u0161em zapis ?",
-                  "Brisanje",
+                  java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("SHOULD_DELETE_RECORD"),
+                  java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("QUESTION_DELETING"),
                   JOptionPane.YES_NO_OPTION,
                   JOptionPane.QUESTION_MESSAGE,
                   null,
-                  new Object[]{"Da", "Ne"},
-                  "Ne") == JOptionPane.YES_OPTION)) {
+                  new Object[]{java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("YES"), java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("NO")},
+                  java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("NO")) == JOptionPane.YES_OPTION)) {
             dataSource.deleteRow();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error deleting the record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error deleting the record.", ex); //NOI18N
           StringBuilder message = new StringBuilder();
-          message.append("Napaka pri brisanju zapisa!\n\n");
-          message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());
-          JOptionPane.showMessageDialog(parentComponent, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);
+          message.append(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("ERROR_WHILE_DELETING"));
+          message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage()); //NOI18N
+          JOptionPane.showMessageDialog(parentComponent, message.toString(), java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("ERROR_NOTIFICATION"), JOptionPane.ERROR_MESSAGE);
         }
       }
 
@@ -308,11 +308,11 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.updateRow();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error storing the updated record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error storing the updated record.", ex); //NOI18N
           StringBuilder message = new StringBuilder();
-          message.append("Napaka pri potrjevanju vnosa!\n\n");
-          message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage());
-          JOptionPane.showMessageDialog(parentComponent, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);
+          message.append(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("ERROR_WHILE_STORING_CHANGES"));
+          message.append(ex.getSQLState()).append(ex.getErrorCode()).append(" : ").append(ex.getMessage()); //NOI18N
+          JOptionPane.showMessageDialog(parentComponent, message.toString(), java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("ERROR_NOTIFICATION"), JOptionPane.ERROR_MESSAGE);
         }
       }
 
@@ -336,7 +336,7 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
             dataSource.cancelRowUpdates();
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error cancelling updates on the record.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error cancelling updates on the record.", ex); //NOI18N
         }
       }
 
@@ -364,15 +364,15 @@ public class JDbControlButton extends JMnemonicButton implements ActiveRowChange
         return dataSource != null;
       }
     };
-    public final static Icon ICON_FIRST = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/2leftarrow.png"));
-    public final static Icon ICON_PREV = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/1leftarrow.png"));
-    public final static Icon ICON_NEXT = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/1rightarrow.png"));
-    public final static Icon ICON_LAST = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/2rightarrow.png"));
-    public final static Icon ICON_ADD = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/edit_add.png"));
-    public final static Icon ICON_DELETE = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/edit_remove.png"));
-    public final static Icon ICON_CONFIRM = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/button_ok.png"));
-    public final static Icon ICON_CANCEL = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/button_cancel1.png"));
-    public final static Icon ICON_RELOAD = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/reload_k.png"));
+    public final static Icon ICON_FIRST = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/2leftarrow.png")); //NOI18N
+    public final static Icon ICON_PREV = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/1leftarrow.png")); //NOI18N
+    public final static Icon ICON_NEXT = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/1rightarrow.png")); //NOI18N
+    public final static Icon ICON_LAST = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/2rightarrow.png")); //NOI18N
+    public final static Icon ICON_ADD = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/edit_add.png")); //NOI18N
+    public final static Icon ICON_DELETE = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/edit_remove.png")); //NOI18N
+    public final static Icon ICON_CONFIRM = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/button_ok.png")); //NOI18N
+    public final static Icon ICON_CANCEL = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/button_cancel1.png")); //NOI18N
+    public final static Icon ICON_RELOAD = new javax.swing.ImageIcon(Operation.class.getResource("/com/openitech/icons/reload_k.png")); //NOI18N
 
     abstract Icon getIcon();
 

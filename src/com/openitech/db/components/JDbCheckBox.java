@@ -8,7 +8,6 @@
 
 package com.openitech.db.components;
 
-import com.openitech.Settings;
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
@@ -18,6 +17,7 @@ import com.openitech.ref.events.ActionWeakListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JCheckBox;
@@ -37,8 +37,8 @@ public class JDbCheckBox extends JCheckBox implements ActionListener, FieldObser
   /** Creates a new instance of JDbCheckBox */
   public JDbCheckBox() {
     try {
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null);
-      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null);
+      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null); //NOI18N
+      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null); //NOI18N
       actionWeakListener = new ActionWeakListener(this);
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
@@ -52,19 +52,23 @@ public class JDbCheckBox extends JCheckBox implements ActionListener, FieldObser
     return dbFieldObserver;
   }
   
+  @Override
   public void setDataSource(DbDataSource dataSource) {
     dbFieldObserver.setDataSource(dataSource);
     dbFieldObserverToolTip.setDataSource(dataSource);
   }
   
+  @Override
   public DbDataSource getDataSource() {
     return dbFieldObserver.getDataSource();
   }
   
+  @Override
   public void setColumnName(String columnName) {
     dbFieldObserver.setColumnName(columnName);
   }
   
+  @Override
   public String getColumnName() {
     return dbFieldObserver.getColumnName();
   }
@@ -97,7 +101,7 @@ public class JDbCheckBox extends JCheckBox implements ActionListener, FieldObser
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     boolean tip  = dbFieldObserverToolTip.getValueAsBoolean();
     if (!dbFieldObserverToolTip.wasNull()) {
-      this.setToolTipText("Pomo\u010d : "+(tip?"izbrano":"prazno"));
+      this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP")+(tip?java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("SELECTED"):java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("EMPTY")));
     } else
       this.setToolTipText(null);
   }
@@ -108,7 +112,7 @@ public class JDbCheckBox extends JCheckBox implements ActionListener, FieldObser
       if ((validator==null)||(validator!=null&&validator.isValid(this.isSelected())))
         dbFieldObserver.updateValue(this.isSelected());
     } catch (SQLException ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex); //NOI18N
     } finally {
       activeRowChangeWeakListener.setEnabled(true);
     }

@@ -9,7 +9,6 @@
 package com.openitech.db.components;
 
 import javax.swing.DefaultButtonModel;
-import com.openitech.Settings;
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
@@ -31,7 +30,7 @@ public class JDbCheckValueBox extends JCheckBox implements ActionListener, Field
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
   private Validator validator = null;
-  private String checkedValue="D";
+  private String checkedValue=java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("SELECTED_CHECK_VALUE");
   private String uncheckedValue=null;
 
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
@@ -40,8 +39,8 @@ public class JDbCheckValueBox extends JCheckBox implements ActionListener, Field
   /** Creates a new instance of JDbCheckBox */
   public JDbCheckValueBox() {
     try {
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null);
-      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null);
+      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_fieldValueChanged",null); //NOI18N
+      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this,"dataSource_toolTipFieldValueChanged",null); //NOI18N
       actionWeakListener = new ActionWeakListener(this);
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
@@ -116,7 +115,7 @@ public class JDbCheckValueBox extends JCheckBox implements ActionListener, Field
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     boolean tip  = dbFieldObserverToolTip.getValueAsText().equalsIgnoreCase(checkedValue);
     if (!dbFieldObserverToolTip.wasNull()) {
-      this.setToolTipText("Pomo\u010d : "+(tip?("izbrano"+(checkedValue!=null?" ["+checkedValue+"]":"")):("prazno"+(uncheckedValue!=null?" ["+uncheckedValue+"]":""))));
+      this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP")+(tip?(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("SELECTED")+(checkedValue!=null?" ["+checkedValue+"]":"")):(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("EMPTY")+(uncheckedValue!=null?" ["+uncheckedValue+"]":""))));
     } else
       this.setToolTipText(null);
   }
@@ -135,7 +134,7 @@ public class JDbCheckValueBox extends JCheckBox implements ActionListener, Field
         }
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex); //NOI18N
     } finally {
       activeRowChangeWeakListener.setEnabled(true);
     }

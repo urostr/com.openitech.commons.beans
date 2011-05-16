@@ -7,7 +7,6 @@
  */
 package com.openitech.db.components;
 
-import com.openitech.Settings;
 import com.openitech.swing.autocomplete.AutoCompleteDecorator;
 import com.openitech.swing.autocomplete.AutoCompleteDocument;
 import com.openitech.swing.autocomplete.AutoCompleteTextComponent;
@@ -51,7 +50,6 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DateFormatter;
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
@@ -83,10 +81,10 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   /** Creates a new instance of JDbFormattedTextField */
   public JDbFormattedTextField() {
     try {
-      actionWeakListener = new ActionWeakListener(this, "dataSource_actionPerformed");
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
-      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
-      focusWeakListener = new FocusWeakListener(this, "this_focusGained", null);
+      actionWeakListener = new ActionWeakListener(this, "dataSource_actionPerformed"); //NOI18N
+      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null); //NOI18N
+      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null); //NOI18N
+      focusWeakListener = new FocusWeakListener(this, "this_focusGained", null); //NOI18N
       documentWeakListener = new DocumentWeakListener(this);
       //propertyChangeWeakListener = new PropertyChangeWeakListener(this);
     } catch (NoSuchMethodException ex) {
@@ -96,8 +94,8 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     dbFieldObserverToolTip.addActiveRowChangeListener(tooltipRowChangeWeakListener);
     this.addFocusListener(focusWeakListener);
     this.getDocument().addDocumentListener(documentWeakListener);
-    this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2, 2, 2, 2));
-    this.setFont((java.awt.Font) UIManager.getDefaults().get("TextField.font"));
+    this.putClientProperty("Quaqua.Component.visualMargin", new java.awt.Insets(2, 2, 2, 2)); //NOI18N
+    this.setFont((java.awt.Font) UIManager.getDefaults().get("TextField.font")); //NOI18N
     //this.addPropertyChangeListener("value", propertyChangeWeakListener);
 
     setFocusLostBehavior(JFormattedTextField.COMMIT);
@@ -165,7 +163,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     AbstractFormatter displayFormatter = new NumberFormatter();
     ((NumberFormatter) displayFormatter).setValueClass(type.getClass());
     AbstractFormatter editFormatter = new NumberFormatter(
-            new DecimalFormat("#.#"));
+            new DecimalFormat("#.#")); //NOI18N
     ((NumberFormatter) editFormatter).setValueClass(type.getClass());
 
     setFormatterFactory(new DefaultFormatterFactory(displayFormatter,
@@ -235,7 +233,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       boolean valid = isValid(getFormatter() == null ? this.getText() : this.getValue());
 
       if (!valid) {
-        throw new IllegalStateException("Polje vsebuje napaËno vrednost");
+        throw new IllegalStateException(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("ILLEGAL_FIELD_VALUE"));
       }
     }
   }
@@ -267,12 +265,12 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       if (update) {
         try {
           if (wasNull) {
-            this.setText("");
+            this.setText(""); //NOI18N
           } else {
             setValue(value);
           }
         } catch (Exception ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't display the '" + dbFieldObserver.getColumnName() + "' value.  " + ex.toString() + " [" + ex.getMessage() + "] Object = " + dbFieldObserver.getValue());
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't display the '" + dbFieldObserver.getColumnName() + "' value.  " + ex.toString() + " [" + ex.getMessage() + "] Object = " + dbFieldObserver.getValue()); //NOI18N
         }
       }
     }
@@ -307,7 +305,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     String tip = dbFieldObserverToolTip.getValueAsText();
     if (!dbFieldObserverToolTip.wasNull() && tip.length() > 0) {
-      this.setToolTipText("Pomo\u010d : " + tip);
+      this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP") + tip);
     } else {
       this.setToolTipText(null);
     }
@@ -335,7 +333,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
     StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 
     for (StackTraceElement element : stackTrace) {
-      if (element.getClassName().contains("JXDatePicker") && element.getMethodName().equals("setEditor")) {
+      if (element.getClassName().contains("JXDatePicker") && element.getMethodName().equals("setEditor")) { //NOI18N
         result = true;
 //        try {
 //          documentWeakListener.setEnabled(false);
@@ -350,7 +348,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
             public void run() {
               disableColumnUpdates = true;
               try {
-                firePropertyChange("value", (java.util.Date) null, dbFieldObserver.getValueAsDate());
+                firePropertyChange("value", (java.util.Date) null, dbFieldObserver.getValueAsDate()); //NOI18N
               } finally {
                 disableColumnUpdates = false;
               }
@@ -384,7 +382,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
             dbFieldObserver.updateValue(value);
           }
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex); //NOI18N
         } finally {
           activeRowChangeWeakListener.setEnabled(true);
         }
@@ -527,12 +525,12 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
       super.commitEdit();
     } catch (ParseException ex) {
       if (getText().length() > 0) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error updating the value. [" + ex.getMessage() + "]");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Error updating the value. [" + ex.getMessage() + "]"); //NOI18N
         StringBuilder message = new StringBuilder();
-        message.append("Napaka pri vnosu podatkov!\n");
-        message.append(getText().substring(0, ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n");
+        message.append(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("ERROR_WHILE_STORING_CHANGES"));
+        message.append(getText().substring(0, ex.getErrorOffset())).append("[?").append(getText().substring(ex.getErrorOffset())).append("]\n\n"); //NOI18N
         message.append(ex.getMessage());
-        JOptionPane.showMessageDialog(this, message.toString(), "Napaka", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, message.toString(), java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("ERROR_NOTIFICATION"), JOptionPane.ERROR_MESSAGE);
       } else {
         setValue(null);
       }
@@ -591,8 +589,8 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
    */
   public void setSearchField(boolean searchField) {
     this.searchField = searchField;
-    this.putClientProperty("Quaqua.TextField.style", searchField ? "search" : "normal");
-    this.putClientProperty("JTextField.variant", searchField ? "search" : null);
+    this.putClientProperty("Quaqua.TextField.style", searchField ? "search" : "normal"); //NOI18N
+    this.putClientProperty("JTextField.variant", searchField ? "search" : null); //NOI18N
   }
 
   /**
@@ -662,7 +660,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
         ((AutoCompleteDocument) getDocument()).setAutoComplete(false);
       }
 
-      firePropertyChange("autoCompleteModel", oldModel, dataModel);
+      firePropertyChange("autoCompleteModel", oldModel, dataModel); //NOI18N
     }
   }
 
@@ -811,7 +809,7 @@ public class JDbFormattedTextField extends JFormattedTextField implements Docume
   public void setMaximumRowCount(int count) {
     int oldCount = maximumRowCount;
     maximumRowCount = count;
-    firePropertyChange("maximumRowCount", oldCount, maximumRowCount);
+    firePropertyChange("maximumRowCount", oldCount, maximumRowCount); //NOI18N
   }
 
   /**

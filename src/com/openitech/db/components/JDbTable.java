@@ -28,6 +28,7 @@ import java.awt.event.ActionListener;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
@@ -59,17 +60,18 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
   private static Method setComparator;
   private static boolean sortable;
   private boolean enableSorting = false;
+  private static final ResourceBundle resourceBundle = ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle");
 
   static {
     try {
-      convertRowIndexToModel = JDbTable.class.getMethod("convertRowIndexToModel", int.class);
-      convertRowIndexToView = JDbTable.class.getMethod("convertRowIndexToView", int.class);
-      setRowSorter = JDbTable.class.getMethod("setRowSorter", Class.forName("javax.swing.RowSorter"));
-      constructRowSorter = Class.forName("javax.swing.table.TableRowSorter").getConstructor(javax.swing.table.TableModel.class);
-      setComparator = Class.forName("javax.swing.table.TableRowSorter").getMethod("setComparator", int.class, java.util.Comparator.class);
+      convertRowIndexToModel = JDbTable.class.getMethod("convertRowIndexToModel", int.class); //NOI18N
+      convertRowIndexToView = JDbTable.class.getMethod("convertRowIndexToView", int.class); //NOI18N
+      setRowSorter = JDbTable.class.getMethod("setRowSorter", Class.forName("javax.swing.RowSorter")); //NOI18N
+      constructRowSorter = Class.forName("javax.swing.table.TableRowSorter").getConstructor(javax.swing.table.TableModel.class); //NOI18N
+      setComparator = Class.forName("javax.swing.table.TableRowSorter").getMethod("setComparator", int.class, java.util.Comparator.class); //NOI18N
 
       if (convertRowIndexToModel != null && convertRowIndexToView != null) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("com.openitech.db.components.JDbTable is sortable.");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("com.openitech.db.components.JDbTable is sortable."); //NOI18N
         sortable = true;
       }
     } catch (Throwable ex) {
@@ -101,12 +103,12 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     editorInputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_DOWN_MASK), copyAction);
     actionMap.put(copyAction, copyAction);
 
-    putClientProperty("Quaqua.Table.style", "striped");
+    putClientProperty("Quaqua.Table.style", "striped"); //NOI18N
     javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
     if (sortable) {
 
 
-      miSorting.setText("Sortiranje seznama");
+      miSorting.setText(resourceBundle.getString("SORT_TABLE_DATA"));
       miSorting.setSelected(enableSorting);
 
       miSorting.addActionListener(new ActionListener() {
@@ -121,9 +123,9 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     }
 
     try {
-      Class.forName("org.apache.poi.hssf.usermodel.HSSFWorkbook");
+      Class.forName("org.apache.poi.hssf.usermodel.HSSFWorkbook"); //NOI18N
 
-      org.jdesktop.swingx.action.BoundAction aExport = new org.jdesktop.swingx.action.BoundAction("Izvozi podatke v XLS", "EXPORT");
+      org.jdesktop.swingx.action.BoundAction aExport = new org.jdesktop.swingx.action.BoundAction(resourceBundle.getString("EXPORT_TO_XLS"), "EXPORT"); //NOI18N
 
       final JTable owner = this;
       aExport.addActionListener(new ActionListener() {
@@ -147,7 +149,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
     
 
-    org.jdesktop.swingx.action.BoundAction copy = new org.jdesktop.swingx.action.BoundAction("Copy", "COPY");
+    org.jdesktop.swingx.action.BoundAction copy = new org.jdesktop.swingx.action.BoundAction(resourceBundle.getString("COPY"), "COPY"); //NOI18N
     copy.addActionListener(new ActionListener() {
 
       @Override
@@ -158,7 +160,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
     menu.add(copy);
 
-    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke", "RELOAD");
+    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction(resourceBundle.getString("RELOAD_DATA"), "RELOAD"); //NOI18N
     aReload.addActionListener(new ActionListener() {
 
       @Override
@@ -173,9 +175,9 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
     setComponentPopupMenu(menu);
     try {
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, null, "tableModel_activeRowChanged");
+      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, null, "tableModel_activeRowChanged"); //NOI18N
     } catch (NoSuchMethodException ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't initialize the JDbTable activeRowChangeListener.", ex); //NOI18N
     }
   }
 
@@ -184,7 +186,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       String value = getValueAt(getSelectedRow(), getSelectedColumn()).toString();
       Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
       clipboard.setContents(new StringSelection(value), null);
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Copy Pressed. Value=" + value);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Copy Pressed. Value={0}", value); //NOI18N
     } catch (Exception ex) {
       //ignore
     }
@@ -355,7 +357,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
           }
           updateViewPosition();
         } catch (Exception ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Can't adjust the selection.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Can't adjust the selection.", ex); //NOI18N
         }
       }
     }
@@ -382,7 +384,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
             dbTableModel.getDataSource().absolute(newRowNumber);
           }
         } catch (Exception ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Can't read from the tableModel.", ex);
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Can't read from the tableModel.", ex); //NOI18N
         } finally {
           selectionChanged = false;
         }
@@ -403,7 +405,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     if (this.getModel() instanceof DbTableModel) {
       ((DbTableModel) this.getModel()).setDataSource(dataSource);
     } else {
-      throw new IllegalArgumentException("The data model for JDbTable is not a DbTableModel.");
+      throw new IllegalArgumentException(resourceBundle.getString("THE DATA MODEL FOR JDBTABLE IS NOT A DBTABLEMODEL"));
     }
     checkDataSource();
   }
@@ -413,7 +415,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
     if (this.getModel() instanceof DbTableModel) {
       return ((DbTableModel) this.getModel()).getDataSource();
     } else {
-      throw new IllegalArgumentException("The data model for JDbTable is not a DbTableModel.");
+      throw new IllegalArgumentException(resourceBundle.getString("THE DATA MODEL FOR JDBTABLE IS NOT A DBTABLEMODEL"));
     }
   }
 

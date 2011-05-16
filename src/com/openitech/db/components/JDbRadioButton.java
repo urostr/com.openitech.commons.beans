@@ -330,7 +330,7 @@ public class JDbRadioButton extends JToggleButton implements ActionListener, Fie
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     boolean tip = dbFieldObserverToolTip.getValueAsText().equalsIgnoreCase(checkedValue);
     if (!dbFieldObserverToolTip.wasNull()) {
-      this.setToolTipText("Pomo\u010d : " + (tip ? ("izbrano" + (checkedValue != null ? " [" + checkedValue + "]" : "")) : ("prazno" + (uncheckedValue != null ? " [" + uncheckedValue + "]" : ""))));
+      this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP") + (tip ? ("izbrano" + (checkedValue != null ? " [" + checkedValue + "]" : "")) : ("prazno" + (uncheckedValue != null ? " [" + uncheckedValue + "]" : ""))));
     } else {
       this.setToolTipText(null);
     }

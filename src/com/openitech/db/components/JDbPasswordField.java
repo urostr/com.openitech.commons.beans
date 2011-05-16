@@ -109,7 +109,7 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     String tip  = dbFieldObserverToolTip.getValueAsText();
     if (!dbFieldObserverToolTip.wasNull()&&tip.length()>0) {
-      this.setToolTipText("Pomo\u010d : "+tip);
+      this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP")+tip);
     } else
       this.setToolTipText(null);
   }

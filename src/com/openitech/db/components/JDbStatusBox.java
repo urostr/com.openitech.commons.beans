@@ -74,7 +74,7 @@ public class JDbStatusBox extends JCheckBox implements FieldObserver {
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     boolean tip  = dbFieldObserverToolTip.isNotEmptyValue();
     if (!dbFieldObserverToolTip.wasNull()) {
-      this.setToolTipText("Pomo\u010d : "+(tip?"izbrano":"prazno"));
+      this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP")+(tip?"izbrano":"prazno"));
     } else
       this.setToolTipText(null);
   }

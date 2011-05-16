@@ -8,8 +8,6 @@
  */
 package com.openitech.db.components;
 
-import com.openitech.Settings;
-import com.openitech.db.model.DbComboBoxModel.DbComboBoxEntry;
 import com.openitech.swing.autocomplete.AutoCompleteDocument;
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
@@ -64,8 +62,8 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
 
   private void init(boolean decorate) {
     try {
-      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null);
-      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null);
+      activeRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_fieldValueChanged", null); //NOI18N
+      tooltipRowChangeWeakListener = new ActiveRowChangeWeakListener(this, "dataSource_toolTipFieldValueChanged", null); //NOI18N
       actionWeakListener = new ActionWeakListener(this);
     } catch (NoSuchMethodException ex) {
       throw (RuntimeException) new IllegalStateException().initCause(ex);
@@ -173,7 +171,7 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
     if (this.dbFieldObserverToolTip.getColumnName() != null) {
       int tip = dbFieldObserverToolTip.getValueAsInt();
       if (!dbFieldObserverToolTip.wasNull() && tip < this.getModel().getSize()) {
-        this.setToolTipText("Pomo\u010d : " + this.getModel().getElementAt(tip));
+        this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP") + this.getModel().getElementAt(tip));
       } else {
         this.setToolTipText(null);
       }
@@ -205,7 +203,7 @@ public class JDbComboBox extends JComboBox implements FieldObserver {
         }
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex); //NOI18N
     } finally {
       activeRowChangeWeakListener.setEnabled(true);
     }
