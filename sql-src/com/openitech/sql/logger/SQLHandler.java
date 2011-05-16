@@ -32,7 +32,7 @@ public class SQLHandler extends Handler {
       public void run() {
         flush();
       }
-    }, 300L);
+    }, 1000L, 100L);
   }
 
   @Override
