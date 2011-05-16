@@ -7,8 +7,12 @@
  */
 package com.openitech.db.connection;
 
+import com.openitech.sql.logger.SQLLogger;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.sql.Connection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
