@@ -4,7 +4,6 @@
  */
 package com.openitech.sql.util.mssql;
 
-import com.openitech.Settings;
 import com.openitech.value.events.EventType;
 import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.TemporaryTable;
@@ -30,6 +29,7 @@ import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.io.ReadInputStream;
 import com.openitech.jdbc.proxy.DataSourceProxy;
+import com.openitech.jdbc.proxy.PreparedStatementProxy;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
 import com.openitech.sql.logger.SQLLogger;
@@ -193,12 +193,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
           String application = manager.getProperty("db.connect.appName", "JAVA-CLIENT");
           try {
             PreparedStatement logAction = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "appendAppLog.sql", "cp1250"));
+            if (logAction instanceof PreparedStatementProxy) {
+              ((PreparedStatementProxy) logAction).setDumpSQL(false);
+            }
+
             XMLFormatter formatter = new XMLFormatter();
 
             for (LogRecord logRecord : logRecords) {
               int param = 1;
               logAction.setString(param++, application);
               logAction.setString(param++, formatter.format(logRecord));
+              logAction.setBoolean(param++, logRecord.getLevel().equals(Level.SEVERE));
+              logAction.setString(param++, logRecord.getMessage());
 
               logAction.executeUpdate();
             }
@@ -248,11 +254,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Long oldValueId = storeValue(fieldType, oldValue.getValue());
 
       fieldValues = new FieldValue[]{
-        new FieldValue("ChangeId", Types.BIGINT, changeId),
-        new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
-        new FieldValue("NewValueId", Types.BIGINT, newValueId),
-        new FieldValue("OldValueId", Types.BIGINT, oldValueId)
-      };
+                new FieldValue("ChangeId", Types.BIGINT, changeId),
+                new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
+                new FieldValue("NewValueId", Types.BIGINT, newValueId),
+                new FieldValue("OldValueId", Types.BIGINT, oldValueId)
+              };
 
       executeUpdate(logChangedValues, fieldValues);
     }
@@ -2278,31 +2284,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public static class MergedSecondaryDataSource extends DbDataSource {
   }
 
-//  public  boolean isSuperDataSource(Set<DbDataSource> secondaryDataSources, DbDataSource joinedSecondaryDataSource) {
-//    boolean result = false;
-//    Collection<Integer> newSifranti = null;
-//    for (Object parameter : joinedSecondaryDataSource.getParameters()) {
-//      if (parameter instanceof EventFilterSearch) {
-//        newSifranti = ((EventFilterSearch) parameter).getSifrant();
-//      }
-//    }
-//
-//    for (DbDataSource dbDataSource : secondaryDataSources) {
-//      Collection<Integer> oldSifranti = null;
-//      for (Object parameter : dbDataSource.getParameters()) {
-//      if (parameter instanceof EventFilterSearch) {
-//        oldSifranti = ((EventFilterSearch) parameter).getSifrant();
-//        oldSifranti.removeAll(newSifranti);
-//        //ce sem uspel vse odstraniti, potem je ta datasource podmnozica in ga je potrebno odstraniti
-//        if(oldSifranti.isEmpty()){
-//          result = true;
-//        }
-//      }
-//    }
-//    }
-//
-//    return result;
-//  }
   public static class EventFilterSearch extends EventQueryParameter {
 
     private static final String EV_VERSIONED_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_versioned.sql", "cp1250");
@@ -3816,6 +3797,182 @@ public class SqlUtilitesImpl extends SqlUtilities {
                         f.getFieldIndex()
                       })).append(" AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
           }
+        } else {
+          sbSearch.append("\nLEFT OUTER JOIN ").append(eventValues).append(" ").append(ev_alias).append(" WITH (NOLOCK) ON (");
+          sbSearch.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
+          NamedFieldIds fn = new NamedFieldIds(f.getName(), Integer.MIN_VALUE);
+          //TODO to ni uredu, ker ne da pravilnega rezultata, ce ne iscem po id polja
+          if (fieldNames.containsKey(fn) || f.getIdPolja() != null) {
+            long idPolja = fieldNames.get(fn) != null ? fieldNames.get(fn).fieldId : f.getIdPolja().intValue();
+            sbSearch.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(idPolja);
+            sbSearch.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex()).append(" )");
+          } else {
+            sbSearch.append(" AND ").append(ev_alias).append(".[FieldValueIndex] = ").append(f.getFieldIndex());
+            sbSearch.append(") ");
+            sbSearch.append("\nLEFT OUTER JOIN ").append(sifrantVnosnihPolj).append(" ").append(vp_alias).append(" WITH (NOLOCK) ON (");
+            sbSearch.append(ev_alias).append(".[IdPolja] = ").append(vp_alias).append(".[Id]");
+            sbSearch.append(" AND ").append(vp_alias).append(".ImePolja= '").append(f.getName()).append("' )");
+          }
+          sbSearch.append("\nLEFT OUTER JOIN ").append(variousValues).append(" ").append(val_alias).append(" WITH (NOLOCK) ON (");
+          sbSearch.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
+
+          int tipPolja = ValueType.getType(f.getType()).getTypeIndex();
+          String value = null;
+          switch (tipPolja) {
+            case 1:
+              value = val_alias + ".IntValue";
+              sbresult.append(",\n").append(val_alias).append(".IntValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 2:
+              //Real
+              value = val_alias + ".RealValue";
+              sbresult.append(",\n").append(val_alias).append(".RealValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 3:
+              //String
+              value = val_alias + ".StringValue";
+              sbresult.append(",\n").append(val_alias).append(".StringValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 4:
+            case 8:
+            case 9:
+            case 10:
+              //Date
+              value = val_alias + ".DateValue";
+              sbresult.append(",\n").append(val_alias).append(".DateValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 6:
+              //Clob
+              value = val_alias + ".ClobValue";
+              sbresult.append(",\n").append(val_alias).append(".ClobValue AS [").append(f.getName() + fieldValueIndex).append("]");
+              break;
+            case 7:
+              //Boolean
+              value = val_alias + ".IntValue";
+              sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
+          }
+
+          if (f.getModel().getQuery().getSelect() != null) {
+            for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
+              sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+              sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+              sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+              sql = sql.replaceAll(f.getModel().getReplace(), value);
+
+              sbresult.append(",\n").append(sql);
+            }
+          }
+          if (f.getModel().getQuery().getJoin() != null) {
+            for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
+              sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+              sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+              sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+              sql = sql.replaceAll(f.getModel().getReplace(), value);
+
+              sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
+            }
+          }
+        }
+      }
+    }
+    sqlFind.setValue(sbSearch.toString());
+    sqlResultFields.setValue(sbresult.toString());
+
+
+    return valuesSet;
+  }
+
+  private int prepareViewSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly, EventPK eventPK) {
+    StringBuilder sbSearch = new StringBuilder(500);
+    StringBuilder sbWhere = new StringBuilder(500);
+    StringBuilder sbresult = new StringBuilder(500);
+    EventLimit sqlResultLimit = new EventLimit("<%ev_result_limit%>");
+    parameters.add(sqlResultLimit);
+    sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : "  ");
+    DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
+    parameters.add(sqlResultFields);
+    EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE) ? event.getEventSource() : null, searchFields.contains(Event.EVENT_DATE) ? event.getDatum() : null, sifrant, sifra, validOnly, eventPK);
+    parameters.add(eventSearchFilter);
+    DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
+    parameters.add(sqlFind);
+    DbDataSource.SubstSqlParameter sqlValidOnly = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
+    parameters.add(sqlValidOnly);
+//    if (validOnly) {
+//      sqlValidOnly.setValue("WHERE (ev.[validTo] IS NULL OR ev.[ValidTo] >= GETDATE())");
+//    } else {
+    sqlValidOnly.setValue("");
+//    }
+
+    int valuesSet = 0;
+    Map<NamedFieldIds, NamedFieldIds> fieldNames = new java.util.HashMap<NamedFieldIds, NamedFieldIds>();
+    try {
+      if (sifra == null) {
+        fieldNames = getEventFields(sifrant, null);
+      } else {
+        for (String s : sifra) {
+          fieldNames.putAll(getEventFields(sifrant, s));
+        }
+      }
+
+    } catch (SQLException ex) {
+      fieldNames = new java.util.HashMap<NamedFieldIds, NamedFieldIds>();
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+    final String eventValues = SqlUtilities.getDataBase() + ".[dbo].[EventValues]";
+    final String sifrantVnosnihPolj = SqlUtilities.getDataBase() + ".[dbo].[SifrantVnosnihPolj]";
+    final String variousValues = SqlUtilities.getDataBase() + ".[dbo].[VariousValues]";
+
+
+    for (Field f : searchFields) {
+      if (!(Event.EVENT_SOURCE.equals(f)
+              || Event.EVENT_DATE.equals(f))) {
+        valuesSet++;
+
+        //dodaj v where brez joina
+        ValueType valueType = ValueType.getType(f.getType());
+
+        sbWhere.append("\n");
+        sbWhere.append(sbWhere.length() > 0 ? " AND " : " WHERE ");
+        sbWhere.append(f.getName()).append(" = ");
+        if (valueType.equals(ValueType.StringValue)) {
+          sbWhere.append(" CAST(? AS VARCHAR) ");
+        } else {
+          sbWhere.append(" ? ");
+        }
+        sbWhere.append("\n");
+
+        DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
+        parameter.setType(f.getType());
+        parameters.add(parameter);
+        namedParameters.put(f, parameter);
+
+
+
+      } else if (Event.EVENT_SOURCE.equals(f)
+              || Event.EVENT_DATE.equals(f)) {
+        valuesSet++;
+      }
+    }
+    sbSearch.insert(sbSearch.length(), sbWhere.toString());
+
+
+    for (Field f : resultFields) {
+      if (!searchFields.contains(f)) {
+        String fieldValueIndex = f.getFieldIndex() > 1 ? Integer.toString(f.getFieldIndex()) : "";
+        if (f.getName().endsWith(fieldValueIndex)) {
+          fieldValueIndex = "";
+        }
+
+        final String ev_alias = "[ev_" + f.getName() + fieldValueIndex + "]";
+        final String vp_alias = "[vp_" + f.getName() + fieldValueIndex + "]";
+        final String val_alias = "[val_" + f.getName() + fieldValueIndex + "]";
+
+        if (f.getModel() == null
+                || f.getModel().getQuery() == null) {
+
+          sbresult.append("[").append(f.getName()).append("]");
+
         } else {
           sbSearch.append("\nLEFT OUTER JOIN ").append(eventValues).append(" ").append(ev_alias).append(" WITH (NOLOCK) ON (");
           sbSearch.append("ev.[Id] = ").append(ev_alias).append(".[EventId]");
