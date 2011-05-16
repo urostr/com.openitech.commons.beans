@@ -41,6 +41,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   protected final java.util.List<Savepoint> activeSavepoints = new WeakList<Savepoint>();
   protected boolean initAutoCommit = true;
   protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
+  private boolean log = false;
 
   public AbstractConnection(DataSource dataSource) throws SQLException {
     this(dataSource, true, null);
@@ -57,7 +58,9 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   }
 
   private Connection openConnection() throws SQLException {
-    Logger.getLogger(AbstractConnection.class.getName()).info("Create connection.");
+    if (log) {
+      Logger.getLogger(AbstractConnection.class.getName()).info("Create connection.");
+    }
     lock();
     Connection result = null;
     try {
@@ -67,11 +70,11 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
         result = pooledConnection.getConnection();
       }
       Statement initStatement;
-      
+
       try {
         initStatement = result.createStatement();
       } catch (SQLException err) {
-        if (pooledConnection!=null) {
+        if (pooledConnection != null) {
           try {
             pooledConnection.close();
           } catch (SQLException ex2) {
@@ -239,7 +242,9 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
         activeSavepoints.clear();
         connection = null;
         closed = Boolean.TRUE;
-        Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
+        if (log) {
+          Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
+        }
 //        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 //
 //        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("StackTrace:::");
