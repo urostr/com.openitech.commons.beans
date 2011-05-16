@@ -42,6 +42,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   private final PreparedStatementFactory factory;
   private String sql = "";
+  private boolean dumpSQL = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"));
 
   protected PreparedStatementProxy(AbstractConnection connection, String sql) throws SQLException {
     this(connection, sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -77,6 +78,11 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
     this.sql = sql;
   }
 
+  public void setDumpSQL(boolean dumpSQL) {
+    this.dumpSQL = dumpSQL;
+  }
+
+
   @Override
   public ResultSet executeQuery() throws SQLException {
 
@@ -99,7 +105,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
       throw ex;
     } finally {
       long endTime = System.currentTimeMillis();
-      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
+      if (dumpSQL) {
         StringBuilder sb = new StringBuilder("Executing query: sql=\n");
         sb.append(sql);
         if (parameters.size() > 0) {
@@ -136,7 +142,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
       throw ex;
     } finally {
       long endTime = System.currentTimeMillis();
-      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
+      if (dumpSQL) {
         StringBuilder sb = new StringBuilder("Executing update: sql=\n");
         sb.append(sql);
         if (parameters.size() > 0) {
@@ -172,7 +178,7 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
       throw ex;
     } finally {
       long endTime = System.currentTimeMillis();
-      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"))) {
+      if (dumpSQL) {
         StringBuilder sb = new StringBuilder("Executing: sql=\n");
         sb.append(sql);
         if (parameters.size() > 0) {
