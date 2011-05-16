@@ -132,13 +132,6 @@ public class ReconnectableSQLConnection implements DbConnection {
     if (!isValid()) {
       try {
         openConnection();
-        if (Boolean.parseBoolean(settings.getProperty(DbConnection.DB_LOG_ACTIONS, "true"))) {
-          try {
-            SQLLogger.init();
-          } catch (IOException ex) {
-            Logger.getLogger(ConnectionManager.class.getName()).log(Level.SEVERE, null, ex);
-          }
-        }
       } catch (Exception ex) {
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get a connection to the database", ex);
         connection = null;

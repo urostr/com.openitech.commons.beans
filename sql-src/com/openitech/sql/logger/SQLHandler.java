@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.logger;
 
+import com.openitech.auth.LoginContextManager;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.util.Equals;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class SQLHandler extends Handler {
 
   private final List<LogRecord> queue = Collections.synchronizedList(new ArrayList<LogRecord>(100));
   private final Timer timer = new Timer("SQL-Handler-Log", true);
-  private final SqlUtilities sqlUtilites = SqlUtilities.getInstance();
+  private SqlUtilities sqlUtilites;
 
 
   public SQLHandler() {
@@ -49,7 +50,12 @@ public class SQLHandler extends Handler {
 
   @Override
   public void flush() {
-    sqlUtilites.logActions(nextLogQueue());
+    if (LoginContextManager.getInstance().isLoggedOn()) {
+      if (sqlUtilites==null) {
+        sqlUtilites = SqlUtilities.getInstance();
+      }
+      sqlUtilites.logActions(nextLogQueue());
+    }
   }
 
   private List<LogRecord> nextLogQueue() {
