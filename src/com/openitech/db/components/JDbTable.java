@@ -158,7 +158,7 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
     menu.add(copy);
 
-    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osve?i podatke", "RELOAD");
+    org.jdesktop.swingx.action.BoundAction aReload = new org.jdesktop.swingx.action.BoundAction("Osveži podatke", "RELOAD");
     aReload.addActionListener(new ActionListener() {
 
       @Override
