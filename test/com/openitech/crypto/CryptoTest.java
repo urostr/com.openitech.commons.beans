@@ -7,9 +7,9 @@
 
 package com.openitech.crypto;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
-import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import junit.framework.*;
@@ -37,7 +37,7 @@ public class CryptoTest extends TestCase {
       assertTrue(true);
     } catch (Exception ex) {
       assertTrue(false);
-      ex.printStackTrace();
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, ex.getMessage(), ex);
     }
   }
 

@@ -218,6 +218,6 @@
 //      stringBuilder.append(integer);
 //      stringBuilder.append("\n");
 //    }
-//    System.out.println(stringBuilder.toString());
+//    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(stringBuilder.toString());
 //  }
 //}

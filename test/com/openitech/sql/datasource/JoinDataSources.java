@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 import junit.framework.TestCase;
 import org.codehaus.groovy.syntax.ReadException;
 
@@ -71,15 +72,13 @@ public class JoinDataSources extends TestCase {
     dataSource1.beforeFirst();
     while (dataSource1.next()) {
       String string = dataSource1.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
-
-    System.out.println();
 
     dataSource2.beforeFirst();
     while (dataSource2.next()) {
       String string = dataSource2.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
 
   }
@@ -119,15 +118,13 @@ public class JoinDataSources extends TestCase {
     dataSource1.beforeFirst();
     while (dataSource1.next()) {
       String string = dataSource1.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
-
-    System.out.println();
 
     dataSource2.beforeFirst();
     while (dataSource2.next()) {
       String string = dataSource2.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
 
     DbDataSource dataSource3 = new DbDataSource();
@@ -148,32 +145,27 @@ public class JoinDataSources extends TestCase {
     DbDataSource joinSecondaryDataSources2 = SqlUtilities.getInstance().joinSecondaryDataSources(dataSources);
     joinSecondaryDataSources2.reload();
 
-    System.out.println("dataSource1");
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("dataSource1");
     dataSource1.beforeFirst();
     while (dataSource1.next()) {
       String string = dataSource1.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
 
-    System.out.println();
-    System.out.println("dataSource2");
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("dataSource2");
 
     dataSource2.beforeFirst();
     while (dataSource2.next()) {
       String string = dataSource2.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
-    System.out.println();
-    System.out.println("dataSource3");
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("dataSource3");
 
     dataSource3.beforeFirst();
     while (dataSource3.next()) {
       String string = dataSource3.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
-
-    System.out.println();
-
   }
 
   public void testTrijedataSourciBrezNext() throws SQLException {
@@ -211,15 +203,13 @@ public class JoinDataSources extends TestCase {
     dataSource1.beforeFirst();
     while (dataSource1.next()) {
       String string = dataSource1.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
-
-    System.out.println();
 
     dataSource2.beforeFirst();
     while (dataSource2.next()) {
       String string = dataSource2.getString("EventId");
-      System.out.println(string);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
     }
 
     DbDataSource dataSource3 = new DbDataSource();
@@ -240,18 +230,14 @@ public class JoinDataSources extends TestCase {
     DbDataSource joinSecondaryDataSources2 = SqlUtilities.getInstance().joinSecondaryDataSources(dataSources);
     joinSecondaryDataSources2.reload();
 
-    System.out.println("dataSource1");
-    System.out.println(dataSource1.getString("EventId"));
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("dataSource1");
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(dataSource1.getString("EventId"));
 
-    System.out.println();
-    System.out.println("dataSource2");
-    System.out.println(dataSource2.getString("EventId"));
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("dataSource2");
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(dataSource2.getString("EventId"));
 
-    System.out.println();
-    System.out.println("dataSource3");
-    System.out.println(dataSource3.getString("EventId"));
-
-    System.out.println();
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("dataSource3");
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(dataSource3.getString("EventId"));
 
   }
 }

@@ -6,6 +6,7 @@ package com.openitech.sql.datasource;
 
 import com.openitech.db.model.DbDataSource;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 import junit.framework.TestCase;
 
 /**
@@ -41,9 +42,9 @@ public class Blob extends TestCase {
     if(blob != null){
       byte[] bytes = blob.getBytes(1, (int) blob.length());
       for (byte b : bytes) {
-        System.out.println(b);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(Byte.toString(b));
       }
     }
-    System.out.println(blob);
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(blob.toString());
   }
 }

@@ -57,7 +57,7 @@ public class DataSourceFactoryTest extends TestCase {
    * Test of getDataSource method, of class DataSourceFactory.
    */
   public void testGetDataSource() throws Exception {
-    System.out.println("getDataSource");
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("getDataSource");
     Properties connection = loadProperites("connection.properties");
 
     Class.forName(connection.getProperty(DbConnection.DB_DRIVER_NET));
