@@ -1079,7 +1079,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
       case SyncProviderNameTag:
         if (nullValue) {
           //rs.setSyncProvider(null);
-          //uporabi paË default providerja
+          //uporabi paè default providerja
         } else {
 //          String str = s;//s.substring(0,s.indexOf("@")+1);
 //          rs.setSyncProvider(str);

@@ -225,7 +225,7 @@ public class DbWebRowSetXmlWriter implements XmlWriter, Serializable {
       // Remove the string after "@xxxx"
       // before writing it to the xml file.
       String strProviderInstance = (caller.getSyncProvider()).toString();
-      //toString vraËa ime razreda + @ + hex
+      //toString vraèa ime razreda + @ + hex
       String strProvider = strProviderInstance.substring(0, (caller.getSyncProvider()).toString().indexOf("@"));
       String vendor = caller.getSyncProvider().getVendor();
       String version = caller.getSyncProvider().getVersion();
