@@ -38,11 +38,7 @@ public class ConnectionManager implements DbConnection {
     if (instance == null) {
       instance = new ConnectionManager();
       if (Boolean.parseBoolean(instance.getProperty(DbConnection.DB_LOG_ACTIONS, "true"))) {
-        try {
-          SQLLogger.init();
-        } catch (IOException ex) {
-          Logger.getLogger(ConnectionManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        SQLLogger.init();
       }
     }
     return instance;
