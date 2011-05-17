@@ -203,7 +203,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               int param = 1;
               logAction.setString(param++, application);
               logAction.setString(param++, formatter.format(logRecord));
-              logAction.setBoolean(param++, logRecord.getLevel().equals(Level.SEVERE));
+              logAction.setString(param++, logRecord.getLevel().toString());
               logAction.setString(param++, logRecord.getMessage());
 
               logAction.executeUpdate();
