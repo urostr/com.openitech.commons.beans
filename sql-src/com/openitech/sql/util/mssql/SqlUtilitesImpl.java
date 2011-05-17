@@ -373,7 +373,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         //seznam verzij, ki jih bo potrebno updejtat
         Map<VersionType, List<EventPK>> updateEventVersions = new HashMap<VersionType, List<EventPK>>();
 
-        //cez vse shranjene EventId-je, vkljuËno s starimi
+        //cez vse shranjene EventId-je, vkljuèno s starimi
         for (EventPK eventPK : eventPKs) {
           if (eventPK.getOldEventId() != null) {
             List<VersionType> versionTypes = versionTypesMap.get(eventPK.getOldEventId());//findVersionTypes(eventPK.getOldEventId());
@@ -778,7 +778,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               if (success) {
                 events_ID = getLastIdentity();
               } else {
-                throw new SQLException("Neuspeöno dodajanje dogodka!");
+                throw new SQLException("Neuspešno dodajanje dogodka!");
               }
             }
 
@@ -3219,7 +3219,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public FieldValue getNextIdentity(Field field, Object initValue) throws SQLException {
     try {
-      //ta motoda mora imeti lock, Ëeprav se zaenkrat naj nebi klicala iz veË threadov
+      //ta motoda mora imeti lock, èeprav se zaenkrat naj nebi klicala iz veè threadov
       lock.acquire();
 
       if (field.getFieldIndex() < 1) {

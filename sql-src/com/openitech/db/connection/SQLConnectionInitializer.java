@@ -89,7 +89,7 @@ public class SQLConnectionInitializer {
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can\'t get a connection to \'" + DB_URL + "\' [" + ex.getMessage() + "]");
         result = null;
         if (!settings.containsKey(ConnectionManager.DB_DRIVER_EMBEDDED)) {
-          throw (SQLException) (new SQLException("Neuspeöna prijava na bazo").initCause(ex));
+          throw (SQLException) (new SQLException("Neuspešna prijava na bazo").initCause(ex));
         }
       }
     }
