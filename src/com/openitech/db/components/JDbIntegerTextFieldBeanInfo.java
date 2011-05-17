@@ -1,7 +1,7 @@
 /*
  * JDbIntegerTextFieldBeanInfo.java
  *
- * Created on »etrtek, 10 januar 2008, 15:04
+ * Created on Èetrtek, 10 januar 2008, 15:04
  */
 
 package com.openitech.db.components;

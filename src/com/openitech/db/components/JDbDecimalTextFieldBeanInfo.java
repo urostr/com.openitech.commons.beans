@@ -1,7 +1,7 @@
 /*
  * JDbDecimalTextFieldBeanInfo.java
  *
- * Created on »etrtek, 10 januar 2008, 15:05
+ * Created on Èetrtek, 10 januar 2008, 15:05
  */
 
 package com.openitech.db.components;
