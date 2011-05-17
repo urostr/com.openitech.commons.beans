@@ -817,7 +817,7 @@ public class SpringDataSource implements DbDataSourceImpl {
    */
   @Override
   public void updateFloat(String columnName, float x) throws SQLException {
-    //TODO float ni natanËen 7.45f se v bazo zapiöe 7.449999809265137
+    //TODO float ni natanèen 7.45f se v bazo zapiše 7.449999809265137
     if (isDataLoaded()) {
       storeUpdate(columnName, x);
     } else {
@@ -1287,7 +1287,7 @@ public class SpringDataSource implements DbDataSourceImpl {
    */
   @Override
   public float getFloat(String columnName) throws SQLException {
-    //TODO nenatanËno Ëe roËno vneseö v bazo. Ëe gre pisanje in branje preko programa potem je uredu
+    //TODO nenatanèno èe roèno vneseš v bazo. èe gre pisanje in branje preko programa potem je uredu
     if (loadData()) {
       Number value = getStoredValue(getRow(), columnName, 0f, Number.class);
       return value == null ? null : value.floatValue();
@@ -1682,7 +1682,7 @@ public class SpringDataSource implements DbDataSourceImpl {
    */
   @Override
   public Timestamp getTimestamp(String columnName) throws SQLException {
-    //TODO ne dela napaËno castanje. OËitno Ëe hoËem date potem dela
+    //TODO ne dela napaèno castanje. Oèitno èe hoèem date potem dela
     if (loadData()) {
       return getStoredValue(getRow(), columnName, null, Timestamp.class);
     } else {
@@ -2821,7 +2821,7 @@ public class SpringDataSource implements DbDataSourceImpl {
     }
   }
 
-  //TODO a se lahko spremeni metodo v askToSaveChanges()? Bolj logiËno mi je
+  //TODO a se lahko spremeni metodo v askToSaveChanges()? Bolj logièno mi je
   public boolean askToSaveChanges() {
     return (JOptionPane.showOptionDialog(OwnerFrame.getInstance().getOwner(),
             "Ali naj shranim spremembe ?",
@@ -2859,7 +2859,7 @@ public class SpringDataSource implements DbDataSourceImpl {
 
 
   protected PreparedStatement getSelectStatement(String sql, Connection connection) throws SQLException {
-    //TODO ni logiËna koda. Ne uprablja se owner.isCacheStatements()
+    //TODO ni logièna koda. Ne uprablja se owner.isCacheStatements()
     if (this.selectStatement != null) {
       return this.selectStatement;
     } else {
@@ -3699,7 +3699,7 @@ public class SpringDataSource implements DbDataSourceImpl {
     Object result = nullValue;
     Integer r = new Integer(row);
 
-    //TODO ne vem Ëe je to uredu. mogoËe bi bilo potrebno dati napako
+    //TODO ne vem èe je to uredu. mogoèe bi bilo potrebno dati napako
 
       final ResultSet openSelectResultSet = openSelectResultSet();
 

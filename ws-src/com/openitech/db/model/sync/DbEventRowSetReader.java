@@ -45,7 +45,7 @@ import javax.sql.rowset.spi.*;
  *     <code>IDSifre</code>
  * 
  * @version 1.0
- * @author Domen BaöiË
+ * @author Domen Bašiè
  * @see javax.sql.rowset.spi.SyncProvider
  * @see javax.sql.rowset.spi.SyncFactory
  * @see javax.sql.rowset.spi.SyncFactoryException
