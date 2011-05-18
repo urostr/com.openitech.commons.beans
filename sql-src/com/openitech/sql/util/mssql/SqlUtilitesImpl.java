@@ -204,7 +204,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               logAction.setString(param++, application);
               logAction.setString(param++, formatter.format(logRecord));
               logAction.setString(param++, logRecord.getLevel().toString());
-              logAction.setString(param++, logRecord.getMessage());
+              logAction.setString(param++, formatter.formatMessage(logRecord));
 
               logAction.executeUpdate();
             }
