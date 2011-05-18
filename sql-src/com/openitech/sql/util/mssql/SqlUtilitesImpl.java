@@ -129,7 +129,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement update_eventLookupKeys;
   PreparedStatement find_eventLookupKeys;
   PreparedStatement findValue;
-  CallableStatement callStoredValue;
   PreparedStatement insertScheduler;
   PreparedStatement delete_eventPKVersions;
   PreparedStatement update_eventPK_versions_byValue;
@@ -140,6 +139,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement is_valueid_valid;
   Map<CaseInsensitiveString, Field> preparedFields;
   Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
+  private final String callStoreValueSql = ReadInputStream.getResourceAsString(getClass(), "callStoreValue.sql", "cp1250");
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -265,10 +265,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   private boolean isVersioned(List<EventPK> eventPKs) {
-    boolean result = true;
+    boolean result = false;
     for (EventPK eventPK : eventPKs) {
-      result = result && eventPK.isVersioned();
-      if (!result) {
+      result = result || eventPK.isVersioned();
+      if (result) {
         break;
       }
     }
@@ -1201,88 +1201,96 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public Long storeValue(ValueType fieldType, final Object value) throws SQLException {
-    if (callStoredValue == null) {
-      callStoredValue = ConnectionManager.getInstance().getTxConnection().prepareCall(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "callStoreValue.sql", "cp1250"));
-      callStoredValue.setQueryTimeout(15);
-    }
-
-    int pos = 0;
-    FieldValue[] fieldValues = new FieldValue[7];
-    fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, new Integer(fieldType.getTypeIndex()));
     Long newValueId = null;
-    if (value != null) {
-      switch (fieldType) {
-        case BitValue:
-        case IntValue:
-        case LongValue:
-          fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, value);
-          fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
-          break;
-        case RealValue:
-          fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, value);
-          fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
-          break;
-        case StringValue:
-          fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, value);
-          fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
-          break;
-        case DateTimeValue:
-        case MonthValue:
-        case TimeValue:
-        case DateValue:
-          fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, value);
-          fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
-          break;
-        case ObjectValue:
-        case BlobValue:
-          fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, value);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
-          break;
-        case ClobValue:
-          fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
-          fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
-          fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
-          fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
-          fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
-          fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, value);
-          break;
-      }
-      if (newValueId == null) {
-        synchronized (callStoredValue) {
-          execute(callStoredValue, fieldValues);
+    final Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
+    try {
+      CallableStatement callStoredValue = temporaryConnection.prepareCall(callStoreValueSql);
+      try {
+        callStoredValue.setQueryTimeout(15);
 
-          ResultSet resultSet = callStoredValue.getResultSet();
-          if (resultSet != null) {
-            try {
-              if (resultSet.next()) {
-                newValueId = resultSet.getLong("Id");
+
+        int pos = 0;
+        FieldValue[] fieldValues = new FieldValue[7];
+        fieldValues[pos++] = new FieldValue("FieldType", Types.INTEGER, new Integer(fieldType.getTypeIndex()));
+        if (value != null) {
+          switch (fieldType) {
+            case BitValue:
+            case IntValue:
+            case LongValue:
+              fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, value);
+              fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+              fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+              fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+              fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+              fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
+              break;
+            case RealValue:
+              fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+              fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, value);
+              fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+              fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+              fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+              fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
+              break;
+            case StringValue:
+              fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+              fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+              fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, value);
+              fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+              fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+              fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
+              break;
+            case DateTimeValue:
+            case MonthValue:
+            case TimeValue:
+            case DateValue:
+              fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+              fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+              fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+              fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, value);
+              fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+              fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
+              break;
+            case ObjectValue:
+            case BlobValue:
+              fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+              fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+              fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+              fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+              fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, value);
+              fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
+              break;
+            case ClobValue:
+              fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+              fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+              fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+              fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+              fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+              fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, value);
+              break;
+          }
+          if (newValueId == null) {
+            synchronized (callStoredValue) {
+              execute(callStoredValue, fieldValues);
+
+              ResultSet resultSet = callStoredValue.getResultSet();
+              if (resultSet != null) {
+                try {
+                  if (resultSet.next()) {
+                    newValueId = resultSet.getLong("Id");
+                  }
+                } finally {
+                  resultSet.close();
+                }
               }
-            } finally {
-              resultSet.close();
             }
           }
         }
+      } finally {
+        callStoredValue.close();
       }
+    } finally {
+      temporaryConnection.close();
     }
     return newValueId;
   }
@@ -1993,7 +2001,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   private boolean isValidValueId(FieldValue fv) throws SQLException {
     if (useValueId == null) {
-      useValueId = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_VALUEID, "false"));
+      useValueId = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_VALUEID, "true"));
     }
     if (fv == null
             || fv.getValueId() == null
