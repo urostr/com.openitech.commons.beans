@@ -400,7 +400,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 
   @Override
   public Dimension getMaximumSize() {
-    return new Dimension(1024, 768);
+    return new Dimension(600, 400);
   }
 
   @Override
