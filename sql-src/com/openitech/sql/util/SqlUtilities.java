@@ -53,7 +53,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public static final String RPE_DB = "[RPE]";
   public static final String MVIEW_CACHE_DB = "[MViewCache]";
   private static Map<Class, SqlUtilities> instances = new HashMap<Class, SqlUtilities>();
-  
+
   protected SqlUtilities() {
   }
 
@@ -189,10 +189,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
               }
               break;
             case Types.BLOB:
+            case Types.LONGVARBINARY:
               if (value instanceof byte[]) {
                 statement.setBytes(pos, (byte[]) value);
               } else {
-                statement.setObject(pos, value);
+                statement.setObject(pos, value, type);
               }
               break;
             case Types.BIGINT:
@@ -417,7 +418,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
     logChanges(application, database, tableName, operation, newValues, oldValues);
   }
-  
+
   public abstract void logActions(List<LogRecord> logRecords);
 
   protected abstract void logChanges(String application, String database, String tableName, Operation operation, List<FieldValue> newValues, List<FieldValue> oldValues) throws SQLException;
@@ -460,9 +461,9 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     return findEvent(search);
   }
 
- public abstract Event findEvent(Long eventId) throws SQLException;
- 
- public abstract Event findEvent(Event event) throws SQLException;
+  public abstract Event findEvent(Long eventId) throws SQLException;
+
+  public abstract Event findEvent(Event event) throws SQLException;
 
   public Long updateEvent(Event event) throws SQLException {
     return updateEvent(event, event); //event vsebuje eventId oz. se dodaja
@@ -573,7 +574,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   @Override
   protected abstract boolean isTransactionValid() throws SQLException;
-  
+
   protected abstract void updateVersion(int oldVersion, List<Long> parentEventIds, List<Long> oldParentEventIds) throws SQLException;
 
   protected abstract long storeVersion(EventType eventType) throws SQLException;
@@ -627,7 +628,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   }
 
   public abstract EventQuery prepareEventQuery(Event parent, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly);
-  
+
   public abstract DbDataSource joinSecondaryDataSources(List<DbDataSource> dataSources) throws SQLException;
 
   public abstract Map<String, com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
@@ -672,7 +673,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract String getPPJoinFields();
 
   public abstract Clob getWorkArea(int workAreaId) throws SQLException;
-  
+
   public static enum Operation {
 
     INSERT,
