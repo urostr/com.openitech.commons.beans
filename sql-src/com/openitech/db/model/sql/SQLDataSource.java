@@ -3784,7 +3784,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
         currentResultSet = null;
       } catch (InterruptedException ex) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Interrupted while preparing '" + selectSql + "'", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Interrupted while preparing ''{0}''", selectSql);
       } finally {
         semaphore.release();
         if (countSql == null) {
@@ -3853,7 +3853,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
       }
     } catch (InterruptedException ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Interrupted while preparing '" + countSql + "'", ex);
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Interrupted while preparing ''{0}''", countSql);
     } finally {
       semaphore.release();
     }
