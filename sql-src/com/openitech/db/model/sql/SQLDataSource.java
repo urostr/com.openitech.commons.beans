@@ -1582,7 +1582,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   @Override
   public boolean relative(int rows) throws SQLException {
     if (loadData()) {
-     if (owner.isSaveChangesOnMove() && rowUpdated()) {
+      if (owner.isSaveChangesOnMove() && rowUpdated()) {
         if (shouldSaveChanges()) {
           updateRow();
         } else {
@@ -3784,7 +3784,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
         currentResultSet = null;
       } catch (InterruptedException ex) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Interrupted while preparing '" + selectSql + "'", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Interrupted while preparing '" + selectSql + "'", ex);
       } finally {
         semaphore.release();
         if (countSql == null) {
@@ -3853,8 +3853,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
       }
     } catch (InterruptedException ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Interrupted while preparing '" + countSql + "'", ex);
-      ;
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Interrupted while preparing '" + countSql + "'", ex);
     } finally {
       semaphore.release();
     }
