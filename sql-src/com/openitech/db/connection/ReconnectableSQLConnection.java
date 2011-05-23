@@ -6,8 +6,8 @@ package com.openitech.db.connection;
 
 import com.openitech.jdbc.proxy.ConnectionProxy;
 import com.openitech.sql.datasource.DataSourceFactory;
-import com.openitech.sql.logger.SQLLogger;
 import com.openitech.sql.pool.ConnectionPool;
+import com.openitech.sql.pool.TemporaryConnectionPool;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -27,7 +27,7 @@ public class ReconnectableSQLConnection implements DbConnection {
 
   private final AbstractSQLConnection owner;
   private DataSource dataSource;
-  private ConnectionPool temporaryPool;
+  private TemporaryConnectionPool temporaryPool;
   private ConnectionPool connectionPool;
   private Boolean isCaseInsensitive = null;
   private Boolean isConvertToVarchar = null;
@@ -168,7 +168,7 @@ public class ReconnectableSQLConnection implements DbConnection {
       if (ds != null) {
         this.dataSource = ds;
         if (Boolean.valueOf(settings.getProperty(DB_USE_TEMPORARY_POOL, "false"))) {
-          this.temporaryPool = new ConnectionPool(ds, Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")), 1, 1, executeOnCreate);
+          this.temporaryPool = new TemporaryConnectionPool(ds, Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")),  Integer.parseInt(settings.getProperty(DB_TEMP_POOL_SIZE, "0")), executeOnCreate);
         } else {
           this.temporaryPool = null;
         }
