@@ -104,7 +104,7 @@ public final class RefreshDataSource extends DataSourceEvent {
           if (label != null && !label.equals("")) {
             busy.setText(label);
           } else {
-            busy.setText("Osve?ujem podatke ...");
+            busy.setText("Osvežujem podatke ...");
           }
         }
       });
