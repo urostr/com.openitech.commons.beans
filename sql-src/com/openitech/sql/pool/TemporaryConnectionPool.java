@@ -52,12 +52,15 @@ public class TemporaryConnectionPool {
 
       @Override
       public void run() {
-        while (connections.size() > initialSize) {
+        boolean removedConnection = false;
+        while (removedConnection && connections.size() > initialSize) {
+          removedConnection = false;
           for (int i = 0; i < connections.size(); i++) {
             try {
               TemporaryPooledConnectionProxy connection = connections.get(i);
               if (connection.isClosed()) {
                 removeConnection(connection);
+                removedConnection = true;
                 break;
               }
             } catch (SQLException ex) {
