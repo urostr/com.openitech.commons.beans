@@ -171,7 +171,9 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
           activeConnection.setClientInfo(clientInfo);
         }
         this.connection = activeConnection;
-        Logger.getLogger(AbstractConnection.class.getName()).info("Connection reopened.");
+        if (log) {
+          Logger.getLogger(AbstractConnection.class.getName()).info("Connection reopened.");
+        }
       } finally {
         unlock();
       }
@@ -245,12 +247,6 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
         if (log) {
           Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
         }
-//        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-//
-//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("StackTrace:::");
-//        for (StackTraceElement element : stackTrace) {
-//          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(element.toString());
-//        }
       }
     } finally {
       unlock();
