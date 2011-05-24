@@ -1,13 +1,11 @@
 package com.openitech.ref;
 
-import com.openitech.Settings;
 import java.awt.EventQueue;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.*;
 import java.lang.ref.Reference;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -17,9 +15,9 @@ import java.util.logging.Logger;
  *
  * <p>Copyright: Copyright (c) 2006</p>
  *
- * <p>Company: Odprte Informacijske Tehnologije Uro?° Trojar s.p.</p>
+ * <p>Company: Odprte Informacijske Tehnologije Uroš Trojar s.p.</p>
  *
- * @author Uro?° Trojar
+ * @author Uroš Trojar
  * @version $Revision: 1.2 $
  */
 public final class WeakListenerList
