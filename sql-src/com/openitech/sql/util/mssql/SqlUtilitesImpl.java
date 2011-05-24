@@ -3259,48 +3259,52 @@ public class SqlUtilitesImpl extends SqlUtilities {
             findIdentityAsString.setString(param++, field.getName());
             rsFindIdentity = findIdentityAsString.executeQuery();
             break;
+          default:
+            throw new IllegalArgumentException("Nepodprti tip polja");
         }
 
 
         Long eventId = null;
         int shranjenTipPolja = -1;
         ValueType shranjenValueType = null;
-        Object fieldValue = null;
-        try {
-          if (rsFindIdentity.next()) {
-            eventId = rsFindIdentity.getLong("EventId");
-            if (rsFindIdentity.wasNull()) {
-              eventId = null;
+        Object storedValue = null;
+        if (rsFindIdentity != null) {
+          try {
+            if (rsFindIdentity.next()) {
+              eventId = rsFindIdentity.getLong("EventId");
+              if (rsFindIdentity.wasNull()) {
+                eventId = null;
+              }
+              shranjenTipPolja = rsFindIdentity.getInt("TipPolja");
+              shranjenValueType = ValueType.valueOf(shranjenTipPolja);
+              if (!type.equals(shranjenValueType)) {
+                throw new IllegalArgumentException("Identity Tip polja se ne ujema");
+              }
+              switch (shranjenValueType) {
+                case IntValue:
+                  storedValue = rsFindIdentity.getInt("FieldValue");
+                  break;
+                case StringValue:
+                  storedValue = rsFindIdentity.getString("FieldValue");
+                  break;
+              }
             }
-            shranjenTipPolja = rsFindIdentity.getInt("TipPolja");
-            shranjenValueType = ValueType.valueOf(shranjenTipPolja);
-            if (!type.equals(shranjenValueType)) {
-              throw new IllegalArgumentException("Identity Tip polja se ne ujema");
-            }
-            switch (shranjenValueType) {
-              case IntValue:
-                fieldValue = rsFindIdentity.getInt("FieldValue");
-                break;
-              case StringValue:
-                fieldValue = rsFindIdentity.getString("FieldValue");
-                break;
-            }
+          } finally {
+            rsFindIdentity.close();
           }
-        } finally {
-          rsFindIdentity.close();
         }
 
         Event result = new Event(0, "ID01");
         result.setId(eventId);
         result.setEventSource(-1);
         result.setDatum(new java.sql.Date(System.currentTimeMillis()));
-        FieldValue fv = new FieldValue(field.getName(), shranjenValueType != null ? shranjenValueType.getSqlType() : field.getType(), fieldValue);
+        FieldValue fv = new FieldValue(field.getName(), shranjenValueType != null ? shranjenValueType.getSqlType() : field.getType(), storedValue);
 
         result.addValue(fv);
 
         Event system = result;
 
-        if (fieldValue == null) {
+        if (storedValue == null) {
 
           PreparedStatement psFindIdentityEventId = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getReplacedSql("SELECT TOP 1 Id FROM <%ChangeLog%>.[dbo].[Events] ev WITH (NOLOCK) WHERE IdSifranta = 0 AND IdSifre = 'ID01'"));
           try {
