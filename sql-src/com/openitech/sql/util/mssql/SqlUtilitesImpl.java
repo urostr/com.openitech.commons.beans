@@ -134,7 +134,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement update_eventPK_versions_byValue;
   PreparedStatement search_by_PK;
   PreparedStatement find_event_by_PK;
-  PreparedStatement findIdentityEventId;
+  PreparedStatement findIdentityAsString;
+  PreparedStatement findIdentityAsInt;
   PreparedStatement is_transaction_valid;
   PreparedStatement is_valueid_valid;
   Map<CaseInsensitiveString, Field> preparedFields;
@@ -3221,7 +3222,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     return result;
   }
-  private final static Event SYSTEM_IDENTITIES = new Event(0, "ID01", -1);
   private final Semaphore lock = new Semaphore(1);
 
   @Override
@@ -3235,61 +3235,110 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       try {
-        if (findIdentityEventId == null) {
-          findIdentityEventId = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getReplacedSql("SELECT TOP 1 Id FROM <%ChangeLog%>.[dbo].[Events] ev WITH (NOLOCK) WHERE IdSifranta = 0 AND IdSifre = 'ID01'"));
+        if (findIdentityAsString == null) {
+          findIdentityAsString = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "find_identity.sql", "cp1250").replaceAll("<%ValueType%>", "StringValue"));
         }
-        ResultSet rsFindIdentityEventId = findIdentityEventId.executeQuery();
-        Event system = null;
+        if (findIdentityAsInt == null) {
+          findIdentityAsInt = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "find_identity.sql", "cp1250").replaceAll("<%ValueType%>", "IntValue"));
+        }
+
+        ResultSet rsFindIdentity = null;
+        ValueType type = ValueType.getType(field.getType());
+
+        int param = 1;
+        switch (type) {
+          case IntValue:
+            param = 1;
+            findIdentityAsInt.clearParameters();
+            findIdentityAsInt.setString(param++, field.getName());
+            rsFindIdentity = findIdentityAsInt.executeQuery();
+            break;
+          case StringValue:
+            param = 1;
+            findIdentityAsString.clearParameters();
+            findIdentityAsString.setString(param++, field.getName());
+            rsFindIdentity = findIdentityAsString.executeQuery();
+            break;
+        }
+
+
+        Long eventId = null;
+        int shranjenTipPolja = -1;
+        ValueType shranjenValueType = null;
+        Object fieldValue = null;
         try {
-          if (rsFindIdentityEventId.next()) {
-            system = findEvent(rsFindIdentityEventId.getLong(1));
+          if (rsFindIdentity.next()) {
+            eventId = rsFindIdentity.getLong("EventId");
+            if (rsFindIdentity.wasNull()) {
+              eventId = null;
+            }
+            shranjenTipPolja = rsFindIdentity.getInt("TipPolja");
+            shranjenValueType = ValueType.valueOf(shranjenTipPolja);
+            if (!type.equals(shranjenValueType)) {
+              throw new IllegalArgumentException("Identity Tip polja se ne ujema");
+            }
+            switch (shranjenValueType) {
+              case IntValue:
+                fieldValue = rsFindIdentity.getInt("FieldValue");
+                break;
+              case StringValue:
+                fieldValue = rsFindIdentity.getString("FieldValue");
+                break;
+            }
           }
         } finally {
-          rsFindIdentityEventId.close();
+          rsFindIdentity.close();
         }
-        SYSTEM_IDENTITIES.setPrimaryKey(new Field[]{});
-        system = system == null ? SYSTEM_IDENTITIES : system;
-        List<FieldValue> get = system.getEventValues().get(field);
-        if ((get == null) || (get.isEmpty())) {
-          ValueType type = ValueType.getType(field.getType());
-          FieldValue start = new FieldValue(field);
+
+        Event result = new Event(0, "ID01");
+        result.setId(eventId);
+        result.setEventSource(-1);
+        result.setDatum(new java.sql.Date(System.currentTimeMillis()));
+        FieldValue fv = new FieldValue(field.getName(), shranjenValueType != null ? shranjenValueType.getSqlType() : field.getType(), fieldValue);
+
+        result.addValue(fv);
+
+        Event system = result;
+
+        if (fieldValue == null) {
+
+          PreparedStatement psFindIdentityEventId = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getReplacedSql("SELECT TOP 1 Id FROM <%ChangeLog%>.[dbo].[Events] ev WITH (NOLOCK) WHERE IdSifranta = 0 AND IdSifre = 'ID01'"));
+          try {
+            ResultSet rsFindIdentityEventId = psFindIdentityEventId.executeQuery();
+            try {
+              if (rsFindIdentityEventId.next()) {
+                system.setId(rsFindIdentityEventId.getLong(1));
+              }
+            } finally {
+              rsFindIdentityEventId.close();
+            }
+          } finally {
+            psFindIdentityEventId.close();
+          }
           switch (type) {
             case RealValue:
             case IntValue:
             case LongValue:
               if ((initValue != null) && (initValue instanceof Number)) {
-                start.setValue(initValue);
+                fv.setValue(initValue);
               } else {
-                start.setValue(1);
+                fv.setValue(1L);
               }
               break;
             case StringValue:
               if (initValue != null) {
-                start.setValue(initValue);
+                fv.setValue(initValue);
               } else {
-                start.setValue("AAA000000001");
+                fv.setValue("AAA000000001");
               }
               break;
-            default:
-              start = null;
+
           }
-          if (start != null) {
-            system.addValue(start);
-            storeEvent(system);
-          }
-          return start;
+          storeEvent(system);
+          return fv;
         } else {
-          FieldValue value = get.get(0);
-          ValueType type = ValueType.getType(value.getType());
+          FieldValue value = fv;
           switch (type) {
-            case RealValue:
-              value.setValue(((Number) value.getValue()).doubleValue() + 1);
-              if ((initValue != null) && (initValue instanceof Number)) {
-                if (((Number) initValue).doubleValue() >= ((Number) value.getValue()).doubleValue()) {
-                  value.setValue(initValue);
-                }
-              }
-              break;
             case IntValue:
             case LongValue:
               value.setValue(((Number) value.getValue()).longValue() + 1);
