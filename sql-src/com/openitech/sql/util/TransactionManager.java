@@ -12,6 +12,7 @@ import java.sql.Savepoint;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,10 +42,6 @@ public class TransactionManager {
     return connection;
   }
 
-  public ReentrantLock getLock() {
-    return lock;
-  }
-
   public static TransactionManager getInstance(Connection connection) {
     TransactionManager result;
     if (managers.containsKey(connection)) {
@@ -57,19 +54,24 @@ public class TransactionManager {
   }
 
   public Savepoint beginTransaction() throws SQLException {
-    if (connection.getAutoCommit()) {
-      autocommit = connection.getAutoCommit();
-      connection.setAutoCommit(false);
-    }
-    activeSavepoints.push(connection.setSavepoint());
-    if (DbDataSource.DUMP_SQL) {
-      if (activeSavepoints.size() > 1) {
-        System.err.println("-- SET SAVEPOINT (" + activeSavepoints.peek().toString() + ") -- ");
-      } else {
-        System.err.println("-- BEGIN TRANSACTION (" + activeSavepoints.peek().toString() + ") -- ");
+    try {
+      lock.tryLock(3, TimeUnit.SECONDS);
+      if (connection.getAutoCommit()) {
+        autocommit = connection.getAutoCommit();
+        connection.setAutoCommit(false);
       }
+      activeSavepoints.push(connection.setSavepoint());
+      if (DbDataSource.DUMP_SQL) {
+        if (activeSavepoints.size() > 1) {
+          System.err.println("-- SET SAVEPOINT (" + activeSavepoints.peek().toString() + ") -- ");
+        } else {
+          System.err.println("-- BEGIN TRANSACTION (" + activeSavepoints.peek().toString() + ") -- ");
+        }
+      }
+      return activeSavepoints.peek();
+    } catch (InterruptedException ex) {
+      throw new SQLException(ex.getMessage(), "T-Lock", 100, ex);
     }
-    return activeSavepoints.peek();
   }
 
   public boolean endTransaction(boolean commit, boolean force) throws SQLException {
@@ -92,8 +94,12 @@ public class TransactionManager {
   }
 
   public boolean endTransaction(boolean commit, Savepoint savepoint) throws SQLException {
+    try {
     if (!connection.getAutoCommit()) {
       if (isTransactionValid()) {
+        if (!lock.isHeldByCurrentThread()) {
+          throw new SQLException("Concurrent transaction access is not allowed", "T-Lock", 100);
+        }
         if (commit) {
           if (savepoint != null) {
             try {
@@ -143,6 +149,11 @@ public class TransactionManager {
       }
     } else {
       return false;
+    }
+    } finally {
+      if (activeSavepoints.isEmpty() && lock.isHeldByCurrentThread()) {
+        lock.unlock();
+      }
     }
   }
 
