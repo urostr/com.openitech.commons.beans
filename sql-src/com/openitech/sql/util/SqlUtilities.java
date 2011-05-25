@@ -506,8 +506,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
         success = success && storePrimaryKeyVersions(eventPK);
       }
 
-      updateEventsCache(newValues);
-
+      
       commit = success;
       return eventId;
     } finally {
