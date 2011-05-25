@@ -626,7 +626,11 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
         java.util.List listeners = activeRowChangeListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
-          ((ActiveRowChangeListener) listeners.get(i)).fieldValueChanged(e);
+          try {
+            ((ActiveRowChangeListener) listeners.get(i)).fieldValueChanged(e);
+          } catch (Exception ex) {
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireFieldValueChanged from [" + columnName + "::" + dataSource.getName() + "]", ex);
+          }
         }
       } finally {
         updatingFieldValue = false;
