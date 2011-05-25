@@ -643,12 +643,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
           }
           if (cache) {
-            try {
-              tt.executeQuery(txConnection, new ArrayList<Object>());
-            } catch (SQLException ex) {
-              //ni potrebno rollback, ce nismo uspeli kesirat
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "ERROR:cacheEvent:" + event.toString(), ex);
-            }
+            tt.executeQuery(txConnection, new ArrayList<Object>());
           }
         }
 
