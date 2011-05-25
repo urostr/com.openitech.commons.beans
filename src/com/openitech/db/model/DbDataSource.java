@@ -2912,7 +2912,11 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
-          ((ListDataListener) listeners.get(i)).intervalAdded(e);//*/
+          try {
+            ((ListDataListener) listeners.get(i)).intervalRemoved(e);//*/
+          } catch (Exception ex) {
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireIntervalAdded from '" + componentName + "'", ex);
+          }
         }
       } else {
         try {
@@ -2930,7 +2934,11 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
-          ((ListDataListener) listeners.get(i)).intervalRemoved(e);//*/
+          try {
+            ((ListDataListener) listeners.get(i)).intervalRemoved(e);//*/
+          } catch (Exception ex) {
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireIntervalRemoved from '" + componentName + "'", ex);
+          }
         }
       } else {
         try {
@@ -2948,7 +2956,11 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
-          ((ListDataListener) listeners.get(i)).contentsChanged(e);//*/
+          try {
+            ((ListDataListener) listeners.get(i)).contentsChanged(e);//*/
+          } catch (Exception ex) {
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireContentsChanged from '" + componentName + "'", ex);
+          }
         }
       } else {
         try {
@@ -2979,7 +2991,11 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
       java.util.List listeners = actionListeners.elementsList();
       int count = listeners.size();
       for (int i = 0; i < count; i++) {
-        ((ActionListener) listeners.get(i)).actionPerformed(e);
+        try {
+          ((ActionListener) listeners.get(i)).actionPerformed(e);
+        } catch (Exception ex) {
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireActionPerformed from '" + componentName + "'", ex);
+        }
       }
     }
   }
@@ -3041,14 +3057,17 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         java.util.List listeners = activeRowChangeListeners.elementsList();
         int count = listeners.size();
         for (int i = 0; i < count; i++) {
-          ((ActiveRowChangeListener) listeners.get(i)).activeRowChanged(e);
+          try {
+            ((ActiveRowChangeListener) listeners.get(i)).activeRowChanged(e);
+          } catch (Exception ex) {
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireActiveRowChange from '" + componentName + "'", ex);
+          }
         }
       } else {
         try {
           java.awt.EventQueue.invokeAndWait(new FireActiveRowChanged(this, e));
         } catch (Exception ex) {
           Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireActiveRowChange from '" + componentName + "'", ex);
-          ;
         }
       }
     }
@@ -3059,7 +3078,11 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
       java.util.List listeners = activeRowChangeListeners.elementsList();
       int count = listeners.size();
       for (int i = 0; i < count; i++) {
-        ((ActiveRowChangeListener) listeners.get(i)).fieldValueChanged(e);
+        try {
+          ((ActiveRowChangeListener) listeners.get(i)).fieldValueChanged(e);
+        } catch (Exception ex) {
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't fireFieldValueChanged from '" + componentName + "'", ex);
+        }
       }
     }
 
