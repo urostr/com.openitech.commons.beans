@@ -162,7 +162,7 @@ public class TransactionManager {
       endTransaction(false, true);
     } catch (SQLException ex) {
       //ignore it
-      Logger.getLogger(SqlUtilities.class.getName()).info(ex.getSQLState() + ":" + ex.getMessage());
+      Logger.getLogger(SqlUtilities.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{ex.getSQLState(), ex.getMessage()});
       activeSavepoints.clear();
       connection.setAutoCommit(autocommit);
       System.err.println("-- TRANSACTION CLEARED -- ");
