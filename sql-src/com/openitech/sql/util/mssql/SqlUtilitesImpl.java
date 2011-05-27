@@ -116,6 +116,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement deleteCachedTemporaryTable;
   PreparedStatement storeCachedEventObject;
   PreparedStatement updateCachedEventObject;
+  PreparedStatement findCachedEventObject;
   PreparedStatement deleteCachedEventObject;
   PreparedStatement delete_eventPK;
   PreparedStatement insert_eventPK;
@@ -623,16 +624,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
       final Connection txConnection = ConnectionManager.getInstance().getTxConnection();
 
-      if (updateCachedEventObject == null) {
-        updateCachedEventObject = txConnection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateCachedEventObjects.sql", "cp1250"));
-      }
-
-      synchronized (updateCachedEventObject) {
-        updateCachedEventObject.setBoolean(1, false);
-        updateCachedEventObject.setInt(2, key.getSifrant());
-        updateCachedEventObject.setString(3, key.getSifra());
-        updateCachedEventObject.executeUpdate();
-      }
+      invalidateCacheEvent(event);
 
       if (event.getOperation().isUpdateCache()) {
         boolean cache = true;
@@ -655,6 +647,45 @@ public class SqlUtilitesImpl extends SqlUtilities {
             updateCachedEventObject.executeUpdate();
           }
         }
+      }
+    }
+  }
+
+  @Override
+  protected void invalidateCacheEvent(Event event) throws SQLException {
+    final Connection txConnection = ConnectionManager.getInstance().getTxConnection();
+    if (updateCachedEventObject == null) {
+      updateCachedEventObject = txConnection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "updateCachedEventObjects.sql", "cp1250"));
+    }
+    if (findCachedEventObject == null) {
+      findCachedEventObject = txConnection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findCachedEventObject.sql", "cp1250"));
+    }
+
+    boolean isCached = false;
+
+    if (cachedEventObjects != null) {
+      isCached = cachedEventObjects.containsKey(new EventType(event));
+    } else {
+      int param = 1;
+      findCachedEventObject.clearParameters();
+      findCachedEventObject.setInt(param++, event.getSifrant());
+      findCachedEventObject.setString(param++, event.getSifra());
+      ResultSet rsFindCache = findCachedEventObject.executeQuery();
+      try {
+        if (rsFindCache.next()) {
+          isCached = true;
+
+        }
+      } finally {
+        rsFindCache.close();
+      }
+    }
+    if (isCached) {
+      synchronized (updateCachedEventObject) {
+        updateCachedEventObject.setBoolean(1, false);
+        updateCachedEventObject.setInt(2, event.getSifrant());
+        updateCachedEventObject.setString(3, event.getSifra());
+        updateCachedEventObject.executeUpdate();
       }
     }
   }
@@ -720,97 +751,89 @@ public class SqlUtilitesImpl extends SqlUtilities {
             if (event.isVersioned() && (oldEvent != null)) {
               //updataj stari event
               //oz.deletej valid = false
-              synchronized (updateEvents) {
-                param = 1;
-                updateEvents.clearParameters();
-                updateEvents.setInt(param++, oldEvent.getSifrant());
-                updateEvents.setString(param++, oldEvent.getSifra());
-                if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
-                  updateEvents.setNull(param++, java.sql.Types.INTEGER);
-                } else {
-                  updateEvents.setInt(param++, oldEvent.getEventSource());
-                }
-                updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
-                updateEvents.setString(param++, oldEvent.getOpomba());
-                updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-                updateEvents.setBoolean(param++, false);
-                updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
-                updateEvents.setLong(param++, oldEvent.getId());
-
-                success = success && updateEvents.executeUpdate() > 0;
+              param = 1;
+              updateEvents.clearParameters();
+              updateEvents.setInt(param++, oldEvent.getSifrant());
+              updateEvents.setString(param++, oldEvent.getSifra());
+              if (oldEvent.getEventSource() == Integer.MIN_VALUE) {
+                updateEvents.setNull(param++, java.sql.Types.INTEGER);
+              } else {
+                updateEvents.setInt(param++, oldEvent.getEventSource());
               }
+              updateEvents.setTimestamp(param++, new java.sql.Timestamp(oldEvent.getDatum().getTime()));
+              updateEvents.setString(param++, oldEvent.getOpomba());
+              updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+              updateEvents.setBoolean(param++, false);
+              updateEvents.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
+              updateEvents.setLong(param++, oldEvent.getId());
 
-              synchronized (delete_eventPK) {
-                param = 1;
-                delete_eventPK.clearParameters();
-                delete_eventPK.setLong(param++, oldEvent.getId());
-                delete_eventPK.executeUpdate();
-              }
+              success = success && updateEvents.executeUpdate() > 0;
 
-              synchronized (delete_eventPKVersions) {
-                param = 1;
-                delete_eventPKVersions.clearParameters();
-                delete_eventPKVersions.setLong(param++, oldEvent.getId());
-                delete_eventPKVersions.executeUpdate();
-              }
-              //success = success && delete_eventPK.executeUpdate() > 0;
+              param = 1;
+              delete_eventPK.clearParameters();
+              delete_eventPK.setLong(param++, oldEvent.getId());
+              delete_eventPK.executeUpdate();
+
+              param = 1;
+              delete_eventPKVersions.clearParameters();
+              delete_eventPKVersions.setLong(param++, oldEvent.getId());
+              delete_eventPKVersions.executeUpdate();
+
             }
 
             //insertaj event
-            synchronized (insertEvents) {
-              param = 1;
-              insertEvents.clearParameters();
-              insertEvents.setInt(param++, event.getSifrant());
-              insertEvents.setString(param++, event.getSifra());
-              if (event.getEventSource() == Integer.MIN_VALUE) {
-                insertEvents.setNull(param++, java.sql.Types.INTEGER);
-              } else {
-                insertEvents.setInt(param++, event.getEventSource());
-              }
-              Date eventDatum = event.getDatum();
-              if (eventDatum != null) {
-                insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
-              } else {
-                insertEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-              }
-              insertEvents.setString(param++, event.getOpomba());
-              success = success && insertEvents.executeUpdate() > 0;
-
-              if (success) {
-                events_ID = getLastIdentity();
-              } else {
-                throw new SQLException("Neuspešno dodajanje dogodka!");
-              }
+            param = 1;
+            insertEvents.clearParameters();
+            insertEvents.setInt(param++, event.getSifrant());
+            insertEvents.setString(param++, event.getSifra());
+            if (event.getEventSource() == Integer.MIN_VALUE) {
+              insertEvents.setNull(param++, java.sql.Types.INTEGER);
+            } else {
+              insertEvents.setInt(param++, event.getEventSource());
             }
+            Date eventDatum = event.getDatum();
+            if (eventDatum != null) {
+              insertEvents.setTimestamp(param++, new java.sql.Timestamp(event.getDatum().getTime()));
+            } else {
+              insertEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+            }
+            insertEvents.setString(param++, event.getOpomba());
+            success = success && insertEvents.executeUpdate() > 0;
+
+            if (success) {
+              events_ID = getLastIdentity();
+            } else {
+              throw new SQLException("Neuspešno dodajanje dogodka!");
+            }
+
 
 
           } else {
             events_ID = event.getId();
-//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("event:" + event.getSifrant() + "-" + event.getSifra() + ":updating:" + events_ID);
-            synchronized (updateEvents) {
-              param = 1;
-              updateEvents.clearParameters();
-              updateEvents.setInt(param++, event.getSifrant());
-              updateEvents.setString(param++, event.getSifra());
-              if (event.getEventSource() == Integer.MIN_VALUE) {
-                updateEvents.setNull(param++, java.sql.Types.INTEGER);
-              } else {
-                updateEvents.setInt(param++, event.getEventSource());
-              }
-              long time = System.currentTimeMillis();
-              if (event != null && event.getDatum() != null) {
-                time = event.getDatum().getTime();
-              }
-              updateEvents.setTimestamp(param++, new java.sql.Timestamp(time));
-              updateEvents.setString(param++, event.getOpomba());
-              updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
-              updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
-              updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
-              updateEvents.setLong(param++, events_ID);
 
-              success = success && updateEvents.executeUpdate() > 0;
+            param = 1;
+            updateEvents.clearParameters();
+            updateEvents.setInt(param++, event.getSifrant());
+            updateEvents.setString(param++, event.getSifra());
+            if (event.getEventSource() == Integer.MIN_VALUE) {
+              updateEvents.setNull(param++, java.sql.Types.INTEGER);
+            } else {
+              updateEvents.setInt(param++, event.getEventSource());
             }
+            long time = System.currentTimeMillis();
+            if (event != null && event.getDatum() != null) {
+              time = event.getDatum().getTime();
+            }
+            updateEvents.setTimestamp(param++, new java.sql.Timestamp(time));
+            updateEvents.setString(param++, event.getOpomba());
+            updateEvents.setTimestamp(param++, new java.sql.Timestamp(System.currentTimeMillis()));
+            updateEvents.setBoolean(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? false : true);
+            updateEvents.setTimestamp(param++, (event.getOperation() != null && event.getOperation() == Event.EventOperation.DELETE) ? new Timestamp(System.currentTimeMillis()) : null);
+            updateEvents.setLong(param++, events_ID);
+
+            success = success && updateEvents.executeUpdate() > 0;
           }
+
 
           if (success) {
             success = success && storeOpomba(events_ID, event.getOpomba());
@@ -821,136 +844,126 @@ public class SqlUtilitesImpl extends SqlUtilities {
               success = success && storeVeljavnost(events_ID, event.getVeljavnost());
             }
           }
-
+          long start = System.currentTimeMillis();
           if (success) {
-            List<FieldValue> fieldValuesList = new ArrayList<FieldValue>(event.getEventValues().size());
+            List<FieldValue> fieldValuesList = event.getValues();
 
             EventPK eventPK = new EventPK();
 
-            Map<Field, List<FieldValue>> eventValues = event.getEventValues();
             final Map<CaseInsensitiveString, Field> fields = event.getPreparedFields() == null ? this.getPreparedFields() : event.getPreparedFields();
+            final Field[] eventPrimaryKey = event.getPrimaryKey();
 
-            for (Field field : eventValues.keySet()) {
-              List<FieldValue> fieldValues = eventValues.get(field);
-              for (int i = 0; i < fieldValues.size(); i++) {
-                FieldValue value = fieldValues.get(i);
+            for (FieldValue fieldValue : fieldValuesList) {
 
-                Long valueId = null;
-                //ce ze imamo valueId, potem ne rabimo vec shranjevat,
-                //ker se vrednosti in valueId ne spreminja
-                if (!isValidValueId(value)) {
-                  valueId = storeValue(value.getValueType(), value.getValue());
-                  value.setValueId(valueId);
-                } else {
-                  valueId = value.getValueId();
+              Long valueId = null;
+              //ce ze imamo valueId, potem ne rabimo vec shranjevat,
+              //ker se vrednosti in valueId ne spreminja
+              if (!isValidValueId(fieldValue)) {
+                valueId = storeValue(fieldValue.getValueType(), fieldValue.getValue());
+                fieldValue.setValueId(valueId);
+              } else {
+                valueId = fieldValue.getValueId();
+              }
+
+              String fieldName = fieldValue.getName();
+              String fieldNameWithIndex = fieldValue.getName();
+              int fieldValueIndex = fieldValue.getFieldIndex();
+
+              int field_id;
+              if ((fieldValue.getIdPolja() == null)
+                      || (fieldValue.getIdPolja() < 0)) {
+                if (fieldValueIndex > 1) {
+                  Field nonIndexed = fieldValue.getNonIndexedField();
+                  fieldName = nonIndexed.getName();
                 }
-                fieldValuesList.add(value);
+                Field newField = Field.getField(fieldName, fieldValueIndex, fields);
+                if (newField.getIdPolja() == null) {
+                  newField = getField(fieldName);
+                }
+                if (newField == null) {
+                  throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
+                }
+                field_id = newField.getIdPolja();
+                fieldValue.setIdPolja(newField.getIdPolja());
+              } else {
+                field_id = fieldValue.getIdPolja();
+              }
 
-                String fieldName = field.getName();
-                String fieldNameWithIndex = field.getName();
-                int fieldValueIndex = field.getFieldIndex();
+              if (valueId != null) {
+                if (fieldValue.getLookupType() == null) {
 
-                int field_id;
-                if ((field.getIdPolja() == null)
-                        || (field.getIdPolja() < 0)) {
-                  if (fieldValueIndex > 1) {
-                    Field nonIndexed = field.getNonIndexedField();
-                    fieldName = nonIndexed.getName();
+                  param = 1;
+                  findEventValue.clearParameters();
+                  findEventValue.setLong(param++, events_ID);
+                  findEventValue.setInt(param++, field_id);
+                  findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
+
+                  ResultSet rs = findEventValue.executeQuery();
+                  try {
+                    rs.next();
+
+                    if (rs.getInt(1) == 0) {
+                      //insertaj event value
+                      param = 1;
+                      insertEventValues.clearParameters();
+                      insertEventValues.setLong(param++, events_ID);
+                      insertEventValues.setInt(param++, field_id);
+                      insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                      insertEventValues.setLong(param++, valueId);
+
+                      success = success && insertEventValues.executeUpdate() > 0;
+                    } else {
+                      //updataj event value
+                      param = 1;
+                      updateEventValues.clearParameters();
+                      updateEventValues.setLong(param++, valueId);
+                      updateEventValues.setLong(param++, events_ID);
+                      updateEventValues.setInt(param++, field_id);
+                      updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+
+                      success = success && updateEventValues.executeUpdate() > 0;
+                    }
+                  } finally {
+                    rs.close();
                   }
-                  Field newField = Field.getField(fieldName, fieldValueIndex, fields);
-                  if (newField.getIdPolja() == null) {
-                    newField = getField(fieldName);
-                  }
-                  if (newField == null) {
-                    throw new SQLException("Cannot find IDPolja! FieldName=" + fieldName);
-                  }
-                  field_id = newField.getIdPolja();
-                  field.setIdPolja(newField.getIdPolja());
-                } else {
-                  field_id = field.getIdPolja();
+
+
                 }
 
-                if (valueId != null) {
-                  if (field.getLookupType() == null) {
-
-                    synchronized (findEventValue) {
-                      param = 1;
-                      findEventValue.clearParameters();
-                      findEventValue.setLong(param++, events_ID);
-                      findEventValue.setInt(param++, field_id);
-                      findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
-
-                      ResultSet rs = findEventValue.executeQuery();
-                      try {
-                        rs.next();
-
-                        if (rs.getInt(1) == 0) {
-                          //insertaj event value
-                          param = 1;
-                          insertEventValues.clearParameters();
-                          insertEventValues.setLong(param++, events_ID);
-                          insertEventValues.setInt(param++, field_id);
-                          insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-                          if (valueId == null) {
-                            insertEventValues.setNull(param++, java.sql.Types.BIGINT);
-                          } else {
-                            insertEventValues.setLong(param++, valueId);
-                          }
-
-                          success = success && insertEventValues.executeUpdate() > 0;
-                        } else {
-                          //updataj event value
-                          param = 1;
-                          updateEventValues.clearParameters();
-                          if (valueId == null) {
-                            updateEventValues.setNull(param++, java.sql.Types.BIGINT);
-                          } else {
-                            updateEventValues.setLong(param++, valueId);
-                          }
-                          updateEventValues.setLong(param++, events_ID);
-                          updateEventValues.setInt(param++, field_id);
-                          updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-
-                          success = success && updateEventValues.executeUpdate() > 0;
-                        }
-                      } finally {
-                        rs.close();
-                      }
-
+                if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
+                  for (Field fieldPK : eventPrimaryKey) {
+                    if (fieldPK.equals(fieldValue)) {
+                      eventPK.addPrimaryKeyField(new FieldValue(field_id, fieldNameWithIndex, fieldValue.getType(), fieldValueIndex, new VariousValue(valueId, fieldValue.getType(), fieldValue.getValue())));
+                      break;
                     }
                   }
+                }
+              } else {
+                if (!event.isVersioned()) {
+                  //delete eventValue
+                  param = 1;
+                  deleteEventValues.clearParameters();
+                  deleteEventValues.setLong(param++, events_ID);
+                  deleteEventValues.setInt(param++, field_id);
+                  deleteEventValues.setInt(param++, fieldValueIndex);
+                  deleteEventValues.executeUpdate();
 
-                  if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
-                    FieldValue fieldValuePK = new FieldValue(field_id, fieldNameWithIndex, field.getType(), fieldValueIndex, new VariousValue(valueId, value.getType(), value.getValue()));
-                    for (Field field1 : event.getPrimaryKey()) {
-                      if (field1.equals(fieldValuePK)) {
-                        eventPK.addPrimaryKeyField(fieldValuePK);
-                        break;
-                      }
-                    }
-                  }
-                } else {
-                  if (!event.isVersioned()) {
-                    //delete eventValue
-                    synchronized (deleteEventValues) {
-                      param = 1;
-                      deleteEventValues.clearParameters();
-                      deleteEventValues.setLong(param++, events_ID);
-                      deleteEventValues.setInt(param++, field_id);
-                      deleteEventValues.setInt(param++, fieldValueIndex);
-                      deleteEventValues.executeUpdate();
-                    }
-                  }
                 }
               }
+
             }
-            if (event.getPrimaryKey() != null && event.getPrimaryKey().length > 0) {
+            long end = System.currentTimeMillis();
+            System.out.println("CAS:EventValues=" + (end - start));
+            start = System.currentTimeMillis();
+            if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
               eventPK.setEventId(events_ID);
               eventPK.setIdSifranta(event.getSifrant());
               eventPK.setIdSifre(event.getSifra());
               eventPK.setEventOperation(event.getOperation());
               success = success && storePrimaryKey(eventPK);
             }
+            end = System.currentTimeMillis();
+            System.out.println("CAS:storePrimaryKey=" + (end - start));
 
             success = success && storeEventLookUpKeys(events_ID, fieldValuesList);
           }
@@ -1202,10 +1215,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public Long storeValue(ValueType fieldType, final Object value) throws SQLException {
+    long start = System.currentTimeMillis();
     Long newValueId = null;
+    long start2 = System.currentTimeMillis();
     final Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
+    long end2 = System.currentTimeMillis();
+    System.out.println("CAS:getTemporaryConnection=" + (end2 - start2));
     try {
+      long start1 = System.currentTimeMillis();
       CallableStatement callStoredValue = temporaryConnection.prepareCall(callStoreValueSql);
+      long end1 = System.currentTimeMillis();
+      System.out.println("CAS:prepareCall=" + (end1 - start1));
       try {
         callStoredValue.setQueryTimeout(15);
 
@@ -1272,7 +1292,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
           if (newValueId == null) {
             synchronized (callStoredValue) {
+              long start4 = System.currentTimeMillis();
               execute(callStoredValue, fieldValues);
+              long end4 = System.currentTimeMillis();
+              System.out.println("CAS:execute=" + (end4 - start4));
 
               ResultSet resultSet = callStoredValue.getResultSet();
               if (resultSet != null) {
@@ -1293,10 +1316,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
     } finally {
       temporaryConnection.close();
     }
+    long end = System.currentTimeMillis();
+    System.out.println("CAS:storeValue=" + (end - start));
     return newValueId;
   }
 
   public boolean storeOpomba(Long eventId, String opomba) throws SQLException {
+    if (opomba == null) {
+      return true;
+    }
+    if (eventId == null) {
+      return false;
+    }
     final Connection connection = ConnectionManager.getInstance().getTxConnection();
     if (insertEventsOpombe == null) {
       insertEventsOpombe = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_EventsOpombe.sql", "cp1250"));
@@ -1332,24 +1363,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       if (saveOpomba) {
-        if (opomba == null) {
-          return true;
-        }
+
         Long opombaId = storeValue(ValueType.ClobValue, opomba);
+        if (opombaId == null) {
+          //null ni dovoljeno, zato bo vrgel sql napako
+          return false;
+        }
         synchronized (insertEventsOpombe) {
           param = 1;
           insertEventsOpombe.clearParameters();
-          if (eventId == null) {
-            return false;
-          } else {
-            insertEventsOpombe.setLong(param++, eventId.longValue());
-          }
-          if (opombaId == null) {
-            //null ni dovoljeno, zato bo vrgel sql napako
-            return false;
-          } else {
-            insertEventsOpombe.setLong(param++, opombaId.longValue());
-          }
+          insertEventsOpombe.setLong(param++, eventId.longValue());
+          insertEventsOpombe.setLong(param++, opombaId.longValue());
           success = success && insertEventsOpombe.executeUpdate() > 0;
         }
       }
