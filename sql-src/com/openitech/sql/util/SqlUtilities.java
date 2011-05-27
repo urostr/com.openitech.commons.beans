@@ -545,7 +545,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       afterUpdateEvent.afterUpdateEvent(newValues, find);
     }
 
-
+    updateEventsCache(newValues, false);
 
     if (eventPK.getEventOperation() == Event.EventOperation.UPDATE) {
       eventIds.add(eventPK);
@@ -571,6 +571,15 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
   }
 
+  public void updateEventsCache(Event event, boolean isValid) throws SQLException{
+    if (event.getOperation() != Event.EventOperation.IGNORE) {
+      for (Event childEvent : event.getChildren()) {
+        updateEventsCache(childEvent, isValid);
+      }
+      invalidateCacheEvent(event);
+    }
+  }
+
   @Override
   protected abstract boolean isTransactionValid() throws SQLException;
 
@@ -579,6 +588,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   protected abstract long storeVersion(EventType eventType) throws SQLException;
 
   protected abstract void cacheEvent(Event event) throws SQLException;
+
+  protected abstract void invalidateCacheEvent(Event event) throws SQLException;
 
   protected abstract Integer assignEventVersion(EventType parent, List<EventPK> eventIds) throws SQLException;
 
