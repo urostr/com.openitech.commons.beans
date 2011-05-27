@@ -15,7 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -175,9 +175,15 @@ public class Event extends EventType implements Cloneable {
     this.versioned = versioned;
   }
   java.util.Map<Field, java.util.List<FieldValue>> eventValues = new java.util.LinkedHashMap<Field, java.util.List<FieldValue>>();
+  List<FieldValue> values = new LinkedList<FieldValue>();
+
+  public List<FieldValue> getValues() {
+    return values;
+  }
 
   public void addValue(FieldValue value) {
     getFieldValues(value).add(value);
+    values.add(value);
   }
 
   public void addValues(ResultSet rs, final java.util.Map<CaseInsensitiveString, Field> fieldsMap, String... fields) throws SQLException {
@@ -205,18 +211,30 @@ public class Event extends EventType implements Cloneable {
     }
   }
 
-  public void removeAll(FieldValue value) {
-    eventValues.remove(value);
-  }
-
+  /**
+   * @deprecated use getValues instead.
+   *
+   **/
+  @Deprecated
   public Map<Field, List<FieldValue>> getEventValues() {
     return eventValues;
   }
 
   public void setEventValues(Map<Field, List<FieldValue>> eventValues) {
     this.eventValues = eventValues;
+    for (Field field : eventValues.keySet()) {
+      List<FieldValue> lfv = eventValues.get(field);
+      for (FieldValue fieldValue : lfv) {
+        values.add(fieldValue);
+      }
+    }
   }
 
+  /**
+   * @deprecated use getValues instead.
+   *
+   **/
+  @Deprecated
   public List<FieldValue> getFieldValues() {
     List<FieldValue> result = new java.util.ArrayList<FieldValue>();
 
@@ -325,22 +343,12 @@ public class Event extends EventType implements Cloneable {
   }
 
   public boolean equalEventValues(Event other) {
-    Map<Field, List<FieldValue>> a = getEventValues();
-    Map<Field, List<FieldValue>> b = other.getEventValues();
-    if ((a.size() == b.size()) && a.keySet().containsAll(b.keySet())) {
-      boolean result = true;
-      Iterator<Map.Entry<Field, List<FieldValue>>> aiterator = a.entrySet().iterator();
 
-      while (aiterator.hasNext() && result) {
-        Map.Entry<Field, List<FieldValue>> anext = aiterator.next();
-        result = compareList(anext.getValue(), b.get(anext.getKey()));
-      }
-      result = result && Equals.equals(getOpomba(), other.getOpomba());
-      return result;
-    } else {
-      return false;
-
-    }
+    List<FieldValue> a = getValues();
+    List<FieldValue> b = other.getValues();
+    boolean result = compareList(a, b);
+    result = result && Equals.equals(getOpomba(), other.getOpomba());
+    return result;
   }
 
   private boolean compareList(List<FieldValue> a, List<FieldValue> b) {
@@ -400,12 +408,15 @@ public class Event extends EventType implements Cloneable {
   }
 
   public EventPK getEventPK() {
+    long start = System.currentTimeMillis();
     EventPK eventPK = null;
     try {
       eventPK = getEventPK(this.preparedFields == null ? SqlUtilities.getInstance().getPreparedFields() : preparedFields);
     } catch (SQLException ex) {
       Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
     }
+    long end = System.currentTimeMillis();
+    System.out.println("CAS:getEventPK=" + (end - start));
     return eventPK;
   }
 
@@ -415,22 +426,21 @@ public class Event extends EventType implements Cloneable {
       eventPK = new EventPK(id, sifrant, sifra);
       eventPK.setEventOperation(operation);
       eventPK.setVersioned(versioned);
-      if (getPrimaryKey() != null && getPrimaryKey().length > 0) {
-        for (Map.Entry<Field, List<FieldValue>> entry : eventValues.entrySet()) {
-          for (FieldValue fieldValue : entry.getValue()) {
-            for (Field pkField : getPrimaryKey()) {
-              if (pkField.equals(fieldValue)) {
-                if (fieldValue.getIdPolja() == null) {
-                  CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(fieldValue.getNonIndexedField().getName());
-                  Integer idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : fieldValue.getIdPolja();
-                  fieldValue.setIdPolja(idPolja);
-                }
-                if (fieldValue.getValueId() == null) {
-                  fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
-                }
-                eventPK.addPrimaryKeyField(fieldValue);
-                break;
+      final Field[] eventPrimaryKey = getPrimaryKey();
+      if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
+        for (Field pkField : eventPrimaryKey) {
+          for (FieldValue fieldValue : values) {
+            if (pkField.equals(fieldValue)) {
+              if (fieldValue.getIdPolja() == null) {
+                CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(fieldValue.getNonIndexedField().getName());
+                Integer idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : fieldValue.getIdPolja();
+                fieldValue.setIdPolja(idPolja);
               }
+              if (fieldValue.getValueId() == null) {
+                fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
+              }
+              eventPK.addPrimaryKeyField(fieldValue);
+              break;
             }
           }
         }
@@ -524,7 +534,7 @@ public class Event extends EventType implements Cloneable {
     result.setOpomba(opomba);
     result.setPreparedFields(preparedFields);
     Field[] primaryKeyCopy = null;
-    if(this.primaryKey != null){
+    if (this.primaryKey != null) {
       primaryKeyCopy = new Field[this.primaryKey.length];
       for (int i = 0; i < this.primaryKey.length; i++) {
         Field field = this.primaryKey[i];
