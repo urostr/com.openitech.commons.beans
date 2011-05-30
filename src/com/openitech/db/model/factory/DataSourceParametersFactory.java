@@ -49,7 +49,8 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     } else if (parameter.getTemporaryTable() != null) {
       final TemporarySubselectSqlParameter temporaryTable = createTemporaryTable(parameter.getTemporaryTable());
       result = temporaryTable;
-    } if (parameter.getTemporaryTableGroup() != null) {
+    }
+    if (parameter.getTemporaryTableGroup() != null) {
       final java.util.List<TemporarySubselectSqlParameter> temporaryTables = createTemporaryTableGroup(parameter.getTemporaryTableGroup());
       result = temporaryTables;
     } else if (parameter.getSubQuery() != null) {
@@ -115,7 +116,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     if (tt.getIsTableDataValidSql() != null) {
       ttParameter.setIsTableDataValidSql(getReplacedSql(tt.getIsTableDataValidSql()));
     }
-    if (tt.getCatalog()!=null) {
+    if (tt.getCatalog() != null) {
       ttParameter.setCatalog(tt.getCatalog());
     }
     ttParameter.setHasParameters(tt.isUseParameters());
@@ -134,19 +135,28 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
         replace = tt.getTableName();
       }
       SQLMaterializedView mv = new SQLMaterializedView(replace);
-      mv.setValue(tt.getMaterializedView().getValue());
-      mv.setIsViewValidSQL(tt.getMaterializedView().getIsViewValidSql());
-      mv.setSetViewVersionSql(tt.getMaterializedView().getSetViewVersionSql());
-      mv.setHasParameters(tt.getMaterializedView().isUseParameters());
 
-      if (tt.getMaterializedView().getCacheEvents()!=null &&
-          tt.getMaterializedView().getCacheEvents().getEvent().size()>0) {
-        mv.setCacheEvent(true);
-        for (Event event : tt.getMaterializedView().getCacheEvents().getEvent()) {
-          mv.getCacheEventTypes().add(new EventType(event.getSifrant(), event.getSifra(), event.isCacheOnUpdate()));
+      if (tt.getMaterializedView().isIndexedView()
+              && tt.getMaterializedView().getCacheEvents() != null
+              && tt.getMaterializedView().getCacheEvents().getEvent().size() == 1) {
+        mv.setValue(tt.getMaterializedView().getCacheEvents().getEvent().get(0).getIndexedAsView());
+        mv.setIndexedView(true);
+        mv.setHasParameters(false);
+      } else {
+        mv.setValue(tt.getMaterializedView().getValue());
+        mv.setIsViewValidSQL(tt.getMaterializedView().getIsViewValidSql());
+        mv.setSetViewVersionSql(tt.getMaterializedView().getSetViewVersionSql());
+        mv.setHasParameters(tt.getMaterializedView().isUseParameters());
+
+        if (tt.getMaterializedView().getCacheEvents() != null
+                && tt.getMaterializedView().getCacheEvents().getEvent().size() > 0) {
+          mv.setCacheEvent(true);
+          for (Event event : tt.getMaterializedView().getCacheEvents().getEvent()) {
+            mv.getCacheEventTypes().add(new EventType(event.getSifrant(), event.getSifra(), event.isCacheOnUpdate() == null ? Boolean.FALSE : event.isCacheOnUpdate()));
+          }
         }
       }
-      
+
       ttParameter.setSqlMaterializedView(mv);
     }
     ttParameter.setDisabled(tt.isDisabled());
@@ -164,7 +174,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
 
     for (TemporaryTable temporaryTable : temporaryTableGroup.getTemporaryTable()) {
       TemporarySubselectSqlParameter tt = createTemporaryTable(temporaryTable);
-      if (group==null) {
+      if (group == null) {
         group = tt.getGroup();
       } else {
         group.add(tt);
@@ -183,7 +193,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
     final boolean cached = !override && (tt.getMaterializedView() != null) && cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue());
     if (cached) {
       tt = cachedTemporaryTables.get(tt.getMaterializedView().getValue());
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("CACHED:TT:" + tt.getMaterializedView().getValue());
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "CACHED:TT:{0}", tt.getMaterializedView().getValue());
     } else if (tt.getMaterializedView() != null) {
       SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
       cachedTemporaryTables.put(tt.getMaterializedView().getValue(), tt);

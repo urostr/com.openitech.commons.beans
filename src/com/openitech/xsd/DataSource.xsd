@@ -207,9 +207,13 @@
           <xsd:sequence>
             <xsd:element name="Event" maxOccurs="unbounded">
               <xsd:complexType>
+                <xsd:choice>
+                  <xsd:element name="IndexedAsView" type="xsd:string"/>
+                  <xsd:element name="CacheOnUpdate" type="xsd:boolean" default="false"/>
+                </xsd:choice>
                 <xsd:attribute name="Sifrant" type="xsd:int" use="required"/>
-                <xsd:attribute name="Sifra" type="xsd:string" use="required"/>
-                <xsd:attribute name="CacheOnUpdate" type="xsd:boolean" default="true"/>
+                <xsd:attribute name="Sifra" type="xsd:string"/>
+                <xsd:attribute name="Convertible" type="xsd:boolean" default="true"/>
               </xsd:complexType>
             </xsd:element>
           </xsd:sequence>
@@ -217,6 +221,7 @@
       </xsd:element>
     </xsd:all>
     <xsd:attribute name="UseParameters" type="xsd:boolean" default="false"/>
+    <xsd:attribute name="IndexedView" type="xsd:boolean" default="false"/>
   </xsd:complexType>
   <xsd:complexType name="TemporaryTable">
     <xsd:all>
@@ -669,3 +674,4 @@
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>
+
