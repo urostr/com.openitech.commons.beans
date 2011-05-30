@@ -121,6 +121,26 @@ public class SQLMaterializedView extends SubstSqlParameter {
     this.setViewVersionSql = setViewVersionSql;
   }
 
+  protected boolean indexedView = false;
+
+  /**
+   * Get the value of indexedView
+   *
+   * @return the value of indexedView
+   */
+  public boolean isIndexedView() {
+    return indexedView;
+  }
+
+  /**
+   * Set the value of indexedView
+   *
+   * @param indexedView new value of indexedView
+   */
+  public void setIndexedView(boolean indexedView) {
+    this.indexedView = indexedView;
+  }
+  
   protected boolean cacheEvent = false;
 
   /**

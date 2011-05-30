@@ -327,7 +327,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           }
         }
         if (DbDataSource.DUMP_SQL) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("tt:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "tt:isvalid:{0}..[{1}]...{2}ms", new Object[]{getValue(), result, System.currentTimeMillis() - timer});
           Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
         }
         return result;
@@ -339,246 +339,249 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   }
 
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException, InterruptedException {
+    if (getSqlMaterializedView() != null
+            && !getSqlMaterializedView().isIndexedView()) {
 
-    boolean fill = !isFillOnceOnly();
-    long timer = System.currentTimeMillis();
+      boolean fill = !isFillOnceOnly();
+      long timer = System.currentTimeMillis();
 
-    String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
-    List<Object> qparams = new ArrayList<Object>(parameters.size());
-    qparams.addAll(getParameters());
-    qparams.addAll(parameters);
-    qparams.add(getSubstSqlParameter());
-    if (sqlMaterializedView != null) {
-      qparams.add(sqlMaterializedView);
-    }
+      String DB_USER = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
+      List<Object> qparams = new ArrayList<Object>(parameters.size());
+      qparams.addAll(getParameters());
+      qparams.addAll(parameters);
+      qparams.add(getSubstSqlParameter());
+      if (sqlMaterializedView != null) {
+        qparams.add(sqlMaterializedView);
+      }
 
-    String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
+      String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
 
-    ReentrantLock lock = null;
-    if (locks.containsKey(table)) {
-      lock = locks.get(table);
-    } else {
-      lock = new ReentrantLock();
-      locks.put(table, lock);
-    }
+      ReentrantLock lock = null;
+      if (locks.containsKey(table)) {
+        lock = locks.get(table);
+      } else {
+        lock = new ReentrantLock();
+        locks.put(table, lock);
+      }
 
-    if (!(lock.tryLock() || lock.tryLock(1, TimeUnit.SECONDS))) {
-      throw new SQLException("Can't lock " + table);
-    }
+      if (!(lock.tryLock() || lock.tryLock(1, TimeUnit.SECONDS))) {
+        throw new SQLException("Can't lock " + table);
+      }
 
-    try {
-      synchronized (connection) {
+      try {
+        synchronized (connection) {
 
-        Statement statement = connection.createStatement();
-        try {
-          TransactionManager tm = TransactionManager.getInstance(connection);
-
-          boolean transaction = false;
-          boolean commit = false;
-          boolean preprocessed = false;
-
+          Statement statement = connection.createStatement();
           try {
-            if (checkTableSql != null) {
-              statement.executeQuery(SQLDataSource.substParameters(checkTableSql, qparams));
-            }
-          } catch (SQLException ex) {
-            if (sqlMaterializedView != null) {
-              if (!tm.isTransaction()) {
-                tm.beginTransaction();
-                transaction = true;
-              }
-            }
+            TransactionManager tm = TransactionManager.getInstance(connection);
 
-            String context = connection.getCatalog();
-
-            if (getCatalog() != null) {
-              connection.setCatalog(catalog);
-            }
-
-            for (String sql : createTableSqls) {
-              String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
-              if (DbDataSource.DUMP_SQL) {
-                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(createSQL + ";");
-                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("-- -- -- --");
-              }
-              try {
-                statement.execute(createSQL);
-              } catch (SQLException ex1) {
-                Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
-                throw new SQLException(ex1);
-              }
-            }
-
-            if (getCatalog() != null) {
-              connection.setCatalog(context);
-            }
-
-
-            qparams = SQLDataSource.preprocessParameters(qparams, connection);
-            preprocessed = true;
-
-            fill = true;
-          }
-
-
-          if (isUseParameters()) {
-            if (!preprocessed) {
-              qparams = SQLDataSource.preprocessParameters(qparams, connection);
-              preprocessed = true;
-            }
-            fill = fill || !isTableDataValidSql(connection, qparams);
-          } else {
-            fill = fill || !isTableDataValidSql(connection, new ArrayList<Object>());
-          }
-
-
-          if ((!fill) && (sqlMaterializedView != null)) {
-            if (sqlMaterializedView.isUseParameters()) {
-              if (!preprocessed) {
-                qparams = SQLDataSource.preprocessParameters(qparams, connection);
-                preprocessed = true;
-              }
-              fill = fill || !sqlMaterializedView.isViewValid(connection, qparams);
-            } else {
-              fill = fill || !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
-            }
-          }
-
-          if (fill && !disabled) {
-            if (!preprocessed) {
-              qparams = SQLDataSource.preprocessParameters(qparams, connection);
-              preprocessed = true;
-            }
-
-            if (sqlMaterializedView != null) {
-              if (!(transaction || tm.isTransaction())) {
-                tm.beginTransaction();
-                transaction = true;
-              }
-            }
+            boolean transaction = false;
+            boolean commit = false;
+            boolean preprocessed = false;
 
             try {
-              if (emptyTableSql.length() > 0) {
-                String query = SQLDataSource.substParameters(emptyTableSql, qparams);
-                if (!Equals.equals(this.connection, connection)
-                        || !Equals.equals(this.qEmptyTable, query)) {
-                  String[] sqls = query.split(";");
-                  for (PreparedStatement preparedStatement : this.psEmptyTable) {
-                    preparedStatement.close();
-                  }
-                  this.psEmptyTable.clear();
-                  for (String sql : sqls) {
-                    this.psEmptyTable.add(connection.prepareStatement(sql,
-                            ResultSet.TYPE_SCROLL_INSENSITIVE,
-                            ResultSet.CONCUR_READ_ONLY,
-                            ResultSet.HOLD_CURSORS_OVER_COMMIT));
-                  }
-                  this.qEmptyTable = query;
-                }
-
-                if (DbDataSource.DUMP_SQL) {
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## empty");
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qEmptyTable);
-                }
-                int rowsDeleted = 0;
-                for (PreparedStatement preparedStatement : psEmptyTable) {
-                  rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
-                }
-                if (DbDataSource.DUMP_SQL) {
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows deleted:" + rowsDeleted);
+              if (checkTableSql != null) {
+                statement.executeQuery(SQLDataSource.substParameters(checkTableSql, qparams));
+              }
+            } catch (SQLException ex) {
+              if (sqlMaterializedView != null) {
+                if (!tm.isTransaction()) {
+                  tm.beginTransaction();
+                  transaction = true;
                 }
               }
-              if (fillTableSql != null) {
-                String query = SQLDataSource.substParameters(fillTableSql, qparams);
-                if (!Equals.equals(this.connection, connection)
-                        || !Equals.equals(this.qFillTable, query)) {
-                  if (this.psFillTable != null) {
-                    this.psFillTable.close();
-                  }
-                  this.psFillTable = connection.prepareStatement(query,
-                          ResultSet.TYPE_SCROLL_INSENSITIVE,
-                          ResultSet.CONCUR_READ_ONLY,
-                          ResultSet.HOLD_CURSORS_OVER_COMMIT);
-                  this.qFillTable = query;
-                }
 
+              String context = connection.getCatalog();
+
+              if (getCatalog() != null) {
+                connection.setCatalog(catalog);
+              }
+
+              for (String sql : createTableSqls) {
+                String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
                 if (DbDataSource.DUMP_SQL) {
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## fill");
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qFillTable);
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(createSQL + ";");
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("-- -- -- --");
                 }
                 try {
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+                  statement.execute(createSQL);
                 } catch (SQLException ex1) {
                   Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
                   throw new SQLException(ex1);
                 }
               }
-              if (cleanTableSqls != null) {
-                List<String> queries = new ArrayList<String>(cleanTableSqls.length);
-                for (String sql : cleanTableSqls) {
-                  queries.add(SQLDataSource.substParameters(sql, qparams));
-                }
 
-                if (!Equals.equals(this.connection, connection)
-                        || !Equals.equals(this.qCleanTable, queries)) {
-                  for (PreparedStatement preparedStatement : this.psCleanTable) {
-                    preparedStatement.close();
-                  }
-                  this.psCleanTable.clear();
-                  for (String sql : queries) {
-                    this.psCleanTable.add(connection.prepareStatement(sql,
-                            ResultSet.TYPE_SCROLL_INSENSITIVE,
-                            ResultSet.CONCUR_READ_ONLY,
-                            ResultSet.HOLD_CURSORS_OVER_COMMIT));
-                  }
-                  this.qCleanTable = queries;
-                }
-
-                if (DbDataSource.DUMP_SQL) {
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## cleanup/update");
-                  for (String string : queries) {
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
-                  }
-                }
-                int rowsAffected = 0;
-                for (PreparedStatement preparedStatement : psCleanTable) {
-                  rowsAffected += SQLDataSource.executeUpdate(preparedStatement, qparams);
-                }
-                if (DbDataSource.DUMP_SQL) {
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows cleaned/updated:" + rowsAffected);
-                }
-              }
-              if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
-                PreparedStatement ps = connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams));
-                try {
-                  SQLDataSource.execute(ps, qparams);
-                } finally {
-                  ps.close();
-                }
-              }
-              if (DbDataSource.DUMP_SQL) {
-                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
-                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+              if (getCatalog() != null) {
+                connection.setCatalog(context);
               }
 
 
-              commit = true;
-            } catch (SQLException ex) {
-              Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
-              throw new SQLException(ex);
-            } finally {
-              if (transaction) {
-                tm.endTransaction(commit);
+              qparams = SQLDataSource.preprocessParameters(qparams, connection);
+              preprocessed = true;
+
+              fill = true;
+            }
+
+
+            if (isUseParameters()) {
+              if (!preprocessed) {
+                qparams = SQLDataSource.preprocessParameters(qparams, connection);
+                preprocessed = true;
+              }
+              fill = fill || !isTableDataValidSql(connection, qparams);
+            } else {
+              fill = fill || !isTableDataValidSql(connection, new ArrayList<Object>());
+            }
+
+
+            if ((!fill) && (sqlMaterializedView != null)) {
+              if (sqlMaterializedView.isUseParameters()) {
+                if (!preprocessed) {
+                  qparams = SQLDataSource.preprocessParameters(qparams, connection);
+                  preprocessed = true;
+                }
+                fill = fill || !sqlMaterializedView.isViewValid(connection, qparams);
+              } else {
+                fill = fill || !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
               }
             }
+
+            if (fill && !disabled) {
+              if (!preprocessed) {
+                qparams = SQLDataSource.preprocessParameters(qparams, connection);
+                preprocessed = true;
+              }
+
+              if (sqlMaterializedView != null) {
+                if (!(transaction || tm.isTransaction())) {
+                  tm.beginTransaction();
+                  transaction = true;
+                }
+              }
+
+              try {
+                if (emptyTableSql.length() > 0) {
+                  String query = SQLDataSource.substParameters(emptyTableSql, qparams);
+                  if (!Equals.equals(this.connection, connection)
+                          || !Equals.equals(this.qEmptyTable, query)) {
+                    String[] sqls = query.split(";");
+                    for (PreparedStatement preparedStatement : this.psEmptyTable) {
+                      preparedStatement.close();
+                    }
+                    this.psEmptyTable.clear();
+                    for (String sql : sqls) {
+                      this.psEmptyTable.add(connection.prepareStatement(sql,
+                              ResultSet.TYPE_SCROLL_INSENSITIVE,
+                              ResultSet.CONCUR_READ_ONLY,
+                              ResultSet.HOLD_CURSORS_OVER_COMMIT));
+                    }
+                    this.qEmptyTable = query;
+                  }
+
+                  if (DbDataSource.DUMP_SQL) {
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## empty");
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qEmptyTable);
+                  }
+                  int rowsDeleted = 0;
+                  for (PreparedStatement preparedStatement : psEmptyTable) {
+                    rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
+                  }
+                  if (DbDataSource.DUMP_SQL) {
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows deleted:" + rowsDeleted);
+                  }
+                }
+                if (fillTableSql != null) {
+                  String query = SQLDataSource.substParameters(fillTableSql, qparams);
+                  if (!Equals.equals(this.connection, connection)
+                          || !Equals.equals(this.qFillTable, query)) {
+                    if (this.psFillTable != null) {
+                      this.psFillTable.close();
+                    }
+                    this.psFillTable = connection.prepareStatement(query,
+                            ResultSet.TYPE_SCROLL_INSENSITIVE,
+                            ResultSet.CONCUR_READ_ONLY,
+                            ResultSet.HOLD_CURSORS_OVER_COMMIT);
+                    this.qFillTable = query;
+                  }
+
+                  if (DbDataSource.DUMP_SQL) {
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## fill");
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qFillTable);
+                  }
+                  try {
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+                  } catch (SQLException ex1) {
+                    Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
+                    throw new SQLException(ex1);
+                  }
+                }
+                if (cleanTableSqls != null) {
+                  List<String> queries = new ArrayList<String>(cleanTableSqls.length);
+                  for (String sql : cleanTableSqls) {
+                    queries.add(SQLDataSource.substParameters(sql, qparams));
+                  }
+
+                  if (!Equals.equals(this.connection, connection)
+                          || !Equals.equals(this.qCleanTable, queries)) {
+                    for (PreparedStatement preparedStatement : this.psCleanTable) {
+                      preparedStatement.close();
+                    }
+                    this.psCleanTable.clear();
+                    for (String sql : queries) {
+                      this.psCleanTable.add(connection.prepareStatement(sql,
+                              ResultSet.TYPE_SCROLL_INSENSITIVE,
+                              ResultSet.CONCUR_READ_ONLY,
+                              ResultSet.HOLD_CURSORS_OVER_COMMIT));
+                    }
+                    this.qCleanTable = queries;
+                  }
+
+                  if (DbDataSource.DUMP_SQL) {
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## cleanup/update");
+                    for (String string : queries) {
+                      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
+                    }
+                  }
+                  int rowsAffected = 0;
+                  for (PreparedStatement preparedStatement : psCleanTable) {
+                    rowsAffected += SQLDataSource.executeUpdate(preparedStatement, qparams);
+                  }
+                  if (DbDataSource.DUMP_SQL) {
+                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows cleaned/updated:" + rowsAffected);
+                  }
+                }
+                if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
+                  PreparedStatement ps = connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams));
+                  try {
+                    SQLDataSource.execute(ps, qparams);
+                  } finally {
+                    ps.close();
+                  }
+                }
+                if (DbDataSource.DUMP_SQL) {
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+                }
+
+
+                commit = true;
+              } catch (SQLException ex) {
+                Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
+                throw new SQLException(ex);
+              } finally {
+                if (transaction) {
+                  tm.endTransaction(commit);
+                }
+              }
+            }
+          } finally {
+            statement.close();
           }
-        } finally {
-          statement.close();
+          this.connection = connection;
         }
-        this.connection = connection;
+      } finally {
+        lock.unlock();
       }
-    } finally {
-      lock.unlock();
     }
   }
 

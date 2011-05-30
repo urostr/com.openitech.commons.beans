@@ -576,7 +576,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       for (Event childEvent : event.getChildren()) {
         updateEventsCache(childEvent, isValid);
       }
-      invalidateCacheEvent(event);
     }
   }
 

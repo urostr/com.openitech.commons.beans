@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util.mssql;
 
+import com.openitech.db.model.xml.config.MaterializedView.CacheEvents;
 import com.openitech.value.events.EventType;
 import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.TemporaryTable;
@@ -1646,13 +1647,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
         while (cachedObjects.next()) {
           if (cachedObjects.getObject("CachedObjectXML") != null) {
             String object = cachedObjects.getString("Object");
-            com.openitech.db.model.xml.config.CachedTemporaryTable temporaryTable;
+            com.openitech.db.model.xml.config.TemporaryTable temporaryTable;
 
             try {
               Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
-              temporaryTable = (com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream());
+              temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream())).getTemporaryTable();
 
-              result.put(object, temporaryTable.getTemporaryTable());
+              result.put(object, convertToIndexedView(temporaryTable));
             } catch (JAXBException ex) {
               Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
             }
@@ -1660,6 +1661,52 @@ public class SqlUtilitesImpl extends SqlUtilities {
         }
       } finally {
         statement.close();
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+    return result;
+  }
+
+  private com.openitech.db.model.xml.config.TemporaryTable convertToIndexedView(com.openitech.db.model.xml.config.TemporaryTable temporaryTable) {
+    if (temporaryTable.getMaterializedView() != null
+            && !temporaryTable.getMaterializedView().isIndexedView()
+            && temporaryTable.getMaterializedView().getCacheEvents() != null
+            && temporaryTable.getMaterializedView().getCacheEvents().getEvent().size() == 1) {
+      CacheEvents.Event cacheEvent = temporaryTable.getMaterializedView().getCacheEvents().getEvent().get(0);
+      if (cacheEvent.isConvertible()) {
+        final String changeLogDb = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB);
+
+        String view = changeLogDb+".[dbo].[E_" + cacheEvent.getSifrant()
+                + (cacheEvent.getSifra() == null ? "" : "_" + cacheEvent.getSifra())
+                + "_valid]";
+
+        if (isViewReady( changeLogDb, view)) {
+          temporaryTable.getMaterializedView().setIndexedView(Boolean.TRUE);
+          cacheEvent.setCacheOnUpdate(null);
+          cacheEvent.setIndexedAsView(view);
+          //storeCachedTemporaryTable(temporaryTable);
+        }
+      }
+    }
+    return temporaryTable;
+  }
+
+  private boolean isViewReady(String database, String view) {
+    boolean result = false;
+    try {
+      Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
+      try {
+        final String sql = com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findView.sql", "cp1250").replaceAll("<%VIEW_DB%>", database == null ? "" : database + ".");
+        PreparedStatement findView = temporaryConnection.prepareStatement(sql);
+        findView.setString(1, view);
+        ResultSet executeQuery = findView.executeQuery();
+        if (executeQuery.next()) {
+          result = executeQuery.getInt(1) > 0;
+        }
+      } finally {
+        temporaryConnection.close();
       }
     } catch (SQLException ex) {
       Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -3017,7 +3064,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   private static class GeneratedFieldFactory extends DataSourceFactory {
 
-    private static final boolean CACHED_GGF = true;
+    private final boolean CACHED_GGF;
     private static final boolean USE_INDEXED_CACHE = true;
     private final boolean DEVELOPMENT;
     private static GeneratedFieldFactory instance;
@@ -3039,6 +3086,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     public GeneratedFieldFactory() {
       super(null);
       DEVELOPMENT = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty("application.mode.development", "false"));
+      CACHED_GGF = !DEVELOPMENT;
     }
 
     private static GeneratedFieldFactory getInstance() throws JAXBException, UnsupportedEncodingException, IOException, SQLException {
