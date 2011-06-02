@@ -152,7 +152,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
                 && tt.getMaterializedView().getCacheEvents().getEvent().size() > 0) {
           mv.setCacheEvent(true);
           for (Event event : tt.getMaterializedView().getCacheEvents().getEvent()) {
-            mv.getCacheEventTypes().add(new EventType(event.getSifrant(), event.getSifra(), event.isCacheOnUpdate() == null ? Boolean.FALSE : event.isCacheOnUpdate()));
+            mv.getCacheEventTypes().add(new EventType(event.getSifrant(), event.getSifra(), event.isCacheOnUpdate() == null ? Boolean.FALSE : event.isCacheOnUpdate(), event.getIndexedAsView()));
           }
         }
       }

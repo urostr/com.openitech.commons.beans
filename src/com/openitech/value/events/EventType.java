@@ -6,16 +6,18 @@ public class EventType {
     this.sifrant = event.getSifrant();
     this.sifra = event.getSifra();
     this.cacheOnUpdate = event.isCacheOnUpdate();
+    this.indexedAsView = event.indexedAsView;
   }
 
   public EventType(int sifrant, String sifra) {
-    this(sifrant, sifra, true);
+    this(sifrant, sifra, false, null);
   }
 
-  public EventType(int sifrant, String sifra, boolean cacheOnUpdate) {
+  public EventType(int sifrant, String sifra, boolean cacheOnUpdate, String indexedAsView) {
     this.sifrant = sifrant;
     this.sifra = sifra;
     this.cacheOnUpdate = cacheOnUpdate;
+    this.indexedAsView = indexedAsView;
   }
   protected final int sifrant;
 
@@ -47,6 +49,27 @@ public class EventType {
   public boolean isCacheOnUpdate() {
     return cacheOnUpdate;
   }
+  
+  protected String indexedAsView;
+
+  /**
+   * Get the value of indexedAsView
+   *
+   * @return the value of indexedAsView
+   */
+  public String getIndexedAsView() {
+    return indexedAsView;
+  }
+
+  /**
+   * Set the value of indexedAsView
+   *
+   * @param indexedAsView new value of indexedAsView
+   */
+  public void setIndexedAsView(String indexedAsView) {
+    this.indexedAsView = indexedAsView;
+  }
+
 
   @Override
   public boolean equals(Object obj) {
