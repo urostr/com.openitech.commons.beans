@@ -1763,16 +1763,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
               deleteCachedEventObject.executeUpdate();
             }
 
-            if (storeCachedEventObject == null) {
-              storeCachedEventObject = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "storeCachedEventObject.sql", "cp1250"));
-            }
+            if (event.getIndexedAsView()==null) {
+              if (storeCachedEventObject == null) {
+                storeCachedEventObject = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "storeCachedEventObject.sql", "cp1250"));
+              }
 
-            synchronized (storeCachedEventObject) {
-              storeCachedEventObject.setInt(1, event.getSifrant());
-              storeCachedEventObject.setString(2, event.getSifra());
-              storeCachedEventObject.setString(3, tt.getMaterializedView().getValue());
-              storeCachedEventObject.setBoolean(4, event.isCacheOnUpdate()==null?false:event.isCacheOnUpdate());
-              storeCachedEventObject.executeUpdate();
+              synchronized (storeCachedEventObject) {
+                storeCachedEventObject.setInt(1, event.getSifrant());
+                storeCachedEventObject.setString(2, event.getSifra());
+                storeCachedEventObject.setString(3, tt.getMaterializedView().getValue());
+                storeCachedEventObject.setBoolean(4, event.isCacheOnUpdate()==null?false:event.isCacheOnUpdate());
+                storeCachedEventObject.executeUpdate();
+              }
             }
           }
         }
