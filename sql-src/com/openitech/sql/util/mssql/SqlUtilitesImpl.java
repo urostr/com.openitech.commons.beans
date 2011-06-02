@@ -1676,13 +1676,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
             && temporaryTable.getMaterializedView().getCacheEvents().getEvent().size() == 1) {
       CacheEvents.Event cacheEvent = temporaryTable.getMaterializedView().getCacheEvents().getEvent().get(0);
       if (cacheEvent.isConvertible()) {
-        final String changeLogDb = SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB);
+        final String eventsDb = SqlUtilities.getEventsDB();
 
-        String view = changeLogDb+".[dbo].[E_" + cacheEvent.getSifrant()
+        String view = eventsDb+".[dbo].[E_" + cacheEvent.getSifrant()
                 + (cacheEvent.getSifra() == null ? "" : "_" + cacheEvent.getSifra())
                 + "_valid]";
 
-        if (isViewReady( changeLogDb, view)) {
+        if (isViewReady( eventsDb, view)) {
           temporaryTable.getMaterializedView().setIndexedView(Boolean.TRUE);
           cacheEvent.setCacheOnUpdate(null);
           cacheEvent.setIndexedAsView(view);
