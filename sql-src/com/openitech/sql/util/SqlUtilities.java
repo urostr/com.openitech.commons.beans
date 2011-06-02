@@ -90,7 +90,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     return instance;
   }
 
-  public static String getDataBase() {
+  public static String getEventsDB() {
     return DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB);
   }
 

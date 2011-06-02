@@ -2121,10 +2121,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           String imePolja = rsFindPPPolja.getString("ImePolja");
           final String ev_alias = "[ev_" + imePolja + "]";
           final String val_alias = "[val_" + imePolja + "]";
-          sbSelect.append("\nLEFT OUTER JOIN ").append(SqlUtilities.getDataBase()).append(".[dbo].[ValuesPP] ").append(ev_alias).append(" ON (");
+          sbSelect.append("\nLEFT OUTER JOIN ").append(SqlUtilities.getEventsDB()).append(".[dbo].[ValuesPP] ").append(ev_alias).append(" ON (");
           sbSelect.append("PP.[PPID] = ").append(ev_alias).append(".[PPId]");
           sbSelect.append(" AND ").append(ev_alias).append(".[IdPolja] = ").append(idPolja).append(")");
-          sbSelect.append("\nLEFT OUTER JOIN ").append(SqlUtilities.getDataBase()).append(".[dbo].[VariousValues] ").append(val_alias).append(" ON (");
+          sbSelect.append("\nLEFT OUTER JOIN ").append(SqlUtilities.getEventsDB()).append(".[dbo].[VariousValues] ").append(val_alias).append(" ON (");
           sbSelect.append(ev_alias).append(".[ValueId] = ").append(val_alias).append(".[Id] )");
         }
         result = sbSelect.toString();
@@ -4052,9 +4052,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
     }
 
-    final String eventValues = SqlUtilities.getDataBase() + ".[dbo].[EventValues]";
-    final String sifrantVnosnihPolj = SqlUtilities.getDataBase() + ".[dbo].[SifrantVnosnihPolj]";
-    final String variousValues = SqlUtilities.getDataBase() + ".[dbo].[VariousValues]";
+    final String eventValues = SqlUtilities.getEventsDB() + ".[dbo].[EventValues]";
+    final String sifrantVnosnihPolj = SqlUtilities.getEventsDB() + ".[dbo].[SifrantVnosnihPolj]";
+    final String variousValues = SqlUtilities.getEventsDB() + ".[dbo].[VariousValues]";
 
 
     for (Field f : searchFields) {
