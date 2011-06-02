@@ -339,8 +339,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   }
 
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException, InterruptedException {
-    if (getSqlMaterializedView() != null
-            && !getSqlMaterializedView().isIndexedView()) {
+    final SQLMaterializedView mv = getSqlMaterializedView();
+
+    if (mv != null
+            && !mv.isIndexedView()) {
 
       boolean fill = !isFillOnceOnly();
       long timer = System.currentTimeMillis();
@@ -350,11 +352,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
       qparams.addAll(getParameters());
       qparams.addAll(parameters);
       qparams.add(getSubstSqlParameter());
-      if (sqlMaterializedView != null) {
-        qparams.add(sqlMaterializedView);
+      if (mv != null) {
+        qparams.add(mv);
       }
 
-      String table = getSqlMaterializedView() == null ? getValue() : getSqlMaterializedView().getValue();
+      String table = mv == null ? getValue() : mv.getValue();
 
       ReentrantLock lock = null;
       if (locks.containsKey(table)) {
@@ -420,6 +422,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               preprocessed = true;
 
               fill = true;
+
+              if (mv!=null &&
+                  !mv.getCacheEventTypes().isEmpty() &&
+                  mv.getCacheEventTypes().get(0).getIndexedAsView()!=null) {
+                  mv.setIndexedView(true);
+              }
             }
 
 
@@ -434,15 +442,15 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             }
 
 
-            if ((!fill) && (sqlMaterializedView != null)) {
-              if (sqlMaterializedView.isUseParameters()) {
+            if ((!fill) && (mv != null)) {
+              if (mv.isUseParameters()) {
                 if (!preprocessed) {
                   qparams = SQLDataSource.preprocessParameters(qparams, connection);
                   preprocessed = true;
                 }
-                fill = fill || !sqlMaterializedView.isViewValid(connection, qparams);
+                fill = fill || !mv.isViewValid(connection, qparams);
               } else {
-                fill = fill || !sqlMaterializedView.isViewValid(connection, new ArrayList<Object>());
+                fill = fill || !mv.isViewValid(connection, new ArrayList<Object>());
               }
             }
 
@@ -452,7 +460,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 preprocessed = true;
               }
 
-              if (sqlMaterializedView != null) {
+              if (mv != null) {
                 if (!(transaction || tm.isTransaction())) {
                   tm.beginTransaction();
                   transaction = true;
@@ -550,7 +558,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                     Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows cleaned/updated:" + rowsAffected);
                   }
                 }
-                if ((sqlMaterializedView != null) && (sqlMaterializedView.setViewVersionSql != null)) {
+                if ((mv != null) && (mv.setViewVersionSql != null)) {
                   PreparedStatement ps = connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams));
                   try {
                     SQLDataSource.execute(ps, qparams);
