@@ -26,6 +26,9 @@ public abstract class EventQueryParameter extends DbDataSource.SubstSqlParameter
   }
 
   public abstract boolean hasVersionId();
+  public abstract boolean hasWhere();
+  public abstract boolean usesView();
+  public abstract String getTableName();
 
   @Override
   public abstract java.util.List<Object> getParameters();
