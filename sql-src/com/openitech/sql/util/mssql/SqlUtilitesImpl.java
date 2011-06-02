@@ -1771,7 +1771,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               storeCachedEventObject.setInt(1, event.getSifrant());
               storeCachedEventObject.setString(2, event.getSifra());
               storeCachedEventObject.setString(3, tt.getMaterializedView().getValue());
-              storeCachedEventObject.setBoolean(4, event.isCacheOnUpdate());
+              storeCachedEventObject.setBoolean(4, event.isCacheOnUpdate()==null?false:event.isCacheOnUpdate());
               storeCachedEventObject.executeUpdate();
             }
           }
