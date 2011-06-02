@@ -9,6 +9,7 @@
 package com.openitech.db.model;
 
 import com.openitech.sql.util.SqlUtilities;
+import java.beans.DesignMode;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
@@ -27,7 +28,6 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
   private final DbSifrantModel.SifrantiDataSourceFilters fGroup = new DbSifrantModel.SifrantiDataSourceFilters();
   private final DbDataSource.SubstSqlParameter fValidDate = new DbDataSource.SubstSqlParameter("<%ValidDate%>");
   private final DbDataSource.SqlParameter<java.sql.Date> validDate = new DbDataSource.SqlParameter<java.sql.Date>(java.sql.Types.DATE, new java.sql.Date(Calendar.getInstance().getTimeInMillis()));
-
   DbDataSource.SubstSqlParameter valuesConstraint = new DbDataSource.SubstSqlParameter("<%ValuesConstraint%>");
   private DbDataSource dsSifrant;
 
@@ -112,7 +112,9 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     });
 
 //    fNotDefined.addDataSource(dsSifrant);
-    fGroup.addDataSource(dsSifrant);
+    if (!java.beans.Beans.isDesignTime()) {
+      fGroup.addDataSource(dsSifrant);
+    }
 
     super.setDataSource(dsSifrant);
   }

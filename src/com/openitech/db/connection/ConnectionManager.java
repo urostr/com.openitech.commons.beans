@@ -72,12 +72,12 @@ public class ConnectionManager implements DbConnection {
 
   @Override
   public String getProperty(String key) {
-    return getDbConnection().getProperty(key);
+    return getDbConnection()==null?null:getDbConnection().getProperty(key);
   }
 
   @Override
   public String getProperty(String key, String defaultValue) {
-    return getDbConnection().getProperty(key, defaultValue);
+    return getDbConnection()==null?defaultValue:getDbConnection().getProperty(key, defaultValue);
   }
 
   @Override
