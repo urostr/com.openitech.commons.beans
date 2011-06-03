@@ -19,6 +19,11 @@ public enum ValueType {
     public int getSqlType() {
       return Types.INTEGER;
     }
+
+    @Override
+    public String getValueColumn() {
+      return "IntValue";
+    }
   }, RealValue {
 
     @Override
@@ -29,6 +34,11 @@ public enum ValueType {
     @Override
     public int getSqlType() {
       return Types.DOUBLE;
+    }
+
+    @Override
+    public String getValueColumn() {
+      return "RealValue";
     }
   }, StringValue {
 
@@ -41,6 +51,11 @@ public enum ValueType {
     public int getSqlType() {
       return Types.VARCHAR;
     }
+
+    @Override
+    public String getValueColumn() {
+      return "StringValue";
+    }
   }, DateValue {
 
     @Override
@@ -51,6 +66,11 @@ public enum ValueType {
     @Override
     public int getSqlType() {
       return Types.DATE;
+    }
+
+    @Override
+    public String getValueColumn() {
+      return "DateValue";
     }
   }, ObjectValue {
 
@@ -63,6 +83,11 @@ public enum ValueType {
     public int getSqlType() {
       return Types.BLOB;
     }
+
+    @Override
+    public String getValueColumn() {
+      return "BlobValue";
+    }
   }, ClobValue {
 
     @Override
@@ -73,6 +98,11 @@ public enum ValueType {
     @Override
     public int getSqlType() {
       return Types.CLOB;
+    }
+
+    @Override
+    public String getValueColumn() {
+      return "ClobValue";
     }
   }, BitValue {
 
@@ -85,6 +115,11 @@ public enum ValueType {
     public int getSqlType() {
       return Types.BOOLEAN;
     }
+
+    @Override
+    public String getValueColumn() {
+      return "IntValue";
+    }
   }, DateTimeValue {
 
     @Override
@@ -95,6 +130,11 @@ public enum ValueType {
     @Override
     public int getSqlType() {
       return Types.TIMESTAMP;
+    }
+
+    @Override
+    public String getValueColumn() {
+      return "DateValue";
     }
   }, TimeValue {
 
@@ -107,6 +147,11 @@ public enum ValueType {
     public int getSqlType() {
       return Types.TIMESTAMP;
     }
+
+    @Override
+    public String getValueColumn() {
+      return "DateValue";
+    }
   }, MonthValue {
 
     @Override
@@ -117,6 +162,11 @@ public enum ValueType {
     @Override
     public int getSqlType() {
       return Types.DATE;
+    }
+
+    @Override
+    public String getValueColumn() {
+      return "DateValue";
     }
   }, LongValue {
 
@@ -129,6 +179,11 @@ public enum ValueType {
     public int getSqlType() {
       return Types.BIGINT;
     }
+
+    @Override
+    public String getValueColumn() {
+      return "IntValue";
+    }
   }, BlobValue {
 
     @Override
@@ -140,11 +195,18 @@ public enum ValueType {
     public int getSqlType() {
       return Types.BLOB;
     }
+
+    @Override
+    public String getValueColumn() {
+      return "BlobValue";
+    }
   };
 
   public abstract int getTypeIndex();
 
   public abstract int getSqlType();
+
+  public abstract String getValueColumn();
 
   public static ValueType valueOf(int valueType) {
     ValueType result = null;
