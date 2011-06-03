@@ -3989,7 +3989,29 @@ public class SqlUtilitesImpl extends SqlUtilities {
     for (Field f : resultFields) {
       if (!searchFields.contains(f)) {
         if (viewColumns.contains(f.getName())) {
-          sbresult.append(",\nev.[").append(f.getName()).append(']');
+          String value = "ev.["+f.getName()+"]";
+          sbresult.append(",\n").append(value);
+
+          if (f.getModel().getQuery().getSelect() != null) {
+            for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
+              sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+              sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+              sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+              sql = sql.replaceAll(f.getModel().getReplace(), value);
+
+              sbresult.append(",\n").append(sql);
+            }
+          }
+          if (f.getModel().getQuery().getJoin() != null) {
+            for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
+              sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+              sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+              sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+              sql = sql.replaceAll(f.getModel().getReplace(), value);
+
+              sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
+            }
+          }
         } else {
           String fieldValueIndex = f.getFieldIndex() > 1 ? Integer.toString(f.getFieldIndex()) : "";
           if (f.getName().endsWith(fieldValueIndex)) {
