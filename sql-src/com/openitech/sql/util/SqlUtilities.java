@@ -683,6 +683,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Clob getWorkArea(int workAreaId) throws SQLException;
 
+  public abstract Set<String> getEventViewColumns(String viewName);
+
   public static enum Operation {
 
     INSERT,
