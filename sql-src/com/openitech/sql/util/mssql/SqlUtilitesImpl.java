@@ -2374,6 +2374,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     private static final String EV_NONVERSIONED_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_valid.sql", "cp1250");
     private static final String EV_SEARCH_BY_PK_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_PK.sql", "cp1250");
     private static final String EV_SEARCH_BY_VERSION_PK_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_version_PK.sql", "cp1250");
+    private static final String EV_CREATE_EVENTS_VIEW = ReadInputStream.getResourceAsString(EventFilterSearch.class, "callCreateEventsView.sql", "cp1250");
+    private static final String EV_FIND_IDSIFRE = ReadInputStream.getResourceAsString(EventFilterSearch.class, "findIdSifre.sql", "cp1250");
     DbDataSource.SubstSqlParameter sqlFindEventVersion = new DbDataSource.SubstSqlParameter("<%ev_version_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
@@ -2396,7 +2398,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     String[] sifra;
     boolean validOnly;
     boolean usesView = false;
-    
     String ev_table;
     String view_valid;
     String view_versioned;
@@ -2425,6 +2426,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
       this.validOnly = validOnly;
       this.eventPK = eventPK;
 
+      if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_PREPARE_EVENT_VIEWS, "false"))) {
+        for (Integer idSifranta : sifranti) {
+          createEventViews(idSifranta);
+        }
+      }
+
       sqlFindEventVersion.clearParameters();
       sqlFindEventType.clearParameters();
       sqlFindEventValid.clearParameters();
@@ -2441,9 +2448,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       final String eventsDb = SqlUtilities.getEventsDB();
 
       ev_table = eventsDb + ".[dbo].[Events]";
-      
-      String ev_view_versioned = ev_table+" ev WITH (NOLOCK)";
-      String ev_view = ev_table+" ev WITH (NOLOCK)";
+
+      String ev_view_versioned = ev_table + " ev WITH (NOLOCK)";
+      String ev_view = ev_table + " ev WITH (NOLOCK)";
 
       if (sifranti.size() == 1) {
         final String qSifra = (sifra != null) && (sifra.length == 1) ? "_" + sifra[0] : "";
@@ -2458,9 +2465,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
           if (usesView) {
             view_valid = chk_valid;
             view_versioned = chk_versioned;
-            
-            ev_view = chk_valid+" ev WITH (NOLOCK,NOEXPAND)";
-            ev_view_versioned = chk_versioned+" ev WITH (NOLOCK,NOEXPAND)";
+
+            ev_view = chk_valid + " ev WITH (NOLOCK,NOEXPAND)";
+            ev_view_versioned = chk_versioned + " ev WITH (NOLOCK,NOEXPAND)";
           }
         }
 
@@ -2544,11 +2551,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evVersionedParameters.add(sqlFindEventVersionPk);
       evVersionedSubquery = SQLDataSource.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
 
-      if (sqlFindEventType.getValue().length()==0 &&
-          sqlFindEventValid.getValue().length()==0 &&
-          sqlFindEventSource.getValue().length()==0 &&
-          sqlFindEventDate.getValue().length()==0 &&
-          sqlFindEventPk.getValue().length()==0 ) {
+      if (sqlFindEventType.getValue().length() == 0
+              && sqlFindEventValid.getValue().length() == 0
+              && sqlFindEventSource.getValue().length() == 0
+              && sqlFindEventDate.getValue().length() == 0
+              && sqlFindEventPk.getValue().length() == 0) {
         sqlEventWhere.setValue("");
       } else {
         sqlEventWhere.setValue("WHERE");
@@ -2563,6 +2570,49 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evNonVersionedParameters.add(sqlFindEventPk);
       evNonVersionedParameters.add(sqlEventWhere);
       evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
+    }
+
+    private void createEventViews(int idSifranta) {
+      final String eventsDb = SqlUtilities.getEventsDB();
+      String eventsViewVersioned;
+      String eventsViewValid;
+      try {
+        Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
+        try {
+          PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
+          CallableStatement callStoredValue = temporaryConnection.prepareCall(EV_CREATE_EVENTS_VIEW);
+
+          eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "]";
+          eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_valid]";
+          if (!(isViewReady(eventsDb, eventsViewVersioned)
+                  && isViewReady(eventsDb, eventsViewValid))) {
+            callStoredValue.setInt(1, idSifranta);
+            callStoredValue.setNull(2, java.sql.Types.VARCHAR);
+            callStoredValue.execute();
+            Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
+          }
+
+          findIdSifre.setInt(1, idSifranta);
+          ResultSet rsIdSifre = findIdSifre.executeQuery();
+
+          while (rsIdSifre.next()) {
+            final String idSifre = rsIdSifre.getString(1);
+            eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "_" + idSifre + "]";
+            eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_" + idSifre + "_valid]";
+            if (!(isViewReady(eventsDb, eventsViewVersioned)
+                    && isViewReady(eventsDb, eventsViewValid))) {
+              callStoredValue.setInt(1, idSifranta);
+              callStoredValue.setString(2, idSifre);
+              callStoredValue.execute();
+              Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
+            }
+          }
+        } finally {
+          temporaryConnection.close();
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      }
     }
 
     private boolean isViewReady(String database, String view) {
@@ -2594,7 +2644,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     @Override
     public boolean hasWhere() {
-      return hasVersionId()||(sqlEventWhere.getValue().length()>0);
+      return hasVersionId() || (sqlEventWhere.getValue().length() > 0);
     }
 
     @Override
@@ -2604,11 +2654,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     @Override
     public String getTableName() {
-      return usesView?(hasVersionId() ? view_versioned : view_valid):ev_table;
+      return usesView ? (hasVersionId() ? view_versioned : view_valid) : ev_table;
     }
-
-
-    
     protected EventPK eventPK;
 
     /**
@@ -3694,7 +3741,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //    } else {
     sqlValidOnly.setValue("");
 //    }
-    
+
     Set<String> viewColumns;
     if (eventSearchFilter.usesView()) {
       viewColumns = getEventViewColumns(eventSearchFilter.getTableName());
@@ -3741,7 +3788,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               || Event.EVENT_DATE.equals(f))) {
         valuesSet++;
 
-        if (resultFields.contains(f)&&!viewColumns.contains(f.getName())) {
+        if (resultFields.contains(f) && !viewColumns.contains(f.getName())) {
 
           final String ev_alias = "[ev_" + f.getName() + "]";
           final String vp_alias = "[vp_" + f.getName() + "]";
@@ -3989,27 +4036,29 @@ public class SqlUtilitesImpl extends SqlUtilities {
     for (Field f : resultFields) {
       if (!searchFields.contains(f)) {
         if (viewColumns.contains(f.getName())) {
-          String value = "ev.["+f.getName()+"]";
+          String value = "ev.[" + f.getName() + "]";
           sbresult.append(",\n").append(value);
 
-          if (f.getModel().getQuery().getSelect() != null) {
-            for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
-              sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-              sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-              sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-              sql = sql.replaceAll(f.getModel().getReplace(), value);
+          if (f.getModel() != null && f.getModel().getQuery() != null) {
+            if (f.getModel().getQuery().getSelect() != null) {
+              for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
+                sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+                sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+                sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+                sql = sql.replaceAll(f.getModel().getReplace(), value);
 
-              sbresult.append(",\n").append(sql);
+                sbresult.append(",\n").append(sql);
+              }
             }
-          }
-          if (f.getModel().getQuery().getJoin() != null) {
-            for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
-              sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-              sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-              sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-              sql = sql.replaceAll(f.getModel().getReplace(), value);
+            if (f.getModel().getQuery().getJoin() != null) {
+              for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
+                sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+                sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+                sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+                sql = sql.replaceAll(f.getModel().getReplace(), value);
 
-              sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
+                sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
+              }
             }
           }
         } else {
