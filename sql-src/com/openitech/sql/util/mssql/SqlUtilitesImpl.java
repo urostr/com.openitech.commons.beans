@@ -34,6 +34,7 @@ import com.openitech.jdbc.proxy.PreparedStatementProxy;
 import com.openitech.ref.SoftHashMap;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
 import com.openitech.sql.logger.SQLLogger;
+import com.openitech.sql.util.TransactionManager;
 import com.openitech.util.Equals;
 import com.openitech.value.StringValue;
 import com.openitech.value.VariousValue;
@@ -2579,6 +2580,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       try {
         Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
         try {
+          TransactionManager tm = TransactionManager.getInstance(temporaryConnection);
+
           PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
           CallableStatement callStoredValue = temporaryConnection.prepareCall(EV_CREATE_EVENTS_VIEW);
 
@@ -2586,10 +2589,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
           eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_valid]";
           if (!(isViewReady(eventsDb, eventsViewVersioned)
                   && isViewReady(eventsDb, eventsViewValid))) {
-            callStoredValue.setInt(1, idSifranta);
-            callStoredValue.setNull(2, java.sql.Types.VARCHAR);
-            callStoredValue.execute();
             Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
+            tm.beginTransaction();
+            boolean commit = false;
+            try {
+              callStoredValue.setInt(1, idSifranta);
+              callStoredValue.setNull(2, java.sql.Types.VARCHAR);
+              callStoredValue.execute();
+              commit = true;
+            } finally {
+              tm.endTransaction(commit);
+            }
           }
 
           findIdSifre.setInt(1, idSifranta);
@@ -2601,10 +2611,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
             eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_" + idSifre + "_valid]";
             if (!(isViewReady(eventsDb, eventsViewVersioned)
                     && isViewReady(eventsDb, eventsViewValid))) {
-              callStoredValue.setInt(1, idSifranta);
-              callStoredValue.setString(2, idSifre);
-              callStoredValue.execute();
               Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
+              tm.beginTransaction();
+              boolean commit = false;
+              try {
+                callStoredValue.setInt(1, idSifranta);
+                callStoredValue.setString(2, idSifre);
+                callStoredValue.execute();
+                commit = true;
+              } finally {
+                tm.endTransaction(commit);
+              }
             }
           }
         } finally {
