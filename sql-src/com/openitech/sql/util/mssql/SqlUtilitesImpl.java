@@ -2429,7 +2429,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_PREPARE_EVENT_VIEWS, "false"))) {
         for (Integer idSifranta : sifranti) {
-          createEventViews(idSifranta);
+          createEventViews(idSifranta, sifra==null||sifra.length>1);
         }
       }
 
@@ -2573,7 +2573,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
-    private void createEventViews(int idSifranta) {
+    private void createEventViews(int idSifranta, boolean nullView) {
       final String eventsDb = SqlUtilities.getEventsDB();
       String eventsViewVersioned;
       String eventsViewValid;
