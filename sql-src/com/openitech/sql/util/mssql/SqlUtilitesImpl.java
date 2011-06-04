@@ -2429,7 +2429,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_PREPARE_EVENT_VIEWS, "false"))) {
         for (Integer idSifranta : sifranti) {
-          createEventViews(idSifranta, sifra==null||sifra.length>1);
+          createEventViews(idSifranta, sifra == null || sifra.length > 1);
         }
       }
 
@@ -2573,7 +2573,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
-    private void createEventViews(int idSifranta, boolean nullView) {
+    private void createEventViews(int idSifranta, boolean eventGroupView) {
       final String eventsDb = SqlUtilities.getEventsDB();
       String eventsViewVersioned;
       String eventsViewValid;
@@ -2585,20 +2585,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
           PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
           CallableStatement callStoredValue = temporaryConnection.prepareCall(EV_CREATE_EVENTS_VIEW);
 
-          eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "]";
-          eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_valid]";
-          if (!(isViewReady(eventsDb, eventsViewVersioned)
-                  && isViewReady(eventsDb, eventsViewValid))) {
-            Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
-            tm.beginTransaction();
-            boolean commit = false;
-            try {
-              callStoredValue.setInt(1, idSifranta);
-              callStoredValue.setNull(2, java.sql.Types.VARCHAR);
-              callStoredValue.execute();
-              commit = true;
-            } finally {
-              tm.endTransaction(commit);
+          if (eventGroupView) {
+            eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "]";
+            eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_valid]";
+            if (!(isViewReady(eventsDb, eventsViewVersioned)
+                    && isViewReady(eventsDb, eventsViewValid))) {
+              Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
+              tm.beginTransaction();
+              boolean commit = false;
+              try {
+                callStoredValue.setInt(1, idSifranta);
+                callStoredValue.setNull(2, java.sql.Types.VARCHAR);
+                callStoredValue.execute();
+                commit = true;
+              } finally {
+                tm.endTransaction(commit);
+              }
             }
           }
 
