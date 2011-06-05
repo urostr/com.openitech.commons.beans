@@ -2585,9 +2585,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
           CallableStatement callStoredValue = temporaryConnection.prepareCall(EV_CREATE_EVENTS_VIEW);
 
+          eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "]";
+          eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_valid]";
+
           if (eventGroupView) {
-            eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "]";
-            eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_valid]";
             if (!(isViewReady(eventsDb, eventsViewVersioned)
                     && isViewReady(eventsDb, eventsViewValid))) {
               Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
@@ -2602,6 +2603,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 tm.endTransaction(commit);
               }
             }
+//          } else {
+//            if (isViewReady(eventsDb, eventsViewVersioned)) {
+//              temporaryConnection.createStatement().execute("DROP VIEW "+eventsViewVersioned.replace(eventsDb+".", ""));
+//            }
+//            if (isViewReady(eventsDb, eventsViewValid)) {
+//              temporaryConnection.createStatement().execute("DROP VIEW "+eventsViewValid.replace(eventsDb+".", ""));
+//            }
           }
 
           findIdSifre.setInt(1, idSifranta);
