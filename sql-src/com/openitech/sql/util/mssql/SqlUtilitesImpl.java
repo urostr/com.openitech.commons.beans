@@ -2411,21 +2411,26 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     public EventFilterSearch(EventFilterSearch eventFilterSearch, Set<Integer> sifranti) {
       super(eventFilterSearch.namedParameters);
-      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti, null, eventFilterSearch.validOnly, eventFilterSearch.eventPK);
+      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti, null, eventFilterSearch.validOnly, true, eventFilterSearch.eventPK);
     }
 
     public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
       super(namedParameters);
-      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, eventPK);
+      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, true, eventPK);
     }
 
     public EventFilterSearch addSifranti(Set<Integer> sifranti) {
       sifrant.addAll(sifranti);
-      init(eventSource, eventDatum, sifrant, sifra, validOnly, eventPK);
+      init(eventSource, eventDatum, sifrant, sifra, validOnly, true, eventPK);
       return this;
     }
 
-    private void init(Integer eventSource, java.util.Date eventDatum, Collection<Integer> sifranti, String[] sifra, boolean validOnly, EventPK eventPK) {
+    @Override
+    public void forceEventsTableUse() {
+      init(eventSource, eventDatum, sifrant, sifra, validOnly, false, eventPK);
+    }
+
+    private void init(Integer eventSource, java.util.Date eventDatum, Collection<Integer> sifranti, String[] sifra, boolean validOnly, boolean canUseView, EventPK eventPK) {
       this.eventSource = eventSource;
       this.eventDatum = eventDatum;
       this.sifrant = new LinkedHashSet<Integer>(sifranti);
@@ -2459,7 +2464,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       String ev_view_versioned = ev_table + " ev WITH (NOLOCK)";
       String ev_view = ev_table + " ev WITH (NOLOCK)";
 
-      if (sifranti.size() == 1) {
+      if (canUseView && sifranti.size() == 1) {
         for (Integer s : sifranti) {
           final String[] sifrant_sifre = getSifre(s);
           String qSifra;
@@ -2485,7 +2490,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
             ev_view_versioned = chk_versioned + " ev WITH (NOLOCK,NOEXPAND)";
           }
         }
-
+      } else {
+        usesView = false;
       }
 
       sqlEventTable.setValue(ev_view);
