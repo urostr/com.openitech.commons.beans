@@ -2456,11 +2456,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (sifranti.size() == 1) {
         for (Integer s : sifranti) {
           final String[] sifrant_sifre = getSifre(s);
+          String qSifra;
           if (sifrant_sifre.length==1) {
-            sifra = sifrant_sifre;
+            qSifra = "_" + sifrant_sifre[0];
+          } else {
+            qSifra = (sifra != null) && (sifra.length == 1) ? "_" + sifra[0] : "";
           }
           
-          final String qSifra = (sifra != null) && (sifra.length == 1) ? "_" + sifra[0] : "";
 
           final String chk_valid = eventsDb + ".[dbo].[E_" + s + qSifra + "_valid]";
           final String chk_versioned = eventsDb + ".[dbo].[E_" + s + qSifra + "]";
