@@ -34,7 +34,7 @@ public class LogWriter {
   public LogWriter(Logger logger, Level level) {
     this.logger = logger;
     this.level = level;
-    this.lineSeparator = System.getProperty("line.separator");
+    this.lineSeparator = System.getProperty("line.separator","\n");
   }
 
   public void flush() {
