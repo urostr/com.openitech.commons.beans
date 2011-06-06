@@ -5,7 +5,6 @@
 package com.openitech.io;
 
 import java.util.Formatter;
-import java.util.IllegalFormatException;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -34,7 +33,7 @@ public class LogWriter {
   public LogWriter(Logger logger, Level level) {
     this.logger = logger;
     this.level = level;
-    this.lineSeparator = System.getProperty("line.separator","\n");
+    this.lineSeparator = System.getProperty("line.separator", "\n");
   }
 
   public void flush() {
