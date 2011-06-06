@@ -41,7 +41,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   protected final java.util.List<Savepoint> activeSavepoints = new WeakList<Savepoint>();
   protected boolean initAutoCommit = true;
   protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
-  private boolean log = false;
+  private static final boolean LOG = true;
 
   public AbstractConnection(DataSource dataSource) throws SQLException {
     this(dataSource, true, null);
@@ -58,7 +58,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   }
 
   private Connection openConnection() throws SQLException {
-    if (log) {
+    if (LOG) {
       Logger.getLogger(AbstractConnection.class.getName()).info("Create connection.");
     }
     lock();
@@ -171,7 +171,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
           activeConnection.setClientInfo(clientInfo);
         }
         this.connection = activeConnection;
-        if (log) {
+        if (LOG) {
           Logger.getLogger(AbstractConnection.class.getName()).info("Connection reopened.");
         }
       } finally {
@@ -244,7 +244,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
         activeSavepoints.clear();
         connection = null;
         closed = Boolean.TRUE;
-        if (log) {
+        if (LOG) {
           Logger.getLogger(AbstractConnection.class.getName()).info("Connection closed.");
         }
       }

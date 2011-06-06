@@ -339,8 +339,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void executeQuery(Connection connection, List<Object> parameters) throws SQLException, InterruptedException {
     final SQLMaterializedView mv = getSqlMaterializedView();
 
-    if (mv != null
-            && !mv.isIndexedView()) {
+    if (mv == null || (mv != null
+            && !mv.isIndexedView())) {
 
       boolean fill = !isFillOnceOnly();
       long timer = System.currentTimeMillis();

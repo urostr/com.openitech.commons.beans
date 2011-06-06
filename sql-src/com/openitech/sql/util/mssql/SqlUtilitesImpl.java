@@ -4038,7 +4038,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
           parameters.add(parameter);
           namedParameters.put(f, parameter);
         } else {
-          sbresult.append(",\nev.[").append(f.getName()).append(']');
+          if (resultFields.contains(f)) {
+            sbresult.append(",\nev.[").append(f.getName()).append(']');
+          }
 
           sbWhere.append(sbWhere.length() > 0 ? " AND " : " WHERE ");
           sbWhere.append("\nev.[").append(f.getName()).append("] = ");
