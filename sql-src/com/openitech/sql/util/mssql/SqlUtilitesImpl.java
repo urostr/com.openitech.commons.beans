@@ -21,6 +21,7 @@ import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.factory.DataSourceParametersFactory;
 import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
+import com.openitech.io.LogWriter;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
@@ -32,6 +33,7 @@ import com.openitech.io.ReadInputStream;
 import com.openitech.jdbc.proxy.DataSourceProxy;
 import com.openitech.jdbc.proxy.PreparedStatementProxy;
 import com.openitech.ref.SoftHashMap;
+import com.openitech.sql.SQLWorker;
 import com.openitech.sql.cache.CachedTemporaryTablesManager;
 import com.openitech.sql.logger.SQLLogger;
 import com.openitech.sql.util.TransactionManager;
@@ -145,6 +147,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement is_valueid_valid;
   Map<CaseInsensitiveString, Field> preparedFields;
   Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
+
+  private final static LogWriter LOG_WRITER = new LogWriter(Logger.getLogger(SqlUtilitesImpl.class.getName()), Level.INFO);
+  private final static SQLWorker SQL_WORKER = new SQLWorker(LOG_WRITER);
+
   private final String callStoreValueSql = ReadInputStream.getResourceAsString(getClass(), "callStoreValue.sql", "cp1250");
 
   @Override
@@ -436,7 +442,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
 
     CachedRowSet versions = new com.sun.rowset.CachedRowSetImpl();
-    ResultSet rs = SQLDataSource.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())), eventIds, connection);
+    ResultSet rs = SqlUtilitesImpl.SQL_WORKER.executeQuery(getEventVersionSQL.replaceAll("<%EVENTS_LIST%>", sb.toString()).replaceAll("<%EVENT_LIST_SIZE%>", Integer.toString(eventIds.size())), eventIds, connection);
     try {
       versions.populate(rs);
     } finally {
@@ -2458,6 +2464,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           final String[] sifrant_sifre = getSifre(s);
           String qSifra;
           if (sifrant_sifre.length==1) {
+            sifra = sifrant_sifre;
             qSifra = "_" + sifrant_sifre[0];
           } else {
             qSifra = (sifra != null) && (sifra.length == 1) ? "_" + sifra[0] : "";
@@ -2557,7 +2564,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evVersionedParameters.add(sqlFindEventSource);
       evVersionedParameters.add(sqlFindEventDate);
       evVersionedParameters.add(sqlFindEventVersionPk);
-      evVersionedSubquery = SQLDataSource.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
+      evVersionedSubquery = SqlUtilitesImpl.SQL_WORKER.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
 
       if (sqlFindEventType.getValue().length() == 0
               && sqlFindEventValid.getValue().length() == 0
@@ -2577,7 +2584,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evNonVersionedParameters.add(sqlFindEventDate);
       evNonVersionedParameters.add(sqlFindEventPk);
       evNonVersionedParameters.add(sqlEventWhere);
-      evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
+      evNonVersionedSubquery = SqlUtilitesImpl.SQL_WORKER.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
     private String[] getSifre(int idSifranta) {
@@ -2744,8 +2751,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlFindEventVersionPk.addParameter(sqlFindEventVersion);
         sqlFindEventVersionPk.addParameter(eventPK.getPrimaryKey());
       }
-      evVersionedSubquery = SQLDataSource.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
-      evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
+      evVersionedSubquery = SqlUtilitesImpl.SQL_WORKER.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
+      evNonVersionedSubquery = SqlUtilitesImpl.SQL_WORKER.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
     @Override
@@ -2793,7 +2800,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       try {
         try {
           if (getCheckTableSql() != null) {
-            statement.executeQuery(SQLDataSource.substParameters(getCheckTableSql(), qparams));
+            statement.executeQuery(SqlUtilitesImpl.SQL_WORKER.substParameters(getCheckTableSql(), qparams));
           }
         } catch (SQLException ex) {
           String context = connection.getCatalog();
@@ -2803,10 +2810,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           for (String sql : getCreateTableSqls()) {
-            String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
+            String createSQL = SqlUtilitesImpl.SQL_WORKER.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
             if (DbDataSource.DUMP_SQL) {
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(createSQL + ";");
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("-- -- -- --");
+              SqlUtilitesImpl.LOG_WRITER.println(createSQL + ";");
+              SqlUtilitesImpl.LOG_WRITER.println("-- -- -- --");
             }
             statement.execute(createSQL);
           }
@@ -2816,12 +2823,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
         }
 
-        qparams = SQLDataSource.preprocessParameters(qparams, connection);
+        qparams = SqlUtilitesImpl.SQL_WORKER.preprocessParameters(qparams, connection);
 
 
         try {
           if (getEmptyTableSql().length() > 0) {
-            String query = SQLDataSource.substParameters(getEmptyTableSql(), qparams);
+            String query = SqlUtilitesImpl.SQL_WORKER.substParameters(getEmptyTableSql(), qparams);
             if (!Equals.equals(this.connection, connection)
                     || !Equals.equals(this.qEmptyTable, query)) {
               String[] sqls = query.split(";");
@@ -2839,19 +2846,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
 
             if (DbDataSource.DUMP_SQL) {
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## empty");
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qEmptyTable);
+              SqlUtilitesImpl.LOG_WRITER.println("############## empty");
+              SqlUtilitesImpl.LOG_WRITER.println(this.qEmptyTable);
             }
             int rowsDeleted = 0;
             for (PreparedStatement preparedStatement : psEmptyTable) {
-              rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
+              rowsDeleted += SqlUtilitesImpl.SQL_WORKER.executeUpdate(preparedStatement, qparams);
             }
             if (DbDataSource.DUMP_SQL) {
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows deleted:" + rowsDeleted);
+              SqlUtilitesImpl.LOG_WRITER.println("Rows deleted:" + rowsDeleted);
             }
           }
 
-          String query = SQLDataSource.substParameters(getFillTableSql(), qparams);
+          String query = SqlUtilitesImpl.SQL_WORKER.substParameters(getFillTableSql(), qparams);
           if (!Equals.equals(this.connection, connection)
                   || !Equals.equals(this.qFillTable, query)) {
             if (this.psFillTable != null) {
@@ -2865,14 +2872,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           if (DbDataSource.DUMP_SQL) {
-            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## fill");
-            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qFillTable);
+            SqlUtilitesImpl.LOG_WRITER.println("############## fill");
+            SqlUtilitesImpl.LOG_WRITER.println(this.qFillTable);
           }
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+          SqlUtilitesImpl.LOG_WRITER.println("Rows added:" + SqlUtilitesImpl.SQL_WORKER.executeUpdate(psFillTable, qparams));
           if (getCleanTableSqls() != null) {
             List<String> queries = new ArrayList<String>(getCleanTableSqls().length);
             for (String sql : getCleanTableSqls()) {
-              queries.add(SQLDataSource.substParameters(sql, qparams));
+              queries.add(SqlUtilitesImpl.SQL_WORKER.substParameters(sql, qparams));
             }
 
             if (!Equals.equals(this.connection, connection)
@@ -2891,25 +2898,25 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
 
             if (DbDataSource.DUMP_SQL) {
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## cleanup/update");
+              SqlUtilitesImpl.LOG_WRITER.println("############## cleanup/update");
               for (String string : queries) {
-                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
+                SqlUtilitesImpl.LOG_WRITER.println(string);
               }
             }
             int rowsAffected = 0;
             for (PreparedStatement preparedStatement : psCleanTable) {
-              rowsAffected += SQLDataSource.executeUpdate(preparedStatement, qparams);
+              rowsAffected += SqlUtilitesImpl.SQL_WORKER.executeUpdate(preparedStatement, qparams);
             }
             if (DbDataSource.DUMP_SQL) {
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows cleaned/updated:" + rowsAffected);
+              SqlUtilitesImpl.LOG_WRITER.println("Rows cleaned/updated:" + rowsAffected);
             }
           }
           if ((sqlMaterializedView != null) && (sqlMaterializedView.getSetViewVersionSql() != null)) {
-            SQLDataSource.execute(connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.getSetViewVersionSql(), qparams)), qparams);
+            SqlUtilitesImpl.SQL_WORKER.execute(connection.prepareStatement(SqlUtilitesImpl.SQL_WORKER.substParameters(sqlMaterializedView.getSetViewVersionSql(), qparams)), qparams);
           }
           if (DbDataSource.DUMP_SQL) {
-            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("cached:event:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
-            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+            SqlUtilitesImpl.LOG_WRITER.println("cached:event:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+            SqlUtilitesImpl.LOG_WRITER.println("##############");
           }
 
 
@@ -2920,6 +2927,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       } finally {
         statement.close();
+        SqlUtilitesImpl.LOG_WRITER.flush();
       }
       this.connection = connection;
     }
@@ -3087,7 +3095,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         }
       }
 
-      return SQLDataSource.executeQuery(this.query, eventQuery.getParameters());
+      return SqlUtilitesImpl.SQL_WORKER.executeQuery(this.query, eventQuery.getParameters());
     }
 
     @Override
@@ -3211,7 +3219,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             parametersVecVrednosti.add(event.getSifrant());
             parametersVecVrednosti.add(event.getSifra());
 
-            ResultSet rsVecVrednosti = SQLDataSource.executeQuery(getCheckVecVrednostiEventSQL(), parametersVecVrednosti, ConnectionManager.getInstance().getTxConnection());
+            ResultSet rsVecVrednosti = SqlUtilitesImpl.SQL_WORKER.executeQuery(getCheckVecVrednostiEventSQL(), parametersVecVrednosti, ConnectionManager.getInstance().getTxConnection());
             try {
               if (rsVecVrednosti.next()) {
                 if (rsVecVrednosti.getInt(1) > 0) {
@@ -3224,7 +3232,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           if (seek) {
-            String sql = SQLDataSource.substParameters(eq.getQuery(), eq.getParameters());
+            String sql = SqlUtilitesImpl.SQL_WORKER.substParameters(eq.getQuery(), eq.getParameters());
             Logger.getLogger(getClass().getName()).log(Level.INFO, "Searching event : \n {0}", sql);
             PreparedStatement statement = ConnectionManager.getInstance().getTxConnection().prepareStatement(sql,
                     ResultSet.TYPE_SCROLL_INSENSITIVE,

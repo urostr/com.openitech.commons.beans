@@ -8,6 +8,8 @@ import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.Types;
+import com.openitech.io.LogWriter;
+import com.openitech.sql.SQLWorker;
 import com.openitech.util.Equals;
 import com.openitech.value.events.EventType;
 import java.sql.Connection;
@@ -25,6 +27,8 @@ import java.util.logging.Logger;
  * @author uros
  */
 public class SQLMaterializedView extends SubstSqlParameter {
+  private final LogWriter logWriter = new LogWriter(Logger.getLogger(TemporarySubselectSqlParameter.class.getName()), Level.INFO);
+  private final SQLWorker sqlWorker = new SQLWorker(logWriter);
 
   public SQLMaterializedView(String tableName) {
     super();
@@ -186,7 +190,7 @@ public class SQLMaterializedView extends SubstSqlParameter {
     try {
       long timer = System.currentTimeMillis();
       if (!Equals.equals(this.connection, connection)) {
-        String query = SQLDataSource.substParameters(isViewValidSQL, parameters);
+        String query = sqlWorker.substParameters(isViewValidSQL, parameters);
         String[] sqls = query.split(";");
         for (PreparedStatement preparedStatement : this.isViewValid) {
           preparedStatement.close();
@@ -206,11 +210,11 @@ public class SQLMaterializedView extends SubstSqlParameter {
       boolean result = true;
 
       if (DbDataSource.DUMP_SQL) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qIsViewValid);
+        logWriter.println("##############");
+        logWriter.println(this.qIsViewValid);
       }
       for (PreparedStatement preparedStatement : isViewValid) {
-        ResultSet executeQuery = SQLDataSource.executeQuery(preparedStatement, parameters);
+        ResultSet executeQuery = sqlWorker.executeQuery(preparedStatement, parameters);
         try {
           if (executeQuery.next()) {
             result = result && executeQuery.getBoolean(1);
@@ -223,14 +227,15 @@ public class SQLMaterializedView extends SubstSqlParameter {
         }
       }
       if (DbDataSource.DUMP_SQL) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("materialized:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+        logWriter.println("materialized:isvalid:" + getValue() + "..[" + result + "]..." + (System.currentTimeMillis() - timer) + "ms");
+        logWriter.println("##############");
       }
       return result;
     } catch (SQLException ex) {
       Logger.getLogger(SQLMaterializedView.class.getName()).log(Level.SEVERE, null, ex);
     } finally {
       lock.unlock();
+      logWriter.flush();
     }
 
     return false;

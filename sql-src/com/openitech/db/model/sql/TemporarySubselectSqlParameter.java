@@ -12,6 +12,8 @@ import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.MaterializedView.CacheEvents.Event;
 import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.TemporaryTable;
+import com.openitech.io.LogWriter;
+import com.openitech.sql.SQLWorker;
 import com.openitech.sql.util.TransactionManager;
 import com.openitech.util.Equals;
 import com.openitech.value.events.EventType;
@@ -41,6 +43,8 @@ import java.util.logging.Logger;
 public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
   private static final Map<String, ReentrantLock> locks = Collections.synchronizedMap(new HashMap<String, ReentrantLock>());
+  private final LogWriter logWriter = new LogWriter(Logger.getLogger(TemporarySubselectSqlParameter.class.getName()), Level.INFO);
+  private final SQLWorker sqlWorker = new SQLWorker(logWriter);
 
   public TemporarySubselectSqlParameter(String replace) {
     super(replace);
@@ -288,7 +292,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     } else {
       try {
         long timer = System.currentTimeMillis();
-        String query = SQLDataSource.substParameters(isTableDataValidSql, parameters);
+        String query = sqlWorker.substParameters(isTableDataValidSql, parameters);
         if (!Equals.equals(this.connection, connection)
                 || !Equals.equals(this.qIsTableDataValidSql, query)) {
           String[] sqls = query.split(";");
@@ -308,11 +312,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         boolean result = true;
 
         if (DbDataSource.DUMP_SQL) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qIsTableDataValidSql);
+          logWriter.println("##############");
+          logWriter.println(this.qIsTableDataValidSql);
         }
         for (PreparedStatement preparedStatement : psIsTableDataValidSql) {
-          ResultSet executeQuery = SQLDataSource.executeQuery(preparedStatement, parameters);
+          ResultSet executeQuery = sqlWorker.executeQuery(preparedStatement, parameters);
           try {
             if (executeQuery.next()) {
               result = result && executeQuery.getBoolean(1);
@@ -325,8 +329,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
           }
         }
         if (DbDataSource.DUMP_SQL) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "tt:isvalid:{0}..[{1}]...{2}ms", new Object[]{getValue(), result, System.currentTimeMillis() - timer});
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+          logWriter.format("tt:isvalid:{0}..[{1}]...{2}ms", new Object[]{getValue(), result, System.currentTimeMillis() - timer});
+          logWriter.println("##############");
         }
         return result;
       } catch (SQLException ex) {
@@ -381,7 +385,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
             try {
               if (checkTableSql != null) {
-                statement.executeQuery(SQLDataSource.substParameters(checkTableSql, qparams));
+                statement.executeQuery(sqlWorker.substParameters(checkTableSql, qparams));
               }
             } catch (SQLException ex) {
               if (sqlMaterializedView != null) {
@@ -398,10 +402,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
 
               for (String sql : createTableSqls) {
-                String createSQL = SQLDataSource.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
+                String createSQL = sqlWorker.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
                 if (DbDataSource.DUMP_SQL) {
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(createSQL + ";");
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("-- -- -- --");
+                  logWriter.println(createSQL + ";");
+                  logWriter.println("-- -- -- --");
                 }
                 try {
                   statement.execute(createSQL);
@@ -416,7 +420,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
 
 
-              qparams = SQLDataSource.preprocessParameters(qparams, connection);
+              qparams = sqlWorker.preprocessParameters(qparams, connection);
               preprocessed = true;
 
               fill = true;
@@ -431,7 +435,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
             if (isUseParameters()) {
               if (!preprocessed) {
-                qparams = SQLDataSource.preprocessParameters(qparams, connection);
+                qparams = sqlWorker.preprocessParameters(qparams, connection);
                 preprocessed = true;
               }
               fill = fill || !isTableDataValidSql(connection, qparams);
@@ -443,7 +447,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
             if ((!fill) && (mv != null)) {
               if (mv.isUseParameters()) {
                 if (!preprocessed) {
-                  qparams = SQLDataSource.preprocessParameters(qparams, connection);
+                  qparams = sqlWorker.preprocessParameters(qparams, connection);
                   preprocessed = true;
                 }
                 fill = fill || !mv.isViewValid(connection, qparams);
@@ -454,7 +458,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
             if (fill && !disabled) {
               if (!preprocessed) {
-                qparams = SQLDataSource.preprocessParameters(qparams, connection);
+                qparams = sqlWorker.preprocessParameters(qparams, connection);
                 preprocessed = true;
               }
 
@@ -467,7 +471,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
               try {
                 if (emptyTableSql.length() > 0) {
-                  String query = SQLDataSource.substParameters(emptyTableSql, qparams);
+                  String query = sqlWorker.substParameters(emptyTableSql, qparams);
                   if (!Equals.equals(this.connection, connection)
                           || !Equals.equals(this.qEmptyTable, query)) {
                     String[] sqls = query.split(";");
@@ -485,19 +489,19 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   }
 
                   if (DbDataSource.DUMP_SQL) {
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## empty");
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qEmptyTable);
+                    logWriter.println("############## empty");
+                    logWriter.println(this.qEmptyTable);
                   }
                   int rowsDeleted = 0;
                   for (PreparedStatement preparedStatement : psEmptyTable) {
-                    rowsDeleted += SQLDataSource.executeUpdate(preparedStatement, qparams);
+                    rowsDeleted += sqlWorker.executeUpdate(preparedStatement, qparams);
                   }
                   if (DbDataSource.DUMP_SQL) {
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows deleted:" + rowsDeleted);
+                    logWriter.println("Rows deleted:" + rowsDeleted);
                   }
                 }
                 if (fillTableSql != null) {
-                  String query = SQLDataSource.substParameters(fillTableSql, qparams);
+                  String query = sqlWorker.substParameters(fillTableSql, qparams);
                   if (!Equals.equals(this.connection, connection)
                           || !Equals.equals(this.qFillTable, query)) {
                     if (this.psFillTable != null) {
@@ -511,11 +515,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   }
 
                   if (DbDataSource.DUMP_SQL) {
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## fill");
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(this.qFillTable);
+                    logWriter.println("############## fill");
+                    logWriter.println(this.qFillTable);
                   }
                   try {
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows added:" + SQLDataSource.executeUpdate(psFillTable, qparams));
+                    logWriter.println("Rows added:" + sqlWorker.executeUpdate(psFillTable, qparams));
                   } catch (SQLException ex1) {
                     Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
                     throw new SQLException(ex1);
@@ -524,7 +528,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 if (cleanTableSqls != null) {
                   List<String> queries = new ArrayList<String>(cleanTableSqls.length);
                   for (String sql : cleanTableSqls) {
-                    queries.add(SQLDataSource.substParameters(sql, qparams));
+                    queries.add(sqlWorker.substParameters(sql, qparams));
                   }
 
                   if (!Equals.equals(this.connection, connection)
@@ -543,36 +547,37 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   }
 
                   if (DbDataSource.DUMP_SQL) {
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("############## cleanup/update");
+                    logWriter.println("############## cleanup/update");
                     for (String string : queries) {
-                      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(string);
+                      logWriter.println(string);
                     }
                   }
                   int rowsAffected = 0;
                   for (PreparedStatement preparedStatement : psCleanTable) {
-                    rowsAffected += SQLDataSource.executeUpdate(preparedStatement, qparams);
+                    rowsAffected += sqlWorker.executeUpdate(preparedStatement, qparams);
                   }
                   if (DbDataSource.DUMP_SQL) {
-                    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Rows cleaned/updated:" + rowsAffected);
+                    logWriter.println("Rows cleaned/updated:" + rowsAffected);
                   }
                 }
                 if ((mv != null) && (mv.setViewVersionSql != null)) {
-                  PreparedStatement ps = connection.prepareStatement(SQLDataSource.substParameters(sqlMaterializedView.setViewVersionSql, qparams));
+                  PreparedStatement ps = connection.prepareStatement(sqlWorker.substParameters(sqlMaterializedView.setViewVersionSql, qparams));
                   try {
-                    SQLDataSource.execute(ps, qparams);
+                    sqlWorker.execute(ps, qparams);
                   } finally {
                     ps.close();
                   }
                 }
                 if (DbDataSource.DUMP_SQL) {
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
-                  Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+                  logWriter.println("temporary:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+                  logWriter.println("##############");
                 }
 
 
                 commit = true;
               } catch (SQLException ex) {
-                Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:temporary:fill:" + getValue(), ex);
+                logWriter.println("ERROR:temporary:fill:" + getValue());
+                logWriter.flush(logWriter.getLogger(), Level.SEVERE, ex);
                 throw new SQLException(ex);
               } finally {
                 if (transaction) {
@@ -587,6 +592,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
         }
       } finally {
         lock.unlock();
+        logWriter.flush();
       }
     }
   }

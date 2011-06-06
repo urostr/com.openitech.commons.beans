@@ -22,7 +22,9 @@ import com.openitech.ref.SoftHashMap;
 import com.openitech.util.Equals;
 import com.openitech.awt.OwnerFrame;
 import com.openitech.events.concurrent.RefreshDataSource;
+import com.openitech.io.LogWriter;
 import com.openitech.io.ReadInputStream;
+import com.openitech.sql.SQLWorker;
 import com.sun.rowset.CachedRowSetImpl;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -102,6 +104,8 @@ public class SQLDataSource extends AbstractDataSourceImpl {
   private boolean refreshPending = false;
   DbDataSource owner;
   private boolean readOnly = false;
+  private final LogWriter logWriter = new LogWriter(Logger.getLogger(SQLDataSource.class.getName()), Level.INFO);
+  private final SQLWorker sqlWorker = new SQLWorker(logWriter);
 
   /** Creates a new instance of DbDataSource */
   public SQLDataSource(DbDataSource owner) {
@@ -2567,14 +2571,14 @@ public class SQLDataSource extends AbstractDataSourceImpl {
       try {
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).fine("Executing '" + preparedSelectSql + "'");
         if (DbDataSource.DUMP_SQL) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(preparedSelectSql);
+          logWriter.print("##############");
+          logWriter.print(preparedSelectSql);
         }
         long timer = System.currentTimeMillis();
         currentResultSet = new CurrentResultSet(owner.isShareResults() ? getSqlCache().getSharedResult(preparedSelectSql, owner.getParameters(), reload) : executeSql(getSelectStatement(preparedSelectSql, connection), owner.getParameters()));
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
+        logWriter.print(owner.getName() + ":select:" + (System.currentTimeMillis() - timer) + "ms");
         if (DbDataSource.DUMP_SQL) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
+          logWriter.print("##############");
         }
         currentResultSet.currentResultSet.first();
       } finally {
@@ -2583,10 +2587,12 @@ public class SQLDataSource extends AbstractDataSourceImpl {
         }
       }
     } catch (SQLException ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't get a result from " + owner.getName(), ex);
+      logWriter.println("Can't get a result from " + owner.getName());
+      logWriter.flush(logWriter.getLogger(), Level.SEVERE, ex);
       currentResultSet = null;
     } finally {
       owner.unlock();
+      logWriter.flush();
     }
 //        finally {
 //          inserting = false;
@@ -4219,122 +4225,19 @@ public class SQLDataSource extends AbstractDataSourceImpl {
     return loadData(true, oldRow);
   }
 
+  @Deprecated
   public static String substParameters(String sql, List<?> parameters) {
-    if (sql != null && sql.length() > 0) {
-      Object value;
-      Integer type;
-
-      sql = ReadInputStream.getReplacedSql(sql);
-
-      for (Iterator values = parameters.iterator(); values.hasNext();) {
-        value = values.next();
-        if (value instanceof DbDataSource.SubstSqlParameter) {
-          type = ((DbDataSource.SubstSqlParameter) value).getType();
-          if (type.equals(Types.SUBST_ALL)) {
-            sql = sql.replaceAll(((DbDataSource.SubstSqlParameter) value).getReplace(), ((DbDataSource.SubstSqlParameter) value).getValue());
-          } else if (type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST)) {
-            sql = sql.replaceFirst(((DbDataSource.SubstSqlParameter) value).getReplace(), ((DbDataSource.SubstSqlParameter) value).getValue());
-          }
-        }
-      }
-    }
-    return sql;
+    return (new SQLWorker()).substParameters(sql, parameters);
   }
 
+  @Deprecated
   public static List<Object> getParameters(List<?> source) {
-    List<Object> target = new ArrayList<Object>();
-
-    getParameters(source, target, 0, false);
-
-    return target;
+    return (new SQLWorker()).getParameters(source);
   }
 
-  private static int getParameters(List<?> source, List<Object> target, int pos, boolean subset) {
-    if (!subset) {
-      target.clear();
-    }
-
-    Integer type;
-
-    for (Object value : source) {
-      if (value instanceof DbDataSource.SqlParameter) {
-        type = ((DbDataSource.SqlParameter) value).getType();
-        if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
-          if (((DbDataSource.SqlParameter) value).getValue() != null) {
-            target.add(((DbDataSource.SqlParameter) value).getValue());
-          } else {
-            target.add(null);
-          }
-        } else if ((value instanceof DbDataSource.SubstSqlParameter) && (((DbDataSource.SubstSqlParameter) value).getParameters().size() > 0)) {
-          pos = getParameters(((DbDataSource.SubstSqlParameter) value).getParameters(), target, pos, true);
-        }
-      } else {
-        if (value == null) {
-          target.add(null);
-        } else {
-          target.add(value);
-        }
-      }
-    }
-    return pos;
-  }
-
+  @Deprecated
   public static int setParameters(PreparedStatement statement, List<?> parameters, int pos, boolean subset) throws SQLException {
-    if (!subset) {
-      statement.clearParameters();
-    }
-
-    ParameterMetaData metaData = null;
-    int parameterCount = Integer.MAX_VALUE;
-    try {
-      metaData = statement.getParameterMetaData();
-      parameterCount = metaData.getParameterCount();
-    } catch (SQLException err) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
-    }
-    Object value;
-    Integer type;
-
-    for (Iterator values = parameters.iterator(); (pos <= parameterCount) && values.hasNext();) {
-      value = values.next();
-      if (value instanceof DbDataSource.SqlParameter) {
-        type = ((DbDataSource.SqlParameter) value).getType();
-        if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
-          if (((DbDataSource.SqlParameter) value).getValue() != null) {
-            statement.setObject(pos++, ((DbDataSource.SqlParameter) value).getValue(),
-                    ((DbDataSource.SqlParameter) value).getType());
-            if (DbDataSource.DUMP_SQL) {
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--[" + (pos - 1) + "]=" + ((DbDataSource.SqlParameter) value).getValue().toString());
-            }
-          } else {
-            statement.setNull(pos++, ((DbDataSource.SqlParameter) value).getType());
-            if (DbDataSource.DUMP_SQL) {
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--[" + (pos - 1) + "]=null");
-            }
-          }
-        } else if ((value instanceof DbDataSource.SubstSqlParameter) && (((DbDataSource.SubstSqlParameter) value).getParameters().size() > 0)) {
-          pos = setParameters(statement, ((DbDataSource.SubstSqlParameter) value).getParameters(), pos, true);
-        }
-      } else {
-        if (value == null) {
-          statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
-          if (DbDataSource.DUMP_SQL) {
-            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--[" + (pos - 1) + "]=null");
-          }
-        } else {
-          statement.setObject(pos++, value);
-          if (DbDataSource.DUMP_SQL) {
-            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("--[" + (pos - 1) + "]=" + value.toString());
-          }
-        }
-      }
-    }
-    if (parameterCount < Integer.MAX_VALUE) {
-      while ((pos <= parameterCount) && !subset) {
-        statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
-      }
-    }
-    return pos;
+    return (new SQLWorker()).setParameters(statement, parameters, pos, subset);
   }
 
   private ResultSet executeSql(PreparedStatement statement, List<?> parameters) throws SQLException {
@@ -4342,121 +4245,72 @@ public class SQLDataSource extends AbstractDataSourceImpl {
     try {
       semaphore.acquireUninterruptibly();
 
-      rs = executeQuery(statement, parameters);
+      rs = sqlWorker.executeQuery(statement, parameters);
     } finally {
       semaphore.release();
     }
 
-
     return rs;
   }
 
+  @Deprecated
   public static ResultSet executeQuery(String selectSQL, List<?> parameters) throws SQLException {
     return executeQuery(selectSQL, parameters, ConnectionManager.getInstance().getConnection());
   }
 
+  @Deprecated
   public static ResultSet executeQuery(String selectSQL, List<?> parameters, Connection connection) throws SQLException {
     return executeQuery(selectSQL, parameters, connection, 1800);
   }
 
+  @Deprecated
   public static ResultSet executeQuery(String selectSQL, List<?> parameters, Connection connection, int timeout) throws SQLException {
-    String sql = substParameters(selectSQL, parameters);
-    PreparedStatement statement = connection.prepareStatement(sql,
-            ResultSet.TYPE_SCROLL_INSENSITIVE,
-            ResultSet.CONCUR_READ_ONLY,
-            ResultSet.HOLD_CURSORS_OVER_COMMIT);
-
-    statement.setQueryTimeout(timeout);
-
-    try {
-      if (DbDataSource.DUMP_SQL) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(sql);
-      }
-      return executeQuery(statement, parameters);
-    } finally {
-      if (DbDataSource.DUMP_SQL) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
-      }
-    }
+    return (new SQLWorker()).executeQuery(selectSQL, parameters, connection, timeout);
   }
 
+  @Deprecated
   public static ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
-    ResultSet resultSet = null;
-//    synchronized (statement.getConnection()) {
-    List<Object> queryParameters = preprocessParameters(parameters, statement);
-
-    setParameters(statement, queryParameters, 1, false);
-
-    resultSet = statement.executeQuery();
-//    }
-    return resultSet;
+    return (new SQLWorker()).executeQuery(statement, parameters);
   }
 
+  @Deprecated
   public static boolean execute(String selectSQL, Object... parameters) throws SQLException {
-    List<Object> l = new ArrayList<Object>();
-    for (Object p : parameters) {
-      l.add(p);
-    }
-    return execute(selectSQL, l);
+    return (new SQLWorker()).execute(selectSQL, parameters);
   }
 
+  @Deprecated
   public static boolean execute(String selectSQL, List<?> parameters) throws SQLException {
-    return execute(selectSQL, parameters, ConnectionManager.getInstance().getConnection());
+    return (new SQLWorker()).execute(selectSQL, parameters);
   }
 
+  @Deprecated
   public static boolean execute(String selectSQL, List<?> parameters, final java.sql.Connection connection) throws SQLException {
-    String sql = substParameters(selectSQL, parameters);
-    PreparedStatement statement = connection.prepareStatement(sql);
-
-    return execute(statement, parameters);
+    return (new SQLWorker()).execute(selectSQL, parameters, connection);
   }
 
+  @Deprecated
   public static boolean execute(PreparedStatement statement, List<?> parameters) throws SQLException {
-    setParameters(statement, parameters, 1, false);
-
-    return statement.execute();
+    return (new SQLWorker()).execute(statement, parameters);
   }
 
+  @Deprecated
   public static int executeUpdate(String selectSQL, List<?> parameters) throws SQLException {
-    return executeUpdate(selectSQL, parameters, ConnectionManager.getInstance().getConnection());
+    return (new SQLWorker()).executeUpdate(selectSQL, parameters);
   }
 
+  @Deprecated
   public static int executeUpdate(String selectSQL, List<?> parameters, final java.sql.Connection connection) throws SQLException {
-    String sql = substParameters(selectSQL, parameters);
-    PreparedStatement statement = connection.prepareStatement(sql);
-
-    try {
-      if (DbDataSource.DUMP_SQL) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############");
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(sql);
-      }
-      return executeUpdate(statement, parameters);
-    } finally {
-      if (DbDataSource.DUMP_SQL) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("##############\n");
-      }
-    }
+    return (new SQLWorker()).executeUpdate(selectSQL, parameters, connection);
   }
 
+  @Deprecated
   public static int executeUpdate(PreparedStatement statement, List<?> parameters) throws SQLException {
-    int result = 0;
-//    synchronized (statement.getConnection()) {
-    List<Object> queryParameters = preprocessParameters(parameters, statement);
-
-    setParameters(statement, queryParameters, 1, false);
-
-    result = statement.executeUpdate();
-//    }
-    return result;
+    return (new SQLWorker()).executeUpdate(statement, parameters);
   }
 
+  @Deprecated
   public static List<Object> preprocessParameters(List<?> parameters, Connection connection) throws SQLException {
     return (List<Object>) DbDataSourceParametersPreprocessor.getInstance().preprocess(parameters, connection);
-  }
-
-  private static List<Object> preprocessParameters(List<?> parameters, PreparedStatement statement) throws SQLException {
-    return preprocessParameters(parameters, statement.getConnection());
   }
 
   @Override
