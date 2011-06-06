@@ -303,8 +303,6 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                     ResultSet.HOLD_CURSORS_OVER_COMMIT));
           }
           this.qIsTableDataValidSql = query;
-
-          this.connection = connection;
         }
 
         boolean result = true;
