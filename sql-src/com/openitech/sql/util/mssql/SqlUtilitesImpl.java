@@ -2429,7 +2429,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_PREPARE_EVENT_VIEWS, "false"))) {
         for (Integer idSifranta : sifranti) {
-          createEventViews(idSifranta, sifra == null || sifra.length > 1);
+          createEventViews(idSifranta);
         }
       }
 
@@ -2454,9 +2454,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
       String ev_view = ev_table + " ev WITH (NOLOCK)";
 
       if (sifranti.size() == 1) {
-        final String qSifra = (sifra != null) && (sifra.length == 1) ? "_" + sifra[0] : "";
-
         for (Integer s : sifranti) {
+          final String[] sifrant_sifre = getSifre(s);
+          if (sifrant_sifre.length==1) {
+            sifra = sifrant_sifre;
+          }
+          
+          final String qSifra = (sifra != null) && (sifra.length == 1) ? "_" + sifra[0] : "";
+
           final String chk_valid = eventsDb + ".[dbo].[E_" + s + qSifra + "_valid]";
           final String chk_versioned = eventsDb + ".[dbo].[E_" + s + qSifra + "]";
 
@@ -2573,7 +2578,29 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evNonVersionedSubquery = SQLDataSource.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
     }
 
-    private void createEventViews(int idSifranta, boolean eventGroupView) {
+    private String[] getSifre(int idSifranta) {
+      List<String> result = new ArrayList<String>();
+      try {
+        Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
+        try {
+                    PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
+
+                    findIdSifre.setInt(1, idSifranta);
+          ResultSet rsIdSifre = findIdSifre.executeQuery();
+
+          while (rsIdSifre.next()) {
+            result.add(rsIdSifre.getString(1));}
+      } finally {
+        temporaryConnection.close();
+      }
+      } catch (SQLException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+      return result.toArray(new String[result.size()]);
+    }
+
+    private void createEventViews(int idSifranta) {
       final String eventsDb = SqlUtilities.getEventsDB();
       String eventsViewVersioned;
       String eventsViewValid;
@@ -2582,13 +2609,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
         try {
           TransactionManager tm = TransactionManager.getInstance(temporaryConnection);
 
-          PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
           CallableStatement callStoredValue = temporaryConnection.prepareCall(EV_CREATE_EVENTS_VIEW);
 
           eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "]";
           eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_valid]";
 
-          if (eventGroupView) {
+          final String[] sifre = getSifre(idSifranta);
+
+          if (sifre.length>1) {
             if (!(isViewReady(eventsDb, eventsViewVersioned)
                     && isViewReady(eventsDb, eventsViewValid))) {
               Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
@@ -2612,11 +2640,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //            }
           }
 
-          findIdSifre.setInt(1, idSifranta);
-          ResultSet rsIdSifre = findIdSifre.executeQuery();
-
-          while (rsIdSifre.next()) {
-            final String idSifre = rsIdSifre.getString(1);
+          for (String idSifre:sifre) {
             eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "_" + idSifre + "]";
             eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_" + idSifre + "_valid]";
             if (!(isViewReady(eventsDb, eventsViewVersioned)
