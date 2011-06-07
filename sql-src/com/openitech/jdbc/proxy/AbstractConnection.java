@@ -41,7 +41,7 @@ public abstract class AbstractConnection implements java.sql.Connection, Locking
   protected final java.util.List<Savepoint> activeSavepoints = new WeakList<Savepoint>();
   protected boolean initAutoCommit = true;
   protected boolean shadowLoading = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SHADOW_LOADING, "false"));
-  private static final boolean LOG = true;
+  private static final boolean LOG = false;
 
   public AbstractConnection(DataSource dataSource) throws SQLException {
     this(dataSource, true, null);

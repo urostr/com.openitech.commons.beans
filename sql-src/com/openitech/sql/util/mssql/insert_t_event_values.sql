@@ -1,0 +1,24 @@
+INSERT INTO #T_EVENT_VALUES
+           ([EventId]
+           ,[IdPolja]
+           ,[FieldValueIndex]
+           ,[ValueId]
+           ,[FieldType]
+           ,[IntValue]
+           ,[RealValue]
+           ,[StringValue]
+           ,[DateValue]
+           ,[ObjectValue]
+           ,[ClobValue])
+     VALUES
+           (?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?
+           ,?)

@@ -19,7 +19,6 @@ import com.openitech.db.model.DbDataSourceIndex;
 import com.openitech.db.model.factory.DataSourceConfig;
 import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.factory.DataSourceParametersFactory;
-import com.openitech.db.model.sql.SQLDataSource;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.io.LogWriter;
 import com.openitech.value.fields.Field;
@@ -99,6 +98,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement insertEventValues;
   PreparedStatement updateEventValues;
   PreparedStatement deleteEventValues;
+  String createTEventValues;
+  String emptyTEventValues;
+  PreparedStatement insertTEventValues;
+  String storeTEventValues;
   PreparedStatement find_datevalue;
   PreparedStatement find_intvalue;
   PreparedStatement find_realvalue;
@@ -739,6 +742,24 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (delete_eventPKVersions == null) {
         delete_eventPKVersions = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "delete_eventPKVersions.sql", "cp1250"));
       }
+
+      if (createTEventValues == null) {
+        createTEventValues = com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "create_t_event_values.sql", "cp1250");
+//      insertEventValues.setQueryTimeout(15);
+      }
+      if (emptyTEventValues == null) {
+        emptyTEventValues = com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "empty_t_event_values.sql", "cp1250");
+//      updateEventValues.setQueryTimeout(15);
+      }
+      if (insertTEventValues == null) {
+        insertTEventValues = connection.prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "insert_t_event_values.sql", "cp1250"));
+      }
+      if (storeTEventValues == null) {
+        storeTEventValues = com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "store_t_event_values.sql", "cp1250");
+      }
+      
+      Statement statement = connection.createStatement();
+
       int param;
       boolean success = true;
       boolean commit = false;
@@ -856,6 +877,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
           long start = System.currentTimeMillis();
           if (success) {
+            synchronized(createTEventValues) {
+              statement.execute(createTEventValues);
+            }
+            synchronized(emptyTEventValues) {
+              statement.execute(emptyTEventValues);
+            }
+
             List<FieldValue> fieldValuesList = event.getValues();
 
             EventPK eventPK = new EventPK();
@@ -901,8 +929,78 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
               if (valueId != null) {
                 if (fieldValue.getLookupType() == null) {
+                  synchronized (insertTEventValues) {
+                    final ValueType fieldType = fieldValue.getValueType();
+                    final Object value = fieldValue.getValue();
 
-                  param = 1;
+                    param = 1;
+                    insertTEventValues.setLong(param++, events_ID);
+                    insertTEventValues.setInt(param++, field_id);
+                    insertTEventValues.setInt(param++, fieldValueIndex);
+                    insertTEventValues.setLong(param++, valueId);
+                    insertTEventValues.setInt(param++, fieldType.getTypeIndex());
+                    if (value != null) {
+                      switch (fieldType) {
+                        case BitValue:
+                        case IntValue:
+                        case LongValue:
+                          insertTEventValues.setObject(param++, value, Types.BIGINT);
+                          insertTEventValues.setNull(param++, Types.DECIMAL);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          break;
+                        case RealValue:
+                          insertTEventValues.setNull(param++, Types.BIGINT);
+                          insertTEventValues.setObject(param++, value, Types.DECIMAL);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          break;
+                        case StringValue:
+                          insertTEventValues.setNull(param++, Types.BIGINT);
+                          insertTEventValues.setNull(param++, Types.DECIMAL);
+                          insertTEventValues.setObject(param++, value, Types.VARCHAR);
+                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          break;
+                        case DateTimeValue:
+                        case MonthValue:
+                        case TimeValue:
+                        case DateValue:
+                          insertTEventValues.setNull(param++, Types.BIGINT);
+                          insertTEventValues.setNull(param++, Types.DECIMAL);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          insertTEventValues.setObject(param++, value, Types.TIMESTAMP);
+                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          break;
+                        case ObjectValue:
+                        case BlobValue:
+                          insertTEventValues.setNull(param++, Types.BIGINT);
+                          insertTEventValues.setNull(param++, Types.DECIMAL);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                          insertTEventValues.setObject(param++, value, Types.LONGVARBINARY);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          break;
+                        case ClobValue:
+                          insertTEventValues.setNull(param++, Types.BIGINT);
+                          insertTEventValues.setNull(param++, Types.DECIMAL);
+                          insertTEventValues.setNull(param++, Types.VARCHAR);
+                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                          insertTEventValues.setObject(param++, value, Types.VARCHAR);
+                          break;
+                      }
+                    }
+                    success = success && insertTEventValues.executeUpdate() > 0;
+                  }
+
+                  /*param = 1;
                   findEventValue.clearParameters();
                   findEventValue.setLong(param++, events_ID);
                   findEventValue.setInt(param++, field_id);
@@ -935,7 +1033,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                     }
                   } finally {
                     rs.close();
-                  }
+                  }//*/
 
 
                 }
@@ -957,11 +1055,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
                   deleteEventValues.setInt(param++, field_id);
                   deleteEventValues.setInt(param++, fieldValueIndex);
                   deleteEventValues.executeUpdate();
-
                 }
               }
-
             }
+
+            synchronized(storeTEventValues) {
+              success = success && statement.execute(storeTEventValues);
+            }
+            
             long end = System.currentTimeMillis();
             System.out.println("CAS:EventValues=" + (end - start));
             start = System.currentTimeMillis();
