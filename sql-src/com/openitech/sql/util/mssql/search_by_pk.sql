@@ -4,7 +4,7 @@ FROM
   ChangeLog.dbo.Events
 WHERE
   [IdSifranta] = ?
-AND [IdSifre] = ?
+AND [IdSifre] = CAST(? AS VARCHAR)
 AND valid = 1
 AND NOT EXISTS
   (
