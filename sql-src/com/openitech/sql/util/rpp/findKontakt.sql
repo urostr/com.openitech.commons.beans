@@ -11,5 +11,5 @@ EXISTS (SELECT [VariousValues].Id FROM [ChangeLog].[dbo].[VariousValues] WITH (N
 AND
 EXISTS (SELECT [VariousValues].Id FROM [ChangeLog].[dbo].[VariousValues] WITH (NOLOCK) WHERE [VariousValues].[Id] = (SELECT [ValueId] FROM [ChangeLog].[dbo].[EventValues] WITH (NOLOCK) WHERE [EventValues].[EventId] = ev.[Id] AND [EventValues].[IdPolja] = 446 AND [EventValues].[FieldValueIndex] = 1)AND [VariousValues].IntValue = ? )
 AND
-EXISTS (SELECT [VariousValues].Id FROM [ChangeLog].[dbo].[VariousValues] WITH (NOLOCK) WHERE [VariousValues].[Id] = (SELECT [ValueId] FROM [ChangeLog].[dbo].[EventValues] WITH (NOLOCK) WHERE [EventValues].[EventId] = ev.[Id] AND [EventValues].[IdPolja] = 532 AND [EventValues].[FieldValueIndex] = 1)AND [VariousValues].StringValue = ? )
+EXISTS (SELECT [VariousValues].Id FROM [ChangeLog].[dbo].[VariousValues] WITH (NOLOCK) WHERE [VariousValues].[Id] = (SELECT [ValueId] FROM [ChangeLog].[dbo].[EventValues] WITH (NOLOCK) WHERE [EventValues].[EventId] = ev.[Id] AND [EventValues].[IdPolja] = 532 AND [EventValues].[FieldValueIndex] = 1)AND [VariousValues].StringValue = CAST(? AS VARCHAR) )
 
