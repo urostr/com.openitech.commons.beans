@@ -2512,17 +2512,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     public EventFilterSearch(EventFilterSearch eventFilterSearch, Set<Integer> sifranti) {
       super(eventFilterSearch.namedParameters);
-      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti, null, eventFilterSearch.validOnly, true, eventFilterSearch.eventPK);
+      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti, null, eventFilterSearch.validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS,"false")), eventFilterSearch.eventPK);
     }
 
     public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
       super(namedParameters);
-      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, true, eventPK);
+      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS,"false")), eventPK);
     }
 
     public EventFilterSearch addSifranti(Set<Integer> sifranti) {
       sifrant.addAll(sifranti);
-      init(eventSource, eventDatum, sifrant, sifra, validOnly, true, eventPK);
+      init(eventSource, eventDatum, sifrant, sifra, validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS,"false")), eventPK);
       return this;
     }
 
