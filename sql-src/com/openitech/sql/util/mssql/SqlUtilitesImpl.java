@@ -150,10 +150,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement is_valueid_valid;
   Map<CaseInsensitiveString, Field> preparedFields;
   Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
-
   private final static LogWriter LOG_WRITER = new LogWriter(Logger.getLogger(SqlUtilitesImpl.class.getName()), Level.INFO);
   private final static SQLWorker SQL_WORKER = new SQLWorker(LOG_WRITER);
-
   private final String callStoreValueSql = ReadInputStream.getResourceAsString(getClass(), "callStoreValue.sql", "cp1250");
 
   @Override
@@ -757,12 +755,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (storeTEventValues == null) {
         storeTEventValues = com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "store_t_event_values.sql", "cp1250");
       }
-      
+
       Statement statement = connection.createStatement();
 
       int param;
       boolean success = true;
       boolean commit = false;
+      boolean useTEventType = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_T_EVENT_TYPE, "true"));
       boolean isTransaction = isTransaction();
       // <editor-fold defaultstate="collapsed" desc="Shrani">
 
@@ -877,10 +876,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
           long start = System.currentTimeMillis();
           if (success) {
-            synchronized(createTEventValues) {
+            synchronized (createTEventValues) {
               statement.execute(createTEventValues);
             }
-            synchronized(emptyTEventValues) {
+            synchronized (emptyTEventValues) {
               statement.execute(emptyTEventValues);
             }
 
@@ -929,113 +928,113 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
               if (valueId != null) {
                 if (fieldValue.getLookupType() == null) {
-                  synchronized (insertTEventValues) {
-                    final ValueType fieldType = fieldValue.getValueType();
-                    final Object value = fieldValue.getValue();
+                  if (useTEventType) {
+                    synchronized (insertTEventValues) {
+                      final ValueType fieldType = fieldValue.getValueType();
+                      final Object value = fieldValue.getValue();
 
-                    param = 1;
-                    insertTEventValues.setLong(param++, events_ID);
-                    insertTEventValues.setInt(param++, field_id);
-                    insertTEventValues.setInt(param++, fieldValueIndex);
-                    insertTEventValues.setLong(param++, valueId);
-                    insertTEventValues.setInt(param++, fieldType.getTypeIndex());
-                    if (value != null) {
-                      switch (fieldType) {
-                        case BitValue:
-                        case IntValue:
-                        case LongValue:
-                          insertTEventValues.setObject(param++, value, Types.BIGINT);
-                          insertTEventValues.setNull(param++, Types.DECIMAL);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
-                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          break;
-                        case RealValue:
-                          insertTEventValues.setNull(param++, Types.BIGINT);
-                          insertTEventValues.setObject(param++, value, Types.DECIMAL);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
-                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          break;
-                        case StringValue:
-                          insertTEventValues.setNull(param++, Types.BIGINT);
-                          insertTEventValues.setNull(param++, Types.DECIMAL);
-                          insertTEventValues.setObject(param++, value, Types.VARCHAR);
-                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
-                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          break;
-                        case DateTimeValue:
-                        case MonthValue:
-                        case TimeValue:
-                        case DateValue:
-                          insertTEventValues.setNull(param++, Types.BIGINT);
-                          insertTEventValues.setNull(param++, Types.DECIMAL);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          insertTEventValues.setObject(param++, value, Types.TIMESTAMP);
-                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          break;
-                        case ObjectValue:
-                        case BlobValue:
-                          insertTEventValues.setNull(param++, Types.BIGINT);
-                          insertTEventValues.setNull(param++, Types.DECIMAL);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
-                          insertTEventValues.setObject(param++, value, Types.LONGVARBINARY);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          break;
-                        case ClobValue:
-                          insertTEventValues.setNull(param++, Types.BIGINT);
-                          insertTEventValues.setNull(param++, Types.DECIMAL);
-                          insertTEventValues.setNull(param++, Types.VARCHAR);
-                          insertTEventValues.setNull(param++, Types.TIMESTAMP);
-                          insertTEventValues.setNull(param++, Types.LONGVARBINARY);
-                          insertTEventValues.setObject(param++, value, Types.VARCHAR);
-                          break;
+                      param = 1;
+                      insertTEventValues.setLong(param++, events_ID);
+                      insertTEventValues.setInt(param++, field_id);
+                      insertTEventValues.setInt(param++, fieldValueIndex);
+                      insertTEventValues.setLong(param++, valueId);
+                      insertTEventValues.setInt(param++, fieldType.getTypeIndex());
+                      if (value != null) {
+                        switch (fieldType) {
+                          case BitValue:
+                          case IntValue:
+                          case LongValue:
+                            insertTEventValues.setObject(param++, value, Types.BIGINT);
+                            insertTEventValues.setNull(param++, Types.DECIMAL);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                            insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            break;
+                          case RealValue:
+                            insertTEventValues.setNull(param++, Types.BIGINT);
+                            insertTEventValues.setObject(param++, value, Types.DECIMAL);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                            insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            break;
+                          case StringValue:
+                            insertTEventValues.setNull(param++, Types.BIGINT);
+                            insertTEventValues.setNull(param++, Types.DECIMAL);
+                            insertTEventValues.setObject(param++, value, Types.VARCHAR);
+                            insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                            insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            break;
+                          case DateTimeValue:
+                          case MonthValue:
+                          case TimeValue:
+                          case DateValue:
+                            insertTEventValues.setNull(param++, Types.BIGINT);
+                            insertTEventValues.setNull(param++, Types.DECIMAL);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            insertTEventValues.setObject(param++, value, Types.TIMESTAMP);
+                            insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            break;
+                          case ObjectValue:
+                          case BlobValue:
+                            insertTEventValues.setNull(param++, Types.BIGINT);
+                            insertTEventValues.setNull(param++, Types.DECIMAL);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                            insertTEventValues.setObject(param++, value, Types.LONGVARBINARY);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            break;
+                          case ClobValue:
+                            insertTEventValues.setNull(param++, Types.BIGINT);
+                            insertTEventValues.setNull(param++, Types.DECIMAL);
+                            insertTEventValues.setNull(param++, Types.VARCHAR);
+                            insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                            insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                            insertTEventValues.setObject(param++, value, Types.VARCHAR);
+                            break;
+                        }
                       }
+                      success = success && insertTEventValues.executeUpdate() > 0;
                     }
-                    success = success && insertTEventValues.executeUpdate() > 0;
+                  } else {
+                    param = 1;
+                    findEventValue.clearParameters();
+                    findEventValue.setLong(param++, events_ID);
+                    findEventValue.setInt(param++, field_id);
+                    findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
+
+                    ResultSet rs = findEventValue.executeQuery();
+                    try {
+                      rs.next();
+
+                      if (rs.getInt(1) == 0) {
+                        //insertaj event value
+                        param = 1;
+                        insertEventValues.clearParameters();
+                        insertEventValues.setLong(param++, events_ID);
+                        insertEventValues.setInt(param++, field_id);
+                        insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+                        insertEventValues.setLong(param++, valueId);
+
+                        success = success && insertEventValues.executeUpdate() > 0;
+                      } else {
+                        //updataj event value
+                        param = 1;
+                        updateEventValues.clearParameters();
+                        updateEventValues.setLong(param++, valueId);
+                        updateEventValues.setLong(param++, events_ID);
+                        updateEventValues.setInt(param++, field_id);
+                        updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
+
+                        success = success && updateEventValues.executeUpdate() > 0;
+                      }
+                    } finally {
+                      rs.close();
+                    }//*/
                   }
-
-                  /*param = 1;
-                  findEventValue.clearParameters();
-                  findEventValue.setLong(param++, events_ID);
-                  findEventValue.setInt(param++, field_id);
-                  findEventValue.setInt(param++, fieldValueIndex);  //indexPolja
-
-                  ResultSet rs = findEventValue.executeQuery();
-                  try {
-                    rs.next();
-
-                    if (rs.getInt(1) == 0) {
-                      //insertaj event value
-                      param = 1;
-                      insertEventValues.clearParameters();
-                      insertEventValues.setLong(param++, events_ID);
-                      insertEventValues.setInt(param++, field_id);
-                      insertEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-                      insertEventValues.setLong(param++, valueId);
-
-                      success = success && insertEventValues.executeUpdate() > 0;
-                    } else {
-                      //updataj event value
-                      param = 1;
-                      updateEventValues.clearParameters();
-                      updateEventValues.setLong(param++, valueId);
-                      updateEventValues.setLong(param++, events_ID);
-                      updateEventValues.setInt(param++, field_id);
-                      updateEventValues.setInt(param++, fieldValueIndex);  //indexPolja
-
-                      success = success && updateEventValues.executeUpdate() > 0;
-                    }
-                  } finally {
-                    rs.close();
-                  }//*/
-
-
                 }
 
                 if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
@@ -1059,10 +1058,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
               }
             }
 
-            synchronized(storeTEventValues) {
-              success = success && statement.execute(storeTEventValues);
+            if (useTEventType) {
+              synchronized (storeTEventValues) {
+                success = success && statement.execute(storeTEventValues);
+              }
             }
-            
+
             long end = System.currentTimeMillis();
             System.out.println("CAS:EventValues=" + (end - start));
             start = System.currentTimeMillis();
@@ -2512,17 +2513,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     public EventFilterSearch(EventFilterSearch eventFilterSearch, Set<Integer> sifranti) {
       super(eventFilterSearch.namedParameters);
-      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti, null, eventFilterSearch.validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS,"false")), eventFilterSearch.eventPK);
+      init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti, null, eventFilterSearch.validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS, "false")), eventFilterSearch.eventPK);
     }
 
     public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
       super(namedParameters);
-      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS,"false")), eventPK);
+      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS, "false")), eventPK);
     }
 
     public EventFilterSearch addSifranti(Set<Integer> sifranti) {
       sifrant.addAll(sifranti);
-      init(eventSource, eventDatum, sifrant, sifra, validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS,"false")), eventPK);
+      init(eventSource, eventDatum, sifrant, sifra, validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS, "false")), eventPK);
       return this;
     }
 
@@ -2569,13 +2570,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
         for (Integer s : sifranti) {
           final String[] sifrant_sifre = getSifre(s);
           String qSifra;
-          if (sifrant_sifre.length==1) {
+          if (sifrant_sifre.length == 1) {
             sifra = sifrant_sifre;
             qSifra = "_" + sifrant_sifre[0];
           } else {
             qSifra = (sifra != null) && (sifra.length == 1) ? "_" + sifra[0] : "";
           }
-          
+
 
           final String chk_valid = eventsDb + ".[dbo].[E_" + s + qSifra + "_valid]";
           final String chk_versioned = eventsDb + ".[dbo].[E_" + s + qSifra + "]";
@@ -2699,16 +2700,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
       try {
         Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
         try {
-                    PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
+          PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
 
-                    findIdSifre.setInt(1, idSifranta);
+          findIdSifre.setInt(1, idSifranta);
           ResultSet rsIdSifre = findIdSifre.executeQuery();
 
           while (rsIdSifre.next()) {
-            result.add(rsIdSifre.getString(1));}
-      } finally {
-        temporaryConnection.close();
-      }
+            result.add(rsIdSifre.getString(1));
+          }
+        } finally {
+          temporaryConnection.close();
+        }
       } catch (SQLException ex) {
         Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
       }
@@ -2732,7 +2734,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
           final String[] sifre = getSifre(idSifranta);
 
-          if (sifre.length>1) {
+          if (sifre.length > 1) {
             if (!(isViewReady(eventsDb, eventsViewVersioned)
                     && isViewReady(eventsDb, eventsViewValid))) {
               Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
@@ -2756,7 +2758,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //            }
           }
 
-          for (String idSifre:sifre) {
+          for (String idSifre : sifre) {
             eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "_" + idSifre + "]";
             eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_" + idSifre + "_valid]";
             if (!(isViewReady(eventsDb, eventsViewVersioned)
