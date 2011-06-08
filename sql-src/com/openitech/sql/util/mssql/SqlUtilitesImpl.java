@@ -2627,7 +2627,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         if (sifra.length == 1) {
           if (!usesView) {
             if (ConnectionManager.getInstance().isConvertToVarchar()) {
-              sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR)");
+              sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR(128))");
             } else {
               sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
             }
@@ -2640,7 +2640,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           for (String s : sifra) {
             sbet.append(sbet.length() > 0 ? ", " : "");
             if (ConnectionManager.getInstance().isConvertToVarchar()) {
-              sbet.append("CAST(? AS VARCHAR)");
+              sbet.append("CAST(? AS VARCHAR(128))");
             } else {
               sbet.append("?");
             }
@@ -4026,7 +4026,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 //String
                 value = val_alias + ".StringValue";
                 if (ConnectionManager.getInstance().isConvertToVarchar()) {
-                  sbSearch.append(val_alias).append(".StringValue = CAST(? AS VARCHAR)");
+                  sbSearch.append(val_alias).append(".StringValue = CAST(? AS VARCHAR(128))");
                 } else {
                   sbSearch.append(val_alias).append(".StringValue = ?");
                 }
@@ -4127,7 +4127,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               //String
               valueColumn = "StringValue";
               if (ConnectionManager.getInstance().isConvertToVarchar()) {
-                searchParameter = "CAST(? AS VARCHAR)";
+                searchParameter = "CAST(? AS VARCHAR(128))";
               }
               break;
             case DateValue:
@@ -4175,7 +4175,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             case StringValue:
               //String
               if (ConnectionManager.getInstance().isConvertToVarchar()) {
-                sbWhere.append("CAST(? AS VARCHAR)");
+                sbWhere.append("CAST(? AS VARCHAR(128))");
               }
               break;
             default:
