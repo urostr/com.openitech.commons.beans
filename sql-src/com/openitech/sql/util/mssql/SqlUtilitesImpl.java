@@ -762,6 +762,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       boolean success = true;
       boolean commit = false;
       boolean useTEventType = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_T_EVENT_TYPE, "true"));
+      String changeLogCatalog = CHANGE_LOG_DB.replace(ConnectionManager.getInstance().getProperty(DbConnection.DB_DELIMITER_LEFT,"["),"")
+                                             .replace(ConnectionManager.getInstance().getProperty(DbConnection.DB_DELIMITER_RIGHT,"]"),"");
       boolean isTransaction = isTransaction();
       // <editor-fold defaultstate="collapsed" desc="Shrani">
 
@@ -1060,7 +1062,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
             if (useTEventType) {
               synchronized (storeTEventValues) {
+                String catalog = connection.getCatalog();
+                connection.setCatalog(changeLogCatalog);
                 success = success && statement.execute(storeTEventValues);
+                connection.setCatalog(catalog);
               }
             }
 

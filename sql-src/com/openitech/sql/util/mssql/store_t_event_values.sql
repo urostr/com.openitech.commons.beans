@@ -1,6 +1,3 @@
-USE <%ChangeLog%>
-GO
-
 DECLARE @EventValues T_EVENT_VALUES
 
 INSERT INTO @EventValues([EventId]
