@@ -12,4 +12,4 @@ WHERE
     AND (1=? OR VersionID IS NULL)
     AND IdSifranta        = ?
     AND IdSifre           = CAST(? AS VARCHAR)
-    AND PrimaryKey        = CAST(? AS VARCHAR(200))
+    AND PrimaryKey        = CAST(? AS VARCHAR(700))
