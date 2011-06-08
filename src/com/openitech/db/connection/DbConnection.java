@@ -51,6 +51,7 @@ public interface DbConnection {
   String DB_USE_VALUEID= "events.use.valueid";
   String DB_PREPARE_EVENT_VIEWS="event.prepare.views";
   String DB_USE_EVENT_VIEWS="event.use.views";
+  String DB_USE_T_EVENT_TYPE="events.use.t_event_type";
   String DB_LOG_ACTIONS= "db.log.actions";
   
   String DB_ENTRY_SERVICE = "ws.entry";
