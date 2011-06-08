@@ -1,3 +1,6 @@
+USE <%ChangeLog%>
+GO
+
 DECLARE @EventValues T_EVENT_VALUES
 
 INSERT INTO @EventValues([EventId]
@@ -13,6 +16,6 @@ INSERT INTO @EventValues([EventId]
            ,[ClobValue])
 SELECT * FROM #T_EVENT_VALUES
 
-EXECUTE [ChangeLog].[dbo].[StoreEventValues]
+EXECUTE [dbo].[StoreEventValues]
  @EventValues
 
