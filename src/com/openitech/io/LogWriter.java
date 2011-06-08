@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  *
  * @author uros
  */
-public class LogWriter {
+public class LogWriter implements Appendable {
 
   private final StringBuffer sb = new StringBuffer(4096);
   private final Logger logger;
@@ -492,7 +492,7 @@ public class LogWriter {
     synchronized (this) {
       if ((formatter == null)
               || (formatter.locale() != Locale.getDefault())) {
-        formatter = new Formatter((Appendable) this);
+        formatter = new Formatter(this);
       }
       formatter.format(Locale.getDefault(), format, args);
     }
@@ -543,7 +543,7 @@ public class LogWriter {
     synchronized (this) {
       if ((formatter == null)
               || (formatter.locale() != l)) {
-        formatter = new Formatter((Appendable) this);
+        formatter = new Formatter(this);
       }
       formatter.format(l, format, args);
     }
