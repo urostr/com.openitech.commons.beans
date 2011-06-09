@@ -4026,7 +4026,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 //String
                 value = val_alias + ".StringValue";
                 if (ConnectionManager.getInstance().isConvertToVarchar()) {
-                  sbSearch.append(val_alias).append(".StringValue = CAST(? AS VARCHAR(128))");
+                  sbSearch.append(val_alias).append(".StringValue = CAST(? AS VARCHAR(700))");
                 } else {
                   sbSearch.append(val_alias).append(".StringValue = ?");
                 }
