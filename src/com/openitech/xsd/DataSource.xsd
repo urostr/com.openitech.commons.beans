@@ -212,7 +212,8 @@
                   <xsd:element name="CacheOnUpdate" type="xsd:boolean" default="false"/>
                 </xsd:choice>
                 <xsd:attribute name="Sifrant" type="xsd:int" use="required"/>
-                <xsd:attribute name="Sifra" type="xsd:string"/>
+                <xsd:attribute name="Sifra" type="xsd:string"/>          
+                <xsd:attribute name="Catalog" type="xsd:string"/>
                 <xsd:attribute name="Convertible" type="xsd:boolean" default="false"/>
               </xsd:complexType>
             </xsd:element>
