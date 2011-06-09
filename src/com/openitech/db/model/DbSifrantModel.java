@@ -67,17 +67,17 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
     fGroup.addRequired(fGroup.I_TYPE_OPIS_SIFRANTA, 2);
     fGroup.addRequired(fGroup.I_TYPE_SKUPINA_SIFRANTA, 2);
 
-    StringBuffer values = new StringBuffer();
+    StringBuilder values = new StringBuilder();
 
     if (allowedValues != null) {
       for (String allowedV : allowedValues) {
-        values.append((values.length() > 0 ? " , " : " ") + "'" + allowedV + "' ");
+        values.append(values.length() > 0 ? " , " : " ").append("'").append(allowedV).append("' ");
       }
       values.insert(0, " Sifranti.IdSifre IN ( ");
       values.append(" ) AND ");
     } else if (excludedValues != null) {
       for (String excludedV : excludedValues) {
-        values.append((values.length() > 0 ? " , " : " ") + "'" + excludedV + "' ");
+        values.append(values.length() > 0 ? " , " : " ").append("'").append(excludedV).append("' ");
       }
       values.insert(0, " Sifranti.IdSifre NOT IN ( ");
       values.append(" ) AND ");
