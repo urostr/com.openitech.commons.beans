@@ -140,12 +140,12 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       new MessageFormat(" ({0} like (?+''%'')) "), //-8
       new MessageFormat(" ({0} like (''%''+?)) "), //-9
       new MessageFormat(" ({0} like (''%''+?+''%'')) "), //-10
-      new MessageFormat(" ({0} = CAST(? AS VARCHAR(128))) "), //-11
-      new MessageFormat(" ({0} like (CAST(? AS VARCHAR(128))+''%'')) "), //-12
-      new MessageFormat(" ({0} like (''%''+CAST(? AS VARCHAR(128)))) "), //-13
-      new MessageFormat(" ({0} like (''%''+CAST(? AS VARCHAR(128))+''%'')) "), //-14
-      new MessageFormat(" ({0} >= CAST(? AS VARCHAR(128))) "), //-15
-      new MessageFormat(" ({0} <= CAST(? AS VARCHAR(128))) "), //-16
+      new MessageFormat(" ({0} = CAST(? AS VARCHAR(700))) "), //-11
+      new MessageFormat(" ({0} like (CAST(? AS VARCHAR(700))+''%'')) "), //-12
+      new MessageFormat(" ({0} like (''%''+CAST(? AS VARCHAR(700)))) "), //-13
+      new MessageFormat(" ({0} like (''%''+CAST(? AS VARCHAR(700))+''%'')) "), //-14
+      new MessageFormat(" ({0} >= CAST(? AS VARCHAR(700))) "), //-15
+      new MessageFormat(" ({0} <= CAST(? AS VARCHAR(700))) "), //-16
     };
     protected final String[] descriptions = new String[]{
       "je enak",

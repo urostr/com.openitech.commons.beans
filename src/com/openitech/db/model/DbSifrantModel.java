@@ -128,7 +128,7 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
 
   private static class SifrantiDataSourceDescriptionFilter extends com.openitech.db.filters.DataSourceFilters {
 
-    public final com.openitech.db.filters.DataSourceFilters.SeekType I_TYPE_NOT_DEFINED = new com.openitech.db.filters.DataSourceFilters.SeekType("cast(? as varchar(128))", com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED, 1);
+    public final com.openitech.db.filters.DataSourceFilters.SeekType I_TYPE_NOT_DEFINED = new com.openitech.db.filters.DataSourceFilters.SeekType("cast(? as varchar(700))", com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED, 1);
 
     public SifrantiDataSourceDescriptionFilter() {
       super("<%DbSifrantModelDescription%>");
