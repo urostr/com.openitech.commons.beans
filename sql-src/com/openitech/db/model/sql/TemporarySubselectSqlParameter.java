@@ -43,8 +43,8 @@ import java.util.logging.Logger;
 public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
   private static final Map<String, ReentrantLock> locks = Collections.synchronizedMap(new HashMap<String, ReentrantLock>());
-  private final LogWriter logWriter = new LogWriter(Logger.getLogger(TemporarySubselectSqlParameter.class.getName()), Level.INFO);
-  private final SQLWorker sqlWorker = new SQLWorker(logWriter);
+  protected final LogWriter logWriter = new LogWriter(Logger.getLogger(TemporarySubselectSqlParameter.class.getName()), Level.INFO);
+  protected final SQLWorker sqlWorker = new SQLWorker(logWriter);
 
   public TemporarySubselectSqlParameter(String replace) {
     super(replace);
@@ -395,33 +395,40 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 }
               }
 
+              qparams = sqlWorker.preprocessParameters(qparams, connection);
+              preprocessed = true;
+
               String context = connection.getCatalog();
 
               if (getCatalog() != null) {
+                logWriter.println("SET:CATALOG:"+catalog);
                 connection.setCatalog(catalog);
               }
 
-              for (String sql : createTableSqls) {
-                String createSQL = sqlWorker.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
-                if (DbDataSource.DUMP_SQL) {
-                  logWriter.println(createSQL + ";");
-                  logWriter.println("-- -- -- --");
+              Statement createStatement = connection.createStatement();
+              try {
+                for (String sql : createTableSqls) {
+                  String createSQL = sqlWorker.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
+                  if (DbDataSource.DUMP_SQL) {
+                    logWriter.println(createSQL + ";");
+                    logWriter.println("-- -- -- --");
+                  }
+                  try {
+                    createStatement.execute(createSQL);
+                  } catch (SQLException ex1) {
+                    Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
+                    throw new SQLException(ex1);
+                  }
                 }
-                try {
-                  statement.execute(createSQL);
-                } catch (SQLException ex1) {
-                  Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
-                  throw new SQLException(ex1);
-                }
+              } finally {
+                createStatement.close();
               }
 
               if (getCatalog() != null) {
+                logWriter.println("SET:CATALOG:"+context);
                 connection.setCatalog(context);
               }
 
-
-              qparams = sqlWorker.preprocessParameters(qparams, connection);
-              preprocessed = true;
 
               fill = true;
 

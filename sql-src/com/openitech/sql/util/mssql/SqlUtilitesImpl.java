@@ -762,8 +762,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       boolean success = true;
       boolean commit = false;
       boolean useTEventType = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_T_EVENT_TYPE, "true"));
-      String changeLogCatalog = CHANGE_LOG_DB.replace(ConnectionManager.getInstance().getProperty(DbConnection.DB_DELIMITER_LEFT,"["),"")
-                                             .replace(ConnectionManager.getInstance().getProperty(DbConnection.DB_DELIMITER_RIGHT,"]"),"");
+      String changeLogCatalog = CHANGE_LOG_DB.replace(ConnectionManager.getInstance().getProperty(DbConnection.DB_DELIMITER_LEFT, "["), "").replace(ConnectionManager.getInstance().getProperty(DbConnection.DB_DELIMITER_RIGHT, "]"), "");
       boolean isTransaction = isTransaction();
       // <editor-fold defaultstate="collapsed" desc="Shrani">
 
@@ -1792,11 +1791,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
             && temporaryTable.getMaterializedView().getCacheEvents().getEvent().size() == 1) {
       CacheEvents.Event cacheEvent = temporaryTable.getMaterializedView().getCacheEvents().getEvent().get(0);
       if (cacheEvent.isConvertible()) {
-        final String eventsDb = SqlUtilities.getEventsDB();
+        String eventsDb;
+        String view;
 
-        String view = eventsDb + ".[dbo].[E_" + cacheEvent.getSifrant()
-                + (cacheEvent.getSifra() == null ? "" : "_" + cacheEvent.getSifra())
-                + "_valid]";
+        if (cacheEvent.getIndexedAsView() != null) {
+          if (cacheEvent.getCatalog() == null) {
+            eventsDb = cacheEvent.getIndexedAsView().substring(0, cacheEvent.getIndexedAsView().indexOf(".[dbo]"));
+          } else {
+            eventsDb = cacheEvent.getCatalog();
+          }
+          view = cacheEvent.getIndexedAsView();
+        } else {
+          eventsDb = SqlUtilities.getEventsDB();
+          view = eventsDb + ".[dbo].[E_" + cacheEvent.getSifrant()
+                  + (cacheEvent.getSifra() == null ? "" : "_" + cacheEvent.getSifra())
+                  + "_valid]";
+        }
 
         if (isViewReady(eventsDb, view)) {
           temporaryTable.getMaterializedView().setIndexedView(Boolean.TRUE);
@@ -2627,7 +2637,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         if (sifra.length == 1) {
           if (!usesView) {
             if (ConnectionManager.getInstance().isConvertToVarchar()) {
-              sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR(128))");
+              sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR(15))");
             } else {
               sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
             }
@@ -2640,7 +2650,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           for (String s : sifra) {
             sbet.append(sbet.length() > 0 ? ", " : "");
             if (ConnectionManager.getInstance().isConvertToVarchar()) {
-              sbet.append("CAST(? AS VARCHAR(128))");
+              sbet.append("CAST(? AS VARCHAR(15))");
             } else {
               sbet.append("?");
             }
@@ -2912,37 +2922,56 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       Statement statement = connection.createStatement();
       try {
+        boolean preprocessed = false;
+
         try {
           if (getCheckTableSql() != null) {
-            statement.executeQuery(SqlUtilitesImpl.SQL_WORKER.substParameters(getCheckTableSql(), qparams));
+            statement.executeQuery(sqlWorker.substParameters(getCheckTableSql(), qparams));
           }
         } catch (SQLException ex) {
+          qparams = sqlWorker.preprocessParameters(qparams, connection);
+          preprocessed = true;
+
           String context = connection.getCatalog();
 
           if (getCatalog() != null) {
+            logWriter.println("SET:CATALOG:" + getCatalog());
             connection.setCatalog(getCatalog());
           }
 
-          for (String sql : getCreateTableSqls()) {
-            String createSQL = SqlUtilitesImpl.SQL_WORKER.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
-            if (DbDataSource.DUMP_SQL) {
-              SqlUtilitesImpl.LOG_WRITER.println(createSQL + ";");
-              SqlUtilitesImpl.LOG_WRITER.println("-- -- -- --");
+          Statement createStatement = connection.createStatement();
+          try {
+            for (String sql : getCreateTableSqls()) {
+              String createSQL = sqlWorker.substParameters(sql.replaceAll("<%TS%>", "_" + DB_USER + Long.toString(System.currentTimeMillis())), qparams);
+              if (DbDataSource.DUMP_SQL) {
+                logWriter.println(createSQL + ";");
+                logWriter.println("-- -- -- --");
+              }
+              try {
+                createStatement.execute(createSQL);
+              } catch (SQLException ex1) {
+                Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
+                throw new SQLException(ex1);
+              }
             }
-            statement.execute(createSQL);
+          } finally {
+            createStatement.close();
           }
 
           if (getCatalog() != null) {
+            logWriter.println("SET:CATALOG:" + context);
             connection.setCatalog(context);
           }
         }
 
-        qparams = SqlUtilitesImpl.SQL_WORKER.preprocessParameters(qparams, connection);
-
+        if (!preprocessed) {
+          qparams = sqlWorker.preprocessParameters(qparams, connection);
+          preprocessed = true;
+        }
 
         try {
           if (getEmptyTableSql().length() > 0) {
-            String query = SqlUtilitesImpl.SQL_WORKER.substParameters(getEmptyTableSql(), qparams);
+            String query = sqlWorker.substParameters(getEmptyTableSql(), qparams);
             if (!Equals.equals(this.connection, connection)
                     || !Equals.equals(this.qEmptyTable, query)) {
               String[] sqls = query.split(";");
@@ -2960,19 +2989,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
 
             if (DbDataSource.DUMP_SQL) {
-              SqlUtilitesImpl.LOG_WRITER.println("############## empty");
-              SqlUtilitesImpl.LOG_WRITER.println(this.qEmptyTable);
+              logWriter.println("############## empty");
+              logWriter.println(this.qEmptyTable);
             }
             int rowsDeleted = 0;
             for (PreparedStatement preparedStatement : psEmptyTable) {
-              rowsDeleted += SqlUtilitesImpl.SQL_WORKER.executeUpdate(preparedStatement, qparams);
+              rowsDeleted += sqlWorker.executeUpdate(preparedStatement, qparams);
             }
             if (DbDataSource.DUMP_SQL) {
-              SqlUtilitesImpl.LOG_WRITER.println("Rows deleted:" + rowsDeleted);
+              logWriter.println("Rows deleted:" + rowsDeleted);
             }
           }
 
-          String query = SqlUtilitesImpl.SQL_WORKER.substParameters(getFillTableSql(), qparams);
+          String query = sqlWorker.substParameters(getFillTableSql(), qparams);
           if (!Equals.equals(this.connection, connection)
                   || !Equals.equals(this.qFillTable, query)) {
             if (this.psFillTable != null) {
@@ -2986,14 +3015,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           if (DbDataSource.DUMP_SQL) {
-            SqlUtilitesImpl.LOG_WRITER.println("############## fill");
-            SqlUtilitesImpl.LOG_WRITER.println(this.qFillTable);
+            logWriter.println("############## fill");
+            logWriter.println(this.qFillTable);
           }
-          SqlUtilitesImpl.LOG_WRITER.println("Rows added:" + SqlUtilitesImpl.SQL_WORKER.executeUpdate(psFillTable, qparams));
+          logWriter.println("Rows added:" + sqlWorker.executeUpdate(psFillTable, qparams));
           if (getCleanTableSqls() != null) {
             List<String> queries = new ArrayList<String>(getCleanTableSqls().length);
             for (String sql : getCleanTableSqls()) {
-              queries.add(SqlUtilitesImpl.SQL_WORKER.substParameters(sql, qparams));
+              queries.add(sqlWorker.substParameters(sql, qparams));
             }
 
             if (!Equals.equals(this.connection, connection)
@@ -3012,36 +3041,37 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
 
             if (DbDataSource.DUMP_SQL) {
-              SqlUtilitesImpl.LOG_WRITER.println("############## cleanup/update");
+              logWriter.println("############## cleanup/update");
               for (String string : queries) {
-                SqlUtilitesImpl.LOG_WRITER.println(string);
+                logWriter.println(string);
               }
             }
             int rowsAffected = 0;
             for (PreparedStatement preparedStatement : psCleanTable) {
-              rowsAffected += SqlUtilitesImpl.SQL_WORKER.executeUpdate(preparedStatement, qparams);
+              rowsAffected += sqlWorker.executeUpdate(preparedStatement, qparams);
             }
             if (DbDataSource.DUMP_SQL) {
-              SqlUtilitesImpl.LOG_WRITER.println("Rows cleaned/updated:" + rowsAffected);
+              logWriter.println("Rows cleaned/updated:" + rowsAffected);
             }
           }
           if ((sqlMaterializedView != null) && (sqlMaterializedView.getSetViewVersionSql() != null)) {
-            SqlUtilitesImpl.SQL_WORKER.execute(connection.prepareStatement(SqlUtilitesImpl.SQL_WORKER.substParameters(sqlMaterializedView.getSetViewVersionSql(), qparams)), qparams);
+            sqlWorker.execute(connection.prepareStatement(sqlWorker.substParameters(sqlMaterializedView.getSetViewVersionSql(), qparams)), qparams);
           }
           if (DbDataSource.DUMP_SQL) {
-            SqlUtilitesImpl.LOG_WRITER.println("cached:event:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
-            SqlUtilitesImpl.LOG_WRITER.println("##############");
+            logWriter.println("cached:event:fill:" + getValue() + "..." + (System.currentTimeMillis() - timer) + "ms");
+            logWriter.println("##############");
           }
 
 
         } catch (SQLException ex) {
-          Logger.getLogger(TemporarySubselectSqlParameter.class.getName()).log(Level.SEVERE, "ERROR:cached:event:fill:" + getValue(), ex);
+          logWriter.println("ERROR:cached:event:fill:" + getValue());
+          logWriter.flush(logWriter.getLogger(), Level.SEVERE, ex);
           throw new SQLException(ex);
         }
 
       } finally {
         statement.close();
-        SqlUtilitesImpl.LOG_WRITER.flush();
+        logWriter.flush();
       }
       this.connection = connection;
     }
@@ -4127,7 +4157,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               //String
               valueColumn = "StringValue";
               if (ConnectionManager.getInstance().isConvertToVarchar()) {
-                searchParameter = "CAST(? AS VARCHAR(128))";
+                searchParameter = "CAST(? AS VARCHAR(700))";
               }
               break;
             case DateValue:
@@ -4175,7 +4205,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             case StringValue:
               //String
               if (ConnectionManager.getInstance().isConvertToVarchar()) {
-                sbWhere.append("CAST(? AS VARCHAR(128))");
+                sbWhere.append("CAST(? AS VARCHAR(700))");
               }
               break;
             default:
