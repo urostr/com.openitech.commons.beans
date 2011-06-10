@@ -34,7 +34,7 @@ public class ConnectionManager implements DbConnection {
   public static ConnectionManager getInstance() {
     if (instance == null) {
       instance = new ConnectionManager();
-      if (Boolean.parseBoolean(instance.getProperty(DbConnection.DB_LOG_ACTIONS, "true"))) {
+      if (Boolean.parseBoolean(instance.getProperty(DbConnection.DB_LOG_ACTIONS, "false"))) {
         SQLLogger.init();
       }
     }
