@@ -1063,7 +1063,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               synchronized (storeTEventValues) {
                 String catalog = connection.getCatalog();
                 connection.setCatalog(changeLogCatalog);
-                success = success && statement.execute(storeTEventValues);
+                statement.execute(storeTEventValues);
                 connection.setCatalog(catalog);
               }
             }
