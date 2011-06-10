@@ -685,6 +685,9 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Set<String> getEventViewColumns(String viewName);
 
+  public abstract void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre) throws SQLException;
+    
+
   public static enum Operation {
 
     INSERT,
