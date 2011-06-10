@@ -3776,6 +3776,8 @@ public class SQLDataSource extends AbstractDataSourceImpl {
               primaryKeys = this.getPrimaryKeys();
             }
           }
+//        } catch (Throwable ex) {
+//          throw new SQLException(ex);
         } finally {
           if (owner.isConnectOnDemand()) {
             connection.close();

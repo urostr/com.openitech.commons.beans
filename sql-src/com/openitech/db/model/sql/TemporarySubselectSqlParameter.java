@@ -422,11 +422,11 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                 }
               } finally {
                 createStatement.close();
-              }
-
-              if (getCatalog() != null) {
-                logWriter.println("SET:CATALOG:"+context);
-                connection.setCatalog(context);
+                
+                if (getCatalog() != null) {
+                  logWriter.println("SET:CATALOG:" + context);
+                  connection.setCatalog(context);
+                }
               }
 
 

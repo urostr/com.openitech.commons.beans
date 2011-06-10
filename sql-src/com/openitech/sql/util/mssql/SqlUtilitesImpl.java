@@ -2956,11 +2956,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
           } finally {
             createStatement.close();
-          }
 
-          if (getCatalog() != null) {
-            logWriter.println("SET:CATALOG:" + context);
-            connection.setCatalog(context);
+            if (getCatalog() != null) {
+              logWriter.println("SET:CATALOG:" + context);
+              connection.setCatalog(context);
+            }
           }
         }
 
