@@ -3657,6 +3657,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public FieldValue getNextIdentity(Field field, Object initValue) throws SQLException {
+    return getNextIdentity(field, initValue, false);
+  }
+
+
+  protected FieldValue getNextIdentity(Field field, Object initValue, boolean override) throws SQLException {
     try {
       //ta motoda mora imeti lock, èeprav se zaenkrat naj nebi klicala iz veè threadov
       lock.acquire();
@@ -3676,52 +3681,54 @@ public class SqlUtilitesImpl extends SqlUtilities {
         ResultSet rsFindIdentity = null;
         ValueType type = ValueType.getType(field.getType());
 
-        int param = 1;
-        switch (type) {
-          case IntValue:
-            param = 1;
-            findIdentityAsInt.clearParameters();
-            findIdentityAsInt.setString(param++, field.getName());
-            rsFindIdentity = findIdentityAsInt.executeQuery();
-            break;
-          case StringValue:
-            param = 1;
-            findIdentityAsString.clearParameters();
-            findIdentityAsString.setString(param++, field.getName());
-            rsFindIdentity = findIdentityAsString.executeQuery();
-            break;
-          default:
-            throw new IllegalArgumentException("Nepodprti tip polja");
-        }
-
-
         Long eventId = null;
+        Object storedValue = null;
         int shranjenTipPolja = -1;
         ValueType shranjenValueType = null;
-        Object storedValue = null;
-        if (rsFindIdentity != null) {
-          try {
-            if (rsFindIdentity.next()) {
-              eventId = rsFindIdentity.getLong("EventId");
-              if (rsFindIdentity.wasNull()) {
-                eventId = null;
+
+        if (!override) {
+          int param = 1;
+          switch (type) {
+            case IntValue:
+              param = 1;
+              findIdentityAsInt.clearParameters();
+              findIdentityAsInt.setString(param++, field.getName());
+              rsFindIdentity = findIdentityAsInt.executeQuery();
+              break;
+            case StringValue:
+              param = 1;
+              findIdentityAsString.clearParameters();
+              findIdentityAsString.setString(param++, field.getName());
+              rsFindIdentity = findIdentityAsString.executeQuery();
+              break;
+            default:
+              throw new IllegalArgumentException("Nepodprti tip polja");
+          }
+
+          if (rsFindIdentity != null) {
+            try {
+              if (rsFindIdentity.next()) {
+                eventId = rsFindIdentity.getLong("EventId");
+                if (rsFindIdentity.wasNull()) {
+                  eventId = null;
+                }
+                shranjenTipPolja = rsFindIdentity.getInt("TipPolja");
+                shranjenValueType = ValueType.valueOf(shranjenTipPolja);
+                if (!type.equals(shranjenValueType)) {
+                  throw new IllegalArgumentException("Identity Tip polja se ne ujema");
+                }
+                switch (shranjenValueType) {
+                  case IntValue:
+                    storedValue = rsFindIdentity.getInt("FieldValue");
+                    break;
+                  case StringValue:
+                    storedValue = rsFindIdentity.getString("FieldValue");
+                    break;
+                }
               }
-              shranjenTipPolja = rsFindIdentity.getInt("TipPolja");
-              shranjenValueType = ValueType.valueOf(shranjenTipPolja);
-              if (!type.equals(shranjenValueType)) {
-                throw new IllegalArgumentException("Identity Tip polja se ne ujema");
-              }
-              switch (shranjenValueType) {
-                case IntValue:
-                  storedValue = rsFindIdentity.getInt("FieldValue");
-                  break;
-                case StringValue:
-                  storedValue = rsFindIdentity.getString("FieldValue");
-                  break;
-              }
+            } finally {
+              rsFindIdentity.close();
             }
-          } finally {
-            rsFindIdentity.close();
           }
         }
 
