@@ -164,6 +164,7 @@ public final class RefreshDataSource extends DataSourceEvent {
         return;
       }
       if (timestamps.get(event).longValue() <= timestamp.longValue()) {
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("QUEUED LOAD:" + this.queuedDelay + "ms:" + event.dataSource + ":" + (isSuspended() ? "SUSPENDED" : "ACTIVE"));
         load();
       } else {
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning("Skipped loading [" + event.dataSource + "...]");
