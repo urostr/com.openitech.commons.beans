@@ -3444,7 +3444,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     public GeneratedFieldFactory() {
       super(null);
-      DEVELOPMENT = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty("application.mode.development", "false"));
+      DEVELOPMENT = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty("db.application.mode.development", "false"));
       CACHED_GGF = !DEVELOPMENT;
     }
 

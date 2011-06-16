@@ -4664,7 +4664,7 @@ public class SQLDataSource extends AbstractDataSourceImpl {
       boolean isUpdating = inserting || storedUpdates.containsKey(row);
 
       final ResultSet openSelectResultSet = openSelectResultSet();
-      final Object resultSetValue = (openSelectResultSet.getRow() == 0) ? null : openSelectResultSet.getObject(columnName);
+      final Object resultSetValue = (openSelectResultSet.getRow() == 0) || inserting ? null : openSelectResultSet.getObject(columnName);
 
       if (isUpdating || !Equals.equals(value, resultSetValue)) {
         Map<String, Object> columnValues;
