@@ -8,7 +8,6 @@
  */
 package com.openitech.db.components;
 
-import com.openitech.Settings;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
@@ -50,6 +49,7 @@ import javax.swing.table.TableModel;
 public class JDbTable extends JTable implements ListSelectionListener, DbNavigatorDataSource {
 
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener = null;
+  private transient WeakListenerList activeRowChangeListeners;
   private transient WeakListenerList actionListeners;
   private boolean selectionChanged = false;
   private final UpdateViewRunnable updateViewRunnable = new UpdateViewRunnable();
@@ -295,6 +295,12 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       } catch (java.lang.IndexOutOfBoundsException e) {
         //ignore it #netbeans fora
       }
+      if (activeRowChangeListeners!=null &&
+          getDataSource()!=null) {
+        for (Object l : activeRowChangeListeners) {
+          getDataSource().addActiveRowChangeListener((ActiveRowChangeListener) l);
+        }
+      }
       ((DbTableModel) this.getModel()).addActiveRowChangeListener(activeRowChangeWeakListener);
     }/* else
     throw new IllegalArgumentException("The data model for JDbTable must be a DbTableModel.");//*/
@@ -528,6 +534,11 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
   @Override
   public void addActiveRowChangeListener(ActiveRowChangeListener l) {
+    WeakListenerList v = activeRowChangeListeners == null ? new WeakListenerList(2) : activeRowChangeListeners;
+    if (!v.contains(l)) {
+      v.addElement(l);
+      activeRowChangeListeners = v;
+    }
     if (getDataSource() != null) {
       getDataSource().addActiveRowChangeListener(l);
     }
@@ -535,6 +546,9 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
   @Override
   public void removeActiveRowChangeListener(ActiveRowChangeListener l) {
+    if (activeRowChangeListeners != null && activeRowChangeListeners.contains(l)) {
+      activeRowChangeListeners.removeElement(l);
+    }
     if (getDataSource() != null) {
       getDataSource().removeActiveRowChangeListener(l);
     }
@@ -542,22 +556,24 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
 
   @Override
   public boolean canLock() {
-    return getDataSource().canLock();
+    return getDataSource()==null?true:getDataSource().canLock();
   }
 
   @Override
   public boolean lock() {
-    return getDataSource().lock();
+    return getDataSource()==null?true:getDataSource().lock();
   }
 
   @Override
   public boolean lock(boolean fatal) {
-    return getDataSource().lock(fatal);
+    return getDataSource()==null?true:getDataSource().lock(fatal);
   }
 
   @Override
   public void unlock() {
-    getDataSource().unlock();
+    if (getDataSource() != null) {
+      getDataSource().unlock();
+    }
   }
 
   @Override
