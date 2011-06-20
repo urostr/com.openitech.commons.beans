@@ -3276,30 +3276,43 @@ public class SqlUtilitesImpl extends SqlUtilities {
   private Map<EventType, Boolean> searchByPKMap = new HashMap<EventType, Boolean>();
 
   @Override
-  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre) throws SQLException {
+  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException {
     EventType eventType = new EventType(idSifranta, idSifre);
     if (!searchByPKMap.containsKey(eventType)) {
-      if (search_by_PK == null) {
-        final Connection connection = ConnectionManager.getInstance().getTxConnection();
-        search_by_PK = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "search_by_pk.sql", "cp1250"));
+      Connection connection;
+      if (useTemporaryConnection) {
+        connection = ConnectionManager.getInstance().getTemporaryConnection();
+      } else {
+        connection = ConnectionManager.getInstance().getTxConnection();
       }
-
-      //prestejem evente, kateri nimajo shranjenega primarykey-a
-      //ce je vsaj eden, ne iscem po PK ampak po vrednostih PK
-      int param = 1;
-      search_by_PK.clearParameters();
-      search_by_PK.setInt(param++, idSifranta);
-      search_by_PK.setString(param++, idSifre);
-      ResultSet rs_search_by_PK = search_by_PK.executeQuery();
       try {
-        Boolean search = Boolean.FALSE;
-        if (rs_search_by_PK.next()) {
-          int count = rs_search_by_PK.getInt(1);
-          search = count == 0;
+        PreparedStatement psSearch_by_PK = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "search_by_pk.sql", "cp1250"));
+
+        //prestejem evente, kateri nimajo shranjenega primarykey-a
+        //ce je vsaj eden, ne iscem po PK ampak po vrednostih PK
+        try {
+          int param = 1;
+          psSearch_by_PK.clearParameters();
+          psSearch_by_PK.setInt(param++, idSifranta);
+          psSearch_by_PK.setString(param++, idSifre);
+          ResultSet rs_search_by_PK = psSearch_by_PK.executeQuery();
+          try {
+            Boolean search = Boolean.FALSE;
+            if (rs_search_by_PK.next()) {
+              int count = rs_search_by_PK.getInt(1);
+              search = count == 0;
+            }
+            searchByPKMap.put(eventType, search);
+          } finally {
+            rs_search_by_PK.close();
+          }
+        } finally {
+          psSearch_by_PK.close();
         }
-        searchByPKMap.put(eventType, search);
       } finally {
-        rs_search_by_PK.close();
+        if (useTemporaryConnection) {
+          connection.close();
+        }
       }
     }
   }
@@ -3659,7 +3672,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public FieldValue getNextIdentity(Field field, Object initValue) throws SQLException {
     return getNextIdentity(field, initValue, false);
   }
-
 
   protected FieldValue getNextIdentity(Field field, Object initValue, boolean override) throws SQLException {
     try {
