@@ -24,6 +24,7 @@ import com.openitech.value.events.AfterUpdateEvent;
 import com.openitech.value.events.EventType;
 import com.openitech.value.events.UpdateEventFields;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -506,7 +507,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
         success = success && storePrimaryKeyVersions(eventPK);
       }
 
-      
+
       commit = success;
       return eventId;
     } finally {
@@ -571,7 +572,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
   }
 
-  public void updateEventsCache(Event event, boolean isValid) throws SQLException{
+  public void updateEventsCache(Event event, boolean isValid) throws SQLException {
     if (event.getOperation() != Event.EventOperation.IGNORE) {
       for (Event childEvent : event.getChildren()) {
         updateEventsCache(childEvent, isValid);
@@ -685,8 +686,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Set<String> getEventViewColumns(String viewName);
 
-  public abstract void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre) throws SQLException;
-    
+  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre) throws SQLException {
+    updateUsePrimaryKeyForSearch(idSifranta, idSifre, false);
+  }
+
+  public abstract void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException;
 
   public static enum Operation {
 
