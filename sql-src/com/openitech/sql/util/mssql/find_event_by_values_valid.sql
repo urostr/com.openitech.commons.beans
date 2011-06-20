@@ -1,4 +1,4 @@
-SELECT ev.*, --non-versioned secondary
+SELECT ev.*, --non-versioned secondary (factory)
      (null) as VersionId
 FROM
   <%ev_table%>

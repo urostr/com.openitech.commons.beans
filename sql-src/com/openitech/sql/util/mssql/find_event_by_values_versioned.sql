@@ -1,4 +1,4 @@
-SELECT ev.*, --versioned secondary
+SELECT ev.*, --versioned secondary (factory)
       CAST(<%ev_version_filter%> as int) as VersionId
 FROM
   <%ev_table%>
