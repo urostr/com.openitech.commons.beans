@@ -475,10 +475,12 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     boolean isTransaction = isTransaction();
     boolean commit = false;
     boolean success = true;
+
+    if (!isTransaction) {
+      beginTransaction();
+    }
+
     try {
-      if (!isTransaction) {
-        beginTransaction();
-      }
       Map<CaseInsensitiveString, Field> preparedFields;
 
       if ((newValues.getPreparedFields() == null) && (oldValues.getPreparedFields() == null)) {
