@@ -768,10 +768,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       connection.clearWarnings();
       Long events_ID = null;
+      if (!isTransaction) {
+        beginTransaction();
+      }
       try {
-        if (!isTransaction) {
-          beginTransaction();
-        }
 
         if (event.getOperation() == Event.EventOperation.UPDATE) {
           boolean insert = (event.getId() == null) || (event.getId() == -1) || event.isVersioned();
@@ -1537,7 +1537,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public DbNaslovDataModel.Naslov storeAddress(DbNaslovDataModel.Naslov address) throws SQLException {
 
-    SqlUtilities sqlUtility = SqlUtilities.getInstance();
     Connection connection = ConnectionManager.getInstance().getTxConnection();
     int param;
 
@@ -1569,7 +1568,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         boolean commit = false;
         boolean isTransaction = isTransaction();
         if (!isTransaction) {
-          sqlUtility.beginTransaction();
+          beginTransaction();
         }
         try {
           synchronized (insertNeznaniNaslov) {
@@ -1608,18 +1607,17 @@ public class SqlUtilitesImpl extends SqlUtilities {
             insertNeznaniNaslov.setInt(param++, address.getIzvor());
 
             commit = insertNeznaniNaslov.executeUpdate() > 0;
+            hs_neznana_id = getLastIdentity();
           }
         } finally {
-          if (commit) {
             if (isTransaction) {
-              sqlUtility.endTransaction(commit);
+              endTransaction(commit);
             }
-
-            hs_neznana_id = sqlUtility.getLastIdentity();
-          } else {
+      
+          if(!commit)
             JOptionPane.showMessageDialog(null, "Napaka pri shranjevanju neznanega naslova!", "Napaka", JOptionPane.ERROR_MESSAGE);
           }
-        }
+        
       }
       address.setHsNeznanaMID(hs_neznana_id);
     }
