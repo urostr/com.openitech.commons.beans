@@ -1958,13 +1958,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
     } else {
       //insert
       synchronized (insert_eventPK) {
-        param = 1;
-        insert_eventPK.clearParameters();
-        insert_eventPK.setLong(param++, eventId);
-        insert_eventPK.setInt(param++, idSifranta);
-        insert_eventPK.setString(param++, idSifre);
-        insert_eventPK.setString(param++, primaryKey);
-        success = insert_eventPK.executeUpdate() > 0;
+        try {
+          param = 1;
+          insert_eventPK.clearParameters();
+          insert_eventPK.setLong(param++, eventId);
+          insert_eventPK.setInt(param++, idSifranta);
+          insert_eventPK.setString(param++, idSifre);
+          insert_eventPK.setString(param++, primaryKey);
+          success = insert_eventPK.executeUpdate() > 0;
+        } catch (SQLException ex) {
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Napaka pri shranjevanju PK: IdSifranta={0} IdSifre={1} PK={2}", new Object[]{idSifranta, idSifre, primaryKey});
+          throw ex;
+        }
       }
     }
 
