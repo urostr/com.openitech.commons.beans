@@ -661,6 +661,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
     }
     tt.setEmptyTableSql(getEmptyTableSql());
     tt.setFillTableSql(getFillTableSql());
+    tt.setPreprocessRequired(isPreprocessRequired());
 
     if (getParameters().size() > 0) {
       tt.setParameter(new TemporaryTable.Parameter());
