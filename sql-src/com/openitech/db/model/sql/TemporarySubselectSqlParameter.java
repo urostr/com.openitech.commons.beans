@@ -246,6 +246,25 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   public void setSqlMaterializedView(SQLMaterializedView sqlMaterializedView) {
     this.sqlMaterializedView = sqlMaterializedView;
   }
+  protected boolean preprocessRequired = true;
+
+  /**
+   * Get the value of preprocessRequired
+   *
+   * @return the value of preprocessRequired
+   */
+  public boolean isPreprocessRequired() {
+    return preprocessRequired;
+  }
+
+  /**
+   * Set the value of preprocessRequired
+   *
+   * @param preprocessRequired new value of preprocessRequired
+   */
+  public void setPreprocessRequired(boolean preprocessRequired) {
+    this.preprocessRequired = preprocessRequired;
+  }
 
   @Override
   public String getValue() {
@@ -376,8 +395,12 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
       try {
         synchronized (connection) {
-          qparams = sqlWorker.preprocessParameters(qparams, connection);
-//          boolean preprocessed = true;
+          boolean preprocessed = false;
+
+          if (isPreprocessRequired()) {
+            qparams = sqlWorker.preprocessParameters(qparams, connection);
+            preprocessed = true;
+          }
 
           Statement statement = connection.createStatement();
           semaphore.acquire();
@@ -401,8 +424,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   }
                 }
 
-//                qparams = sqlWorker.preprocessParameters(qparams, connection);
-//                preprocessed = true;
+                if (!preprocessed) {
+                  qparams = sqlWorker.preprocessParameters(qparams, connection);
+                  preprocessed = true;
+                }
 
                 String context = connection.getCatalog();
 
@@ -447,10 +472,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
 
               if (isUseParameters()) {
-//                if (!preprocessed) {
-//                  qparams = sqlWorker.preprocessParameters(qparams, connection);
-//                  preprocessed = true;
-//                }
+                if (!preprocessed) {
+                  qparams = sqlWorker.preprocessParameters(qparams, connection);
+                  preprocessed = true;
+                }
                 fill = fill || !isTableDataValidSql(connection, qparams);
               } else {
                 fill = fill || !isTableDataValidSql(connection, new ArrayList<Object>());
@@ -459,10 +484,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
               if ((!fill) && (mv != null)) {
                 if (mv.isUseParameters()) {
-//                  if (!preprocessed) {
-//                    qparams = sqlWorker.preprocessParameters(qparams, connection);
-//                    preprocessed = true;
-//                  }
+                  if (!preprocessed) {
+                    qparams = sqlWorker.preprocessParameters(qparams, connection);
+                    preprocessed = true;
+                  }
                   fill = fill || !mv.isViewValid(connection, qparams);
                 } else {
                   fill = fill || !mv.isViewValid(connection, new ArrayList<Object>());
@@ -470,10 +495,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
 
               if (fill && !disabled) {
-//                if (!preprocessed) {
-//                  qparams = sqlWorker.preprocessParameters(qparams, connection);
-//                  preprocessed = true;
-//                }
+                if (!preprocessed) {
+                  qparams = sqlWorker.preprocessParameters(qparams, connection);
+                  preprocessed = true;
+                }
 
                 if (mv != null) {
                   if (!(transaction || tm.isTransaction())) {
