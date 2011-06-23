@@ -120,6 +120,7 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
       ttParameter.setCatalog(tt.getCatalog());
     }
     ttParameter.setHasParameters(tt.isUseParameters());
+    ttParameter.setPreprocessRequired(tt.isPreprocessRequired());
 
     if (tt.getParameter() != null) {
       for (QueryParameter parameter : tt.getParameter().getParameters()) {

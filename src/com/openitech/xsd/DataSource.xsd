@@ -287,6 +287,7 @@
     <xsd:attribute name="FillOnceOnly" type="xsd:boolean"/>
     <xsd:attribute name="Disabled" default="false" type="xsd:boolean"/>
     <xsd:attribute name="UseParameters" type="xsd:boolean" default="false"/>
+    <xsd:attribute name="PreprocessRequired" type="xsd:boolean" default="true"/>
     <xsd:attribute name="Catalog" type="xsd:string"/>
   </xsd:complexType>
   <xsd:complexType name="DataModel">
