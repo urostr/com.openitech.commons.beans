@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -45,6 +46,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
   private static final Map<String, ReentrantLock> locks = Collections.synchronizedMap(new HashMap<String, ReentrantLock>());
   protected final LogWriter logWriter = new LogWriter(Logger.getLogger(TemporarySubselectSqlParameter.class.getName()), Level.INFO);
   protected final SQLWorker sqlWorker = new SQLWorker(logWriter);
+  private Semaphore semaphore = new Semaphore(1);
 
   public TemporarySubselectSqlParameter(String replace) {
     super(replace);
@@ -374,14 +376,17 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
       try {
         synchronized (connection) {
+          qparams = sqlWorker.preprocessParameters(qparams, connection);
+//          boolean preprocessed = true;
 
           Statement statement = connection.createStatement();
+          semaphore.acquire();
           try {
             TransactionManager tm = TransactionManager.getInstance(connection);
 
             boolean transaction = false;
             boolean commit = false;
-            boolean preprocessed = false;
+//            boolean preprocessed = false;
 
             try {
               try {
@@ -396,8 +401,8 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
                   }
                 }
 
-                qparams = sqlWorker.preprocessParameters(qparams, connection);
-                preprocessed = true;
+//                qparams = sqlWorker.preprocessParameters(qparams, connection);
+//                preprocessed = true;
 
                 String context = connection.getCatalog();
 
@@ -442,10 +447,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
 
               if (isUseParameters()) {
-                if (!preprocessed) {
-                  qparams = sqlWorker.preprocessParameters(qparams, connection);
-                  preprocessed = true;
-                }
+//                if (!preprocessed) {
+//                  qparams = sqlWorker.preprocessParameters(qparams, connection);
+//                  preprocessed = true;
+//                }
                 fill = fill || !isTableDataValidSql(connection, qparams);
               } else {
                 fill = fill || !isTableDataValidSql(connection, new ArrayList<Object>());
@@ -454,10 +459,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
 
               if ((!fill) && (mv != null)) {
                 if (mv.isUseParameters()) {
-                  if (!preprocessed) {
-                    qparams = sqlWorker.preprocessParameters(qparams, connection);
-                    preprocessed = true;
-                  }
+//                  if (!preprocessed) {
+//                    qparams = sqlWorker.preprocessParameters(qparams, connection);
+//                    preprocessed = true;
+//                  }
                   fill = fill || !mv.isViewValid(connection, qparams);
                 } else {
                   fill = fill || !mv.isViewValid(connection, new ArrayList<Object>());
@@ -465,10 +470,10 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
 
               if (fill && !disabled) {
-                if (!preprocessed) {
-                  qparams = sqlWorker.preprocessParameters(qparams, connection);
-                  preprocessed = true;
-                }
+//                if (!preprocessed) {
+//                  qparams = sqlWorker.preprocessParameters(qparams, connection);
+//                  preprocessed = true;
+//                }
 
                 if (mv != null) {
                   if (!(transaction || tm.isTransaction())) {
@@ -595,6 +600,7 @@ public class TemporarySubselectSqlParameter extends SubstSqlParameter {
               }
             }
           } finally {
+            semaphore.release();
             statement.close();
           }
           this.connection = connection;
