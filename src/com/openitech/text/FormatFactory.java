@@ -65,6 +65,14 @@ public class FormatFactory {
     return nf;
   }
 
+  public static NumberFormat getPercentageNumberFormat(int length, int decimals) {
+    DecimalFormat nf = new DecimalFormat("#,##0.00%", sl_SI_DECIMAL_FORMAT_SYMBOLS);
+    //nf.setMaximumIntegerDigits(length);
+    nf.setMaximumFractionDigits(decimals);
+    nf.setDecimalSeparatorAlwaysShown(true);
+    return nf;
+  }
+
   public static DateFormat getDateFormat() {
     return DATE_FORMAT;
   }
