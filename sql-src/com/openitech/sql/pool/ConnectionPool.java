@@ -105,6 +105,7 @@ public class ConnectionPool {
     if (roundrobin >= maxSize) {
       roundrobin = 0;
     }
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "getConnection = {0}", result);
     return result;
   }
 }
