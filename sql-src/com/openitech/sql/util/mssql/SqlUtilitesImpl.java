@@ -1610,14 +1610,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
             hs_neznana_id = getLastIdentity();
           }
         } finally {
-            if (isTransaction) {
-              endTransaction(commit);
-            }
-      
-          if(!commit)
+          if (isTransaction) {
+            endTransaction(commit);
+          }
+
+          if (!commit) {
             JOptionPane.showMessageDialog(null, "Napaka pri shranjevanju neznanega naslova!", "Napaka", JOptionPane.ERROR_MESSAGE);
           }
-        
+        }
+
       }
       address.setHsNeznanaMID(hs_neznana_id);
     }
@@ -1943,14 +1944,19 @@ public class SqlUtilitesImpl extends SqlUtilities {
       } else {
         //insert
         synchronized (update_eventPK) {
-          param = 1;
-          update_eventPK.clearParameters();
-          update_eventPK.setInt(param++, idSifranta);
-          update_eventPK.setString(param++, idSifre);
-          update_eventPK.setString(param++, primaryKey);
-          update_eventPK.setLong(param++, eventId);
+          try {
+            param = 1;
+            update_eventPK.clearParameters();
+            update_eventPK.setInt(param++, idSifranta);
+            update_eventPK.setString(param++, idSifre);
+            update_eventPK.setString(param++, primaryKey);
+            update_eventPK.setLong(param++, eventId);
 
-          success = update_eventPK.executeUpdate() > 0;
+            success = update_eventPK.executeUpdate() > 0;
+          } catch (SQLException ex) {
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Napaka pri updejtanju PK: IdSifranta={0} IdSifre={1} PK={2}", new Object[]{idSifranta, idSifre, primaryKey});
+            throw ex;
+          }
         }
       }
     } else {
@@ -1965,7 +1971,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           insert_eventPK.setString(param++, primaryKey);
           success = insert_eventPK.executeUpdate() > 0;
         } catch (SQLException ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Napaka pri shranjevanju PK: IdSifranta={0} IdSifre={1} PK={2}", new Object[]{idSifranta, idSifre, primaryKey});
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Napaka pri insertanju PK: IdSifranta={0} IdSifre={1} PK={2}", new Object[]{idSifranta, idSifre, primaryKey});
           throw ex;
         }
       }
