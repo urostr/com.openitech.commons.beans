@@ -1,0 +1,7 @@
+SELECT TOP 1
+    [PPID],
+    [PPKontaktID],
+    [PPEMAIL]
+FROM
+    RPP.[dbo].[PP_MAX_VALID_EMAILI] WITH (NOLOCK)
+WHERE PPID = ?

@@ -28,9 +28,13 @@ public class UtilRPP {
 
   private final String findKontakt = ReadInputStream.getResourceAsString(UtilRPP.class, "findKontakt.sql", "cp1250");
   private final String findEmail = ReadInputStream.getResourceAsString(UtilRPP.class, "findEmail.sql", "cp1250");
+  private final String findRPPGsm = ReadInputStream.getResourceAsString(UtilRPP.class, "findRPPGsm.sql", "cp1250");
+  private final String findRPPTelefon = ReadInputStream.getResourceAsString(UtilRPP.class, "findRPPTelefon.sql", "cp1250");
+  private final String findRPPEmail = ReadInputStream.getResourceAsString(UtilRPP.class, "findRPPEmail.sql", "cp1250");
   public static final boolean cachePreparedStatments = true;
   private Map<String, PreparedStatement> psCache = new HashMap<String, PreparedStatement>();
   private static UtilRPP instance;
+  private boolean isNew = true;
 
   public static UtilRPP getInstance() {
     if (instance == null) {
@@ -60,7 +64,7 @@ public class UtilRPP {
     return getIDKontakta(omrezna, telefonska, "KTIP02");
   }
 
-  private String getIDKontakta(Integer omrezna, Integer telefonska, String tip) throws SQLException {
+  private synchronized String getIDKontakta(Integer omrezna, Integer telefonska, String tip) throws SQLException {
     String idKontakta = null;
     PreparedStatement ps_findIdKontakta = null;
 
@@ -97,7 +101,10 @@ public class UtilRPP {
       }
     }
     if (idKontakta == null) {
+      isNew = true;
       idKontakta = getNextIdKontakta();
+    } else {
+      isNew = false;
     }
     return idKontakta;
   }
@@ -109,7 +116,7 @@ public class UtilRPP {
     return idKontakta;
   }
 
-  public String getEmailIDKontakta(String email) throws SQLException {
+  public synchronized String getEmailIDKontakta(String email) throws SQLException {
     String idKontakta = null;
     PreparedStatement ps_findIdKontakta = null;
     if (cachePreparedStatments) {
@@ -134,5 +141,224 @@ public class UtilRPP {
       idKontakta = getNextIdKontakta();
     }
     return idKontakta;
+  }
+
+  public synchronized boolean isNewIdKontakta() {
+    return isNew;
+  }
+
+  public synchronized GSMKontakt getRppGsm(int ppID) throws SQLException {
+    GSMKontakt result = null;
+
+    PreparedStatement ps_findRPPGsm = null;
+
+    if (cachePreparedStatments) {
+      if (psCache.containsKey(findRPPGsm)) {
+        ps_findRPPGsm = psCache.get(findRPPGsm);
+      } else {
+        ps_findRPPGsm = ConnectionManager.getInstance().getTxConnection().prepareStatement(findRPPGsm);
+        psCache.put(findRPPGsm, ps_findRPPGsm);
+      }
+    } else {
+      ps_findRPPGsm = ConnectionManager.getInstance().getTxConnection().prepareStatement(findRPPGsm);
+    }
+
+    try {
+      int param = 1;
+      ps_findRPPGsm.setInt(param++, ppID);
+      ResultSet rs_findRPPGsm = ps_findRPPGsm.executeQuery();
+      try {
+        if (rs_findRPPGsm.next()) {
+          Integer ppKontaktID = rs_findRPPGsm.getInt("PPKontaktID");
+          if (rs_findRPPGsm.wasNull()) {
+            ppKontaktID = null;
+          }
+          Integer os = rs_findRPPGsm.getInt("PPOmreznaGSM");
+          if (rs_findRPPGsm.wasNull()) {
+            os = null;
+          }
+          Integer stevilka = rs_findRPPGsm.getInt("PPStevilkaGSM");
+          if (rs_findRPPGsm.wasNull()) {
+            stevilka = null;
+          }
+
+          result = new GSMKontakt(ppID, ppKontaktID, os, stevilka);
+
+        }
+      } finally {
+        rs_findRPPGsm.close();
+      }
+    } finally {
+      if (!cachePreparedStatments) {
+        ps_findRPPGsm.close();
+      }
+    }
+    return result;
+  }
+
+  public synchronized TelefonKontakt getRppTelefon(int ppID) throws SQLException {
+    TelefonKontakt result = null;
+
+    PreparedStatement ps_findRPPTelefon = null;
+
+    if (cachePreparedStatments) {
+      if (psCache.containsKey(findRPPTelefon)) {
+        ps_findRPPTelefon = psCache.get(findRPPTelefon);
+      } else {
+        ps_findRPPTelefon = ConnectionManager.getInstance().getTxConnection().prepareStatement(findRPPTelefon);
+        psCache.put(findRPPTelefon, ps_findRPPTelefon);
+      }
+    } else {
+      ps_findRPPTelefon = ConnectionManager.getInstance().getTxConnection().prepareStatement(findRPPTelefon);
+    }
+
+    try {
+      int param = 1;
+      ps_findRPPTelefon.setInt(param++, ppID);
+      ResultSet rs_findRPPTelefon = ps_findRPPTelefon.executeQuery();
+      try {
+        if (rs_findRPPTelefon.next()) {
+          Integer ppKontaktID = rs_findRPPTelefon.getInt("PPKontaktID");
+          if (rs_findRPPTelefon.wasNull()) {
+            ppKontaktID = null;
+          }
+          Integer os = rs_findRPPTelefon.getInt("PPOmreznaTelefon");
+          if (rs_findRPPTelefon.wasNull()) {
+            os = null;
+          }
+          Integer stevilka = rs_findRPPTelefon.getInt("PPStevilkaTelefon");
+          if (rs_findRPPTelefon.wasNull()) {
+            stevilka = null;
+          }
+
+          result = new TelefonKontakt(ppID, ppKontaktID, os, stevilka);
+
+        }
+      } finally {
+        rs_findRPPTelefon.close();
+      }
+    } finally {
+      if (!cachePreparedStatments) {
+        ps_findRPPTelefon.close();
+      }
+    }
+    return result;
+  }
+
+   public synchronized EmailKontakt getRppEmail(int ppID) throws SQLException {
+    EmailKontakt result = null;
+
+    PreparedStatement ps_findRPPEmail = null;
+
+    if (cachePreparedStatments) {
+      if (psCache.containsKey(findRPPEmail)) {
+        ps_findRPPEmail = psCache.get(findRPPEmail);
+      } else {
+        ps_findRPPEmail = ConnectionManager.getInstance().getTxConnection().prepareStatement(findRPPEmail);
+        psCache.put(findRPPEmail, ps_findRPPEmail);
+      }
+    } else {
+      ps_findRPPEmail = ConnectionManager.getInstance().getTxConnection().prepareStatement(findRPPEmail);
+    }
+
+    try {
+      int param = 1;
+      ps_findRPPEmail.setInt(param++, ppID);
+      ResultSet rs_findRPPEmail = ps_findRPPEmail.executeQuery();
+      try {
+        if (rs_findRPPEmail.next()) {
+          Integer ppKontaktID = rs_findRPPEmail.getInt("PPKontaktID");
+          if (rs_findRPPEmail.wasNull()) {
+            ppKontaktID = null;
+          }
+          String email = rs_findRPPEmail.getString("PPEMAIL");
+
+          result = new EmailKontakt(ppID, ppKontaktID, email);
+
+        }
+      } finally {
+        rs_findRPPEmail.close();
+      }
+    } finally {
+      if (!cachePreparedStatments) {
+        ps_findRPPEmail.close();
+      }
+    }
+    return result;
+  }
+
+
+  public static class GSMKontakt extends Kontakt {
+
+    private final int ppTipontaktaID = 2;
+
+    public GSMKontakt(int ppID, Integer ppKontaktID, Integer os, Integer stevilka) {
+      super(ppID, ppKontaktID, os, stevilka);
+    }
+  }
+
+  public static class TelefonKontakt extends Kontakt {
+
+    private final int ppTipontaktaID = 1;
+
+    public TelefonKontakt(int ppID, Integer ppKontaktID, Integer os, Integer stevilka) {
+      super(ppID, ppKontaktID, os, stevilka);
+    }
+  }
+
+  public static class EmailKontakt extends Kontakt {
+
+    private final int ppTipontaktaID = 3;
+
+    public EmailKontakt(int ppID, Integer ppKontaktID, String email) {
+      super(ppID, ppKontaktID, email);
+    }
+
+    @Override
+    public String getEmail() {
+      return super.getEmail();
+    }
+  }
+
+  private static class Kontakt {
+
+    private int ppID;
+    private Integer ppKontaktID = null;
+    private Integer os = null;
+    private Integer stevilka = null;
+    private String email = null;
+
+    protected Kontakt(int ppID, Integer ppKontaktID, Integer os, Integer stevilka) {
+      this.ppID = ppID;
+      this.ppKontaktID = ppKontaktID;
+      this.os = os;
+      this.stevilka = stevilka;
+    }
+
+    protected  Kontakt(int ppID, Integer ppKontaktID, String email) {
+      this.ppID = ppID;
+      this.ppKontaktID = ppKontaktID;
+      this.email = email;
+    }
+
+    public int getPPID() {
+      return ppID;
+    }
+
+    public Integer getPPKontaktID() {
+      return ppKontaktID;
+    }
+
+    public Integer getOs() {
+      return os;
+    }
+
+    public Integer getStevilka() {
+      return stevilka;
+    }
+
+    protected String getEmail() {
+      return email;
+    }
   }
 }
