@@ -1333,6 +1333,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public Long storeValue(ValueType fieldType, final Object value) throws SQLException {
     long start = System.currentTimeMillis();
     Long newValueId = null;
+    if (value == null) {
+      return null;
+    }
     long start2 = System.currentTimeMillis();
     final Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
     long end2 = System.currentTimeMillis();
