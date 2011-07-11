@@ -127,7 +127,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
      * LESS_OR_EQUALS has value 6
      */
     public static final int CI_LESS_OR_EQUALS = 16;
-    
     protected final MessageFormat[] formati = new MessageFormat[]{
       new MessageFormat(" (UPPER({0}) = ?) "), //-0
       new MessageFormat(" (UPPER({0}) like (?+''%'')) "), //-1
@@ -712,6 +711,125 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     @Override
     public boolean hasValue() {
       return value != null;
+    }
+  }
+
+  public final static class ValueSeekType extends AbstractSeekType<String> {
+
+    public ValueSeekType() {
+      super("", PREFORMATTED, 0);
+    }
+
+    @Override
+    public StringBuilder getSQLSegment() {
+      return new StringBuilder(value);
+    }
+
+    @Override
+    public boolean setValue(String value) {
+      if (!Equals.equals(getValue(), value)) {
+        this.value = value;
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  public final static class RezultatiKlicaSeekType extends AbstractSeekType<List<DataSourceFilters.RezultatiKlicaSeekType.RezultatKlica>> {
+
+    private RezultatKlica vsi = new RezultatKlica("Vsi", "", false);
+    List<RezultatKlica> rezltati = new ArrayList<RezultatKlica>();
+    private final DataSourceFilters filters;
+
+    public RezultatiKlicaSeekType(String field, DataSourceFilters filters) {
+      super(field, PREFORMATTED, 0);
+      this.filters = filters;
+      addRezultat(vsi);
+    }
+
+    @Override
+    public StringBuilder getSQLSegment() {
+      StringBuilder sbValues = new StringBuilder();
+      if (value != null) {
+        for (RezultatKlica rezultatKlica : value) {
+          if (rezultatKlica.isChecked()) {
+            sbValues.append(sbValues.length() > 0 ? ", " : " ").append(" '").append(rezultatKlica.getValue()).append("' ");
+          }
+        }
+      }
+      if (sbValues.length() > 0) {
+        return new StringBuilder(field + " IN (" + sbValues.toString() + " )");
+      } else {
+        return new StringBuilder(field + " is null ");
+      }
+    }
+
+    @Override
+    public boolean setValue(List<RezultatKlica> value) {
+      if (value != null && value.isEmpty()) {
+        value = null;
+      }
+      if (!Equals.equals(getValue(), value)) {
+        this.value = value;
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    public void addRezultat(RezultatKlica rezultatKlica) {
+      rezltati.add(rezultatKlica);
+    }
+
+    public List<RezultatKlica> getRezltati() {
+      return rezltati;
+    }
+
+    public void reload() {
+      boolean setNull = false;
+      if (value != null) {
+        for (RezultatKlica rezultatKlica : value) {
+          if (rezultatKlica.equals(vsi)) {
+            setNull = true;
+            break;
+          }
+        }
+      }
+      filters.setSeekValue(this, setNull ? null : rezltati);
+    }
+
+    public RezultatKlica getRezultatVsi() {
+      return vsi;
+    }
+
+    public static class RezultatKlica {
+
+      private String opis;
+      private String value;
+      private boolean isChecked;
+
+      public RezultatKlica(String opis, String value, boolean isChecked) {
+        this.opis = opis;
+        this.value = value;
+        this.isChecked = isChecked;
+      }
+
+      public String getOpis() {
+        return opis;
+      }
+
+      public String getValue() {
+        return value;
+      }
+
+      public boolean isChecked() {
+        return isChecked;
+      }
+
+      public void setChecked(boolean isChecked) {
+        this.isChecked = isChecked;
+      }
     }
   }
 
