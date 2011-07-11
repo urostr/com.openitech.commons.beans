@@ -138,7 +138,10 @@ public class UtilRPP {
       idKontakta = rs_findIdKontakta.getString("ID_KONTAKTA");
     }
     if (idKontakta == null) {
+      isNew = true;
       idKontakta = getNextIdKontakta();
+    }else{
+      isNew = false;
     }
     return idKontakta;
   }
