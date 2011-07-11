@@ -88,9 +88,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       if (dataSourceElement != null) {
         this.dataSource = createDataSource();
 
+        suspendDataSource();
+          
         dataSource.lock();
         try {
-          dataSource.setQueuedDelay(0);
+          dataSource.setQueuedDelay(Integer.MAX_VALUE);
           this.dataSourceLimit = createDataSourceLimit();
 
           List<Object> parameters = new ArrayList<Object>();
@@ -111,7 +113,6 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           addListeners();
 
           createEventColumns();
-          suspendDataSource();
           limitDataSource();
           setDataSourceQueuedDelay();
 
