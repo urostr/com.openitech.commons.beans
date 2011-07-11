@@ -13,21 +13,28 @@ package com.openitech.db.filters;
 import com.openitech.db.components.JDbComboBox;
 import com.openitech.db.components.JDbDateTextField;
 import com.openitech.db.components.JDbTextField;
+import com.openitech.db.events.ActiveRowChangeEvent;
+import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
+import com.openitech.db.filters.DataSourceFilters.RezultatiKlicaSeekType;
+import com.openitech.db.filters.DataSourceFilters.RezultatiKlicaSeekType.RezultatKlica;
 import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.xml.config.GridBagConstraints;
 import com.openitech.db.model.xml.config.SeekLayout;
 import com.openitech.util.Equals;
 import java.awt.CardLayout;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
@@ -238,6 +245,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
     for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
       java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
+      final DataSourceFilters filter = entry.getKey();
 
       for (int i = 0; i < seekTypeList.size(); i++) {
         final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i) instanceof DataSourceFilters.SeekTypeWrapper
@@ -281,12 +289,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             javax.swing.text.Document from = docs.get(0);
             javax.swing.text.Document to = docs.size() > 1 ? docs.get(1) : new com.openitech.db.components.JDbDateTextField().getDocument();
 
-            item.setDocuments(entry.getKey(), new javax.swing.text.Document[]{from, to});
+            item.setDocuments(filter, new javax.swing.text.Document[]{from, to});
 
             documents.put(item, new javax.swing.text.Document[]{from, to});
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             javax.swing.text.Document document = docs.get(0);
-            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), listenerItem));
+            document.addDocumentListener(new FilterDocumentListener(filter, listenerItem));
 
             documents.put(item, new javax.swing.text.Document[]{document});
             sifranti.put(item, ((DataSourceFilters.SifrantSeekType) item).getModel());
@@ -312,7 +320,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             }
           } else {
             javax.swing.text.Document document = docs.get(0);
-            document.addDocumentListener(new FilterDocumentListener(entry.getKey(), listenerItem));
+            document.addDocumentListener(new FilterDocumentListener(filter, listenerItem));
             documents.put(item, new javax.swing.text.Document[]{document});
           }
         }
@@ -470,6 +478,98 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
             jpHoldingPanel.add(jCheckBox, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+          } else if (item instanceof DataSourceFilters.ValueSeekType) {
+
+            int index = 0;
+            final Document document = documents.get(item)[0];
+
+            final JDbTextField jDbTextField1 = new com.openitech.db.components.JDbTextField();
+            jDbTextField1.setColumns(layout.getColumns() == null ? 20 : layout.getColumns());
+            jDbTextField1.setSearchField(true);
+            jDbTextField1.setDocument(document);
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
+            jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+
+            JButton jbConfigureFilter = new JButton("Configure filter");
+            final JDConfigureFilter jDConfigureFilter = new JDConfigureFilter(null, false);
+
+            jDConfigureFilter.setDocument(document);
+            try {
+              jDConfigureFilter.setDataSource(filter.getDataSource());
+            } catch (SQLException ex) {
+              Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            jbConfigureFilter.addActionListener(new ActionListener() {
+
+              @Override
+              public void actionPerformed(ActionEvent e) {
+                jDConfigureFilter.setVisible(true);
+
+              }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            jpHoldingPanel.add(jbConfigureFilter, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+
+
+          } else if (item instanceof DataSourceFilters.RezultatiKlicaSeekType) {
+
+            final JLabel jlOpis = new javax.swing.JLabel();
+            jlOpis.setText(item.toString());
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            customPanel.add(jlOpis, gridBagConstraints);
+
+            final DataSourceFilters.RezultatiKlicaSeekType rezultatiKlicaSeekType = (RezultatiKlicaSeekType) item;
+
+            JPanel jpBoxes = new JPanel(new GridBagLayout());
+            jpBoxes.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+
+            List<RezultatKlica> rezltati = rezultatiKlicaSeekType.getRezltati();
+            for (final RezultatKlica rezultatKlica : rezltati) {
+              final JCheckBox checkBox = new JCheckBox(rezultatKlica.getOpis());
+              checkBox.setSelected(rezultatKlica.isChecked());
+              checkBox.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                  rezultatKlica.setChecked(checkBox.isSelected());
+                  rezultatiKlicaSeekType.reload();
+                }
+              });
+              jpBoxes.add(checkBox, new java.awt.GridBagConstraints());
+            }
+            //ko je dataSource pripravljen, mu dodam default filtre
+            final ActiveRowChangeListener l = new ActiveRowChangeListener() {
+
+              @Override
+              public void activeRowChanged(ActiveRowChangeEvent event) {
+                filter.getDataSource().removeActiveRowChangeListener(this);
+                rezultatiKlicaSeekType.reload();
+              }
+
+              @Override
+              public void fieldValueChanged(ActiveRowChangeEvent event) {
+              }
+            };
+
+            filter.getDataSource().addActiveRowChangeListener(l);
+
+            JPanel jpChechBoxHolder = new JPanel(new GridBagLayout());
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            jpChechBoxHolder.add(jpBoxes, gridBagConstraints);
+
+
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
+            jpHoldingPanel.add(jpChechBoxHolder, gridBagConstraints);
+
           } else {
             final JLabel jlOpis = new javax.swing.JLabel();
             final JComboBox jDbComboBox1 = new JComboBox();
@@ -529,7 +629,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         }
       }
 
-      entry.getKey().addPropertyChangeListener("query", queryChanged);
+      filter.addPropertyChangeListener("query", queryChanged);
     }
 
     if (headers.isEmpty()) {
@@ -738,31 +838,32 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       if (jcbStolpec.getSelectedItem() instanceof DataSourceFilters.AbstractSeekType) {
         DataSourceFilters.AbstractSeekType<? extends Object> item = (DataSourceFilters.AbstractSeekType<? extends Object>) jcbStolpec.getSelectedItem();
         if (item.getLayout() == null || !item.getLayout().isDisplayInPanel()) {
+          final Document document = documents.get(item)[0];
           if (item instanceof DataSourceFilters.BetweenDateSeekType) {
-            jtfDateValueOd.setDocument(documents.get(item)[0]);
+            jtfDateValueOd.setDocument(document);
             jtfDateValueDo.setDocument(documents.get(item)[1]);
             ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "DATEFIELD_CARD");
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
-            jtfSifrant.setDocument(documents.get(item)[0]);
+            jtfSifrant.setDocument(document);
             jcbSifrant.setModel(sifranti.get(item));
-            updateSifrant(documents.get(item)[0], jcbSifrant);
+            updateSifrant(document, jcbSifrant);
             ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "SIFRANT_CARD");
           } else if (item.getSeekType() == com.openitech.db.filters.DataSourceFilters.SeekType.PREFORMATTED) {
-            jtfPreformattedValue.setDocument(documents.get(item)[0]);
+            jtfPreformattedValue.setDocument(document);
             ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "PREFORMATTED_CARD");
           } else if (item instanceof DataSourceFilters.IntegerSeekType) {
             if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
               item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
             }
             jcbNumberType.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-            jtfNumberValue.setDocument(documents.get(item)[0]);
+            jtfNumberValue.setDocument(document);
             ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "NUMBERFIELD_CARD");
           } else {
             if (item.getSeekType() >= jcbType.getItemCount()) {
               item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.UPPER_EQUALS);
             }
             jcbType.setSelectedIndex(item.getSeekType());
-            jtfValue.setDocument(documents.get(item)[0]);
+            jtfValue.setDocument(document);
             ((CardLayout) jpFilterValues.getLayout()).show(jpFilterValues, "TEXTFIELD_CARD");
           }
           invalidate();
@@ -879,7 +980,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
         .addComponent(jLabel2)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(jXDatePicker2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(63, Short.MAX_VALUE))
+        .addContainerGap(67, Short.MAX_VALUE))
     );
     jpDateFieldLayout.setVerticalGroup(
       jpDateFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -911,7 +1012,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpTextFieldLayout.createSequentialGroup()
         .addComponent(jcbType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE))
+        .addComponent(jtfValue, javax.swing.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE))
     );
     jpTextFieldLayout.setVerticalGroup(
       jpTextFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -941,7 +1042,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpSifrantPanelLayout.createSequentialGroup()
         .addComponent(jtfSifrant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 265, Short.MAX_VALUE))
+        .addComponent(jcbSifrant, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE))
     );
     jpSifrantPanelLayout.setVerticalGroup(
       jpSifrantPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -959,7 +1060,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     jpPreformattedField.setLayout(jpPreformattedFieldLayout);
     jpPreformattedFieldLayout.setHorizontalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 309, Short.MAX_VALUE)
+      .addComponent(jtfPreformattedValue, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
     );
     jpPreformattedFieldLayout.setVerticalGroup(
       jpPreformattedFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -986,7 +1087,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       .addGroup(jpNumberFieldLayout.createSequentialGroup()
         .addComponent(jcbNumberType, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE))
+        .addComponent(jtfNumberValue, javax.swing.GroupLayout.DEFAULT_SIZE, 177, Short.MAX_VALUE))
     );
     jpNumberFieldLayout.setVerticalGroup(
       jpNumberFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
