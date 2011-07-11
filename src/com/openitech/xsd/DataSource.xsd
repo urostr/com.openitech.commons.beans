@@ -212,7 +212,7 @@
                   <xsd:element name="CacheOnUpdate" type="xsd:boolean" default="false"/>
                 </xsd:choice>
                 <xsd:attribute name="Sifrant" type="xsd:int" use="required"/>
-                <xsd:attribute name="Sifra" type="xsd:string"/>          
+                <xsd:attribute name="Sifra" type="xsd:string"/>
                 <xsd:attribute name="Catalog" type="xsd:string"/>
                 <xsd:attribute name="Convertible" type="xsd:boolean" default="false"/>
               </xsd:complexType>
@@ -311,11 +311,13 @@
   <xsd:complexType name="SeekLayout">
     <xsd:all>
       <xsd:element name="DisplayInPanel" type="xsd:boolean"/>
-      <xsd:element name="Documents" minOccurs="0"><xsd:complexType>
+      <xsd:element name="Documents" minOccurs="0">
+        <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="DocumentNames" type="xsd:string" maxOccurs="unbounded"></xsd:element>
           </xsd:sequence>
-      </xsd:complexType></xsd:element>
+        </xsd:complexType>
+      </xsd:element>
       <xsd:element name="Layout" minOccurs="0">
         <xsd:complexType>
           <xsd:choice>
@@ -367,6 +369,30 @@
             <xsd:element name="Type" type="tns:SeekType" minOccurs="0"></xsd:element>
             <xsd:element name="MinumumLength" type="xsd:int" minOccurs="0"></xsd:element>
             <xsd:element name="ParameterCount" type="xsd:int" minOccurs="0"></xsd:element>
+            <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="RezultatKlicaSeekType">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="Field" type="xsd:string"></xsd:element>
+            <xsd:element name="Rezultati">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="RezultatiValues" type="tns:RezultatKlicaValues" maxOccurs="unbounded"></xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ConfigureFilterSeekType">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
             <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
@@ -439,6 +465,7 @@
         </xsd:complexType>
       </xsd:element>
     </xsd:choice>
+    <xsd:attribute name="ConvertToVarchar" type="xsd:string"/>
   </xsd:complexType>
   <xsd:simpleType name="SeekType">
     <xsd:restriction base="xsd:string">
@@ -675,5 +702,12 @@
       <xsd:enumeration value="CALL"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:complexType name="RezultatKlicaValues">
+    <xsd:sequence>
+      <xsd:element name="Opis" type="xsd:string"/>
+      <xsd:element name="Sifra" type="xsd:string"/>
+      <xsd:element name="Checked" type="xsd:boolean" default="false"/>
+    </xsd:sequence>
+  </xsd:complexType>
 </xsd:schema>
 
