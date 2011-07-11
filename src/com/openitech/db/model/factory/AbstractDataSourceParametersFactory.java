@@ -16,7 +16,11 @@ import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefin
 import com.openitech.db.model.xml.config.DataSourceFilter;
 import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.db.model.xml.config.Factory;
+import com.openitech.db.model.xml.config.RezultatKlicaValues;
 import com.openitech.db.model.xml.config.SeekParameters;
+import com.openitech.db.model.xml.config.SeekParameters.ConfigureFilterSeekType;
+import com.openitech.db.model.xml.config.SeekParameters.RezultatKlicaSeekType;
+import com.openitech.db.model.xml.config.SeekParameters.RezultatKlicaSeekType.Rezultati;
 import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.ComboBoxModel;
 import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.ComboBoxModel.Display;
 import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.Lookup;
@@ -155,6 +159,12 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
         }
         if (dataSourceFilter.getParameters() != null) {
           for (SeekParameters seekParameter : dataSourceFilter.getParameters().getSeekParameters()) {
+            Boolean convertToVarchar = null;
+            String convertToVarcharS = seekParameter.getConvertToVarchar();
+            if (convertToVarcharS != null) {
+              convertToVarchar = Boolean.valueOf(convertToVarcharS);
+            }
+//            seekParameter.getRezultatKlicaSeekType().getRezultati().getRezultatiValues().get(0).isChecked();
             if (seekParameter.getSeekType() != null) {
               final SeekParameters.SeekType parameter = seekParameter.getSeekType();
 
@@ -173,6 +183,9 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               } else {
                 seekType = new DataSourceFilters.SeekType(field, getSeekType(type), minumumLength, parameterCount);
               }
+              if (convertToVarchar != null) {
+                seekType.setConvertToVarchar(convertToVarchar);
+              }
               seekType.setName(parameter.getName());
               seekType.setLayout(parameter.getLayout());
 
@@ -189,6 +202,9 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               } else {
                 integerSeekType = new DataSourceFilters.IntegerSeekType(field, getSeekType(type));
               }
+              if (convertToVarchar != null) {
+                integerSeekType.setConvertToVarchar(convertToVarchar);
+              }
               integerSeekType.setName(parameter.getName());
               integerSeekType.setLayout(parameter.getLayout());
 
@@ -199,6 +215,9 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               String field = parameter.getField();
 
               DataSourceFilters.BetweenDateSeekType betweenDateSeekType = new DataSourceFilters.BetweenDateSeekType(field);
+              if (convertToVarchar != null) {
+                betweenDateSeekType.setConvertToVarchar(convertToVarchar);
+              }
               betweenDateSeekType.setName(parameter.getName());
               betweenDateSeekType.setLayout(parameter.getLayout());
 
@@ -286,12 +305,51 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 }
 
                 if (sifrantSeekType != null) {
+                  if (convertToVarchar != null) {
+                    sifrantSeekType.setConvertToVarchar(convertToVarchar);
+                  }
                   sifrantSeekType.setName(parameter.getName());
                   sifrantSeekType.setLayout(parameter.getLayout());
 
                   filtersMap.put(filter, sifrantSeekType);
                 }
               }
+            } else if (seekParameter.getConfigureFilterSeekType() != null) {
+              final ConfigureFilterSeekType parameter = seekParameter.getConfigureFilterSeekType();
+
+
+              DataSourceFilters.ValueSeekType preformatedSeekType;
+
+              preformatedSeekType = new DataSourceFilters.ValueSeekType();
+
+              if (convertToVarchar != null) {
+                preformatedSeekType.setConvertToVarchar(convertToVarchar);
+              }
+              preformatedSeekType.setName(parameter.getName());
+              preformatedSeekType.setLayout(parameter.getLayout());
+
+              filtersMap.put(filter, preformatedSeekType);
+            }else if (seekParameter.getRezultatKlicaSeekType() != null) {
+              final RezultatKlicaSeekType parameter = seekParameter.getRezultatKlicaSeekType();
+
+              DataSourceFilters.RezultatiKlicaSeekType rezultatiSeekType;
+
+              rezultatiSeekType = new DataSourceFilters.RezultatiKlicaSeekType(parameter.getField(), filter);
+
+              if (convertToVarchar != null) {
+                rezultatiSeekType.setConvertToVarchar(convertToVarchar);
+              }
+              rezultatiSeekType.setName(parameter.getName());
+              rezultatiSeekType.setLayout(parameter.getLayout());
+              Rezultati rezultati = parameter.getRezultati();
+              if(rezultati != null){
+                List<RezultatKlicaValues> rezultatiValues = rezultati.getRezultatiValues();
+                for (RezultatKlicaValues rezultat : rezultatiValues) {
+                  rezultatiSeekType.addRezultat(new DataSourceFilters.RezultatiKlicaSeekType.RezultatKlica(rezultat.getOpis(), rezultat.getSifra(), rezultat.isChecked()));
+                }
+              }
+
+              filtersMap.put(filter, rezultatiSeekType);
             }
           }
         }
