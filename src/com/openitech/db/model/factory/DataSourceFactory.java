@@ -372,7 +372,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         useLimitParameter = creationParameters.isUseLimitParameter();
       }
 
-      if (dataSourceElement.getSQL().indexOf(DATA_SOURCE_LIMIT) == -1) {
+      if (dataSourceElement.getSQL() != null && dataSourceElement.getSQL().indexOf(DATA_SOURCE_LIMIT) == -1) {
         useLimitParameter = Boolean.FALSE;
       }
 
