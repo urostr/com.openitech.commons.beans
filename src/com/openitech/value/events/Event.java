@@ -352,7 +352,7 @@ public class Event extends EventType implements Cloneable {
     }
     return updateEventFields;
   }
-  protected List<AfterUpdateEvent> afterUpdateEvent;
+  private List<AfterUpdateEvent> afterUpdateEvent;
 
   /**
    * Get the value of updateEventFields
@@ -578,6 +578,20 @@ public class Event extends EventType implements Cloneable {
     }
 
     return result;
+  }
+
+  public boolean contains(FieldValue fv) {
+    if (fv == null) {
+      return false;
+    }
+    for (FieldValue fieldValue : values) {
+      if (fieldValue != null) {
+        if (fieldValue.equals(fv)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public static enum EventOperation {
