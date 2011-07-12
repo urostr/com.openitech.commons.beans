@@ -89,7 +89,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         this.dataSource = createDataSource();
 
         suspendDataSource();
-          
+
         dataSource.lock();
         try {
           dataSource.setQueuedDelay(Integer.MAX_VALUE);
@@ -158,6 +158,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
         }
       }
+    } catch (SQLException ex) {
+      throw ex;
     } finally {
       dataSourceXML = original;
       if (root.equals(dataSourceXML)) {
@@ -269,17 +271,19 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void resumeDataSource() {
-    Boolean resume = null;
-    if (creationParameters != null) {
-      resume = creationParameters.isResumeAfterCreation();
-    } else {
-      resume = dataSourceXML.getDataSource().isResumeAfterCreation();
-    }
-    if (resume != null && resume && dataSource.isSuspended()) {
+//    Boolean resume = null;
+//    if (creationParameters != null) {
+//      resume = creationParameters.isResumeAfterCreation();
+//    } else {
+//      resume = dataSourceXML.getDataSource().isResumeAfterCreation();
+//    }
+//    if (resume != null && resume && dataSource.isSuspended()) {
+    if (dataSource != null) {
       DataSourceEvent.resume(dataSource);
-    } else {
-      DataSourceEvent.resume(dataSource);
     }
+//    } else {
+//      DataSourceEvent.resume(dataSource);
+//    }
   }
 
   protected DbDataSource createDataSource() throws ClassNotFoundException {
@@ -391,18 +395,19 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void suspendDataSource() {
-    final DataSource dataSourceElement = dataSourceXML.getDataSource();
-    if (dataSourceElement != null) {
-      CreationParameters creationParameters = dataSourceElement.getCreationParameters();
-
-      Boolean suspend = null;
-      if (creationParameters != null) {
-        suspend = creationParameters.isSuspend();
-      }
-      if (suspend == null || suspend.booleanValue()) {
-        DataSourceEvent.suspend(dataSource);
-      }
+//    final DataSource dataSourceElement = dataSourceXML.getDataSource();
+//    if (dataSourceElement != null) {
+//      CreationParameters creationParameters = dataSourceElement.getCreationParameters();
+//
+//      Boolean suspend = null;
+//      if (creationParameters != null) {
+//        suspend = creationParameters.isSuspend();
+//      }
+//      if (suspend == null || suspend.booleanValue()) {
+    if (dataSource != null) {
+      DataSourceEvent.suspend(dataSource);
     }
+//    }
   }
 
   protected void createInformationPanels() {
