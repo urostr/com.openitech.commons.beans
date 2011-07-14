@@ -739,7 +739,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   public final static class RezultatiKlicaSeekType extends AbstractSeekType<List<DataSourceFilters.RezultatiKlicaSeekType.RezultatKlica>> {
 
     private RezultatKlica vsi = new RezultatKlica("Vsi", "", false);
-    List<RezultatKlica> rezltati = new ArrayList<RezultatKlica>();
+    private List<RezultatKlica> rezltati = new ArrayList<RezultatKlica>();
     private final DataSourceFilters filters;
 
     public RezultatiKlicaSeekType(String field, DataSourceFilters filters) {
@@ -770,12 +770,9 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       if (value != null && value.isEmpty()) {
         value = null;
       }
-      if (!Equals.equals(getValue(), value)) {
-        this.value = value;
-        return true;
-      } else {
-        return false;
-      }
+      this.value = value;
+      return true;
+
     }
 
     public void addRezultat(RezultatKlica rezultatKlica) {
@@ -788,14 +785,15 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     public void reload() {
       boolean setNull = false;
-      if (value != null) {
-        for (RezultatKlica rezultatKlica : value) {
-          if (rezultatKlica.equals(vsi)) {
+      for (RezultatKlica rezultatKlica : rezltati) {
+        if (rezultatKlica.equals(vsi)) {
+          if (rezultatKlica.isChecked()) {
             setNull = true;
-            break;
           }
+          break;
         }
       }
+
       filters.setSeekValue(this, setNull ? null : rezltati);
     }
 
@@ -829,6 +827,32 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
       public void setChecked(boolean isChecked) {
         this.isChecked = isChecked;
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        if (obj == null) {
+          return false;
+        }
+
+        final RezultatKlica other = (RezultatKlica) obj;
+        if ((this.opis == null) ? (other.opis != null) : !this.opis.equals(other.opis)) {
+          return false;
+        }
+        if ((this.value == null) ? (other.value != null) : !this.value.equals(other.value)) {
+          return false;
+        }
+        if (this.isChecked != other.isChecked) {
+          return false;
+        }
+        return true;
+      }
+
+      @Override
+      public int hashCode() {
+        int hash = 7;
+        hash = hash * (opis != null ? opis.hashCode() : 1) + (value != null ? value.hashCode() : 0) + (isChecked ? 12 : 8);
+        return hash;
       }
     }
   }
