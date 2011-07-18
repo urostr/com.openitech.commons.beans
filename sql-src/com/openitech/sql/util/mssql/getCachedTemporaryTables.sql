@@ -1,1 +1,1 @@
-select * from <%MVIEWCACHE%>.dbo.[CACHED:OBJECTS]
+select * from <%MVIEWCACHE%>.dbo.[CACHED:OBJECTS] WITH (NOLOCK)
