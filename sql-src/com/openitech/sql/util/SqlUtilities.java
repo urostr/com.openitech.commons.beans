@@ -200,6 +200,9 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
             case Types.BIGINT:
               if (value instanceof Number) {
                 statement.setLong(pos, ((Number) value).longValue());
+              } else if (value instanceof Boolean) {
+                boolean temp = ((Boolean) value).booleanValue();
+                statement.setLong(pos, temp ? 1 : 0);
               } else {
                 statement.setLong(pos, Long.parseLong(value.toString()));
               }
