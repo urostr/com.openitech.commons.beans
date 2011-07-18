@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util.rpp;
 
+import com.openitech.db.components.DbNaslovDataModel.Naslov;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.io.ReadInputStream;
@@ -11,9 +12,11 @@ import com.openitech.sql.cache.CachedTemporaryTablesManager;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValue;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -140,7 +143,7 @@ public class UtilRPP {
     if (idKontakta == null) {
       isNew = true;
       idKontakta = getNextIdKontakta();
-    }else{
+    } else {
       isNew = false;
     }
     return idKontakta;
@@ -248,7 +251,7 @@ public class UtilRPP {
     return result;
   }
 
-   public synchronized EmailKontakt getRppEmail(int ppID) throws SQLException {
+  public synchronized EmailKontakt getRppEmail(int ppID) throws SQLException {
     EmailKontakt result = null;
 
     PreparedStatement ps_findRPPEmail = null;
@@ -289,7 +292,6 @@ public class UtilRPP {
     }
     return result;
   }
-
 
   public static class GSMKontakt extends Kontakt {
 
@@ -338,7 +340,7 @@ public class UtilRPP {
       this.stevilka = stevilka;
     }
 
-    protected  Kontakt(int ppID, Integer ppKontaktID, String email) {
+    protected Kontakt(int ppID, Integer ppKontaktID, String email) {
       this.ppID = ppID;
       this.ppKontaktID = ppKontaktID;
       this.email = email;
@@ -363,5 +365,55 @@ public class UtilRPP {
     protected String getEmail() {
       return email;
     }
+  }
+  private PreparedStatement findHS_MID_3 = null;
+
+  public Integer getHS_mid(String ul_ime, String hs_hd, String pt_id, String na_ime) throws SQLException {
+    Integer result = null;
+    ul_ime = ul_ime == null ? null : ul_ime.toUpperCase();
+    na_ime = na_ime == null ? null : na_ime.toUpperCase();
+    hs_hd = hs_hd == null ? null : hs_hd.replaceAll(" ", "");
+    pt_id = pt_id == null || pt_id.length() == 0 ? null : pt_id;
+    long timer;
+
+    if (findHS_MID_3 == null) {
+      final Connection connection = ConnectionManager.getInstance().getConnection();
+      findHS_MID_3 = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "find_hs_mid_3.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+    }
+
+    int param = 1;
+
+    param = 1;
+    findHS_MID_3.clearParameters();
+    findHS_MID_3.setString(param++, hs_hd);
+    findHS_MID_3.setString(param++, ul_ime);
+    findHS_MID_3.setObject(param++, pt_id, Types.INTEGER);
+    timer = System.currentTimeMillis();
+    ResultSet rsHS_MID_3 = findHS_MID_3.executeQuery();
+    try {
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "findHS_MID_3: {0}ms", (System.currentTimeMillis() - timer));
+      if (rsHS_MID_3.next() && rsHS_MID_3.isLast()) {
+        result = rsHS_MID_3.getInt(1);
+      }
+    } finally {
+      rsHS_MID_3.close();
+    }
+    return result;
+  }
+  private final String insertPP = ReadInputStream.getResourceAsString(getClass(), "insertPP.sql", "cp1250");
+
+  public int insertPP() throws SQLException {
+    int result = -1;
+    SqlUtilities sqlUtilities = SqlUtilities.getInstance();
+    PreparedStatement ps_insertPP = ConnectionManager.getInstance().getTxConnection().prepareStatement(insertPP);
+    try {
+      ps_insertPP.execute();
+      result = (int) sqlUtilities.getLastIdentity();
+    } catch (SQLException ex) {
+      throw ex;
+    } finally {
+      ps_insertPP.close();
+    }
+    return result;
   }
 }
