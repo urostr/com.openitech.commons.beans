@@ -331,8 +331,10 @@ public class Event extends EventType implements Cloneable {
   /**
    * Get the value of children
    *
+   * @deprecated Use addChild instead...
    * @return the value of children
    */
+  @Deprecated
   public List<Event> getChildren() {
     if (children == null) {
       children = new ArrayList<Event>();
@@ -592,6 +594,10 @@ public class Event extends EventType implements Cloneable {
       }
     }
     return false;
+  }
+
+  public void addChild(Event event) {
+    getChildren().add(event);
   }
 
   public static enum EventOperation {
