@@ -4,7 +4,6 @@
  */
 package com.openitech.sql.util.rpp;
 
-import com.openitech.db.components.DbNaslovDataModel.Naslov;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.io.ReadInputStream;
