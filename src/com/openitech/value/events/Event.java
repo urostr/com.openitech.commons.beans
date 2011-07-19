@@ -232,6 +232,7 @@ public class Event extends EventType implements Cloneable {
    */
   public boolean removeValue(FieldValue fieldValue) {
     getFieldValues(fieldValue).remove(fieldValue);
+    eventValues.remove(fieldValue);
     return values.remove(fieldValue);
   }
 
@@ -334,7 +335,6 @@ public class Event extends EventType implements Cloneable {
    * @deprecated Use addChild instead...
    * @return the value of children
    */
-  @Deprecated
   public List<Event> getChildren() {
     if (children == null) {
       children = new ArrayList<Event>();
