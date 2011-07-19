@@ -257,12 +257,7 @@
                 THEN CAST(SifrantiPolja.FieldValueIndex AS VARCHAR)
                 ELSE ''
               END AS [ImePolja],
-              CAST(
-                CASE
-                  WHEN SifrantiPolja.[PrimaryKey]=1
-                  THEN 0
-                  ELSE SifrantVnosnihPolj.[VecVrednosti]
-                END AS BIT) AS [VecVrednosti],
+              CAST(SifrantVnosnihPolj.[VecVrednosti] AS BIT) AS [VecVrednosti],
               SifrantVnosnihPolj.[PrikazkotTabela],
               SifrantVnosnihPolj.[TipPolja],
               SifrantVnosnihPolj.[DolzinaPolja],
