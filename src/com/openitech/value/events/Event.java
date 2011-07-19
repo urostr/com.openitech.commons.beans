@@ -600,6 +600,10 @@ public class Event extends EventType implements Cloneable {
     getChildren().add(event);
   }
 
+  public void removeAllChildren() {
+    children = new ArrayList<Event>();
+  }
+
   public static enum EventOperation {
 
     UPDATE {
