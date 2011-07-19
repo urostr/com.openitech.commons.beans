@@ -5,4 +5,4 @@ FROM
 WHERE
         [IdSifranta] = ?
     AND [IdSifre] = CAST(? AS VARCHAR)
-    AND [PrimaryKey] = CAST(? AS VARCHAR)
+    AND [PrimaryKey] = CAST(? AS VARCHAR(700))
