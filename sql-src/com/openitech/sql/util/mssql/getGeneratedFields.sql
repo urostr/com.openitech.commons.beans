@@ -65,17 +65,26 @@ SELECT
     SifrantiPolja.[Lookup],
     CASE
       WHEN ActivityEventsPolja.[FieldActions] IS NOT NULL
-      THEN ActivityEventsPolja.[FieldActions]
+      THEN (CASE WHEN ActivityEventsPolja.[FieldActions] = 'null'
+              THEN null
+              ELSE ActivityEventsPolja.[FieldActions]
+            END)
       ELSE SifrantiPolja.[FieldActions]
     END AS [FieldActions],
     CASE
       WHEN ActivityEventsPolja.[SecondarySourceXML] IS NOT NULL
-      THEN ActivityEventsPolja.[SecondarySourceXML]
+      THEN (CASE WHEN ActivityEventsPolja.[SecondarySourceXML] = 'null'
+              THEN null
+              ELSE ActivityEventsPolja.[SecondarySourceXML]
+            END)
       ELSE SifrantiPolja.[SecondarySourceXML]
     END AS [SecondarySourceXML],
     CASE
       WHEN ActivityEventsPolja.[FieldLayout] IS NOT NULL
-      THEN ActivityEventsPolja.[FieldLayout]
+      THEN (CASE WHEN ActivityEventsPolja.[FieldLayout] = 'null'
+              THEN null
+              ELSE ActivityEventsPolja.[FieldLayout]
+            END)
       ELSE SifrantiPolja.[FieldLayout]
     END AS [FieldLayout],
 
