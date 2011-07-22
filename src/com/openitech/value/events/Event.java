@@ -332,7 +332,7 @@ public class Event extends EventType implements Cloneable {
   /**
    * Get the value of children
    *
-   * @deprecated Use addChild instead...
+   * 
    * @return the value of children
    */
   public List<Event> getChildren() {
@@ -551,7 +551,7 @@ public class Event extends EventType implements Cloneable {
       for (FieldValue fieldValue : fieldValues) {
         fieldValuesCopy.add(fieldValue.clone());
       }
-      eventValuesCopy.put(new Field(field), fieldValuesCopy);
+      eventValuesCopy.put(field.clone(), fieldValuesCopy);
     }
 
     result.setEventValues(eventValuesCopy);
@@ -564,7 +564,7 @@ public class Event extends EventType implements Cloneable {
       primaryKeyCopy = new Field[this.primaryKey.length];
       for (int i = 0; i < this.primaryKey.length; i++) {
         Field field = this.primaryKey[i];
-        primaryKeyCopy[i] = new Field(field);
+        primaryKeyCopy[i] = field.clone();
       }
     }
     result.setPrimaryKey(primaryKeyCopy);
@@ -576,7 +576,7 @@ public class Event extends EventType implements Cloneable {
       result.updateEventFields = updateEventFieldsesCopy;
     }
     for (Event child : getChildren()) {
-      result.getChildren().add(child.clone());
+      result.addChild(child.clone());
     }
 
     return result;
