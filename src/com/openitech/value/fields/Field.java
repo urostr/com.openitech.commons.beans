@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  *
  * @author uros
  */
-public class Field {
+public class Field implements Cloneable {
 
   public static final Field VERSION = new Field("_SYS_EVENT_VERSION", java.sql.Types.INTEGER, Integer.MIN_VALUE);
   Integer idPolja;
@@ -67,6 +67,16 @@ public class Field {
     this(field.idPolja, field.name, field.type, fieldIndex);
   }
 
+  @Override
+  public Field clone() {
+    Field result = new Field(this);
+    result.setLookupType(lookupType);
+    result.getModel().setQuery(model.getQuery());
+    result.getModel().setReplace(model.getReplace());
+    result.getModel().setTableColumns(model.getTableColumns());
+    return result;
+  }
+
   /**
    * Get the value of model
    *
@@ -94,7 +104,6 @@ public class Field {
   public void setOpis(String opis) {
     this.opis = opis;
   }
-
 
   @Override
   public boolean equals(Object obj) {
