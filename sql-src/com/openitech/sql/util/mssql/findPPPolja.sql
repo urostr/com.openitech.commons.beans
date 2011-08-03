@@ -39,6 +39,7 @@ SELECT TOP 100 PERCENT
     SifrantVnosnihPolj.[UporabiSifrantPodjetji],
     SifrantVnosnihPolj.[UporabiSifrantPonudb],
     SifrantVnosnihPolj.[UporabiSifrantXML],
+    SifrantVnosnihPolj.[LookupXML],
     SifrantVnosnihPolj.[UporabiWorkAreaId],
     SifrantVnosnihPolj.[Opombe],
     1 AS Persisted
