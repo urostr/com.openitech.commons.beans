@@ -127,6 +127,12 @@ SELECT
     SifrantVnosnihPolj.[UporabiSifrantPodjetji],
     SifrantVnosnihPolj.[UporabiSifrantPonudb],
     SifrantVnosnihPolj.[UporabiSifrantXML],
+    CASE
+      WHEN SifrantiPolja.[LookupXML] is not null
+      THEN SifrantiPolja.[LookupXML]
+      ELSE SifrantVnosnihPolj.[LookupXML]
+    END AS [LookupXML],
+
     SifrantVnosnihPolj.[UporabiWorkAreaId],
     SifrantVnosnihPolj.[Opombe],
     SifrantiPolja.[Changed],
