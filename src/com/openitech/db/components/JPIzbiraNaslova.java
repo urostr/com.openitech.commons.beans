@@ -37,10 +37,10 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   FilterDocumentCaretListener flPosta;
   DbDataSource dataSource;
   ActionListener alDataSource;
-  private boolean addLabels = true;
+  private boolean addLabels;
 
   public JPIzbiraNaslova() throws SQLException {
-    this(false);
+    this(true);
 
   }
 
@@ -303,8 +303,8 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
     foPostnaStevilkaMID = new com.openitech.db.model.DbFieldObserver();
     foPostnaStevilka = new com.openitech.db.model.DbFieldObserver();
     foPosta = new com.openitech.db.model.DbFieldObserver();
-    jPanel1 = new javax.swing.JPanel();
     jlUlica = new javax.swing.JLabel();
+    jPanel1 = new javax.swing.JPanel();
     jtfUlice = new com.openitech.db.components.JDbTextField();
     jlHS = new javax.swing.JLabel();
     jtfHisnaStevilka = new com.openitech.db.components.JDbTextField();
@@ -389,14 +389,14 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
 
     setLayout(new java.awt.GridBagLayout());
 
-    jPanel1.setLayout(new java.awt.GridBagLayout());
-
     jlUlica.setText("Ulica");
     if(addLabels){
       gridBagConstraints = new java.awt.GridBagConstraints();
       gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-      jPanel1.add(jlUlica, gridBagConstraints);
+      add(jlUlica, gridBagConstraints);
     }
+
+    jPanel1.setLayout(new java.awt.GridBagLayout());
 
     jtfUlice.setAutoCompleteModel(cmUlice);
     jtfUlice.addFocusListener(new java.awt.event.FocusAdapter() {
