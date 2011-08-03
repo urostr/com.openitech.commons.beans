@@ -104,8 +104,12 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           if (dataSourceElement.getCOUNTSQL() != null) {
             dataSource.setCountSql(getReplacedSql(dataSourceElement.getCOUNTSQL()));
           }
-          dataSource.setSelectSql(getReplacedSql(dataSourceElement.getSQL()));
-
+          if (dataSourceElement.getIdSifranta() != null) {
+            String dataSourceSQL = SqlUtilities.getInstance().getDataSourceSQL(dataSourceElement.getIdSifranta(), dataSourceElement.getIdSifre());
+            dataSource.setSelectSql(getReplacedSql(dataSourceSQL));
+          } else {
+            dataSource.setSelectSql(getReplacedSql(dataSourceElement.getSQL()));
+          }
           if (dataSourceElement.getQueryHints() != null) {
             dataSource.setCountSql(dataSource.getCountSql() + '\n' + dataSourceElement.getQueryHints());
             dataSource.setSelectSql(dataSource.getSelectSql() + '\n' + dataSourceElement.getQueryHints());
