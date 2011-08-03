@@ -37,7 +37,7 @@ public class JPIzbiraNaslova extends javax.swing.JPanel {
   FilterDocumentCaretListener flPosta;
   DbDataSource dataSource;
   ActionListener alDataSource;
-  private boolean addLabels = false;
+  private boolean addLabels = true;
 
   public JPIzbiraNaslova() throws SQLException {
     this(false);
