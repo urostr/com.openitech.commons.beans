@@ -55,6 +55,8 @@
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
+            <xsd:attribute name="IdSifranta" type="xsd:int"/>
+            <xsd:attribute name="IdSifre" type="xsd:string"/>
           </xsd:complexType>
         </xsd:element>
         <xsd:element name="DataModel" type="tns:DataModel" minOccurs="0"></xsd:element>
@@ -523,6 +525,7 @@
       <xsd:element name="SeekEventId" type="tns:SeekParameters"></xsd:element>
       <xsd:element name="LookupValueFieldName" type="xsd:string"></xsd:element>
       <xsd:element name="LookupPrikazFieldName" type="xsd:string"></xsd:element>
+      <xsd:element name="LookupAsComboBox" type="xsd:boolean"></xsd:element>
     </xsd:sequence>
   </xsd:complexType>
   <xsd:simpleType name="GridBagLayoutAnchor">
