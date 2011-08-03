@@ -27,6 +27,7 @@ import java.util.logging.Logger;
  * @author uros
  */
 public class SQLWorker {
+
   private final LogWriter logWriter;
 
   /** Creates a new instance of DbDataSource */
@@ -116,7 +117,7 @@ public class SQLWorker {
       parameterCount = metaData.getParameterCount();
     } catch (SQLException err) {
       logWriter.println(err.getMessage());
-      logWriter.flush(logWriter.getLogger(),Level.WARNING, err);
+      logWriter.flush(logWriter.getLogger(), Level.WARNING, err);
     }
     Object value;
     Integer type;
@@ -161,6 +162,74 @@ public class SQLWorker {
       }
     }
     return pos;
+  }
+
+  public String setParameters(String sql, List<?> parameters) throws SQLException {
+    return setParameters(sql, parameters, 1, false);
+  }
+
+  public String setParameters(String sql, List<?> parameters, int pos, boolean subset) throws SQLException {
+
+    int parameterCount = Integer.MAX_VALUE;
+    int count = 0;
+    for (int i = 0; i < sql.length(); i++) {
+      char charAt = sql.charAt(i);
+      if (charAt == '?') {
+        count++;
+      }
+    }
+
+    parameterCount = count;
+
+    Object value;
+    Integer type;
+
+    for (Iterator values = parameters.iterator(); (pos <= parameterCount) && values.hasNext();) {
+      value = values.next();
+      if (value instanceof DbDataSource.SqlParameter) {
+        type = ((DbDataSource.SqlParameter) value).getType();
+        if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
+          if (((DbDataSource.SqlParameter) value).getValue() != null) {
+            sql = sql.replaceFirst("\\?", ((DbDataSource.SqlParameter) value).getValue().toString());
+//            statement.setObject(pos++, ((DbDataSource.SqlParameter) value).getValue(),
+//                    ((DbDataSource.SqlParameter) value).getType());
+            if (DbDataSource.DUMP_SQL) {
+              logWriter.println("--[" + (pos - 1) + "]=" + ((DbDataSource.SqlParameter) value).getValue().toString());
+            }
+          } else {
+            sql = sql.replaceFirst("\\?", "''");
+//            statement.setNull(pos++, ((DbDataSource.SqlParameter) value).getType());
+            if (DbDataSource.DUMP_SQL) {
+              logWriter.println("--[" + (pos - 1) + "]=''");
+            }
+          }
+        } else if ((value instanceof DbDataSource.SubstSqlParameter) && (((DbDataSource.SubstSqlParameter) value).getParameters().size() > 0)) {
+          sql = setParameters(sql, ((DbDataSource.SubstSqlParameter) value).getParameters(), pos, true);
+        }
+      } else {
+        if (value == null) {
+          sql = sql.replaceFirst("\\?", "''");
+//          statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
+          if (DbDataSource.DUMP_SQL) {
+            logWriter.println("--[" + (pos - 1) + "]=''");
+          }
+        } else {
+          sql = sql.replaceFirst("\\?", value.toString());
+//          statement.setObject(pos++, value);
+          if (DbDataSource.DUMP_SQL) {
+            logWriter.println("--[" + (pos - 1) + "]=" + value.toString());
+          }
+        }
+      }
+    }
+    if (parameterCount < Integer.MAX_VALUE) {
+      while ((pos <= parameterCount) && !subset) {
+        sql = sql.replaceFirst("\\?", "''");
+        pos++;
+//        statement.setNull(pos, metaData == null ? java.sql.Types.VARCHAR : metaData.getParameterType(pos++));
+      }
+    }
+    return sql;
   }
 
   public ResultSet executeQuery(String selectSQL, List<?> parameters) throws SQLException {

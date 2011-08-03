@@ -697,6 +697,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException;
 
+  public abstract String getDataSourceSQL(int idSifranta, String idSifre) throws SQLException;
+  
   public static enum Operation {
 
     INSERT,

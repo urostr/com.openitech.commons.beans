@@ -43,6 +43,7 @@ import com.openitech.value.events.EventPK;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.CallableStatement;
@@ -2627,7 +2628,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       sqlEventTableVersioned.setValue(ev_view_versioned);
 
       sqlFindEventValid.setValue(validOnly && !usesView ? " AND ev.valid = 1 " : "");
-      if (sifra == null) {
+      if (sifra == null || (sifra.length == 1 && sifra[0] == null)) {
         if (!usesView) {
           StringBuilder sbSifrant = new StringBuilder();
           for (Integer s : sifranti) {
@@ -4500,6 +4501,36 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
     }
     return result;
+  }
+
+  @Override
+  public String getDataSourceSQL(int idSifranta, String idSifre) throws SQLException {
+    return getDataSourceSQL(idSifranta, idSifre, false, true);
+  }
+
+  public String getDataSourceSQL(int idSifranta, String idSifre, final boolean searchByPK, final boolean showResultFields) throws SQLException {
+
+    EventQuery eq;
+    Event ev = new Event(idSifranta, idSifre);
+    ResultSet fields = getGeneratedFields(idSifranta, idSifre);
+    HashSet<Field> result = new LinkedHashSet<Field>();
+    HashSet<Field> search = new LinkedHashSet<Field>();
+    while (fields.next()) {
+      final Field field = new Field(fields.getString("ImePolja"), ValueType.valueOf(fields.getInt("TipPolja")).getSqlType(), fields.getInt("FieldValueIndex"));
+      field.setOpis(fields.getString("Opis"));
+
+
+      if (showResultFields) {
+        result.add(field);
+      }
+      if (searchByPK && fields.getBoolean("PrimaryKey")) {
+        search.add(field);
+      }
+    }
+    eq = prepareEventQuery(ev, search, result);
+    StringBuilder sb = new StringBuilder(DbDataSource.substParameters(eq.getQuery(), eq.getParameters()));
+    return new SQLWorker().setParameters(sb.toString(), eq.getParameters());
+
   }
 
   @Override

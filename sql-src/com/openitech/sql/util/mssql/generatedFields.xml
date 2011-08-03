@@ -52,6 +52,7 @@
                 [UporabiSifrantPodjetji] [bit] NULL,
                 [UporabiSifrantPonudb] [bit] NULL,
                 [UporabiSifrantXML] [varchar](max) NULL,
+                [LookupXML] [varchar](max) NULL,
                 [UporabiWorkAreaId] [int] NULL,
                 [Opombe] [varchar](max) NULL,
                 [SifrantiPoljaChanged] [binary](8) NOT NULL,
@@ -152,6 +153,7 @@
                ,[UporabiSifrantPodjetji]
                ,[UporabiSifrantPonudb]
                ,[UporabiSifrantXML]
+               ,[LookupXML]
                ,[UporabiWorkAreaId]
                ,[Opombe]
                ,[SifrantiPoljaChanged]
@@ -281,6 +283,11 @@
               SifrantVnosnihPolj.[UporabiSifrantPodjetji],
               SifrantVnosnihPolj.[UporabiSifrantPonudb],
               SifrantVnosnihPolj.[UporabiSifrantXML],
+              CASE
+                WHEN SifrantiPolja.[LookupXML] is not null
+                THEN SifrantiPolja.[LookupXML]
+                ELSE SifrantVnosnihPolj.[LookupXML]
+              END AS [LookupXML],
               SifrantVnosnihPolj.[UporabiWorkAreaId],
               SifrantVnosnihPolj.[Opombe],
               SifrantiPolja.[Changed],
