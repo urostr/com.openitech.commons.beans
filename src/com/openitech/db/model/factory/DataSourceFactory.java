@@ -282,6 +282,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 //      resume = dataSourceXML.getDataSource().isResumeAfterCreation();
 //    }
 //    if (resume != null && resume && dataSource.isSuspended()) {
+    if(dataSource.getQueuedDelay() == Integer.MAX_VALUE){
+      dataSource.setQueuedDelay(DbDataSource.DEFAULT_QUEUED_DELAY);
+    }
     if (dataSource != null) {
       DataSourceEvent.resume(dataSource);
     }
