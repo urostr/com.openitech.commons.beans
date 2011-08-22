@@ -1,5 +1,5 @@
 UPDATE
-    <%ChangeLog%>.[dbo].[EventValues] WITH (ROWLOCK)
+    <%ChangeLog%>.[dbo].[EventValues] 
     SET
     [ValueId]         = ?
 WHERE

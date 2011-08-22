@@ -1,6 +1,6 @@
 INSERT 
 INTO 
-    <%ChangeLog%>.[dbo].[EventValues] WITH (ROWLOCK)
+    <%ChangeLog%>.[dbo].[EventValues] 
     (
         [EventId], 
         [IdPolja],
