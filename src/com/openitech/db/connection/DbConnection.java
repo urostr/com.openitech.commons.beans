@@ -67,6 +67,8 @@ public interface DbConnection {
   String DB_MERGE_SECONDARY = "db.merge.secondary";
   String DB_OPTIMISE_RELOADING = "db.optimiseReloading";
 
+  String DB_USE_PK_FOR_SEARCH = "db.use.pk.for.search";
+
 
   Connection getTemporaryConnection();
   Connection getConnection();
