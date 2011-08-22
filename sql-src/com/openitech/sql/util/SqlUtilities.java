@@ -691,11 +691,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Set<String> getEventViewColumns(String viewName);
 
-  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre) throws SQLException {
-    updateUsePrimaryKeyForSearch(idSifranta, idSifre, false);
-  }
-
-  public abstract void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException;
+//  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre) throws SQLException {
+//    updateUsePrimaryKeyForSearch(idSifranta, idSifre, false);
+//  }
+//
+//  public abstract void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException;
 
   public abstract String getDataSourceSQL(int idSifranta, String idSifre) throws SQLException;
   
