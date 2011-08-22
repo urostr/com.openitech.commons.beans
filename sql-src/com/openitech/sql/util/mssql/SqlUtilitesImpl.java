@@ -3286,49 +3286,49 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
   private Map<EventQueryKey, EventQueryKey> findEventStatements = new SoftHashMap<EventQueryKey, EventQueryKey>();
-  private Map<EventType, Boolean> searchByPKMap = new HashMap<EventType, Boolean>();
+//  private Map<EventType, Boolean> searchByPKMap = new HashMap<EventType, Boolean>();
 
-  @Override
-  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException {
-    EventType eventType = new EventType(idSifranta, idSifre);
-    if (!searchByPKMap.containsKey(eventType)) {
-      Connection connection;
-      if (useTemporaryConnection) {
-        connection = ConnectionManager.getInstance().getTemporaryConnection();
-      } else {
-        connection = ConnectionManager.getInstance().getTxConnection();
-      }
-      try {
-        PreparedStatement psSearch_by_PK = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "search_by_pk.sql", "cp1250"));
-
-        //prestejem evente, kateri nimajo shranjenega primarykey-a
-        //ce je vsaj eden, ne iscem po PK ampak po vrednostih PK
-        try {
-          int param = 1;
-          psSearch_by_PK.clearParameters();
-          psSearch_by_PK.setInt(param++, idSifranta);
-          psSearch_by_PK.setString(param++, idSifre);
-          ResultSet rs_search_by_PK = psSearch_by_PK.executeQuery();
-          try {
-            Boolean search = Boolean.FALSE;
-            if (rs_search_by_PK.next()) {
-              int count = rs_search_by_PK.getInt(1);
-              search = count == 0;
-            }
-            searchByPKMap.put(eventType, search);
-          } finally {
-            rs_search_by_PK.close();
-          }
-        } finally {
-          psSearch_by_PK.close();
-        }
-      } finally {
-        if (useTemporaryConnection) {
-          connection.close();
-        }
-      }
-    }
-  }
+//  @Override
+//  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException {
+//    EventType eventType = new EventType(idSifranta, idSifre);
+//    if (!searchByPKMap.containsKey(eventType)) {
+//      Connection connection;
+//      if (useTemporaryConnection) {
+//        connection = ConnectionManager.getInstance().getTemporaryConnection();
+//      } else {
+//        connection = ConnectionManager.getInstance().getTxConnection();
+//      }
+//      try {
+//        PreparedStatement psSearch_by_PK = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "search_by_pk.sql", "cp1250"));
+//
+//        //prestejem evente, kateri nimajo shranjenega primarykey-a
+//        //ce je vsaj eden, ne iscem po PK ampak po vrednostih PK
+//        try {
+//          int param = 1;
+//          psSearch_by_PK.clearParameters();
+//          psSearch_by_PK.setInt(param++, idSifranta);
+//          psSearch_by_PK.setString(param++, idSifre);
+//          ResultSet rs_search_by_PK = psSearch_by_PK.executeQuery();
+//          try {
+//            Boolean search = Boolean.FALSE;
+//            if (rs_search_by_PK.next()) {
+//              int count = rs_search_by_PK.getInt(1);
+//              search = count == 0;
+//            }
+//            searchByPKMap.put(eventType, search);
+//          } finally {
+//            rs_search_by_PK.close();
+//          }
+//        } finally {
+//          psSearch_by_PK.close();
+//        }
+//      } finally {
+//        if (useTemporaryConnection) {
+//          connection.close();
+//        }
+//      }
+//    }
+//  }
 
   @Override
   public Event findEvent(Event event) throws SQLException {
@@ -3337,9 +3337,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
       eventId = event.getId();
     } else {
 
-      updateUsePrimaryKeyForSearch(event.getSifrant(), event.getSifra());
+//      updateUsePrimaryKeyForSearch(event.getSifrant(), event.getSifra());
 
-      Boolean searchByPK = searchByPKMap.get(new EventType(event));
+//      Boolean searchByPK = searchByPKMap.get(new EventType(event));
+      Boolean searchByPK = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_PK_FOR_SEARCH, Boolean.toString(true)));
       if (searchByPK != null && searchByPK) {
         //find by PK
         EventPK eventPK = event.getEventPK();
