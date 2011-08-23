@@ -10,6 +10,7 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.Field;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
+import com.openitech.db.connection.DbConnection;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
@@ -507,9 +508,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
       //za razumevanje in konsistentnost raje vzamem versionedparent in ne samo newvalues, ceprav sta ista
       versionId = assignEventVersion(newValues.getVersionParent(), eventPKs);
 
-      for (EventPK eventPK : eventPKs) {
-        eventPK.setVersionID(versionId);
-        success = success && storePrimaryKeyVersions(eventPK);
+      if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SAVE_PK, Boolean.toString(true)))) {
+        for (EventPK eventPK : eventPKs) {
+          eventPK.setVersionID(versionId);
+          success = success && storePrimaryKeyVersions(eventPK);
+        }
       }
 
 
@@ -696,9 +699,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 //  }
 //
 //  public abstract void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException;
-
   public abstract String getDataSourceSQL(int idSifranta, String idSifre) throws SQLException;
-  
+
   public static enum Operation {
 
     INSERT,
