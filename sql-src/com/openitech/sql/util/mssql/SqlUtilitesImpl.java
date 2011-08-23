@@ -367,7 +367,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
               storedEventIds.add(eventPK.getEventId());
               storeEventVersion(versionId, eventPK.getEventId());
               eventPK.setVersionID(versionId);
-              storePrimaryKeyVersions(eventPK);
+              if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SAVE_PK, Boolean.toString(true)))) {
+                storePrimaryKeyVersions(eventPK);
+              }
             }
           }
         }
@@ -1072,7 +1074,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             long end = System.currentTimeMillis();
             System.out.println("CAS:EventValues=" + (end - start));
             start = System.currentTimeMillis();
-            if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
+            if (eventPrimaryKey != null && eventPrimaryKey.length > 0 && Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SAVE_PK, Boolean.toString(true)))) {
               eventPK.setEventId(events_ID);
               eventPK.setIdSifranta(event.getSifrant());
               eventPK.setIdSifre(event.getSifra());
@@ -3329,7 +3331,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //      }
 //    }
 //  }
-
   @Override
   public Event findEvent(Event event) throws SQLException {
     Long eventId = null;
