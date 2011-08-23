@@ -68,6 +68,7 @@ public interface DbConnection {
   String DB_OPTIMISE_RELOADING = "db.optimiseReloading";
 
   String DB_USE_PK_FOR_SEARCH = "db.use.pk.for.search";
+  String DB_SAVE_PK = "db.save.pk";
 
 
   Connection getTemporaryConnection();
