@@ -5224,8 +5224,8 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
       }
     }
 
-    public DbDataSource getDataSource() {
-      return dataSources.get(0);
+    public DbDataSource getFirstDataSource() {
+      return dataSources != null && dataSources.size() > 0 ? dataSources.get(0) : null;
     }
 
     public String getReplace() {
