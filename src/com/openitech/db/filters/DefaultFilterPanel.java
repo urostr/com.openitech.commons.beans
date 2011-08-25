@@ -14,6 +14,9 @@ import com.openitech.db.model.DbDataSource;
 import java.awt.Component;
 import java.awt.Container;
 import java.util.Map;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.Document;
 
 /**
@@ -24,6 +27,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
 
   protected DataSourceFiltersMap filtersMap;
   private boolean addSearchButton = false;
+  private SpinnerNumberModel spinnerModel;
 
   /**
    * Creates new form JPKadrovskaEvidencaFilterPanel
@@ -54,11 +58,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
       addSearchButton = addSearchButton || dataSourceFilters.isUseSearchButton();
     }
     if (addSearchButton) {
-      for (DataSourceFilters dataSourceFilters : dbDataSourceFilter.getFilters().keySet()) {
-        for (DbDataSource dbDataSource : dataSourceFilters.getDataSources()) {
-          dbDataSource.setAutoReload(false);
-        }
-      }
+      toggleAutomaticSearch(!addSearchButton);
     }
 
     initComponents();
@@ -106,37 +106,113 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     java.awt.GridBagConstraints gridBagConstraints;
 
     dbDataSourceFilter = dbDataSourceFilter==null?new com.openitech.db.filters.JPDbDataSourceFilter():dbDataSourceFilter;
+    jPanel1 = new javax.swing.JPanel();
+    jcbAutomaticSearch = new javax.swing.JCheckBox();
+    jsDataSourceDelay = new javax.swing.JSpinner();
     jbIsci = new javax.swing.JButton();
 
     setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
     setLayout(new java.awt.GridBagLayout());
     gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.weightx = 1.0;
     add(dbDataSourceFilter, gridBagConstraints);
 
+    jPanel1.setLayout(new java.awt.GridBagLayout());
+
+    jcbAutomaticSearch.setSelected(!addSearchButton);
+    jcbAutomaticSearch.setText("Avtomatièno iskanje");
+    jcbAutomaticSearch.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jcbAutomaticSearchActionPerformed(evt);
+      }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+    jPanel1.add(jcbAutomaticSearch, gridBagConstraints);
+
+    jsDataSourceDelay.setModel(this.getSpinnerModel());
+    jsDataSourceDelay.setToolTipText("Zamik pri avtomatiènem iskanju");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+    gridBagConstraints.weightx = 1.0;
+    jPanel1.add(jsDataSourceDelay, gridBagConstraints);
+
     jbIsci.setText("Išèi");
+    jbIsci.setEnabled(addSearchButton);
     jbIsci.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         jbIsciActionPerformed(evt);
       }
     });
-    if(addSearchButton){
-      gridBagConstraints = new java.awt.GridBagConstraints();
-      gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-      gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-      add(jbIsci, gridBagConstraints);
-    }
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
+    jPanel1.add(jbIsci, gridBagConstraints);
+
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    add(jPanel1, gridBagConstraints);
   }// </editor-fold>//GEN-END:initComponents
 
   private void jbIsciActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbIsciActionPerformed
     // TODO add your handling code here:
-    dbDataSourceFilter.reload();
+    dbDataSourceFilter.reload(false);
   }//GEN-LAST:event_jbIsciActionPerformed
+
+
+  /**
+   * Get the value of spinnerModel
+   *
+   * @return the value of spinnerModel
+   */
+  public SpinnerNumberModel getSpinnerModel() {
+    if (spinnerModel==null) {
+      int delay = 270;
+
+      for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
+         delay = Math.min(delay, (int) dbDataSource.getQueuedDelay());
+      }
+
+      spinnerModel = new SpinnerNumberModel(delay, Math.min(100, delay), 5000, 100);
+      spinnerModel.addChangeListener(new ChangeListener() {
+
+        @Override
+        public void stateChanged(ChangeEvent e) {
+          long queuedDelay = ((Number) ((SpinnerNumberModel) e.getSource()).getValue()).longValue();
+
+          for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
+            dbDataSource.setQueuedDelay(queuedDelay);
+          }
+        }
+      });
+    }
+    return spinnerModel;
+  }
+
+
+  private void jcbAutomaticSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbAutomaticSearchActionPerformed
+    toggleAutomaticSearch(jcbAutomaticSearch.isSelected());
+  }
+
+  private void toggleAutomaticSearch(boolean autoReload) {
+    for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
+        dbDataSource.setAutoReload(autoReload);
+    }
+    if (jsDataSourceDelay!=null) {
+      jsDataSourceDelay.setEnabled(autoReload);
+    }
+    if (jbIsci!=null) {
+      jbIsci.setEnabled(!autoReload);
+    }
+  }//GEN-LAST:event_jcbAutomaticSearchActionPerformed
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private com.openitech.db.filters.JPDbDataSourceFilter dbDataSourceFilter;
+  private javax.swing.JPanel jPanel1;
   private javax.swing.JButton jbIsci;
+  private javax.swing.JCheckBox jcbAutomaticSearch;
+  private javax.swing.JSpinner jsDataSourceDelay;
   // End of variables declaration//GEN-END:variables
 }

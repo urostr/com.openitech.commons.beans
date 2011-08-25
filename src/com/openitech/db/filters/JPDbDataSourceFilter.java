@@ -22,6 +22,7 @@ import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.xml.config.GridBagConstraints;
 import com.openitech.db.model.xml.config.SeekLayout;
+import com.openitech.events.concurrent.RefreshDataSource;
 import com.openitech.util.Equals;
 import java.awt.CardLayout;
 import java.awt.GridBagLayout;
@@ -138,6 +139,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   public DataSourceFiltersMap getFilters() {
     return filters;
   }
+
+  public Set<DbDataSource> getDataSources() {
+    return Collections.unmodifiableSet(dataSources);
+  }
+
+
   private JMenu filterMenuItem = new JMenu("Aktivni filtri");
 
   @Override
@@ -639,9 +646,15 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     updateFilterPane();
   }
 
-  public void reload() {
+  public void reload(boolean queued) {
     for (DbDataSource dataSource : dataSources) {
-      dataSource.reload(true);
+      if (queued) {
+        dataSource.reload(true);
+      } else {
+        RefreshDataSource refreshDataSource = new com.openitech.events.concurrent.RefreshDataSource(dataSource, true);
+        refreshDataSource.setQueuedDelay(1);
+        com.openitech.events.concurrent.DataSourceEvent.submit(refreshDataSource);
+      }
     }
   }
 
