@@ -9,7 +9,6 @@
 
 package com.openitech.db.filters;
 
-import com.openitech.db.filters.DataSourceFilters;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,8 +56,10 @@ public class DataSourceFilterScheduler {
       this.value = value;
     }
     
+    @Override
     public void run() {
-      filter.setSeekValue(seek_type, value);
+      filter.setSeekValue(seek_type, value, !filter.isUseSearchButton());
+      FilterManager.getInstance().addFilter(filter);
     }
   }
 }

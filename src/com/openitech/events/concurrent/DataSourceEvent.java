@@ -12,7 +12,9 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbNavigatorDataSource;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -33,7 +35,8 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
           new SynchronousQueue<Runnable>());
   protected static final Map<Event, Long> timestamps = new ConcurrentHashMap<Event, Long>();
   protected static final Map<Event, Future> tasks = new ConcurrentHashMap<Event, Future>();
-  
+  protected static final Map<DbDataSource, Set<DataSourceEvent>> suspendedTasks = new ConcurrentHashMap<DbDataSource, Set<DataSourceEvent>>();
+
   protected final Long timestamp = new Long((new Date()).getTime());
   protected final Event event;
   protected Event suspend;
@@ -80,6 +83,12 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
 
   public static void resume(DbDataSource dataSource) {
     timestamps.remove(new Event(dataSource, Event.Type.SUSPEND));
+    if (suspendedTasks.containsKey(dataSource)) {
+      for (DataSourceEvent event : suspendedTasks.get(dataSource)) {
+        submit(event);
+      }
+    }
+    suspendedTasks.remove(dataSource);
   }
 
   public static boolean isRefreshing(DbNavigatorDataSource dataSource) {

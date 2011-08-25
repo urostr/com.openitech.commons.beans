@@ -529,11 +529,12 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
       try {
         this.dataSource.startUpdate();
       } catch (SQLException ex) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning("can't start updating the row");
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "can't start updating the row", ex);
       }
     }
   }
 
+  @Override
   public void setDataSource(DbDataSource dataSource) {
     if (this.dataSource != null) {
       this.dataSource.removeActiveRowChangeListener(activeRowChangeWeakListener);
@@ -547,10 +548,12 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
     }
   }
 
+  @Override
   public DbDataSource getDataSource() {
     return dataSource;
   }
 
+  @Override
   public void setColumnName(String columnName) {
     if (columnName != null && columnName.trim().length() == 0) {
       columnName = null;
@@ -561,6 +564,7 @@ public class DbFieldObserver implements com.openitech.db.model.FieldObserver, ja
     }
   }
 
+  @Override
   public String getColumnName() {
     return columnName;
   }

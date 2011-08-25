@@ -22,6 +22,7 @@ import javax.swing.text.Document;
 public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable {
 
   protected DataSourceFiltersMap filtersMap;
+  private boolean addSearchButton = false;
 
   /**
    * Creates new form JPKadrovskaEvidencaFilterPanel
@@ -47,6 +48,9 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     dbDataSourceFilter.setParentFilterPanel(parentFilterPanel);
     dbDataSourceFilter.getFilters().putAll(filtersMap);
 
+    for (DataSourceFilters dataSourceFilters : dbDataSourceFilter.getFilters().keySet()) {
+      addSearchButton = addSearchButton || dataSourceFilters.isUseSearchButton();
+    }
     invalidate();
   }
 
@@ -89,16 +93,37 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     java.awt.GridBagConstraints gridBagConstraints;
 
     dbDataSourceFilter = new com.openitech.db.filters.JPDbDataSourceFilter();
+    jbIsci = new javax.swing.JButton();
 
     setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
     setLayout(new java.awt.GridBagLayout());
     gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.weightx = 1.0;
     add(dbDataSourceFilter, gridBagConstraints);
+
+    jbIsci.setText("Išèi");
+    jbIsci.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jbIsciActionPerformed(evt);
+      }
+    });
+    if(addSearchButton){
+      gridBagConstraints = new java.awt.GridBagConstraints();
+      gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+      gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
+      add(jbIsci, gridBagConstraints);
+    }
   }// </editor-fold>//GEN-END:initComponents
+
+  private void jbIsciActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbIsciActionPerformed
+    // TODO add your handling code here:
+    FilterManager.getInstance().doSeek();
+  }//GEN-LAST:event_jbIsciActionPerformed
+
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private com.openitech.db.filters.JPDbDataSourceFilter dbDataSourceFilter;
+  private javax.swing.JButton jbIsci;
   // End of variables declaration//GEN-END:variables
 }

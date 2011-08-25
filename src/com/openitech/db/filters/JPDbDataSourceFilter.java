@@ -246,7 +246,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
       java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
       final DataSourceFilters filter = entry.getKey();
-
+      
       for (int i = 0; i < seekTypeList.size(); i++) {
         final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i) instanceof DataSourceFilters.SeekTypeWrapper
                 ? ((DataSourceFilters.SeekTypeWrapper) seekTypeList.get(i)).getWrapperFor()

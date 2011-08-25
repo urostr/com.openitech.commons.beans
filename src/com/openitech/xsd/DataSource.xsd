@@ -164,6 +164,7 @@
         </xsd:complexType>
       </xsd:element>
     </xsd:all>
+    <xsd:attribute name="UseSearchButton" type="xsd:boolean"/>
   </xsd:complexType>
   <xsd:complexType name="DataSourceParametersFactory">
     <xsd:all>

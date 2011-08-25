@@ -2907,7 +2907,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public void fireIntervalAdded(ListDataEvent e) {
-    if (listDataListeners != null) {
+    if (isCanFireEvents() && listDataListeners != null) {
       if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
@@ -2925,7 +2925,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public void fireIntervalRemoved(ListDataEvent e) {
-    if (listDataListeners != null) {
+    if (isCanFireEvents() && listDataListeners != null) {
       if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
@@ -2943,7 +2943,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public void fireContentsChanged(ListDataEvent e) {
-    if (listDataListeners != null) {
+    if (isCanFireEvents() && listDataListeners != null) {
       if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = listDataListeners.elementsList();
         int count = listeners.size();
@@ -2975,7 +2975,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public void fireActionPerformed(ActionEvent e) {
-    if (actionListeners != null) {
+    if (isCanFireEvents() && actionListeners != null) {
       java.util.List listeners = actionListeners.elementsList();
       int count = listeners.size();
       for (int i = 0; i < count; i++) {
@@ -2999,7 +2999,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public void fireStoreUpdates(StoreUpdatesEvent e) throws SQLException {
-    if (storeUpdatesListeners != null) {
+    if (isCanFireEvents() && storeUpdatesListeners != null) {
       java.util.List listeners = storeUpdatesListeners.elementsList();
       int count = listeners.size();
       for (int i = 0; i < count; i++) {
@@ -3009,7 +3009,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public void fireDeleteRow(StoreUpdatesEvent e) throws SQLException {
-    if (storeUpdatesListeners != null) {
+    if (isCanFireEvents() && storeUpdatesListeners != null) {
       java.util.List listeners = storeUpdatesListeners.elementsList();
       int count = listeners.size();
       for (int i = 0; i < count; i++) {
@@ -3036,7 +3036,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public void fireActiveRowChange(ActiveRowChangeEvent e) {
-    if (activeRowChangeListeners != null) {
+    if (isCanFireEvents() && activeRowChangeListeners != null) {
       if (java.awt.EventQueue.isDispatchThread() || !isSafeMode()) {
         java.util.List listeners = activeRowChangeListeners.elementsList();
         int count = listeners.size();
@@ -3055,7 +3055,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   }
 
   public void fireFieldValueChanged(ActiveRowChangeEvent e) {
-    if (activeRowChangeListeners != null) {
+    if (isCanFireEvents() && activeRowChangeListeners != null) {
       java.util.List listeners = activeRowChangeListeners.elementsList();
       int count = listeners.size();
       for (int i = 0; i < count; i++) {
@@ -3528,7 +3528,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   public void setCanAddRows(boolean canAddRows) {
     boolean oldValue = this.canAddRows;
     this.canAddRows = canAddRows;
-    if (implementation.fireEvents()) {
+    if (implementation.fireEvents() && isCanFireEvents()) {
       firePropertyChange("canAddRows", oldValue, canAddRows);
     }
   }
@@ -3536,7 +3536,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   public void setCanDeleteRows(boolean canDeleteRows) {
     boolean oldValue = this.canDeleteRows;
     this.canDeleteRows = canDeleteRows;
-    if (implementation.fireEvents()) {
+    if (implementation.fireEvents() && isCanFireEvents()) {
       firePropertyChange("canDeleteRows", oldValue, canDeleteRows);
     }
   }
@@ -3730,18 +3730,20 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
    */
   public void firePropertyChange(String propertyName,
           Object oldValue, Object newValue) {
-    PropertyChangeSupport changeSupport = this.changeSupport;
-    if (changeSupport == null || (oldValue != null && newValue != null && oldValue.equals(newValue))) {
-      return;
-    }
-    if (EventQueue.isDispatchThread() || !isSafeMode()) {
-      changeSupport.firePropertyChange(propertyName, oldValue, newValue);
-    } else {
-      try {
-        java.awt.EventQueue.invokeAndWait(new FirePropertyChanged(this, propertyName, oldValue, newValue));
-      } catch (Exception ex) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't firePropertyChange from '" + componentName + "'", ex);
-        ;
+    if (isCanFireEvents()) {
+      PropertyChangeSupport changeSupport = this.changeSupport;
+      if (changeSupport == null || (oldValue != null && newValue != null && oldValue.equals(newValue))) {
+        return;
+      }
+      if (EventQueue.isDispatchThread() || !isSafeMode()) {
+        changeSupport.firePropertyChange(propertyName, oldValue, newValue);
+      } else {
+        try {
+          java.awt.EventQueue.invokeAndWait(new FirePropertyChanged(this, propertyName, oldValue, newValue));
+        } catch (Exception ex) {
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't firePropertyChange from '" + componentName + "'", ex);
+          ;
+        }
       }
     }
   }
@@ -3758,11 +3760,13 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
    */
   public void firePropertyChange(String propertyName,
           boolean oldValue, boolean newValue) {
-    PropertyChangeSupport changeSupport = this.changeSupport;
-    if (changeSupport == null || oldValue == newValue) {
-      return;
+    if (isCanFireEvents()) {
+      PropertyChangeSupport changeSupport = this.changeSupport;
+      if (changeSupport == null || oldValue == newValue) {
+        return;
+      }
+      changeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }
-    changeSupport.firePropertyChange(propertyName, oldValue, newValue);
   }
 
   /**
@@ -3777,11 +3781,13 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
    */
   public void firePropertyChange(String propertyName,
           int oldValue, int newValue) {
-    PropertyChangeSupport changeSupport = this.changeSupport;
-    if (changeSupport == null || oldValue == newValue) {
-      return;
+    if (isCanFireEvents()) {
+      PropertyChangeSupport changeSupport = this.changeSupport;
+      if (changeSupport == null || oldValue == newValue) {
+        return;
+      }
+      changeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }
-    changeSupport.firePropertyChange(propertyName, oldValue, newValue);
   }
 
   /**
@@ -4746,6 +4752,25 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   public boolean isSaveChangesOnMove() {
     return saveChangesOnMove;
   }
+  protected boolean canFireEvents = true;
+
+  /**
+   * Get the value of canFireEvents
+   *
+   * @return the value of canFireEvents
+   */
+  public boolean isCanFireEvents() {
+    return canFireEvents;
+  }
+
+  /**
+   * Set the value of canFireEvents
+   *
+   * @param canFireEvents new value of canFireEvents
+   */
+  public void setCanFireEvents(boolean canFireEvents) {
+    this.canFireEvents = canFireEvents;
+  }
 
   public static class SqlParameter<T> {
 
@@ -5199,7 +5224,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
       }
     }
 
-    public DbDataSource getDataSource(){
+    public DbDataSource getDataSource() {
       return dataSources.get(0);
     }
 

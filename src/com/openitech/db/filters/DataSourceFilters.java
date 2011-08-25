@@ -1001,6 +1001,25 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       firePropertyChange("query", true, false);
     }
   }
+  protected boolean useSearchButton = false;
+
+  /**
+   * Get the value of useSearchButton
+   *
+   * @return the value of useSearchButton
+   */
+  public boolean isUseSearchButton() {
+    return useSearchButton;
+  }
+
+  /**
+   * Set the value of useSearchButton
+   *
+   * @param useSearchButton new value of useSearchButton
+   */
+  public void setUseSearchButton(boolean useSearchButton) {
+    this.useSearchButton = useSearchButton;
+  }
 
   @Override
   public void reloadDataSources() {
@@ -1067,13 +1086,21 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
    * Setter for property itype.
    * @param itype New value of property itype.
    */
-  public <E> void setSeekValue(AbstractSeekType<E> seek, E seek_value) {
+  public <E> void setSeekValue(AbstractSeekType<E> seek, E seek_value, boolean setParameters) {
     if (!seek_types.contains(seek)) {
       seek_types.add(seek);
     }
-    if (seek.setValue(seek_value)) {
+    if (seek.setValue(seek_value) && setParameters) {
       setParameters(true);
     }
+  }
+
+  /**
+   * Setter for property itype.
+   * @param itype New value of property itype.
+   */
+  public <E> void setSeekValue(AbstractSeekType<E> seek, E seek_value) {
+    setSeekValue(seek, seek_value, true);
   }
 
   public <E> E getSeekValue(AbstractSeekType<E> seek) {

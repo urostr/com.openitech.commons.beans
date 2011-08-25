@@ -8,9 +8,12 @@ import com.openitech.db.model.*;
 import java.awt.EventQueue;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -136,19 +139,18 @@ public final class RefreshDataSource extends DataSourceEvent {
       Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(event.dataSource + " is canceled. Quitting.");
       return;
     }
-    if (isSuspended()) {
-      try {
-        Thread.sleep(27);
-      } catch (InterruptedException ex) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Thread interrupted [" + event.dataSource + "]");
-      }
-    }
-    if (isCanceled()) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(event.dataSource + " is canceled. Quitting.");
-      return;
-    }
+
     if (isSuspended()) { //re-queue
-      resubmit();
+      //resume ponovno pozene
+      Set<DataSourceEvent> requeue = DataSourceEvent.suspendedTasks.get(event.dataSource);
+      if (requeue == null) {
+        requeue = Collections.synchronizedSet(new HashSet<DataSourceEvent>());
+      }
+
+      requeue.add(this);
+
+      DataSourceEvent.suspendedTasks.put(event.dataSource, requeue);
+//      resubmit();
     } else {
       if (timestamps.get(event).longValue() > timestamp.longValue()) {
         return;

@@ -155,6 +155,9 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
           if (dataSourceFilter.getOperator() != null) {
             filter.setOperator(dataSourceFilter.getOperator());
             filter.addDataSource(dataSource);
+            if (dataSourceFilter.isUseSearchButton() != null) {
+              filter.setUseSearchButton(dataSourceFilter.isUseSearchButton());
+            }
           }
         }
         if (dataSourceFilter.getParameters() != null) {
@@ -329,7 +332,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               preformatedSeekType.setLayout(parameter.getLayout());
 
               filtersMap.put(filter, preformatedSeekType);
-            }else if (seekParameter.getRezultatKlicaSeekType() != null) {
+            } else if (seekParameter.getRezultatKlicaSeekType() != null) {
               final RezultatKlicaSeekType parameter = seekParameter.getRezultatKlicaSeekType();
 
               DataSourceFilters.RezultatiKlicaSeekType rezultatiSeekType;
@@ -342,7 +345,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               rezultatiSeekType.setName(parameter.getName());
               rezultatiSeekType.setLayout(parameter.getLayout());
               Rezultati rezultati = parameter.getRezultati();
-              if(rezultati != null){
+              if (rezultati != null) {
                 List<RezultatKlicaValues> rezultatiValues = rezultati.getRezultatiValues();
                 for (RezultatKlicaValues rezultat : rezultatiValues) {
                   rezultatiSeekType.addRezultat(new DataSourceFilters.RezultatiKlicaSeekType.RezultatKlica(rezultat.getOpis(), rezultat.getSifra(), rezultat.isChecked()));
