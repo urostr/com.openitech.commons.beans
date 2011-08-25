@@ -19,6 +19,7 @@ import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
 import com.openitech.db.filters.DataSourceFilters.RezultatiKlicaSeekType;
 import com.openitech.db.filters.DataSourceFilters.RezultatiKlicaSeekType.RezultatKlica;
 import com.openitech.db.model.DbComboBoxModel;
+import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.xml.config.GridBagConstraints;
 import com.openitech.db.model.xml.config.SeekLayout;
 import com.openitech.util.Equals;
@@ -57,6 +58,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   private final DataSourceFiltersMap filters = new DataSourceFiltersMap();
   private final java.util.Map<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]> documents = new HashMap<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]>();
   private final java.util.Map<DataSourceFilters.AbstractSeekType<? extends Object>, DbComboBoxModel> sifranti = new HashMap<DataSourceFilters.AbstractSeekType<? extends Object>, DbComboBoxModel>();
+  private final java.util.Set<DbDataSource> dataSources = new HashSet<DbDataSource>();
 
   /** Creates new form JPDbDataSourceFilter */
   public JPDbDataSourceFilter() {
@@ -242,11 +244,13 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     customPanel.removeAll();
     filtersInPanel = 0;
     documents.clear();
+    dataSources.clear();
 
     for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
       java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
       final DataSourceFilters filter = entry.getKey();
-      
+      dataSources.addAll(filter.getDataSources());
+
       for (int i = 0; i < seekTypeList.size(); i++) {
         final DataSourceFilters.AbstractSeekType<? extends Object> item = seekTypeList.get(i) instanceof DataSourceFilters.SeekTypeWrapper
                 ? ((DataSourceFilters.SeekTypeWrapper) seekTypeList.get(i)).getWrapperFor()
@@ -527,8 +531,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             JPanel jpBoxes = new JPanel(new GridBagLayout());
             jpBoxes.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
-            List<RezultatKlica> rezltati = rezultatiKlicaSeekType.getRezltati();
-            for (final RezultatKlica rezultatKlica : rezltati) {
+            List<RezultatKlica> rezultati = rezultatiKlicaSeekType.getRezultati();
+            for (final RezultatKlica rezultatKlica : rezultati) {
               final JCheckBox checkBox = new JCheckBox(rezultatKlica.getOpis());
               checkBox.setSelected(rezultatKlica.isChecked());
               checkBox.addActionListener(new ActionListener() {
@@ -541,21 +545,11 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               });
               jpBoxes.add(checkBox, new java.awt.GridBagConstraints());
             }
+
             //ko je dataSource pripravljen, mu dodam default filtre
-            final ActiveRowChangeListener l = new ActiveRowChangeListener() {
-
-              @Override
-              public void activeRowChanged(ActiveRowChangeEvent event) {
-                filter.getFirstDataSource().removeActiveRowChangeListener(this);
-                rezultatiKlicaSeekType.reload();
-              }
-
-              @Override
-              public void fieldValueChanged(ActiveRowChangeEvent event) {
-              }
-            };
-
-            filter.getFirstDataSource().addActiveRowChangeListener(l);
+            for (DbDataSource dataSource : filter.getDataSources()) {
+              dataSource.addActiveRowChangeListener(new RezultatKlicaActiveRowChangeListener(rezultatiKlicaSeekType));
+            }
 
             JPanel jpChechBoxHolder = new JPanel(new GridBagLayout());
             gridBagConstraints = new java.awt.GridBagConstraints();
@@ -643,6 +637,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     }
     jcbStolpec.setPreferredSize(new JComboBox(jcbStolpec.getModel()).getPreferredSize());
     updateFilterPane();
+  }
+
+  public void reload() {
+    for (DbDataSource dataSource : dataSources) {
+      dataSource.reload(true);
+    }
   }
 
   private java.awt.GridBagConstraints getCustomGridBagConstraints(SeekLayout layout, java.awt.GridBagConstraints defaultConstraint) {
@@ -1219,4 +1219,24 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   private com.openitech.db.components.JDbTextField jtfValue;
   private com.openitech.db.model.DbSifrantModel smSifrant;
   // End of variables declaration//GEN-END:variables
+
+  private static class RezultatKlicaActiveRowChangeListener implements ActiveRowChangeListener {
+
+    DataSourceFilters.RezultatiKlicaSeekType rezultatiKlicaSeekType;
+
+    public RezultatKlicaActiveRowChangeListener(RezultatiKlicaSeekType rezultatiKlicaSeekType) {
+      this.rezultatiKlicaSeekType = rezultatiKlicaSeekType;
+    }
+
+    @Override
+    public void activeRowChanged(ActiveRowChangeEvent event) {
+      event.getSource().removeActiveRowChangeListener(this);
+      rezultatiKlicaSeekType.reload();
+      rezultatiKlicaSeekType = null;
+    }
+
+    @Override
+    public void fieldValueChanged(ActiveRowChangeEvent event) {
+    }
+  }
 }

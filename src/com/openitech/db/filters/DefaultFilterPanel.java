@@ -10,6 +10,7 @@
  */
 package com.openitech.db.filters;
 
+import com.openitech.db.model.DbDataSource;
 import java.awt.Component;
 import java.awt.Container;
 import java.util.Map;
@@ -42,7 +43,8 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
   public DefaultFilterPanel(Map<String, Document> namedDocuments, com.openitech.db.filters.JPDbDataSourceFilter parentFilterPanel,
           DataSourceFiltersMap filtersMap) {
     this.filtersMap = filtersMap;
-    initComponents();
+    dbDataSourceFilter = new com.openitech.db.filters.JPDbDataSourceFilter();
+
 
     dbDataSourceFilter.setNamedDocuments(namedDocuments);
     dbDataSourceFilter.setParentFilterPanel(parentFilterPanel);
@@ -51,8 +53,19 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     for (DataSourceFilters dataSourceFilters : dbDataSourceFilter.getFilters().keySet()) {
       addSearchButton = addSearchButton || dataSourceFilters.isUseSearchButton();
     }
+    if (addSearchButton) {
+      for (DataSourceFilters dataSourceFilters : dbDataSourceFilter.getFilters().keySet()) {
+        for (DbDataSource dbDataSource : dataSourceFilters.getDataSources()) {
+          dbDataSource.setAutoReload(false);
+        }
+      }
+    }
+
+    initComponents();
     invalidate();
   }
+
+
 
   public JPDbDataSourceFilter getJPDbDataSourceFilter() {
     return dbDataSourceFilter;
@@ -92,7 +105,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
   private void initComponents() {
     java.awt.GridBagConstraints gridBagConstraints;
 
-    dbDataSourceFilter = new com.openitech.db.filters.JPDbDataSourceFilter();
+    dbDataSourceFilter = dbDataSourceFilter==null?new com.openitech.db.filters.JPDbDataSourceFilter():dbDataSourceFilter;
     jbIsci = new javax.swing.JButton();
 
     setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
@@ -119,7 +132,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
 
   private void jbIsciActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbIsciActionPerformed
     // TODO add your handling code here:
-    FilterManager.getInstance().doSeek();
+    dbDataSourceFilter.reload();
   }//GEN-LAST:event_jbIsciActionPerformed
 
   // Variables declaration - do not modify//GEN-BEGIN:variables

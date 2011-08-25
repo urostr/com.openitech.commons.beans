@@ -4772,6 +4772,26 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     this.canFireEvents = canFireEvents;
   }
 
+  private boolean autoReload = true;
+
+  /**
+   * Get the value of autoReload
+   *
+   * @return the value of autoReload
+   */
+  public boolean isAutoReload() {
+    return autoReload;
+  }
+
+  /**
+   * Set the value of autoReload
+   *
+   * @param autoReload new value of autoReload
+   */
+  public void setAutoReload(boolean autoReload) {
+    this.autoReload = autoReload;
+  }
+
   public static class SqlParameter<T> {
 
     protected int type = Types.NULL;
@@ -5188,14 +5208,10 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
 
     public void reloadDataSources() {
       for (DbDataSource dataSource : dataSources) {
-        com.openitech.events.concurrent.RefreshDataSource.timestamp(dataSource);
-
-//        dataSource.lock();
-//        try {
-        com.openitech.events.concurrent.DataSourceEvent.submit(new com.openitech.events.concurrent.RefreshDataSource(dataSource, true));
-//        } finally {
-//          dataSource.unlock();
-//        }
+        if (dataSource.isAutoReload()) {
+          com.openitech.events.concurrent.RefreshDataSource.timestamp(dataSource);
+          com.openitech.events.concurrent.DataSourceEvent.submit(new com.openitech.events.concurrent.RefreshDataSource(dataSource, true));
+        }
       }
     }
 
@@ -5225,7 +5241,11 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     }
 
     public DbDataSource getFirstDataSource() {
-      return dataSources != null && dataSources.size() > 0 ? dataSources.get(0) : null;
+      return dataSources.size()>0?dataSources.get(0):null;
+    }
+
+    public List<DbDataSource> getDataSources() {
+      return dataSources;
     }
 
     public String getReplace() {

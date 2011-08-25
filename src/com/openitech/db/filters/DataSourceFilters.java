@@ -739,7 +739,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
   public final static class RezultatiKlicaSeekType extends AbstractSeekType<List<DataSourceFilters.RezultatiKlicaSeekType.RezultatKlica>> {
 
     private RezultatKlica vsi = new RezultatKlica("Vsi", "", false);
-    private List<RezultatKlica> rezltati = new ArrayList<RezultatKlica>();
+    private List<RezultatKlica> rezultati = new ArrayList<RezultatKlica>();
     private final DataSourceFilters filters;
 
     public RezultatiKlicaSeekType(String field, DataSourceFilters filters) {
@@ -776,16 +776,16 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     public void addRezultat(RezultatKlica rezultatKlica) {
-      rezltati.add(rezultatKlica);
+      rezultati.add(rezultatKlica);
     }
 
-    public List<RezultatKlica> getRezltati() {
-      return rezltati;
+    public List<RezultatKlica> getRezultati() {
+      return rezultati;
     }
 
     public void reload() {
       boolean setNull = false;
-      for (RezultatKlica rezultatKlica : rezltati) {
+      for (RezultatKlica rezultatKlica : rezultati) {
         if (rezultatKlica.equals(vsi)) {
           if (rezultatKlica.isChecked()) {
             setNull = true;
@@ -794,7 +794,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         }
       }
 
-      filters.setSeekValue(this, setNull ? null : rezltati);
+      filters.setSeekValue(this, setNull ? null : rezultati);
     }
 
     public RezultatKlica getRezultatVsi() {

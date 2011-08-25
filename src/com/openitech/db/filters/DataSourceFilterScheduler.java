@@ -58,8 +58,8 @@ public class DataSourceFilterScheduler {
     
     @Override
     public void run() {
-      filter.setSeekValue(seek_type, value, !filter.isUseSearchButton());
-      FilterManager.getInstance().addFilter(filter);
+      filter.setSeekValue(seek_type, value);
+     //FilterManager.getInstance().addFilter(filter);
     }
   }
 }
