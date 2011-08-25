@@ -498,7 +498,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
             jDConfigureFilter.setDocument(document);
             try {
-              jDConfigureFilter.setDataSource(filter.getDataSource());
+              jDConfigureFilter.setDataSource(filter.getFirstDataSource());
             } catch (SQLException ex) {
               Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -546,7 +546,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
               @Override
               public void activeRowChanged(ActiveRowChangeEvent event) {
-                filter.getDataSource().removeActiveRowChangeListener(this);
+                filter.getFirstDataSource().removeActiveRowChangeListener(this);
                 rezultatiKlicaSeekType.reload();
               }
 
@@ -555,7 +555,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               }
             };
 
-            filter.getDataSource().addActiveRowChangeListener(l);
+            filter.getFirstDataSource().addActiveRowChangeListener(l);
 
             JPanel jpChechBoxHolder = new JPanel(new GridBagLayout());
             gridBagConstraints = new java.awt.GridBagConstraints();
