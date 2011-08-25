@@ -155,9 +155,6 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
           if (dataSourceFilter.getOperator() != null) {
             filter.setOperator(dataSourceFilter.getOperator());
             filter.addDataSource(dataSource);
-            if (dataSourceFilter.isUseSearchButton() != null) {
-              filter.setUseSearchButton(dataSourceFilter.isUseSearchButton());
-            }
           }
         }
         if (dataSourceFilter.getParameters() != null) {
