@@ -25,7 +25,9 @@ public abstract class EventQueryParameter extends DbDataSource.SubstSqlParameter
     namedParameters.put(Field.VERSION, this.versionId);
   }
 
+
   public abstract void forceEventsTableUse();
+  public abstract void forceEventsViewUse();
   public abstract boolean hasVersionId();
   public abstract boolean hasWhere();
   public abstract boolean usesView();

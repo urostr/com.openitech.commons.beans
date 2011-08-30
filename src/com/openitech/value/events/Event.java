@@ -4,6 +4,8 @@
  */
 package com.openitech.value.events;
 
+import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.connection.DbConnection;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.util.Equals;
@@ -123,6 +125,26 @@ public class Event extends EventType implements Cloneable {
    */
   public int getEventSource() {
     return eventSource;
+  }
+
+  protected boolean useView = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS, "false"));
+
+  /**
+   * Get the value of useView
+   *
+   * @return the value of useView
+   */
+  public boolean isUseView() {
+    return useView;
+  }
+
+  /**
+   * Set the value of useView
+   *
+   * @param useView new value of useView
+   */
+  public void setUseView(boolean useView) {
+    this.useView = useView;
   }
 
   /**
