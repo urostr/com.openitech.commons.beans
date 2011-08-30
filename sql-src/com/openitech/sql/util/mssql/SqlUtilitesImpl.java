@@ -4266,7 +4266,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
         valuesSet++;
       }
     }
-    sbSearch.insert(sbSearch.length(), sbWhere.toString());
 
 
     String template = "(SELECT [VariousValues].{0} FROM <%VARIOUS_VALUES%> WITH (NOLOCK) WHERE [VariousValues].[Id] = (SELECT [ValueId] FROM <%EVENT_VALUES%> WITH (NOLOCK) "
@@ -4462,6 +4461,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
         }
       }
     }
+
+    sbSearch.insert(sbSearch.length(), sbWhere.toString());
+
     sqlFind.setValue(sbSearch.toString());
     sqlResultFields.setValue(sbresult.toString());
 
