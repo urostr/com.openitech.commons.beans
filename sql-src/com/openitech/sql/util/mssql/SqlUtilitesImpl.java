@@ -2524,8 +2524,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
     DbDataSource.SubstSqlParameter sqlFindEventVersionPk = new DbDataSource.SubstSqlParameter("<%ev_version_pk_filter%>");
     DbDataSource.SubstSqlParameter sqlEventSifrant = new DbDataSource.SubstSqlParameter("<%ev_sifrant%>");
     DbDataSource.SubstSqlParameter sqlEventSifra = new DbDataSource.SubstSqlParameter("<%ev_sifra%>");
+    DbDataSource.SubstSqlParameter sqlEventAlias = new DbDataSource.SubstSqlParameter("<%ev_alias%>");
     DbDataSource.SubstSqlParameter sqlEventTable = new DbDataSource.SubstSqlParameter("<%ev_table%>");
-    DbDataSource.SubstSqlParameter sqlEventTableVersioned = new DbDataSource.SubstSqlParameter("<%ev_table%>");
     DbDataSource.SubstSqlParameter sqlEventWhere = new DbDataSource.SubstSqlParameter("<%ev_where%>");
     String evVersionedSubquery;
     String evNonVersionedSubquery;
@@ -2538,7 +2538,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     boolean validOnly;
     boolean usesView = false;
     String ev_table;
-    String view_valid;
     String view_versioned;
 
     public EventFilterSearch(EventFilterSearch eventFilterSearch, Set<Integer> sifranti) {
@@ -2546,9 +2545,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       init(eventFilterSearch.eventSource, eventFilterSearch.eventDatum, sifranti, null, eventFilterSearch.validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS, "false")), eventFilterSearch.eventPK);
     }
 
-    public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, EventPK eventPK) {
+    public EventFilterSearch(Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Integer eventSource, java.util.Date eventDatum, int sifrant, String[] sifra, boolean validOnly, boolean useView, EventPK eventPK) {
       super(namedParameters);
-      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS, "false")), eventPK);
+      init(eventSource, eventDatum, Arrays.asList(new Integer[]{sifrant}), sifra, validOnly, useView, eventPK);
     }
 
     public EventFilterSearch addSifranti(Set<Integer> sifranti) {
@@ -2560,6 +2559,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
     @Override
     public void forceEventsTableUse() {
       init(eventSource, eventDatum, sifrant, sifra, validOnly, false, eventPK);
+    }
+
+    @Override
+    public void forceEventsViewUse() {
+      init(eventSource, eventDatum, sifrant, sifra, validOnly, true, eventPK);
     }
 
     private void init(Integer eventSource, java.util.Date eventDatum, Collection<Integer> sifranti, String[] sifra, boolean validOnly, boolean canUseView, EventPK eventPK) {
@@ -2593,9 +2597,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       ev_table = eventsDb + ".[dbo].[Events]";
 
-      String ev_view_versioned = ev_table + " ev WITH (NOLOCK)";
-      String ev_view = ev_table + " ev WITH (NOLOCK)";
-
       if (canUseView && sifranti.size() == 1) {
         for (Integer s : sifranti) {
           final String[] sifrant_sifre = getSifre(s);
@@ -2607,31 +2608,29 @@ public class SqlUtilitesImpl extends SqlUtilities {
             qSifra = (sifra != null) && (sifra.length == 1) ? "_" + sifra[0] : "";
           }
 
-
-          final String chk_valid = eventsDb + ".[dbo].[E_" + s + qSifra + "_valid]";
           final String chk_versioned = eventsDb + ".[dbo].[E_" + s + qSifra + "]";
 
-          usesView = isViewReady(eventsDb, chk_valid);
-          usesView = usesView && isViewReady(eventsDb, chk_versioned);
+          usesView = isViewReady(eventsDb, chk_versioned);
 
           if (usesView) {
-            view_valid = chk_valid;
             view_versioned = chk_versioned;
-
-            ev_view = chk_valid + " ev WITH (NOLOCK,NOEXPAND)";
-            ev_view_versioned = chk_versioned + " ev WITH (NOLOCK,NOEXPAND)";
           }
         }
       } else {
         usesView = false;
       }
 
-      sqlEventTable.setValue(ev_view);
-      sqlEventTableVersioned.setValue(ev_view_versioned);
+      if (usesView) {
+        sqlEventAlias.setValue("ev_view");
+        sqlEventTable.setValue(ev_table + " ev WITH (NOLOCK)\n"
+                + "INNER JOIN "+view_versioned+" AS ev_view WITH (NOLOCK,NOEXPAND) ON ev_view.id = ev.id");
+      } else {
+        sqlEventAlias.setValue("ev");
+        sqlEventTable.setValue(ev_table + " ev WITH (NOLOCK)");
+      }
 
-      sqlFindEventValid.setValue(validOnly && !usesView ? " AND ev.valid = 1 " : "");
+      sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
       if (sifra == null || (sifra.length == 1 && sifra[0] == null)) {
-        if (!usesView) {
           StringBuilder sbSifrant = new StringBuilder();
           for (Integer s : sifranti) {
             sqlFindEventType.addParameter(new SqlParameter<Integer>(java.sql.Types.INTEGER, s));
@@ -2644,13 +2643,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           sqlFindEventType.setValue(sbSifrant.toString());
-        }
 
       } else {
         final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifranti.toArray(new Integer[sifranti.size()])[0]);
 
         if (sifra.length == 1) {
-          if (!usesView) {
             if (ConnectionManager.getInstance().isConvertToVarchar()) {
               sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR(15))");
             } else {
@@ -2658,7 +2655,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
             sqlFindEventType.addParameter(qpSifrant);
             sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, sifra[0]));
-          }
         } else {
           StringBuilder sbet = new StringBuilder();
           sqlFindEventType.addParameter(qpSifrant);
@@ -2671,7 +2667,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
             sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, s));
           }
-          sbet.insert(0, (usesView ? "" : "ev.[IdSifranta] = ? AND ") + "ev.[IdSifre] IN (").append(") ");
+          sbet.insert(0, "ev.[IdSifranta] = ? AND ev.[IdSifre] IN (").append(") ");
           sqlFindEventType.setValue(sbet.toString());
         }
       }
@@ -2695,8 +2691,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       //  setEventPK(eventPK);
 
       evVersionedParameters.clear();
+      evVersionedParameters.add(sqlEventAlias);
       evVersionedParameters.add(sqlFindEventVersion);
-      evVersionedParameters.add(sqlEventTableVersioned);
+      evVersionedParameters.add(sqlEventTable);
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventType);
       evVersionedParameters.add(sqlFindEventSource);
@@ -2715,6 +2712,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       evNonVersionedParameters.clear();
+      evNonVersionedParameters.add(sqlEventAlias);
       evNonVersionedParameters.add(sqlEventTable);
       evNonVersionedParameters.add(sqlFindEventType);
       evNonVersionedParameters.add(sqlFindEventValid);
@@ -2853,7 +2851,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     @Override
     public String getTableName() {
-      return usesView ? (hasVersionId() ? view_versioned : view_valid) : ev_table;
+      return usesView ? view_versioned : ev_table;
     }
     protected EventPK eventPK;
 
@@ -3967,7 +3965,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly, EventPK eventPK) {
+  private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly, boolean useView, EventPK eventPK) {
     StringBuilder sbSearch = new StringBuilder(500);
     StringBuilder sbWhere = new StringBuilder(500);
     StringBuilder sbresult = new StringBuilder(500);
@@ -3976,7 +3974,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     sqlResultLimit.setValue(lastEntryOnly ? " TOP 1 " : "  ");
     DbDataSource.SubstSqlParameter sqlResultFields = new DbDataSource.SubstSqlParameter("<%ev_field_results%>");
     parameters.add(sqlResultFields);
-    EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE) ? event.getEventSource() : null, searchFields.contains(Event.EVENT_DATE) ? event.getDatum() : null, sifrant, sifra, validOnly, eventPK);
+    EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE) ? event.getEventSource() : null, searchFields.contains(Event.EVENT_DATE) ? event.getDatum() : null, sifrant, sifra, validOnly, useView, eventPK);
     parameters.add(eventSearchFilter);
     DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
     parameters.add(sqlFind);
@@ -4217,8 +4215,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               valueColumn = "ObjectValue";
               break;
           }
-          sbWhere.append(sbWhere.length() > 0 ? " AND " : " WHERE ");
-          sbWhere.append("\n");
+          sbWhere.append(sbWhere.length() > 0 ? "    AND " : " WHERE ");
           sbWhere.append(searchFormat.format(new Object[]{
                     valueColumn,
                     qIdPolja,
@@ -4237,8 +4234,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
             sbresult.append(",\nev.[").append(f.getName()).append(']');
           }
 
-          sbWhere.append(sbWhere.length() > 0 ? " AND " : " WHERE ");
-          sbWhere.append("\nev.[").append(f.getName()).append("] = ");
+          sbWhere.append(sbWhere.length() > 0 ? "    AND " : " WHERE ");
+          sbWhere.append("ev.[").append(f.getName()).append("] = ");
 
           ValueType valueType = ValueType.getType(f.getType());
 
@@ -4555,7 +4552,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 ////        result.eventPK = new EventPK();
 ////      }
 //    }
-    result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, validOnly, lastEntryOnly, result.eventPK);
+    result.valuesSet = prepareSearchParameters(result.parameters, result.namedParameters, parent, searchFields, resultFields, sifrant, sifra, validOnly, lastEntryOnly, parent.isUseView(), result.eventPK);
 
     return result;
   }
