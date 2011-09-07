@@ -3965,6 +3965,31 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
+
+
+  private void prepareFieldModel(Field f, String value, StringBuilder sbresult, StringBuilder sbSearch) {
+    if (f.getModel() != null && f.getModel().getQuery() != null) {
+      if (f.getModel().getQuery().getSelect() != null) {
+        for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
+          sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+          sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+          sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+          sql = sql.replaceAll(f.getModel().getReplace(), value);
+          sbresult.append(",\n").append(sql);
+        }
+      }
+      if (f.getModel().getQuery().getJoin() != null) {
+        for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
+          sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
+          sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
+          sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
+          sql = sql.replaceAll(f.getModel().getReplace(), value);
+          sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
+        }
+      }
+    }
+  }
+
   private int prepareSearchParameters(List parameters, Map<Field, DbDataSource.SqlParameter<Object>> namedParameters, Event event, Set<Field> searchFields, Set<Field> resultFields, int sifrant, String[] sifra, boolean validOnly, boolean lastEntryOnly, boolean useView, EventPK eventPK) {
     StringBuilder sbSearch = new StringBuilder(500);
     StringBuilder sbWhere = new StringBuilder(500);
@@ -4132,26 +4157,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
             if (resultFields.contains(f)
                     && (f.getModel().getQuery() != null)) {
-              if (f.getModel().getQuery().getSelect() != null) {
-                for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
-                  sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-                  sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-                  sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-                  sql = sql.replaceAll(f.getModel().getReplace(), value);
-
-                  sbresult.append(",\n").append(sql);
-                }
-              }
-              if (f.getModel().getQuery().getJoin() != null) {
-                for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
-                  sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-                  sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-                  sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-                  sql = sql.replaceAll(f.getModel().getReplace(), value);
-
-                  join.append("\nLEFT OUTER JOIN ").append(sql);
-                }
-              }
+              prepareFieldModel(f, value, sbresult, sbSearch);
             }
             DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
             parameter.setType(fv.getType());
@@ -4231,7 +4237,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
           namedParameters.put(f, parameter);
         } else {
           if (resultFields.contains(f)) {
-            sbresult.append(",\nev.[").append(f.getName()).append(']');
+            String value = "ev.["+f.getName()+"]";
+
+            sbresult.append(",\n").append(value);
+            prepareFieldModel(f, value, sbresult, sbSearch);
           }
 
           sbWhere.append(sbWhere.length() > 0 ? "    AND " : " WHERE ");
@@ -4282,29 +4291,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         if (viewColumns.contains(f.getName())) {
           String value = "ev.[" + f.getName() + "]";
           sbresult.append(",\n").append(value);
-
-          if (f.getModel() != null && f.getModel().getQuery() != null) {
-            if (f.getModel().getQuery().getSelect() != null) {
-              for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
-                sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-                sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-                sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-                sql = sql.replaceAll(f.getModel().getReplace(), value);
-
-                sbresult.append(",\n").append(sql);
-              }
-            }
-            if (f.getModel().getQuery().getJoin() != null) {
-              for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
-                sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-                sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-                sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-                sql = sql.replaceAll(f.getModel().getReplace(), value);
-
-                sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
-              }
-            }
-          }
+          prepareFieldModel(f, value, sbresult, sbSearch);
         } else {
           String fieldValueIndex = f.getFieldIndex() > 1 ? Integer.toString(f.getFieldIndex()) : "";
           if (f.getName().endsWith(fieldValueIndex)) {
@@ -4437,32 +4424,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 sbresult.append(",\n").append("CAST(").append(val_alias).append(".IntValue AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
             }
 
-            if (f.getModel().getQuery().getSelect() != null) {
-              for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
-                sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-                sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-                sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-                sql = sql.replaceAll(f.getModel().getReplace(), value);
-
-                sbresult.append(",\n").append(sql);
-              }
-            }
-            if (f.getModel().getQuery().getJoin() != null) {
-              for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
-                sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
-                sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
-                sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-                sql = sql.replaceAll(f.getModel().getReplace(), value);
-
-                sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
-              }
-            }
+            prepareFieldModel(f, value, sbresult, sbSearch);
           }
         }
       }
     }
 
-    sbSearch.insert(sbSearch.length(), sbWhere.toString());
+//    sbSearch.insert(sbSearch.length(), sbWhere.toString());
+    sbSearch.append(sbWhere);
 
     sqlFind.setValue(sbSearch.toString());
     sqlResultFields.setValue(sbresult.toString());
