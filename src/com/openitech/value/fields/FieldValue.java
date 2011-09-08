@@ -2,8 +2,15 @@ package com.openitech.value.fields;
 
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.util.Equals;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 public class FieldValue extends Field implements Cloneable{
 
@@ -134,6 +141,101 @@ public class FieldValue extends Field implements Cloneable{
     result.setIdPolja(idPolja);
     result.setOpis(opis);
     result.setValueId(valueId);
+    return result;
+  }
+
+
+  public com.openitech.sql.events.xml.Field getField() throws DatatypeConfigurationException, IOException {
+    final ValueType valueType = ValueType.getType(type);
+
+    com.openitech.sql.events.xml.Field result = new com.openitech.sql.events.xml.Field();
+
+    result.setFieldId(idPolja);
+    result.setValueId(valueId);
+    result.setFieldName(name);
+    result.setFieldValueIndex(fieldIndex);
+    result.setFieldType(valueType.getTypeIndex());
+    
+    if (value != null) {
+
+      switch (valueType) {
+        case BitValue:
+          if (value instanceof Boolean) {
+            result.setBitValue((Boolean) value);
+          } else if (value instanceof Number) {
+            result.setBitValue(((Number) value).doubleValue() > 0);
+          } else {
+            result.setBitValue(Boolean.valueOf(value.toString()));
+          }
+          break;
+        case IntValue:
+          if (value instanceof Number) {
+            result.setIntValue(((Number) value).intValue());
+          } else {
+            result.setIntValue(Integer.parseInt(value.toString()));
+          }
+          break;
+        case LongValue:
+          if (value instanceof Number) {
+            result.setLongValue(((Number) value).longValue());
+          } else {
+            result.setLongValue(Long.parseLong(value.toString()));
+          }
+          break;
+        case RealValue:
+          if (value instanceof Number) {
+            result.setRealValue(((Number) value).floatValue());
+          } else {
+            result.setRealValue(Float.parseFloat(value.toString()));
+          }
+          break;
+        case MonthValue:
+        case DateTimeValue:
+        case TimeValue:
+        case DateValue:
+          GregorianCalendar calendar = new GregorianCalendar();
+          if (value instanceof Date) {
+            calendar.setGregorianChange((Date) value);
+          } else if (value instanceof Number) {
+            calendar.setTimeInMillis(((Number) value).longValue());
+          }
+          final XMLGregorianCalendar xmlGregorianCalendar = javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+
+          switch (valueType) {
+            case MonthValue:
+              result.setMonthValue(xmlGregorianCalendar); break;
+            case DateTimeValue:
+              result.setDateTimeValue(xmlGregorianCalendar); break;
+            case TimeValue:
+              result.setTimeValue(xmlGregorianCalendar); break;
+            case DateValue:
+              result.setDateValue(xmlGregorianCalendar);
+              break;
+          }
+          break;
+        case StringValue:
+          result.setStringValue(value.toString());
+          break;
+        case ClobValue:
+          result.setClobValue(value.toString());
+          break;
+        case BlobValue:
+        case ObjectValue:
+          if (value instanceof byte[]) {
+            result.setObjectValue((byte[]) value);
+          } else {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+            ObjectOutputStream os = new ObjectOutputStream(bos);
+            os.writeObject(value);
+            result.setObjectValue(bos.toByteArray());
+          }
+
+          break;
+      }
+    }
+
+
     return result;
   }
 }

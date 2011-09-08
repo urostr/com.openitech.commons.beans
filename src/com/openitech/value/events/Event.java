@@ -6,22 +6,26 @@ package com.openitech.value.events;
 
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.connection.DbConnection;
+import com.openitech.sql.events.xml.Operation;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.util.Equals;
 import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.datatype.DatatypeConfigurationException;
 
 /**
  *
@@ -624,6 +628,38 @@ public class Event extends EventType implements Cloneable {
 
   public void removeAllChildren() {
     children = new ArrayList<Event>();
+  }
+
+  public com.openitech.sql.events.xml.Event getEvent() throws DatatypeConfigurationException, IOException {
+    com.openitech.sql.events.xml.Event result = new com.openitech.sql.events.xml.Event();
+
+    result.setEventId(getId());
+    result.setSifrant(getSifrant());
+    result.setSifra(getSifra());
+
+    GregorianCalendar calendar = new GregorianCalendar();
+    calendar.setGregorianChange(getDatum());
+    
+    result.setDate(javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar));
+    result.setOperation(com.openitech.sql.events.xml.Operation.valueOf(getOperation().toString()));
+
+    result.setVersioned(isVersioned());
+    result.setEventSource(getEventSource());
+    result.setComment(getOpomba());
+
+    List<com.openitech.sql.events.xml.Field> xFieldValues = result.getEventValues();
+
+    for (FieldValue fieldValue : getValues()) {
+      xFieldValues.add(fieldValue.getField());
+    }
+    
+    List<com.openitech.sql.events.xml.Event> xChildren = result.getChildren();
+
+    for (Event child : getChildren()) {
+      xChildren.add(child.getEvent());
+    }
+
+    return result;
   }
 
   public static enum EventOperation {

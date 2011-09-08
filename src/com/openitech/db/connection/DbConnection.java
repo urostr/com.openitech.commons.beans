@@ -69,6 +69,7 @@ public interface DbConnection {
 
   String DB_USE_PK_FOR_SEARCH = "db.use.pk.for.search";
   String DB_SAVE_PK = "db.save.pk";
+  String DB_CALL_STORE_EVENT = "db.use.storeEvent";
 
 
   Connection getTemporaryConnection();
