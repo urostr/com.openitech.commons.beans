@@ -80,6 +80,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.datatype.DatatypeConfigurationException;
 
 /**
  *
@@ -88,6 +89,7 @@ import javax.xml.bind.Unmarshaller;
 public class SqlUtilitesImpl extends SqlUtilities {
 
   protected boolean override = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_OVERRIDE_CACHED_VIEWS, "false"));
+  protected boolean useStoreEvent = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_CALL_STORE_EVENT, "false"));
   PreparedStatement logChanges;
   PreparedStatement logValues;
   PreparedStatement logChangedValues;
@@ -149,6 +151,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement findIdentityAsInt;
   PreparedStatement is_transaction_valid;
   PreparedStatement is_valueid_valid;
+  CallableStatement callStoreEvent;
   Map<CaseInsensitiveString, Field> preparedFields;
   Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
   private final static LogWriter LOG_WRITER = new LogWriter(Logger.getLogger(SqlUtilitesImpl.class.getName()), Level.INFO);
@@ -704,12 +707,111 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
+  private static class DbEventPK extends EventPK {
+    private final String pk;
+
+    public DbEventPK(Event event, String pk) {
+      super(event.getId(), event.getSifrant(), event.getSifra());
+      setEventOperation(event.getOperation());
+      setVersioned(event.isVersioned());
+
+      this.pk = pk;
+    }
+
+    @Override
+    public String toHexString() {
+      return pk;
+    }
+
+    @Override
+    public String toNormalString() {
+      return pk;
+    }
+  }
+
   @Override
   public EventPK storeEvent(Event event, Event oldEvent) throws SQLException {
     EventPK result;
     EventPK oldEventPK = (oldEvent != null) ? oldEvent.getEventPK() : null;
     if ((oldEvent != null) && oldEvent.equalEventValues(event) && event.getOperation() == Event.EventOperation.UPDATE) {
       result = oldEventPK;
+    } else if (useStoreEvent) {
+      final Connection connection = ConnectionManager.getInstance().getTxConnection();
+      if (callStoreEvent == null) {
+        callStoreEvent = connection.prepareCall(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "callStoreEvent.sql", "cp1250"), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        //      insertEvents.setQueryTimeout(15);
+      }
+      boolean isTransaction = isTransaction();
+      boolean success = false;
+      // <editor-fold defaultstate="collapsed" desc="Shrani">
+
+      connection.clearWarnings();
+
+      if (!isTransaction) {
+        beginTransaction();
+      }
+      try {
+        try {
+          StringWriter sw = new StringWriter();
+          final com.openitech.sql.events.xml.Event ev = event.getEvent();
+          final com.openitech.sql.events.xml.ObjectFactory of = new com.openitech.sql.events.xml.ObjectFactory();
+
+
+          JAXBContext context = JAXBContext.newInstance(ev.getClass());
+
+
+          Marshaller marshaller = context.createMarshaller();
+          marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+          marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+          marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, "Event.xsd");
+          marshaller.setProperty("com.sun.xml.bind.namespacePrefixMapper", new NamespacePrefixMapper());
+          marshaller.marshal(of.createEvent(ev), sw);
+
+          System.out.println(sw.toString());
+
+          callStoreEvent.setString(1, sw.toString());
+
+          if (callStoreEvent.execute()) {
+            ResultSet rs = callStoreEvent.getResultSet();
+
+            while (callStoreEvent.getMoreResults(Statement.KEEP_CURRENT_RESULT)) {
+              if (rs != null) {
+                rs.close();
+              }
+              rs = callStoreEvent.getResultSet();
+            }
+
+            success = (rs != null);
+
+            if (success && rs.next()) {
+              event.setId(rs.getLong("EventId"));
+              result = new DbEventPK(event, rs.getString("EventPK"));
+            } else {
+              result = null;
+              success = false;
+            }
+
+            if (rs != null) {
+                rs.close();
+            }
+          } else {
+            result = null;
+          }
+        } catch (IOException ex) {
+          success = false;
+          throw (SQLException) (new SQLException("Neuspešno dodajanje dogodka!")).initCause(ex);
+        } catch (DatatypeConfigurationException ex) {
+          success = false;
+          throw (SQLException) (new SQLException("Neuspešno dodajanje dogodka!")).initCause(ex);
+        } catch (JAXBException ex) {
+          success = false;
+          throw (SQLException) (new SQLException("Neuspešno dodajanje dogodka!")).initCause(ex);
+        }
+      } finally {
+        if (!isTransaction) {
+          endTransaction(success);
+        }
+      }
     } else {
       final Connection connection = ConnectionManager.getInstance().getTxConnection();
       if (insertEvents == null) {
@@ -4643,6 +4745,32 @@ public class SqlUtilitesImpl extends SqlUtilities {
     @Override
     public boolean isSearchByEventPK() {
       return searchByEventPK;
+    }
+  }
+  
+  private static class NamespacePrefixMapper extends com.sun.xml.bind.marshaller.NamespacePrefixMapper {
+
+    private final static String[][] prefixes = new String[][]{
+      {"http://xml.netbeans.org/schema/Event", "ns0"},
+      {"http://www.w3.org/2001/XMLSchema", "xs"},
+      {"http://www.w3.org/2001/XMLSchema-instance", "xsi"}
+    };
+
+    @Override
+    public String getPreferredPrefix(String namespaceUri, String suggestion, boolean requirePrefix) {
+      int index = -1;
+      for (int i = 0; i < prefixes.length && index == -1; i++) {
+        if (prefixes[i][0].equalsIgnoreCase(namespaceUri)) {
+          index = i;
+        }
+      }
+      if (index != -1) {
+        return prefixes[index][1];
+      } else if (requirePrefix) {
+        return suggestion;
+      } else {
+        return null;
+      }
     }
   }
 }

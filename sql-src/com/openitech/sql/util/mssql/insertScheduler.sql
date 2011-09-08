@@ -1,6 +1,6 @@
 INSERT
   INTO
-    [ChangeLog].[DBO].[Scheduler]
+    <%ChangeLog%>.[DBO].[Scheduler]
     (
         [EventId] ,
         [ActionTime] ,
@@ -9,8 +9,8 @@ INSERT
  (
     SELECT
       Events.Id ,
-      ChangeLog.dbo.sumDateTime(Events.ValidFrom, ?),
+      <%ChangeLog%>.dbo.sumDateTime(Events.ValidFrom, ?),
       1 AS [ActionType]
-    FROM [ChangeLog].[DBO].Events
+    FROM <%ChangeLog%>.[DBO].Events
     WHERE Id = ?
 )
