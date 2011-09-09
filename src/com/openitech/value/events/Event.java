@@ -130,7 +130,6 @@ public class Event extends EventType implements Cloneable {
   public int getEventSource() {
     return eventSource;
   }
-
   protected boolean useView = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_USE_EVENT_VIEWS, "false"));
 
   /**
@@ -637,10 +636,12 @@ public class Event extends EventType implements Cloneable {
     result.setSifrant(getSifrant());
     result.setSifra(getSifra());
 
-    GregorianCalendar calendar = new GregorianCalendar();
-    calendar.setGregorianChange(getDatum());
-    
-    result.setDate(javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar));
+    if (getDatum() != null) {
+      GregorianCalendar calendar = new GregorianCalendar();
+      calendar.setGregorianChange(getDatum());
+
+      result.setDate(javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar));
+    }
     result.setOperation(com.openitech.sql.events.xml.Operation.valueOf(getOperation().toString()));
 
     result.setVersioned(isVersioned());
@@ -652,7 +653,7 @@ public class Event extends EventType implements Cloneable {
     for (FieldValue fieldValue : getValues()) {
       xFieldValues.add(fieldValue.getField());
     }
-    
+
     List<com.openitech.sql.events.xml.Event> xChildren = result.getChildren();
 
     for (Event child : getChildren()) {
