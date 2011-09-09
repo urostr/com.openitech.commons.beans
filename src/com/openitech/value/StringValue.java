@@ -21,23 +21,28 @@ public class StringValue {
   public static String getNextSifra(String sifra) {
     Matcher compare = numbers.matcher(sifra);
     if (compare.matches()) {
-      String sdigit = compare.group(3);
+      String sLastdigit = compare.group(3);
       String sstring = compare.group(2);
-      if (sdigit.length() > 0) {
-        String ndigit = Integer.toString(Integer.parseInt(sdigit) + 1);
-        if (ndigit.length() > sdigit.length() && sstring.length() > 0) {
-          ndigit = "1";
+      if (sLastdigit.length() > 0) {
+        String nextLastdigit = Integer.toString(Integer.parseInt(sLastdigit) + 1);
+        if (nextLastdigit.length() > sLastdigit.length() && sstring.length() > 0) {
+          nextLastdigit = "0";
           try {
             sstring = getNextString(sstring);
           } catch (UnsupportedEncodingException ex) {
-            sdigit = "0" + sdigit;
+            sLastdigit = "0" + sLastdigit;
             Logger.getLogger(StringValue.class.getName()).log(Level.WARNING, null, ex);
           }
+          
         }
-        ndigit = getZero(sdigit.length()) + ndigit;
-        sdigit = ndigit.substring(ndigit.length() - sdigit.length());
+        if (sstring.length() > 0) {
+          nextLastdigit = getZero(sLastdigit.length()) + nextLastdigit;
+          sLastdigit = nextLastdigit.substring(nextLastdigit.length() - sLastdigit.length());
+        } else {
+          sLastdigit = nextLastdigit;
+        }
       }
-      sifra = compare.group(1) + sstring + sdigit + compare.group(4);
+      sifra = compare.group(1) + sstring + sLastdigit + compare.group(4);
     }
     return sifra;
   }
@@ -59,5 +64,18 @@ public class StringValue {
       sb.append("0");
     }
     return sb.toString();
+  }
+
+  public static Integer getLastNumbers(String value) {
+    Integer result = null;
+
+    Matcher compare = numbers.matcher(value);
+    if (compare.matches()) {
+      String sdigit = compare.group(3);
+      if (sdigit.length() > 0) {
+        result = Integer.parseInt(sdigit);
+      }
+    }
+    return result;
   }
 }
