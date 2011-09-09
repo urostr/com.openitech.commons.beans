@@ -694,6 +694,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Set<String> getEventViewColumns(String viewName);
 
+  public abstract void loadCaches() throws SQLException;
 //  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre) throws SQLException {
 //    updateUsePrimaryKeyForSearch(idSifranta, idSifre, false);
 //  }
