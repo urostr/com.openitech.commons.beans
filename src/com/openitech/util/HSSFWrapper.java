@@ -9,9 +9,9 @@ import com.openitech.swing.JWProgressMonitor;
 import com.openitech.db.model.DbTableModel;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTable;
@@ -66,13 +66,17 @@ public class HSSFWrapper {
     xls_header_cell_style.setFillForegroundColor(new HSSFColor.GREY_25_PERCENT().getIndex());
     //xls_header_cell_style.setBorderBottom(HSSFCellStyle.BORDER_DOUBLE);
 
+    java.util.Map<String,HSSFCellStyle> cellStyles = new java.util.HashMap<String,HSSFCellStyle>();
+
     HSSFDataFormat xls_data_format = xls_workbook.createDataFormat();
 
     HSSFCellStyle xls_date_cell_style = xls_workbook.createCellStyle();
     xls_date_cell_style.setDataFormat(xls_data_format.getFormat("d.m.yyyy"));
+    cellStyles.put("d.m.yyyy", xls_date_cell_style);
 
     HSSFCellStyle xls_double_cell_style = xls_workbook.createCellStyle();
     xls_double_cell_style.setDataFormat(xls_data_format.getFormat("#,##0.00"));
+    cellStyles.put("#,##0.00", xls_double_cell_style);
 
     while (columns.hasMoreElements()) {
       TableColumn column = columns.nextElement();
@@ -111,20 +115,33 @@ public class HSSFWrapper {
 
               if (vm.getColumnNames().size() == 1) {
                 java.util.List<Object> values = vm.getValues();
+                java.util.List<String> cellFormats = vm.getCellFormats();
+
+                for (String cellFormat : cellFormats) {
+                  if (cellFormat!=null) {
+                    if (!cellStyles.containsKey(cellFormat)) {
+                      HSSFCellStyle xls_cell_style = xls_workbook.createCellStyle();
+                      xls_cell_style.setDataFormat(xls_data_format.getFormat(cellFormat));
+                      cellStyles.put(cellFormat, xls_cell_style);
+                    }
+                  }
+                }
 
                 Object vm_value = values.get(0);
+                HSSFCellStyle xls_cell_style = cellFormats.get(0)==null?null:cellStyles.get(cellFormats.get(0));
 
                 if (vm_value != null) {
                   xls_cell = xls_row.createCell(cell);
+
                   if (vm_value instanceof java.util.Date) {
                     xls_cell.setCellValue((java.util.Date) vm_value);
-                    xls_cell.setCellStyle(xls_date_cell_style);
+                    xls_cell.setCellStyle(xls_cell_style==null?xls_date_cell_style:xls_cell_style);
                   } else if (vm_value instanceof java.lang.Number) {
                     xls_cell.setCellValue(((java.lang.Number) vm_value).doubleValue());
                     if ((vm_value instanceof java.math.BigDecimal) ||
                             (vm_value instanceof java.lang.Double) ||
                             (vm_value instanceof java.lang.Float)) {
-                      xls_cell.setCellStyle(xls_double_cell_style);
+                      xls_cell.setCellStyle(xls_cell_style==null?xls_double_cell_style:xls_cell_style);
                     }
                   } else if (vm_value instanceof java.lang.Boolean) {
                     xls_cell.setCellValue(((java.lang.Boolean) vm_value).booleanValue());

@@ -20,6 +20,7 @@ import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
+import java.text.Format;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
   private static final Pattern columnPattern = Pattern.compile("\\$C\\{(.*)\\}");
   private static final Pattern functionPattern = Pattern.compile("\\$F\\{(.*)\\}");
+  private static final Pattern formatPattern = Pattern.compile("\\$T\\{(.*)\\}");
   private static final Pattern separatorPattern = Pattern.compile("\\$S\\{(.*)\\}");
   private static final Pattern rendererPattern = Pattern.compile("\\$R\\{(.*)\\}");
   private static final Pattern editorPattern = Pattern.compile("\\$E\\{(.*)\\}");
@@ -234,6 +236,12 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
           if (descriptor.getRendererKey() == null) {
             descriptor.setRendererKey(matcher.lookingAt() ? matcher.group(1) : null);
+          }
+
+          matcher = formatPattern.matcher(parameter);
+
+          if (descriptor.getFormatKey() == null) {
+            descriptor.setFormatKey(matcher.lookingAt() ? matcher.group(1) : null);
           }
 
           matcher = editorPattern.matcher(parameter);
@@ -592,6 +600,7 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
     private String functionKey;
     private String rendererKey;
     private String editorKey;
+    private ValueMethod.Formats format;
     private boolean returnValueMethod = false;
     private boolean editable = false;
     private DbTableModel owner;
@@ -633,6 +642,14 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
     public String getRendererKey() {
       return rendererKey;
+    }
+
+    public String getFormatKey() {
+      return format==null?null:format.toString();
+    }
+
+    public void setFormatKey(String formatKey) {
+      this.format = formatKey==null?null:ValueMethod.Formats.valueOf(formatKey);
     }
 
     public TableCellRenderer getCellRenderer() {
@@ -725,7 +742,9 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
           function = functionsMap.get(functionKey);
         }
 
-        ValueMethod method = new ValueMethod(renderer, editor, function,
+        ValueMethod method = new ValueMethod(renderer, editor,
+                format, 
+                function,
                 owner.dataSource,
                 rowIndex, columnIndex,
                 columnNames,
@@ -767,8 +786,89 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
 
     public static class ValueMethod implements Comparable<ValueMethod> {
 
-      private static final java.text.NumberFormat DECIMAL_FORMAT = FormatFactory.getDecimalNumberFormat(0, 2);
-      private static final java.text.NumberFormat INTEGER_FORMAT = FormatFactory.getIntegerNumberFormat(0);
+      protected static enum Formats {
+        DECIMAL_FORMAT {
+          private final java.text.NumberFormat format = FormatFactory.getDecimalNumberFormat(0, 2);
+
+          @Override
+          public Format getFormat() {
+            return format;
+          }
+
+          @Override
+          public String getCellFormat() {
+            return "#,##0.00";
+          }
+        },
+        INTEGER_FORMAT {
+          private final java.text.NumberFormat format = FormatFactory.getIntegerNumberFormat(0);
+
+          @Override
+          public Format getFormat() {
+            return format;
+          }
+
+          @Override
+          public String getCellFormat() {
+            return "#,##0";
+          }
+        },
+        PROCENT_FORMAT {
+          private final java.text.NumberFormat format = FormatFactory.getPercentageNumberFormat(0, 2);
+
+          @Override
+          public Format getFormat() {
+            return format;
+          }
+
+          @Override
+          public String getCellFormat() {
+            return "#,##0.00%";
+          }
+        },
+        DATE_FORMAT {
+          private final java.text.DateFormat format = FormatFactory.DATE_FORMAT;
+
+          @Override
+          public Format getFormat() {
+            return format;
+          }
+
+          @Override
+          public String getCellFormat() {
+            return "d.m.yyyy";
+          }
+        },
+        DATETIME_FORMAT {
+          private final java.text.DateFormat format = FormatFactory.DATETIME_FORMAT;
+
+          @Override
+          public Format getFormat() {
+            return format;
+          }
+
+          @Override
+          public String getCellFormat() {
+            return "d.mm.yyyy hh:mm";
+          }
+        };
+
+        public abstract Format getFormat();
+        public abstract String getCellFormat();
+
+
+        public String format(Object... values) {
+          StringBuilder sb = new StringBuilder();
+
+            for (Object object : values) {
+              sb.append(getFormat().format(object));
+            }
+            return sb.toString();
+        }
+      }
+
+//      private static final java.text.NumberFormat DECIMAL_FORMAT = FormatFactory.getDecimalNumberFormat(0, 2);
+//      private static final java.text.NumberFormat INTEGER_FORMAT = FormatFactory.getIntegerNumberFormat(0);
       private Method function;
       private DbDataSource dataSource;
       private int rowIndex;
@@ -779,8 +879,9 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
       private Class<? extends TableCellEditor> editor;
       private List<String> separators;
       private Object owner = null;
+      private Formats formater = null;
 
-      protected ValueMethod(Class<? extends TableCellRenderer> renderer, Class<? extends TableCellEditor> editor, Method function, DbDataSource dataSource, int rowIndex, int columnIndex, List<String> columnNames, List<String> separators, String[] rowColumnNames) {
+      protected ValueMethod(Class<? extends TableCellRenderer> renderer, Class<? extends TableCellEditor> editor, Formats formater, Method function, DbDataSource dataSource, int rowIndex, int columnIndex, List<String> columnNames, List<String> separators, String[] rowColumnNames) {
         this.function = function;
         this.dataSource = dataSource;
         this.rowIndex = rowIndex;
@@ -790,10 +891,11 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         this.rowColumnNames = rowColumnNames;
         this.renderer = renderer;
         this.editor = editor;
+        this.formater = formater;
       }
 
       public ValueMethod(Method function, DbDataSource dataSource, int rowIndex, int columnIndex, List<String> columnNames, List<String> separators, String[] rowColumnNames) {
-        this(null, null, function, dataSource, rowIndex, columnIndex, columnNames, separators, rowColumnNames);
+        this(null, null, null, function, dataSource, rowIndex, columnIndex, columnNames, separators, rowColumnNames);
       }
 
       public Method getFunction() {
@@ -823,6 +925,39 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
         return result;
       }
 
+      public List<String> getCellFormats() {
+
+        java.util.List<String> result = new java.util.ArrayList<String>();
+        try {
+          for (String columnName : columnNames) {
+            Object value = dataSource.getValueAt(rowIndex + 1, columnName, rowColumnNames);
+            String format = null;
+
+            if (formater != null) {
+              format = formater.getCellFormat();
+            } else if (value instanceof java.util.Date) {
+              format = Formats.DATE_FORMAT.getCellFormat();
+            } else if (value instanceof java.lang.Number) {
+              if ((value instanceof java.math.BigDecimal)
+                      || (value instanceof java.lang.Double)
+                      || (value instanceof java.lang.Float)) {
+                format = Formats.DECIMAL_FORMAT.getCellFormat();
+              } else {
+                format = Formats.INTEGER_FORMAT.getCellFormat();
+              }
+            } else {
+              format = null;
+            }
+
+            result.add(format);
+          }
+        } catch (SQLException ex) {
+          Logger.getLogger(DbTableModel.class.getName()).log(Level.SEVERE, null, ex);
+          result.clear();
+        }
+        return result;
+      }
+
       private String getValueAsString() {
         try {
           if (dataSource != null) {
@@ -842,15 +977,17 @@ public class DbTableModel extends AbstractTableModel implements ListDataListener
               }
 
               if (renderer == null) {
-                if (value instanceof java.util.Date) {
-                  value = FormatFactory.DATE_FORMAT.format((java.util.Date) value);
+                if (formater != null) {
+                  value = formater.format(value);
+                } else if (value instanceof java.util.Date) {
+                  value = Formats.DATE_FORMAT.format((java.util.Date) value);
                 } else if (value instanceof java.lang.Number) {
                   if ((value instanceof java.math.BigDecimal)
                           || (value instanceof java.lang.Double)
                           || (value instanceof java.lang.Float)) {
-                    value = DECIMAL_FORMAT.format((java.lang.Number) value);
+                    value = Formats.DECIMAL_FORMAT.format((java.lang.Number) value);
                   } else {
-                    value = INTEGER_FORMAT.format((java.lang.Number) value);
+                    value = Formats.INTEGER_FORMAT.format((java.lang.Number) value);
                   }
                 } else if (((value instanceof java.sql.Clob) || (value instanceof javax.sql.rowset.serial.SerialClob)) && (value != null)) {
                   try {
