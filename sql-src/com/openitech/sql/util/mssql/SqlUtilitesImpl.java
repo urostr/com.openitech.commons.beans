@@ -590,6 +590,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
+  @Override
+  public void loadCaches() throws SQLException {
+    getCachedEventObjects();
+    getPreparedFields();
+  }
+
   private Map<EventType, List<EventCacheTemporaryParameter>> getCachedEventObjects() throws SQLException {
     Map<EventType, List<EventCacheTemporaryParameter>> result = new HashMap<EventType, List<EventCacheTemporaryParameter>>();
     if (cachedEventObjects == null) {
@@ -1857,38 +1863,41 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     return result;
   }
+  private Map<String, TemporaryTable> cachedTemporaryTables = null;
 
   @Override
-  public Map<String, TemporaryTable> getCachedTemporaryTables() {
-    Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();
-    try {
-      Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+  public synchronized Map<String, TemporaryTable> getCachedTemporaryTables() {
+    if (cachedTemporaryTables == null) {
+      Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();
       try {
-        ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
+        Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+        try {
+          ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
 
-        while (cachedObjects.next()) {
-          if (cachedObjects.getObject("CachedObjectXML") != null) {
-            String object = cachedObjects.getString("Object");
-            com.openitech.db.model.xml.config.TemporaryTable temporaryTable;
+          while (cachedObjects.next()) {
+            if (cachedObjects.getObject("CachedObjectXML") != null) {
+              String object = cachedObjects.getString("Object");
+              com.openitech.db.model.xml.config.TemporaryTable temporaryTable;
 
-            try {
-              Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
-              temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream())).getTemporaryTable();
+              try {
+                Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
+                temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream())).getTemporaryTable();
 
-              result.put(object, convertToIndexedView(temporaryTable));
-            } catch (JAXBException ex) {
-              Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
+                result.put(object, convertToIndexedView(temporaryTable));
+              } catch (JAXBException ex) {
+                Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
+              }
             }
           }
+        } finally {
+          statement.close();
         }
-      } finally {
-        statement.close();
+      } catch (SQLException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
       }
-    } catch (SQLException ex) {
-      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      cachedTemporaryTables = result;
     }
-
-    return result;
+    return cachedTemporaryTables;
   }
 
   private com.openitech.db.model.xml.config.TemporaryTable convertToIndexedView(com.openitech.db.model.xml.config.TemporaryTable temporaryTable) {
@@ -2725,7 +2734,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (usesView) {
         sqlEventAlias.setValue("ev_view");
         sqlEventTable.setValue(ev_table + " ev WITH (NOLOCK)\n"
-                + "INNER JOIN "+view_versioned+" AS ev_view WITH (NOLOCK,NOEXPAND) ON ev_view.id = ev.id");
+                + "INNER JOIN " + view_versioned + " AS ev_view WITH (NOLOCK,NOEXPAND) ON ev_view.id = ev.id");
       } else {
         sqlEventAlias.setValue("ev");
         sqlEventTable.setValue(ev_table + " ev WITH (NOLOCK)");
@@ -2733,30 +2742,30 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
       if (sifra == null || (sifra.length == 1 && sifra[0] == null)) {
-          StringBuilder sbSifrant = new StringBuilder();
-          for (Integer s : sifranti) {
-            sqlFindEventType.addParameter(new SqlParameter<Integer>(java.sql.Types.INTEGER, s));
-            sbSifrant.append(sbSifrant.length() > 0 ? "," : "").append(" ? ");
-          }
-          if (sifranti.size() > 1) {
-            sbSifrant.insert(0, " ev.[IdSifranta] IN (").append(" ) ");
-          } else {
-            sbSifrant.insert(0, " ev.[IdSifranta] = ");
-          }
+        StringBuilder sbSifrant = new StringBuilder();
+        for (Integer s : sifranti) {
+          sqlFindEventType.addParameter(new SqlParameter<Integer>(java.sql.Types.INTEGER, s));
+          sbSifrant.append(sbSifrant.length() > 0 ? "," : "").append(" ? ");
+        }
+        if (sifranti.size() > 1) {
+          sbSifrant.insert(0, " ev.[IdSifranta] IN (").append(" ) ");
+        } else {
+          sbSifrant.insert(0, " ev.[IdSifranta] = ");
+        }
 
-          sqlFindEventType.setValue(sbSifrant.toString());
+        sqlFindEventType.setValue(sbSifrant.toString());
 
       } else {
         final SqlParameter<Integer> qpSifrant = new SqlParameter<Integer>(java.sql.Types.INTEGER, sifranti.toArray(new Integer[sifranti.size()])[0]);
 
         if (sifra.length == 1) {
-            if (ConnectionManager.getInstance().isConvertToVarchar()) {
-              sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR(15))");
-            } else {
-              sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
-            }
-            sqlFindEventType.addParameter(qpSifrant);
-            sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, sifra[0]));
+          if (ConnectionManager.getInstance().isConvertToVarchar()) {
+            sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = CAST(? AS VARCHAR(15))");
+          } else {
+            sqlFindEventType.setValue("ev.[IdSifranta] = ? AND ev.[IdSifre] = ?");
+          }
+          sqlFindEventType.addParameter(qpSifrant);
+          sqlFindEventType.addParameter(new SqlParameter<String>(java.sql.Types.VARCHAR, sifra[0]));
         } else {
           StringBuilder sbet = new StringBuilder();
           sqlFindEventType.addParameter(qpSifrant);
@@ -4067,8 +4076,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
   }
 
-
-
   private void prepareFieldModel(Field f, String value, StringBuilder sbresult, StringBuilder sbSearch) {
     if (f.getModel() != null && f.getModel().getQuery() != null) {
       if (f.getModel().getQuery().getSelect() != null) {
@@ -4259,7 +4266,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
             if (resultFields.contains(f)
                     && (f.getModel().getQuery() != null)) {
-              prepareFieldModel(f, value, sbresult, sbSearch);
+              prepareFieldModel(f, value, sbresult, join);
             }
             DbDataSource.SqlParameter<Object> parameter = new DbDataSource.SqlParameter<Object>();
             parameter.setType(fv.getType());
@@ -4339,7 +4346,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           namedParameters.put(f, parameter);
         } else {
           if (resultFields.contains(f)) {
-            String value = "ev.["+f.getName()+"]";
+            String value = "ev.[" + f.getName() + "]";
 
             sbresult.append(",\n").append(value);
             prepareFieldModel(f, value, sbresult, sbSearch);
