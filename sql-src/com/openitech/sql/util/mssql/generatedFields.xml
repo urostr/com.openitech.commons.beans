@@ -230,7 +230,15 @@
                         THEN null 
                         ELSE ActivityEventsPolja.[FieldActions]
                       END)
-                ELSE SifrantiPolja.[FieldActions]
+                ELSE
+                  CASE WHEN SifrantiPolja.[FieldActions] IS NOT NULL
+                    THEN (CASE WHEN SifrantiPolja.[FieldActions] = 'null'
+                        THEN null
+                        ELSE SifrantiPolja.[FieldActions]
+                      END)
+                    ELSE
+                      SifrantVnosnihPolj.FieldActions
+                  END
               END AS [FieldActions],
               CASE
                 WHEN ActivityEventsPolja.[SecondarySourceXML] IS NOT NULL
@@ -246,7 +254,15 @@
                         THEN null
                         ELSE ActivityEventsPolja.[FieldLayout]
                       END)
-                ELSE SifrantiPolja.[FieldLayout]
+                ELSE 
+                  CASE WHEN SifrantiPolja.[FieldLayout] IS NOT NULL
+                    THEN (CASE WHEN SifrantiPolja.[FieldLayout] = 'null'
+                        THEN null
+                        ELSE SifrantiPolja.[FieldLayout]
+                      END)
+                    ELSE
+                      SifrantVnosnihPolj.FieldLayout
+                  END
               END AS [FieldLayout],
 
               CASE
