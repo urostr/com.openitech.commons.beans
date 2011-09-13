@@ -1,4 +1,4 @@
-<CachedTemporaryTable xmlns="http://xml.netbeans.org/schema/sifranti_custom">
+<CachedTemporaryTable xmlns="http://xml.openitech.com/schema/datasource">
     <TemporaryTable FillOnceOnly="true">
     <Replace>&lt;%Q_E_243_KTEL01%&gt;</Replace>
     <CreateTableSqls>
