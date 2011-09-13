@@ -15,14 +15,13 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.events.concurrent.RefreshDataSource;
+import com.openitech.util.ValueCheck;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
@@ -350,11 +349,7 @@ public class JDConfigureFilter extends javax.swing.JDialog {
   }
 
   private boolean isNumeric(String string) {
-    boolean result = false;
-    Pattern pattern = Pattern.compile("\\d+");
-    Matcher matcher = pattern.matcher(string);
-    result = matcher.matches();
-    return result;
+    return ValueCheck.isNumeric(string);
   }
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel jPanel1;
