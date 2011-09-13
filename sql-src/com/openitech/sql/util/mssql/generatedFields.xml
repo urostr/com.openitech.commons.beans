@@ -1,7 +1,7 @@
 
-<CachedTemporaryTable xmlns="http://xml.netbeans.org/schema/sifranti_custom"
+<CachedTemporaryTable xmlns="http://xml.openitech.com/schema/datasource"
    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-   xsi:schemaLocation='http://xml.netbeans.org/schema/sifranti_custom DataSource.xsd' >
+   xsi:schemaLocation='http://xml.openitech.com/schema/datasource DataSource.xsd' >
   <TemporaryTable FillOnceOnly="true">
     <Replace>&lt;%GENERATED_FIELDS%&gt;</Replace>
     <CreateTableSqls>
