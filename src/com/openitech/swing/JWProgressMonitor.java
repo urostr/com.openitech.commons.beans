@@ -3,7 +3,6 @@
  *
  * Created on Nedelja, 11 junij 2006, 11:57
  */
-
 package com.openitech.swing;
 
 import java.awt.EventQueue;
@@ -13,21 +12,22 @@ import java.awt.EventQueue;
  * @author  uros
  */
 public class JWProgressMonitor extends javax.swing.JDialog {
+
   /** Creates new form JWProgressMonitor */
   public JWProgressMonitor(java.awt.Frame owner) {
-    super(owner,true);
+    super(owner, true);
     setUndecorated(true);
     initComponents();
     setLocationRelativeTo(owner);
   }
-  
+
   public JWProgressMonitor(java.awt.Dialog owner) {
-    super(owner,true);
+    super(owner, true);
     setUndecorated(true);
     initComponents();
     setLocationRelativeTo(owner);
   }
-  
+
   /** This method is called from within the constructor to
    * initialize the form.
    * WARNING: Do NOT modify this code. The content of this method is
@@ -71,9 +71,8 @@ public class JWProgressMonitor extends javax.swing.JDialog {
 
     pack();
   }// </editor-fold>//GEN-END:initComponents
-  
   int progress = 0;
-  
+
   public void setMin(int min) {
     jProgressBar.setMinimum(min);
   }
@@ -83,8 +82,9 @@ public class JWProgressMonitor extends javax.swing.JDialog {
   }
 
   public void setMax(int max) {
-    if (max==0)
+    if (max == 0) {
       jlPage.setText("");
+    }
     jProgressBar.setMaximum(max);
   }
 
@@ -95,17 +95,21 @@ public class JWProgressMonitor extends javax.swing.JDialog {
   public int getProgress() {
     return jProgressBar.getValue();
   }
-  
+
   public void setProgress(int progress) {
     this.progress = progress;
-    jlPage.setText(jProgressBar.getMaximum()<1?"":Integer.toString(progress)+"/"+Integer.toString(jProgressBar.getMaximum()));
+    jlPage.setText(jProgressBar.getMaximum() < 1 ? "" : Integer.toString(progress) + "/" + Integer.toString(jProgressBar.getMaximum()));
     jProgressBar.setValue(progress);
     this.repaint();
   }
-  
+
   public void next() {
-    setProgress(++progress);
-    if ((progress % 100)==0) {
+    progress++;
+    if ((progress % jProgressBar.getMaximum()) == 0) {
+      progress = 0;
+    }
+    setProgress(progress);
+    if ((progress % 100) == 0) {
       pack();
     }
   }
@@ -115,7 +119,7 @@ public class JWProgressMonitor extends javax.swing.JDialog {
     jlTitle.setText(title);
     pack();
   }
-  
+
   @Override
   public String getTitle() {
     return jlTitle.getText();
@@ -124,6 +128,7 @@ public class JWProgressMonitor extends javax.swing.JDialog {
   @Override
   public void setVisible(final boolean b) {
     EventQueue.invokeLater(new Runnable() {
+
       @Override
       public void run() {
         setModal(b);
@@ -132,15 +137,13 @@ public class JWProgressMonitor extends javax.swing.JDialog {
     });
   }
 
-  private final void inheritedVisible(boolean b) {
+  private void inheritedVisible(boolean b) {
     super.setVisible(b);
   }
-
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel jPanel1;
   private javax.swing.JProgressBar jProgressBar;
   private javax.swing.JLabel jlPage;
   private javax.swing.JLabel jlTitle;
   // End of variables declaration//GEN-END:variables
-  
 }
