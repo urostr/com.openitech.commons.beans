@@ -349,333 +349,329 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
             //            "GO  " +
             //            "SET QUOTED_IDENTIFIER ON " +
             //            "GO  " +
-            " CREATE PROCEDURE [dbo].[" + imeProcedure + "] (  " +
-            parametri +
-            //            "	@idSifranta [int], " +
+            " CREATE PROCEDURE [dbo].[" + imeProcedure + "] (  "
+            + parametri
+            + //            "	@idSifranta [int], " +
             //            "	@idPrivolitveneIzjave [varchar] (100), " +
             //            "	@idPP [int] " +
-            ")  " +
-            "AS  " +
-            "BEGIN " +
-            "DECLARE @xmlWRS [xml]; " +
-            "	WITH XMLNAMESPACES ('http://java.sun.com/xml/ns/jdbc' as ns0) " +
-            "	SELECT @xmlWRS=(SELECT (null) " +
-            "	FOR XML RAW('ns0:webRowSet'), ELEMENTS); " +
-            "	SET @xmlWRS.modify(' " +
-            "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; " +
-            "						insert  " +
-            "							<ns0:properties> " +
-            "								<ns0:command>null</ns0:command> " +
-            "								<ns0:concurrency>1008</ns0:concurrency> " +
-            "								<ns0:datasource>null</ns0:datasource> " +
-            "								<ns0:escape-processing>true</ns0:escape-processing> " +
-            "								<ns0:fetch-direction>1000</ns0:fetch-direction> " +
-            "								<ns0:fetch-size>0</ns0:fetch-size> " +
-            "								<ns0:isolation-level>2</ns0:isolation-level> " +
-            "								<ns0:key-columns> " +
-            "								</ns0:key-columns> " +
-            "								<ns0:map> " +
-            "								</ns0:map> " +
-            "								<ns0:max-field-size>0</ns0:max-field-size> " +
-            "								<ns0:max-rows>0</ns0:max-rows> " +
-            "								<ns0:query-timeout>0</ns0:query-timeout> " +
-            "								<ns0:read-only>true</ns0:read-only> " +
-            "								<ns0:rowset-type>ResultSet.TYPE_SCROLL_INSENSITIVE</ns0:rowset-type> " +
-            "               <ns0:show-deleted>false</ns0:show-deleted> " +
-            "   						<ns0:table-name>null</ns0:table-name> " +
-            "								<ns0:url>null</ns0:url> " +
-            "								<ns0:sync-provider> " +
-            "									<ns0:sync-provider-name>com.openitech.db.model.sync.DbSecondarySyncProvider</ns0:sync-provider-name> " +
-            "									<ns0:sync-provider-vendor>Domen</ns0:sync-provider-vendor> " +
-            "									<ns0:sync-provider-version>1.0</ns0:sync-provider-version> " +
-            "									<ns0:sync-provider-grade>2</ns0:sync-provider-grade> " +
-            "									<ns0:data-source-lock>1</ns0:data-source-lock> " +
-            "								</ns0:sync-provider> " +
-            "							</ns0:properties> " +
-            "						as first " +
-            "						into   (/ns0:webRowSet)[1] " +
-            "					'); " +
-            "	SET @xmlWRS.modify(' " +
-            "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; " +
-            "						insert  " +
-            "				<ns0:metadata/> " +
-            "						as last  " +
-            "						into   (/ns0:webRowSet)[1] " +
-            "					'); " +
-            "	SET @xmlWRS.modify(' " +
-            "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; " +
-            "						insert  " +
-            "							<ns0:column-count>6</ns0:column-count> " +
-            "						as last  " +
-            "						into   (/ns0:webRowSet/ns0:metadata)[1] " +
-            "					'); " +
-            "	SET @xmlWRS.modify(' " +
-            "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; " +
-            "						insert  " +
-            "				<ns0:data/> " +
-            "						as last  " +
-            "						into   (/ns0:webRowSet)[1] " +
-            "					'); " +
-            "					SET @xmlWRS.modify(' " +
-            "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; " +
-            "						insert  " +
-            "				<ns0:currentRow/> " +
-            "						as last  " +
-            "						into   (/ns0:webRowSet/ns0:data)[1] " +
-            "					'); " +
-            "	DECLARE	 " +
-            "			@ID [int], " +
-            "			@EventID [int], " +
-            "			@IDSifranta [int], " +
-            "			@IDSifre [varchar](100), " +
-            "			@IDEventSource [int], " +
-            "			@datum [varchar](108) " +
-            "	DECLARE eventValues_cursor  CURSOR FAST_FORWARD FOR " +
-            sql +
-            "	OPEN eventValues_cursor " +
-            "	FETCH NEXT FROM eventValues_cursor " +
-            "	INTO " +
-            "			@ID , " +
-            "			@EventID , " +
-            "			@IDSifranta, " +
-            "			@IDSifre , " +
-            "			@IDEventSource , " +
-            "			@datum  " +
-            /*ID*/
-            "SET @xmlWRS.modify(' " +
-            "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; " +
-            "				insert  " +
-            "					<ns0:column-definition> " +
-            "						<ns0:column-index>1</ns0:column-index> " +
-            "						<ns0:auto-increment>false</ns0:auto-increment> " +
-            "						<ns0:case-sensitive>false</ns0:case-sensitive> " +
-            "						<ns0:currency>false</ns0:currency> " +
-            "						<ns0:nullable>0</ns0:nullable> " +
-            "						<ns0:signed>true</ns0:signed> " +
-            "						<ns0:searchable>true</ns0:searchable> " +
-            "						<ns0:column-display-size>11</ns0:column-display-size> " +
-            "						<ns0:column-label>ID</ns0:column-label> " +
-            "						<ns0:column-name>ID</ns0:column-name>  " +
-            "						<ns0:schema-name></ns0:schema-name>  " +
-            "						<ns0:column-precision>10</ns0:column-precision>  " +
-            "						<ns0:column-scale>0</ns0:column-scale>  " +
-            "						<ns0:table-name></ns0:table-name>  " +
-            "						<ns0:catalog-name></ns0:catalog-name>  " +
-            "						<ns0:column-type>4</ns0:column-type>  " +
-            "						<ns0:column-type-name>int</ns0:column-type-name>  " +
-            "					</ns0:column-definition>  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:metadata)[1]  " +
-            "			');  " +
-            "			SET @xmlWRS.modify('  " +
-            "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "			insert 			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@id\") }</ns0:columnValue>			  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  " +
-            "			');  " +
-            /*EventID*/
-            "	SET @xmlWRS.modify('  " +
-            "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "				insert   " +
-            "					<ns0:column-definition>  " +
-            "						<ns0:column-index>2</ns0:column-index>  " +
-            "						<ns0:auto-increment>false</ns0:auto-increment>  " +
-            "						<ns0:case-sensitive>false</ns0:case-sensitive>  " +
-            "						<ns0:currency>false</ns0:currency>  " +
-            "						<ns0:nullable>0</ns0:nullable>  " +
-            "						<ns0:signed>true</ns0:signed>  " +
-            "						<ns0:searchable>true</ns0:searchable>  " +
-            "						<ns0:column-display-size>11</ns0:column-display-size>  " +
-            "						<ns0:column-label>EventID</ns0:column-label>  " +
-            "						<ns0:column-name>EventID</ns0:column-name>  " +
-            "						<ns0:schema-name></ns0:schema-name>  " +
-            "						<ns0:column-precision>10</ns0:column-precision>  " +
-            "						<ns0:column-scale>0</ns0:column-scale>  " +
-            "						<ns0:table-name></ns0:table-name>  " +
-            "						<ns0:catalog-name></ns0:catalog-name>  " +
-            "						<ns0:column-type>4</ns0:column-type>  " +
-            "						<ns0:column-type-name>int</ns0:column-type-name>  " +
-            "					</ns0:column-definition>  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:metadata)[1]  " +
-            "			');  " +
-            "			SET @xmlWRS.modify('  " +
-            "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "			insert 			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@eventid\") }</ns0:columnValue>			  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  " +
-            "			');  " +
-            /*IDSifranta*/
-            "	SET @xmlWRS.modify('  " +
-            "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "				insert   " +
-            "					<ns0:column-definition>  " +
-            "						<ns0:column-index>3</ns0:column-index>  " +
-            "						<ns0:auto-increment>false</ns0:auto-increment>  " +
-            "						<ns0:case-sensitive>false</ns0:case-sensitive>  " +
-            "						<ns0:currency>false</ns0:currency>  " +
-            "						<ns0:nullable>0</ns0:nullable>  " +
-            "						<ns0:signed>true</ns0:signed>  " +
-            "						<ns0:searchable>true</ns0:searchable>  " +
-            "						<ns0:column-display-size>11</ns0:column-display-size>  " +
-            "						<ns0:column-label>IDSifranta</ns0:column-label>  " +
-            "						<ns0:column-name>IDSifranta</ns0:column-name>  " +
-            "						<ns0:schema-name></ns0:schema-name>  " +
-            "						<ns0:column-precision>10</ns0:column-precision>  " +
-            "						<ns0:column-scale>0</ns0:column-scale>  " +
-            "						<ns0:table-name></ns0:table-name>  " +
-            "						<ns0:catalog-name></ns0:catalog-name>  " +
-            "						<ns0:column-type>4</ns0:column-type>  " +
-            "						<ns0:column-type-name>int</ns0:column-type-name>  " +
-            "					</ns0:column-definition>  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:metadata)[1]  " +
-            "			');  " +
-            "			SET @xmlWRS.modify('  " +
-            "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "			insert 			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@IDSifranta\") }</ns0:columnValue>			  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  " +
-            "			');  " +
-            "			/*IDSifre*/	  " +
-            "	SET @xmlWRS.modify('  " +
-            "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "				insert   " +
-            "					<ns0:column-definition>  " +
-            "							<ns0:column-index>4</ns0:column-index>  " +
-            "							<ns0:auto-increment>false</ns0:auto-increment>  " +
-            "							<ns0:case-sensitive>false</ns0:case-sensitive>  " +
-            "							<ns0:currency>false</ns0:currency>  " +
-            "							<ns0:nullable>1</ns0:nullable>  " +
-            "							<ns0:signed>false</ns0:signed>  " +
-            "							<ns0:searchable>true</ns0:searchable>  " +
-            "							<ns0:column-display-size>30</ns0:column-display-size>  " +
-            "							<ns0:column-label>IDSifre</ns0:column-label>  " +
-            "							<ns0:column-name>IDSifre</ns0:column-name>  " +
-            "							<ns0:schema-name></ns0:schema-name>  " +
-            "							<ns0:column-precision>30</ns0:column-precision>  " +
-            "							<ns0:column-scale>0</ns0:column-scale>  " +
-            "							<ns0:table-name></ns0:table-name>  " +
-            "							<ns0:catalog-name></ns0:catalog-name>  " +
-            "							<ns0:column-type>12</ns0:column-type>  " +
-            "							<ns0:column-type-name>varchar</ns0:column-type-name>  " +
-            "						</ns0:column-definition>  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:metadata)[1]  " +
-            "			');  " +
-            "			SET @xmlWRS.modify('  " +
-            "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "			insert 			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@IDSifre\") }</ns0:columnValue>			  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  " +
-            "			');  " +
-            /*IDEventSource*/
-            "	SET @xmlWRS.modify('  " +
-            "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "				insert   " +
-            "					<ns0:column-definition>  " +
-            "						<ns0:column-index>5</ns0:column-index>  " +
-            "						<ns0:auto-increment>false</ns0:auto-increment>  " +
-            "						<ns0:case-sensitive>false</ns0:case-sensitive>  " +
-            "						<ns0:currency>false</ns0:currency>  " +
-            "						<ns0:nullable>0</ns0:nullable>  " +
-            "						<ns0:signed>true</ns0:signed>  " +
-            "						<ns0:searchable>true</ns0:searchable>  " +
-            "						<ns0:column-display-size>11</ns0:column-display-size>  " +
-            "						<ns0:column-label>IDEventSource</ns0:column-label>  " +
-            "						<ns0:column-name>IDEventSource</ns0:column-name>  " +
-            "						<ns0:schema-name></ns0:schema-name>  " +
-            "						<ns0:column-precision>10</ns0:column-precision>  " +
-            "						<ns0:column-scale>0</ns0:column-scale>  " +
-            "						<ns0:table-name></ns0:table-name>  " +
-            "						<ns0:catalog-name></ns0:catalog-name>  " +
-            "						<ns0:column-type>4</ns0:column-type>  " +
-            "						<ns0:column-type-name>int</ns0:column-type-name>  " +
-            "					</ns0:column-definition>  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:metadata)[1]  " +
-            "			');  " +
-            "			SET @xmlWRS.modify('  " +
-            "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "			insert 			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@IDEventSource\") }</ns0:columnValue>			  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  " +
-            "			');  " +
-            "	SET @xmlWRS.modify('  " +
-            "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "				insert   " +
-            "					<ns0:column-definition>  " +
-            "						<ns0:column-index>6</ns0:column-index>  " +
-            "						<ns0:auto-increment>false</ns0:auto-increment>  " +
-            "						<ns0:case-sensitive>false</ns0:case-sensitive>  " +
-            "						<ns0:currency>false</ns0:currency>  " +
-            "						<ns0:nullable>1</ns0:nullable>  " +
-            "						<ns0:signed>false</ns0:signed>  " +
-            "						<ns0:searchable>true</ns0:searchable>  " +
-            "						<ns0:column-display-size>23</ns0:column-display-size>  " +
-            "						<ns0:column-label>Datum</ns0:column-label>  " +
-            "						<ns0:column-name>Datum</ns0:column-name>  " +
-            "						<ns0:schema-name>dbo</ns0:schema-name>  " +
-            "						<ns0:column-precision>23</ns0:column-precision>  " +
-            "						<ns0:column-scale>3</ns0:column-scale>  " +
-            "						<ns0:table-name>Events</ns0:table-name>  " +
-            "						<ns0:catalog-name>ChangeLog</ns0:catalog-name>  " +
-            "						<ns0:column-type>93</ns0:column-type>  " +
-            "						<ns0:column-type-name>datetime</ns0:column-type-name>  " +
-            "					</ns0:column-definition>  " +
-            "				as last   " +
-            "				into   (/ns0:webRowSet/ns0:metadata)[1]  " +
-            "				');  " +
-            "			SET @xmlWRS.modify('  " +
-            "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "				insert   " +
-            "				<ns0:columnValue>{ sql:variable(\"@datum\") }</ns0:columnValue>  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  " +
-            "			');  " +
-            "	FETCH NEXT FROM eventValues_cursor  " +
-            "	INTO  " +
-            "			@ID ,  " +
-            "			@EventID ,  " +
-            "			@IDSifranta, " +
-            "			@IDSifre ,  " +
-            "			@IDEventSource ,  " +
-            "			@datum   " +
-            "    WHILE @@FETCH_STATUS = 0  " +
-            "	BEGIN  " +
-            "	SET @xmlWRS.modify('  " +
-            "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  " +
-            "			insert 			  " +
-            "			<ns0:currentRow>  " +
-            "				<ns0:columnValue>{ sql:variable(\"@ID\") }</ns0:columnValue>			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@EventID\") }</ns0:columnValue>  " +
-            "				<ns0:columnValue>{ sql:variable(\"@IDSifranta\") }</ns0:columnValue>			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@IDSifre\") }</ns0:columnValue>			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@IDEventSource\") }</ns0:columnValue>			  " +
-            "				<ns0:columnValue>{ sql:variable(\"@datum\") }</ns0:columnValue>  " +
-            "			</ns0:currentRow>  " +
-            "			as last   " +
-            "			into   (/ns0:webRowSet/ns0:data)[1]  " +
-            "			');  " +
-            "	FETCH NEXT FROM eventValues_cursor  " +
-            "	INTO  " +
-            "			@ID ,  " +
-            "			@EventID ,  " +
-            "			@IDSifranta, " +
-            "			@IDSifre ,  " +
-            "			@IDEventSource ,  " +
-            "			@datum   " +
-            "	END  " +
-            "	CLOSE eventValues_cursor  " +
-            "	DEALLOCATE eventValues_cursor	  " +
-            "	/*SELECT CAST(@xmlWRS AS [xml](collectionXMLEvents));  */ " +
-            " SELECT CAST(@xmlWRS AS [xml]);  " +
-            "END";
+            ")  "
+            + "AS  "
+            + "BEGIN "
+            + "DECLARE @xmlWRS [xml]; "
+            + "	WITH XMLNAMESPACES ('http://java.sun.com/xml/ns/jdbc' as ns0) "
+            + "	SELECT @xmlWRS=(SELECT (null) "
+            + "	FOR XML RAW('ns0:webRowSet'), ELEMENTS); "
+            + "	SET @xmlWRS.modify(' "
+            + "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; "
+            + "						insert  "
+            + "							<ns0:properties> "
+            + "								<ns0:command>null</ns0:command> "
+            + "								<ns0:concurrency>1008</ns0:concurrency> "
+            + "								<ns0:datasource>null</ns0:datasource> "
+            + "								<ns0:escape-processing>true</ns0:escape-processing> "
+            + "								<ns0:fetch-direction>1000</ns0:fetch-direction> "
+            + "								<ns0:fetch-size>0</ns0:fetch-size> "
+            + "								<ns0:isolation-level>2</ns0:isolation-level> "
+            + "								<ns0:key-columns> "
+            + "								</ns0:key-columns> "
+            + "								<ns0:map> "
+            + "								</ns0:map> "
+            + "								<ns0:max-field-size>0</ns0:max-field-size> "
+            + "								<ns0:max-rows>0</ns0:max-rows> "
+            + "								<ns0:query-timeout>0</ns0:query-timeout> "
+            + "								<ns0:read-only>true</ns0:read-only> "
+            + "								<ns0:rowset-type>ResultSet.TYPE_SCROLL_INSENSITIVE</ns0:rowset-type> "
+            + "               <ns0:show-deleted>false</ns0:show-deleted> "
+            + "   						<ns0:table-name>null</ns0:table-name> "
+            + "								<ns0:url>null</ns0:url> "
+            + "								<ns0:sync-provider> "
+            + "									<ns0:sync-provider-name>com.openitech.db.model.sync.DbSecondarySyncProvider</ns0:sync-provider-name> "
+            + "									<ns0:sync-provider-vendor>Domen</ns0:sync-provider-vendor> "
+            + "									<ns0:sync-provider-version>1.0</ns0:sync-provider-version> "
+            + "									<ns0:sync-provider-grade>2</ns0:sync-provider-grade> "
+            + "									<ns0:data-source-lock>1</ns0:data-source-lock> "
+            + "								</ns0:sync-provider> "
+            + "							</ns0:properties> "
+            + "						as first "
+            + "						into   (/ns0:webRowSet)[1] "
+            + "					'); "
+            + "	SET @xmlWRS.modify(' "
+            + "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; "
+            + "						insert  "
+            + "				<ns0:metadata/> "
+            + "						as last  "
+            + "						into   (/ns0:webRowSet)[1] "
+            + "					'); "
+            + "	SET @xmlWRS.modify(' "
+            + "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; "
+            + "						insert  "
+            + "							<ns0:column-count>6</ns0:column-count> "
+            + "						as last  "
+            + "						into   (/ns0:webRowSet/ns0:metadata)[1] "
+            + "					'); "
+            + "	SET @xmlWRS.modify(' "
+            + "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; "
+            + "						insert  "
+            + "				<ns0:data/> "
+            + "						as last  "
+            + "						into   (/ns0:webRowSet)[1] "
+            + "					'); "
+            + "					SET @xmlWRS.modify(' "
+            + "		declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; "
+            + "						insert  "
+            + "				<ns0:currentRow/> "
+            + "						as last  "
+            + "						into   (/ns0:webRowSet/ns0:data)[1] "
+            + "					'); "
+            + "	DECLARE	 "
+            + "			@ID [int], "
+            + "			@EventID [int], "
+            + "			@IDSifranta [int], "
+            + "			@IDSifre [varchar](100), "
+            + "			@IDEventSource [int], "
+            + "			@datum [varchar](108) "
+            + "	DECLARE eventValues_cursor  CURSOR FAST_FORWARD FOR "
+            + sql
+            + "	OPEN eventValues_cursor "
+            + "	FETCH NEXT FROM eventValues_cursor "
+            + "	INTO "
+            + "			@ID , "
+            + "			@EventID , "
+            + "			@IDSifranta, "
+            + "			@IDSifre , "
+            + "			@IDEventSource , "
+            + "			@datum  "
+            + /*ID*/ "SET @xmlWRS.modify(' "
+            + "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\"; "
+            + "				insert  "
+            + "					<ns0:column-definition> "
+            + "						<ns0:column-index>1</ns0:column-index> "
+            + "						<ns0:auto-increment>false</ns0:auto-increment> "
+            + "						<ns0:case-sensitive>false</ns0:case-sensitive> "
+            + "						<ns0:currency>false</ns0:currency> "
+            + "						<ns0:nullable>0</ns0:nullable> "
+            + "						<ns0:signed>true</ns0:signed> "
+            + "						<ns0:searchable>true</ns0:searchable> "
+            + "						<ns0:column-display-size>11</ns0:column-display-size> "
+            + "						<ns0:column-label>ID</ns0:column-label> "
+            + "						<ns0:column-name>ID</ns0:column-name>  "
+            + "						<ns0:schema-name></ns0:schema-name>  "
+            + "						<ns0:column-precision>10</ns0:column-precision>  "
+            + "						<ns0:column-scale>0</ns0:column-scale>  "
+            + "						<ns0:table-name></ns0:table-name>  "
+            + "						<ns0:catalog-name></ns0:catalog-name>  "
+            + "						<ns0:column-type>4</ns0:column-type>  "
+            + "						<ns0:column-type-name>int</ns0:column-type-name>  "
+            + "					</ns0:column-definition>  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:metadata)[1]  "
+            + "			');  "
+            + "			SET @xmlWRS.modify('  "
+            + "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "			insert 			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@id\") }</ns0:columnValue>			  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  "
+            + "			');  "
+            + /*EventID*/ "	SET @xmlWRS.modify('  "
+            + "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "				insert   "
+            + "					<ns0:column-definition>  "
+            + "						<ns0:column-index>2</ns0:column-index>  "
+            + "						<ns0:auto-increment>false</ns0:auto-increment>  "
+            + "						<ns0:case-sensitive>false</ns0:case-sensitive>  "
+            + "						<ns0:currency>false</ns0:currency>  "
+            + "						<ns0:nullable>0</ns0:nullable>  "
+            + "						<ns0:signed>true</ns0:signed>  "
+            + "						<ns0:searchable>true</ns0:searchable>  "
+            + "						<ns0:column-display-size>11</ns0:column-display-size>  "
+            + "						<ns0:column-label>EventID</ns0:column-label>  "
+            + "						<ns0:column-name>EventID</ns0:column-name>  "
+            + "						<ns0:schema-name></ns0:schema-name>  "
+            + "						<ns0:column-precision>10</ns0:column-precision>  "
+            + "						<ns0:column-scale>0</ns0:column-scale>  "
+            + "						<ns0:table-name></ns0:table-name>  "
+            + "						<ns0:catalog-name></ns0:catalog-name>  "
+            + "						<ns0:column-type>4</ns0:column-type>  "
+            + "						<ns0:column-type-name>int</ns0:column-type-name>  "
+            + "					</ns0:column-definition>  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:metadata)[1]  "
+            + "			');  "
+            + "			SET @xmlWRS.modify('  "
+            + "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "			insert 			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@eventid\") }</ns0:columnValue>			  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  "
+            + "			');  "
+            + /*IDSifranta*/ "	SET @xmlWRS.modify('  "
+            + "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "				insert   "
+            + "					<ns0:column-definition>  "
+            + "						<ns0:column-index>3</ns0:column-index>  "
+            + "						<ns0:auto-increment>false</ns0:auto-increment>  "
+            + "						<ns0:case-sensitive>false</ns0:case-sensitive>  "
+            + "						<ns0:currency>false</ns0:currency>  "
+            + "						<ns0:nullable>0</ns0:nullable>  "
+            + "						<ns0:signed>true</ns0:signed>  "
+            + "						<ns0:searchable>true</ns0:searchable>  "
+            + "						<ns0:column-display-size>11</ns0:column-display-size>  "
+            + "						<ns0:column-label>IDSifranta</ns0:column-label>  "
+            + "						<ns0:column-name>IDSifranta</ns0:column-name>  "
+            + "						<ns0:schema-name></ns0:schema-name>  "
+            + "						<ns0:column-precision>10</ns0:column-precision>  "
+            + "						<ns0:column-scale>0</ns0:column-scale>  "
+            + "						<ns0:table-name></ns0:table-name>  "
+            + "						<ns0:catalog-name></ns0:catalog-name>  "
+            + "						<ns0:column-type>4</ns0:column-type>  "
+            + "						<ns0:column-type-name>int</ns0:column-type-name>  "
+            + "					</ns0:column-definition>  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:metadata)[1]  "
+            + "			');  "
+            + "			SET @xmlWRS.modify('  "
+            + "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "			insert 			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@IDSifranta\") }</ns0:columnValue>			  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  "
+            + "			');  "
+            + "			/*IDSifre*/	  "
+            + "	SET @xmlWRS.modify('  "
+            + "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "				insert   "
+            + "					<ns0:column-definition>  "
+            + "							<ns0:column-index>4</ns0:column-index>  "
+            + "							<ns0:auto-increment>false</ns0:auto-increment>  "
+            + "							<ns0:case-sensitive>false</ns0:case-sensitive>  "
+            + "							<ns0:currency>false</ns0:currency>  "
+            + "							<ns0:nullable>1</ns0:nullable>  "
+            + "							<ns0:signed>false</ns0:signed>  "
+            + "							<ns0:searchable>true</ns0:searchable>  "
+            + "							<ns0:column-display-size>30</ns0:column-display-size>  "
+            + "							<ns0:column-label>IDSifre</ns0:column-label>  "
+            + "							<ns0:column-name>IDSifre</ns0:column-name>  "
+            + "							<ns0:schema-name></ns0:schema-name>  "
+            + "							<ns0:column-precision>30</ns0:column-precision>  "
+            + "							<ns0:column-scale>0</ns0:column-scale>  "
+            + "							<ns0:table-name></ns0:table-name>  "
+            + "							<ns0:catalog-name></ns0:catalog-name>  "
+            + "							<ns0:column-type>12</ns0:column-type>  "
+            + "							<ns0:column-type-name>varchar</ns0:column-type-name>  "
+            + "						</ns0:column-definition>  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:metadata)[1]  "
+            + "			');  "
+            + "			SET @xmlWRS.modify('  "
+            + "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "			insert 			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@IDSifre\") }</ns0:columnValue>			  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  "
+            + "			');  "
+            + /*IDEventSource*/ "	SET @xmlWRS.modify('  "
+            + "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "				insert   "
+            + "					<ns0:column-definition>  "
+            + "						<ns0:column-index>5</ns0:column-index>  "
+            + "						<ns0:auto-increment>false</ns0:auto-increment>  "
+            + "						<ns0:case-sensitive>false</ns0:case-sensitive>  "
+            + "						<ns0:currency>false</ns0:currency>  "
+            + "						<ns0:nullable>0</ns0:nullable>  "
+            + "						<ns0:signed>true</ns0:signed>  "
+            + "						<ns0:searchable>true</ns0:searchable>  "
+            + "						<ns0:column-display-size>11</ns0:column-display-size>  "
+            + "						<ns0:column-label>IDEventSource</ns0:column-label>  "
+            + "						<ns0:column-name>IDEventSource</ns0:column-name>  "
+            + "						<ns0:schema-name></ns0:schema-name>  "
+            + "						<ns0:column-precision>10</ns0:column-precision>  "
+            + "						<ns0:column-scale>0</ns0:column-scale>  "
+            + "						<ns0:table-name></ns0:table-name>  "
+            + "						<ns0:catalog-name></ns0:catalog-name>  "
+            + "						<ns0:column-type>4</ns0:column-type>  "
+            + "						<ns0:column-type-name>int</ns0:column-type-name>  "
+            + "					</ns0:column-definition>  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:metadata)[1]  "
+            + "			');  "
+            + "			SET @xmlWRS.modify('  "
+            + "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "			insert 			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@IDEventSource\") }</ns0:columnValue>			  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  "
+            + "			');  "
+            + "	SET @xmlWRS.modify('  "
+            + "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "				insert   "
+            + "					<ns0:column-definition>  "
+            + "						<ns0:column-index>6</ns0:column-index>  "
+            + "						<ns0:auto-increment>false</ns0:auto-increment>  "
+            + "						<ns0:case-sensitive>false</ns0:case-sensitive>  "
+            + "						<ns0:currency>false</ns0:currency>  "
+            + "						<ns0:nullable>1</ns0:nullable>  "
+            + "						<ns0:signed>false</ns0:signed>  "
+            + "						<ns0:searchable>true</ns0:searchable>  "
+            + "						<ns0:column-display-size>23</ns0:column-display-size>  "
+            + "						<ns0:column-label>Datum</ns0:column-label>  "
+            + "						<ns0:column-name>Datum</ns0:column-name>  "
+            + "						<ns0:schema-name>dbo</ns0:schema-name>  "
+            + "						<ns0:column-precision>23</ns0:column-precision>  "
+            + "						<ns0:column-scale>3</ns0:column-scale>  "
+            + "						<ns0:table-name>Events</ns0:table-name>  "
+            + "						<ns0:catalog-name>ChangeLog</ns0:catalog-name>  "
+            + "						<ns0:column-type>93</ns0:column-type>  "
+            + "						<ns0:column-type-name>datetime</ns0:column-type-name>  "
+            + "					</ns0:column-definition>  "
+            + "				as last   "
+            + "				into   (/ns0:webRowSet/ns0:metadata)[1]  "
+            + "				');  "
+            + "			SET @xmlWRS.modify('  "
+            + "				declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "				insert   "
+            + "				<ns0:columnValue>{ sql:variable(\"@datum\") }</ns0:columnValue>  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:data/ns0:currentRow)[1]  "
+            + "			');  "
+            + "	FETCH NEXT FROM eventValues_cursor  "
+            + "	INTO  "
+            + "			@ID ,  "
+            + "			@EventID ,  "
+            + "			@IDSifranta, "
+            + "			@IDSifre ,  "
+            + "			@IDEventSource ,  "
+            + "			@datum   "
+            + "    WHILE @@FETCH_STATUS = 0  "
+            + "	BEGIN  "
+            + "	SET @xmlWRS.modify('  "
+            + "			declare namespace  ns0=\"http://java.sun.com/xml/ns/jdbc\";  "
+            + "			insert 			  "
+            + "			<ns0:currentRow>  "
+            + "				<ns0:columnValue>{ sql:variable(\"@ID\") }</ns0:columnValue>			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@EventID\") }</ns0:columnValue>  "
+            + "				<ns0:columnValue>{ sql:variable(\"@IDSifranta\") }</ns0:columnValue>			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@IDSifre\") }</ns0:columnValue>			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@IDEventSource\") }</ns0:columnValue>			  "
+            + "				<ns0:columnValue>{ sql:variable(\"@datum\") }</ns0:columnValue>  "
+            + "			</ns0:currentRow>  "
+            + "			as last   "
+            + "			into   (/ns0:webRowSet/ns0:data)[1]  "
+            + "			');  "
+            + "	FETCH NEXT FROM eventValues_cursor  "
+            + "	INTO  "
+            + "			@ID ,  "
+            + "			@EventID ,  "
+            + "			@IDSifranta, "
+            + "			@IDSifre ,  "
+            + "			@IDEventSource ,  "
+            + "			@datum   "
+            + "	END  "
+            + "	CLOSE eventValues_cursor  "
+            + "	DEALLOCATE eventValues_cursor	  "
+            + "	/*SELECT CAST(@xmlWRS AS [xml](collectionXMLEvents));  */ "
+            + " SELECT CAST(@xmlWRS AS [xml]);  "
+            + "END";
 
     //Logger.getAnonymousLogger().log(Level.INFO, preparedSQL);
     String result = null;
@@ -684,7 +680,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
 //
       String findSQL = getQuery("findProcedure");
       PreparedStatement findProcedure = sqlCache.getSharedStatement(conn, findSQL);
-     
+
       par = 1;
       findProcedure.setString(par++, imeProcedure);
 
@@ -695,8 +691,8 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
 
         boolean commit = false;
 
+        SqlUtilities.getInstance().beginTransaction();
         try {
-          SqlUtilities.getInstance().beginTransaction();
           Statement statement = conn.createStatement();
           statement.executeUpdate(preparedSQL);
           result = imeProcedure;
@@ -761,7 +757,7 @@ public class DbSecondaryRowSetReader implements RowSetReader, Serializable {
     return sql;
   }
 
-  private String getQuery(String fileName){
-    return com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "sql/"+fileName+".sql", "cp1250");
+  private String getQuery(String fileName) {
+    return com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "sql/" + fileName + ".sql", "cp1250");
   }
 }
