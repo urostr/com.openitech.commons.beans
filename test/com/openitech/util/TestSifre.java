@@ -40,6 +40,8 @@ public class TestSifre extends TestCase {
        assertEquals("2", StringValue.getNextSifra("1"));
        assertEquals("10", StringValue.getNextSifra("9"));
        assertEquals("11516", StringValue.getNextSifra("11515"));
+
+       assertEquals("AB", StringValue.getNextSifra("AB"));
      }
 
 }
