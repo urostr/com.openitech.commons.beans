@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="windows-1250"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xml.openitech.com/schema/fieldmodel"
+            xmlns:tns="http://xml.openitech.com/schema/fieldmodel"
+            elementFormDefault="qualified">
+  <xsd:element name="FieldModel">
+    <xsd:complexType>
+      <xsd:all>
+        <xsd:element name="Field" type="xsd:string"/>
+        <xsd:element name="Replace" type="xsd:string"/>
+        <xsd:element name="Query">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="Select">
+                <xsd:complexType>
+                  <xsd:sequence maxOccurs="unbounded">
+                    <xsd:element name="SQL"  maxOccurs="unbounded" type="xsd:string"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="Join">
+                <xsd:complexType>
+                  <xsd:sequence maxOccurs="unbounded">
+                    <xsd:element name="SQL"  maxOccurs="unbounded" type="xsd:string"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="TableColumns">
+          <xsd:complexType>
+            <xsd:sequence maxOccurs="unbounded">
+              <xsd:element name="TableColumnDefinition">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="TableColumnEntry" maxOccurs="unbounded" type="xsd:string"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:all>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
+

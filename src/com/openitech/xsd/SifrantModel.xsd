@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="windows-1250"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xml.openitech.com/schema/sifrantmodel"
+            xmlns:tns="http://xml.openitech.com/schema/sifrantmodel"
+            elementFormDefault="qualified">
+  <xsd:element name="Sifrant">
+    <xsd:complexType>
+      <xsd:all>
+        <xsd:element name="DataSource">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="SQL" type="xsd:string"/>
+              <xsd:element name="COUNT_SQL" type="xsd:string" minOccurs="0"/>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="DataModel">
+          <xsd:complexType>
+            <xsd:all>
+              <xsd:element name="KeyColumnName" type="xsd:string"/>
+              <xsd:element name="Separators" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="Separator" type="xsd:string" maxOccurs="unbounded"></xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="ValueColumnNames">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ColumnName" type="xsd:string" maxOccurs="unbounded"></xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="ExtendedValueColumnNames" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ColumnName" type="xsd:string" maxOccurs="unbounded"></xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:all>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:all>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
+
