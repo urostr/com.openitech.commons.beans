@@ -215,6 +215,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         } else if ((parameter.getDataSourceParametersFactory() != null) || (parameter.getDataSourceFilterFactory() != null)) {
           try {
             DataSourceParametersFactory dsf = (parameter.getDataSourceParametersFactory() != null) ? parameter.getDataSourceParametersFactory() : parameter.getDataSourceFilterFactory();
+            if (dsf.getFactory() == null) {
+              Factory defaultFactory = new Factory();
+              defaultFactory.setClassName(DefaultFilterFactory.class.getName());
+              dsf.setFactory(defaultFactory);
+            }
             Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), dsf.getFactory(), DbDataSource.class, config.getClass()).newInstance(dataSource, config);
             if (newInstance != null) {
               if (newInstance instanceof AbstractDataSourceParametersFactory) {
@@ -282,7 +287,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 //      resume = dataSourceXML.getDataSource().isResumeAfterCreation();
 //    }
 //    if (resume != null && resume && dataSource.isSuspended()) {
-    if(dataSource.getQueuedDelay() == Integer.MAX_VALUE){
+    if (dataSource.getQueuedDelay() == Integer.MAX_VALUE) {
       dataSource.setQueuedDelay(DbDataSource.DEFAULT_QUEUED_DELAY);
     }
     if (dataSource != null) {
