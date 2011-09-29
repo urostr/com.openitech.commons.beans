@@ -29,6 +29,20 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+        <xsd:element name="ViewsParameters">
+          <xsd:complexType>
+            <xsd:sequence maxOccurs="unbounded">
+              <xsd:element name="View">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="IdSifranta" maxOccurs="1" type="xsd:int"/>
+                    <xsd:element name="IdSifre" maxOccurs="1" type="xsd:string"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
         <xsd:element name="TableColumns">
           <xsd:complexType>
             <xsd:sequence maxOccurs="unbounded">

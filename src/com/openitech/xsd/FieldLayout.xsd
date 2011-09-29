@@ -20,6 +20,27 @@
         <xsd:element name="UseValueLookup" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="AddFitPanel" type="xsd:boolean" default="true"></xsd:element>
         <xsd:element name="PrikaziComboBox" type="xsd:boolean" default="true"></xsd:element>
+        <xsd:element name="LookupComboBox">
+          <xsd:complexType>
+            <xsd:all>
+              <xsd:element name="KeyColumnName" type="xsd:string"/>
+              <xsd:element name="ValueColumnNames">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ColumnName" type="xsd:string" maxOccurs="unbounded"></xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="ExtendedValueColumnNames" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ColumnName" type="xsd:string" maxOccurs="unbounded"></xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:all>
+          </xsd:complexType>
+        </xsd:element>
         <xsd:element name="KompleksenDogodek" type="xsd:boolean" default="true"></xsd:element>
         <xsd:element name="ShowAllEditors" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="EditorsHorizontalLayout" type="xsd:boolean" default="false"></xsd:element>
