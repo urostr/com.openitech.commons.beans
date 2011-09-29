@@ -46,7 +46,8 @@ public interface DbConnection {
   String DB_SHADOW_LOADING= "db.shadow.loading";
   String DB_SHADOW_INTERRUPT= "db.shadow.interrupt";
   String DB_STOP_LOADING_THREAD= "db.thread.kill";
-  String DB_OVERRIDE_CACHED_VIEWS= "db.override.cached";
+  String DB_OVERRIDE_CACHED= "db.override.cached";
+  String DB_OVERRIDE_VIEWS= "db.override.views";
   String DB_CONVERT_TO_VARCHAR= "db.convert.varchar";
   String DB_USE_VALUEID= "events.use.valueid";
   String DB_PREPARE_EVENT_VIEWS="event.prepare.views";
