@@ -4,7 +4,6 @@
  */
 package com.openitech.db.model.factory;
 
-import com.openitech.db.filters.DataSourceLimit;
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.model.DbDataModel;
@@ -131,26 +130,7 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   protected List<FieldObserver> fieldObservers = new ArrayList<FieldObserver>();
   protected Set<Field> dataEntryValues = new java.util.HashSet<com.openitech.value.fields.Field>();
   protected String opis;
-  protected DataSourceLimit.Limit limit = DataSourceLimit.Limit.LALL;
-
-  /**
-   * Get the value of limit
-   *
-   * @return the value of limit
-   */
-  public DataSourceLimit.Limit getLimit() {
-    return limit;
-  }
-
-  /**
-   * Set the value of limit
-   *
-   * @param limit new value of limit
-   */
-  public void setLimit(DataSourceLimit.Limit limit) {
-    this.limit = limit;
-  }
-
+  
   /**
    * Get the value of opis
    *

@@ -34,7 +34,7 @@ import org.codehaus.groovy.control.CompilationFailedException;
  */
 public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
 
-  protected boolean override = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_OVERRIDE_CACHED_VIEWS, "false"));
+  protected boolean override = SqlUtilities.getInstance().getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_CACHED);;
   protected static java.util.Map<String, TemporaryTable> cachedTemporaryTables;
   protected T config;
   protected DbDataSource dataSource = new DbDataSource();

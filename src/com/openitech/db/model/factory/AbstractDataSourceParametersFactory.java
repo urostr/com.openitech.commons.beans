@@ -154,8 +154,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
           filters.put(replace, filter = new DataSourceFilters(replace));
           if (dataSourceFilter.getOperator() != null) {
             filter.setOperator(dataSourceFilter.getOperator());
-            filter.addDataSource(dataSource);
           }
+        }
+        if (!filter.getDataSources().contains(dataSource)) {
+          filter.addDataSource(dataSource);
         }
         if (dataSourceFilter.getParameters() != null) {
           for (SeekParameters seekParameter : dataSourceFilter.getParameters().getSeekParameters()) {

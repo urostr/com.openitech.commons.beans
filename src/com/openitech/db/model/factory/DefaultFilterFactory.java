@@ -28,18 +28,39 @@ public class DefaultFilterFactory extends AbstractDataSourceParametersFactory im
 
   public DefaultFilterFactory(DbDataSource dataSource, DataSourceConfig<? extends DbDataModel> config) {
     super(dataSource);
-    this.config = config;    
+    this.config = config;
+  }
+  protected Map<String, DataSourceFilters> filters;
+
+  /**
+   * Get the value of filters
+   *
+   * @return the value of filters
+   */
+  public Map<String, DataSourceFilters> getFilters() {
+    return filters;
+  }
+
+  /**
+   * Set the value of filters
+   *
+   * @param filters new value of filters
+   */
+  public void setFilters(Map<String, DataSourceFilters> filters) {
+    this.filters = filters;
   }
 
   @Override
   public void configure() {
-    Map<String, DataSourceFilters> filters = new HashMap<String, DataSourceFilters>();
+    Map<String, DataSourceFilters> cfilters = filters == null ? new HashMap<String, DataSourceFilters>() : filters;
 
-    configure(filters);
-    for (Map.Entry<String, DataSourceFilters> entry : filters.entrySet()) {
-      parameters.add(entry.getValue());
+    configure(cfilters);
+    for (Map.Entry<String, DataSourceFilters> entry : cfilters.entrySet()) {
+      if (!parameters.contains(entry.getValue())) {
+        parameters.add(entry.getValue());
+      }
     }
-    
+
     configure(viewMenuItems);
 
     filterPanel = new DefaultFilterPanel(config.getDataModel().getDocuments(), filtersMap);

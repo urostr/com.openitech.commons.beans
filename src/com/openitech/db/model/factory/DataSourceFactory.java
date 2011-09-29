@@ -33,6 +33,7 @@ import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
+import com.openitech.events.concurrent.RefreshDataSource;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
@@ -120,9 +121,6 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           limitDataSource();
           setDataSourceQueuedDelay();
 
-          if (dataSourceLimit != null) {
-            dataSourceLimit.reloadDataSources();
-          }
           storeCachedTemporaryTables();
 
           creationParameters = dataSourceElement.getCreationParameters();
@@ -274,28 +272,24 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
   protected void limitDataSource() {
     if (dataSourceLimit != null) {
-      getLimit().setSelected();
-      dataSourceLimit.setValue(getLimit().getValue());
+      dataSourceLimit.setValue(DataSourceLimit.Limit.DEFAULT_LIMIT);
     }
   }
 
   protected void resumeDataSource() {
-//    Boolean resume = null;
-//    if (creationParameters != null) {
-//      resume = creationParameters.isResumeAfterCreation();
-//    } else {
-//      resume = dataSourceXML.getDataSource().isResumeAfterCreation();
-//    }
-//    if (resume != null && resume && dataSource.isSuspended()) {
     if (dataSource.getQueuedDelay() == Integer.MAX_VALUE) {
       dataSource.setQueuedDelay(DbDataSource.DEFAULT_QUEUED_DELAY);
     }
     if (dataSource != null) {
+      DataSourceEvent.cancel(dataSource);
       DataSourceEvent.resume(dataSource);
+      try {
+        dataSource.filterChanged();
+      } catch (SQLException ex) {
+        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      DataSourceEvent.submit(new RefreshDataSource(dataSource));
     }
-//    } else {
-//      DataSourceEvent.resume(dataSource);
-//    }
   }
 
   protected DbDataSource createDataSource() throws ClassNotFoundException {
