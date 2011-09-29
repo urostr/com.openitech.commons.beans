@@ -197,6 +197,48 @@ public class Field implements Cloneable {
     this.lookupType = lookupType;
   }
 
+  protected boolean showInTable;
+
+  /**
+   * Get the value of showInTable
+   *
+   * @return the value of showInTable
+   */
+  public boolean isShowInTable() {
+    return showInTable;
+  }
+
+  protected boolean lookup;
+
+  /**
+   * Get the value of lookup
+   *
+   * @return the value of lookup
+   */
+  public boolean isLookup() {
+    return lookup;
+  }
+
+  /**
+   * Set the value of lookup
+   *
+   * @param lookup new value of lookup
+   */
+  public void setLookup(boolean lookup) {
+    this.lookup = lookup;
+  }
+
+
+  /**
+   * Set the value of showInTable
+   *
+   * @param showInTable new value of showInTable
+   */
+  public void setShowInTable(boolean showInTable) {
+    this.showInTable = showInTable;
+  }
+
+
   @Override
   public int hashCode() {
     int hash = 7;
