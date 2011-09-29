@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 public final class RefreshDataSource extends DataSourceEvent {
 
+  public static List<JXDimBusyLabel> busyLabels = new ArrayList<JXDimBusyLabel>();
   public static JXDimBusyLabel busy = null;
   List<Object> parameters = new ArrayList<Object>();
   Map<String, Object> defaults = new HashMap<String, Object>();
@@ -102,6 +103,14 @@ public final class RefreshDataSource extends DataSourceEvent {
       EventQueue.invokeLater(new Runnable() {
 
         public void run() {
+          for (JXDimBusyLabel busyLabel : busyLabels) {
+            busyLabel.setBusy(true);
+            if (label != null && !label.equals("")) {
+              busyLabel.setText(label);
+            } else {
+              busyLabel.setText("Osvežujem podatke ...");
+            }
+          }
           busy.setBusy(true);
           busyCount++;
           if (label != null && !label.equals("")) {
@@ -124,6 +133,10 @@ public final class RefreshDataSource extends DataSourceEvent {
             busyCount--;
           }
           if (busyCount == 0) {
+            for (JXDimBusyLabel busyLabel : busyLabels) {
+              busyLabel.setBusy(false);
+              busyLabel.setText("Pripravljen...");
+            }
             busy.setBusy(false);
             busy.setText("Pripravljen...");
 //            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Ready!");
@@ -328,7 +341,7 @@ public final class RefreshDataSource extends DataSourceEvent {
       loading = false;
       tasks.remove(event);
 
-      if (!Thread.interrupted()&&isLastInQueue()) {
+      if (!Thread.interrupted() && isLastInQueue()) {
         if (event.isOnEventQueue() && !EventQueue.isDispatchThread()) {
           final int r = row;
           Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("trying to load on EQ:" + event.dataSource);
