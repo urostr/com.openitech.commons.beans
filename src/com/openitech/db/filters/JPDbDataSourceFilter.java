@@ -143,8 +143,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   public Set<DbDataSource> getDataSources() {
     return Collections.unmodifiableSet(dataSources);
   }
-
-
   private JMenu filterMenuItem = new JMenu("Aktivni filtri");
 
   @Override
@@ -224,15 +222,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     @Override
     public void actionPerformed(ActionEvent e) {
       if (e.getActionCommand().equalsIgnoreCase("CLEAR") && documents != null) {
-        for (javax.swing.text.Document documents1[] : documents.values()) {
-          for (Document document : documents1) {
-            try {
-              document.remove(0, document.getLength());
-            } catch (BadLocationException ex) {
-              Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.WARNING, null, ex);
-            }
-          }
-        }
+        clearFilters();
       }
     }
   }
@@ -243,6 +233,27 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       updateFilterMenuItem();
     }
   };
+
+  public void clearFilters() {
+    boolean autoReload = true;
+    for (DbDataSource dbDataSource : dataSources) {
+      autoReload = dbDataSource.isAutoReload();
+      dbDataSource.setAutoReload(false);
+    }
+    for (javax.swing.text.Document documents1[] : documents.values()) {
+      for (Document document : documents1) {
+        try {
+          document.remove(0, document.getLength());
+        } catch (BadLocationException ex) {
+          Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.WARNING, null, ex);
+        }
+      }
+    }
+    for (DbDataSource dbDataSource : dataSources) {
+      dbDataSource.setAutoReload(autoReload);
+    }
+    reload(true);
+  }
 
   private void updateColumns() {
     Vector<DataSourceFilters.AbstractSeekType<? extends Object>> headers = new Vector<DataSourceFilters.AbstractSeekType<? extends Object>>();

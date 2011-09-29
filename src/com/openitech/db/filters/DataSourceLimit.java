@@ -5,26 +5,18 @@
 package com.openitech.db.filters;
 
 import com.openitech.db.model.DbDataSource;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.ButtonGroup;
 
 /**
  *
  * @author uros
  */
-public class DataSourceLimit extends DbDataSource.SubstSqlParameter implements ActionListener {
+public class DataSourceLimit extends DbDataSource.SubstSqlParameter {
 
-  @Override
-  public void actionPerformed(ActionEvent e) {
-    String result = null;
+  private Limit limitValue = Limit.DEFAULT_LIMIT;
 
-    for (int i = 0; (i < Limit.values().length) && result == null; i++) {
-      result = Limit.values()[i].getValue();
-    }
-
-    super.setValue(result == null ? "" : result);
-    super.reloadDataSources();
+  public void setValue(Limit limit) {
+    limitValue = limit;
+    super.setValue(limit.getValue());
   }
 
   public enum Limit {
@@ -33,110 +25,42 @@ public class DataSourceLimit extends DbDataSource.SubstSqlParameter implements A
 
       @Override
       public String getValue() {
-        return model.isSelected() ? "TOP 10" : null;
+        return " TOP 10 ";
       }
     },
     L50 {
 
       @Override
       public String getValue() {
-        return model.isSelected() ? "TOP 50" : null;
+        return " TOP 50 ";
       }
     },
     L100 {
 
       @Override
       public String getValue() {
-        return model.isSelected() ? "TOP 100" : null;
+        return " TOP 100 ";
       }
     },
     LALL {
 
       @Override
       public String getValue() {
-        return model.isSelected() ? "" : null;
+        return "";
       }
     },
-    L10P {
+    DEFAULT_LIMIT {
 
       @Override
       public String getValue() {
-        return model.isSelected() ? "TOP 10 PERCENT" : null;
-      }
-    },
-    L25P {
-
-      @Override
-      public String getValue() {
-        return model.isSelected() ? "TOP 25 PERCENT" : null;
-      }
-    },
-    L50P {
-
-      @Override
-      public String getValue() {
-        return model.isSelected() ? "TOP 50 PERCENT" : null;
-      }
-    },
-    L100P {
-
-      @Override
-      public String getValue() {
-        return model.isSelected() ? "TOP 100 PERCENT" : null;
+        return L10.getValue();
       }
     };
 
     public abstract String getValue();
-    javax.swing.JToggleButton.ToggleButtonModel model = new javax.swing.JToggleButton.ToggleButtonModel();
-
-    public javax.swing.JToggleButton.ToggleButtonModel getModel() {
-      return model;
-    }
-    
-    private final static ButtonGroup bg = new ButtonGroup();
-
-    static {
-      for (Limit l : Limit.values()) {
-        l.getModel().setGroup(bg);
-      }
-
-    }
-
-    public static ButtonGroup getButtonGroup() {
-      return bg;
-    }
-
-    public boolean isSelected() {
-      return model.isSelected();
-    }
-
-    public void setSelected() {
-      setSelected(this);
-    }
-
-    public static Limit getSelected() {
-      Limit result = null;
-      for (Limit l : Limit.values()) {
-        if (l.model.isSelected()) {
-          result =l; break;
-        }
-      }
-
-      return result;
-    }
-
-    public void setSelected(Limit limit) {
-      for (Limit s:Limit.values()) {
-        s.getModel().setSelected(s.equals(limit));
-      }
-    }
   }
 
   public DataSourceLimit(String replace) {
     super(replace);
-
-    for (Limit l : Limit.values()) {
-      l.getModel().addActionListener(this);
-    }
   }
 }

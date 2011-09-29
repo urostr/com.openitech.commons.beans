@@ -10,9 +10,15 @@
  */
 package com.openitech.db.filters;
 
+import com.openitech.db.events.ActiveRowChangeEvent;
+import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.model.DbDataSource;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
@@ -63,9 +69,36 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
 
     initComponents();
     invalidate();
+
+    for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
+      dbDataSource.addActiveRowChangeListener(new ActiveRowChangeListener() {
+
+        @Override
+        public void activeRowChanged(ActiveRowChangeEvent event) {
+          event.getSource().removeActiveRowChangeListener(this);
+          setLimitParameter();
+        }
+
+        @Override
+        public void fieldValueChanged(ActiveRowChangeEvent event) {
+        }
+      });
+    }
   }
 
+  private void setLimitParameter() {
+    List<DataSourceLimit> params = new ArrayList<DataSourceLimit>();
+    for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
+      for (Object param : dbDataSource.getParameters()) {
+        if (param instanceof DataSourceLimit) {
+          params.add((DataSourceLimit) param);
+        }
+      }
 
+    }
+    jPLimitGroup1.setParameter(params);
+
+  }
 
   public JPDbDataSourceFilter getJPDbDataSourceFilter() {
     return dbDataSourceFilter;
@@ -107,8 +140,12 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
 
     dbDataSourceFilter = dbDataSourceFilter==null?new com.openitech.db.filters.JPDbDataSourceFilter():dbDataSourceFilter;
     jPanel1 = new javax.swing.JPanel();
+    jlLimit = new javax.swing.JLabel();
+    jPLimitGroup1 = new com.openitech.db.filters.JPLimitGroup();
+    jSeparator1 = new javax.swing.JSeparator();
     jcbAutomaticSearch = new javax.swing.JCheckBox();
     jsDataSourceDelay = new javax.swing.JSpinner();
+    jbPocisti = new javax.swing.JButton();
     jbIsci = new javax.swing.JButton();
 
     setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
@@ -120,6 +157,13 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     add(dbDataSourceFilter, gridBagConstraints);
 
     jPanel1.setLayout(new java.awt.GridBagLayout());
+
+    jlLimit.setText("Prikaži najveè:");
+    jPanel1.add(jlLimit, new java.awt.GridBagConstraints());
+    jPanel1.add(jPLimitGroup1, new java.awt.GridBagConstraints());
+
+    jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
+    jPanel1.add(jSeparator1, new java.awt.GridBagConstraints());
 
     jcbAutomaticSearch.setSelected(!addSearchButton);
     jcbAutomaticSearch.setText("Avtomatièno iskanje");
@@ -138,6 +182,17 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
     gridBagConstraints.weightx = 1.0;
     jPanel1.add(jsDataSourceDelay, gridBagConstraints);
+
+    jbPocisti.setText("Poèisti");
+    jbPocisti.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jbPocistiActionPerformed(evt);
+      }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
+    jPanel1.add(jbPocisti, gridBagConstraints);
 
     jbIsci.setText("Išèi");
     jbIsci.setEnabled(addSearchButton);
@@ -161,18 +216,17 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     dbDataSourceFilter.reload(false);
   }//GEN-LAST:event_jbIsciActionPerformed
 
-
   /**
    * Get the value of spinnerModel
    *
    * @return the value of spinnerModel
    */
   public SpinnerNumberModel getSpinnerModel() {
-    if (spinnerModel==null) {
+    if (spinnerModel == null) {
       int delay = 270;
 
       for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
-         delay = Math.min(delay, (int) dbDataSource.getQueuedDelay());
+        delay = Math.min(delay, (int) dbDataSource.getQueuedDelay());
       }
 
       spinnerModel = new SpinnerNumberModel(delay, Math.min(100, delay), 5000, 100);
@@ -191,28 +245,48 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     return spinnerModel;
   }
 
-
   private void jcbAutomaticSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbAutomaticSearchActionPerformed
     toggleAutomaticSearch(jcbAutomaticSearch.isSelected());
   }
 
   private void toggleAutomaticSearch(boolean autoReload) {
     for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
-        dbDataSource.setAutoReload(autoReload);
+      dbDataSource.setAutoReload(autoReload);
     }
-    if (jsDataSourceDelay!=null) {
+    if (jsDataSourceDelay != null) {
       jsDataSourceDelay.setEnabled(autoReload);
     }
-    if (jbIsci!=null) {
+    if (jbIsci != null) {
       jbIsci.setEnabled(!autoReload);
     }
   }//GEN-LAST:event_jcbAutomaticSearchActionPerformed
 
+  private void jbPocistiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPocistiActionPerformed
+    // TODO add your handling code here:
+    dbDataSourceFilter.clearFilters();
+    fireActionPerformed("CLEAR_FILTERS");
+
+  }//GEN-LAST:event_jbPocistiActionPerformed
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private com.openitech.db.filters.JPDbDataSourceFilter dbDataSourceFilter;
+  private com.openitech.db.filters.JPLimitGroup jPLimitGroup1;
   private javax.swing.JPanel jPanel1;
+  private javax.swing.JSeparator jSeparator1;
   private javax.swing.JButton jbIsci;
+  private javax.swing.JButton jbPocisti;
   private javax.swing.JCheckBox jcbAutomaticSearch;
+  private javax.swing.JLabel jlLimit;
   private javax.swing.JSpinner jsDataSourceDelay;
   // End of variables declaration//GEN-END:variables
+  private List<ActionListener> actionListeners = new ArrayList<ActionListener>();
+
+  public void addActionListener(ActionListener l) {
+    this.actionListeners.add(l);
+  }
+
+  protected void fireActionPerformed(String command) {
+    for (ActionListener actionListener : actionListeners) {
+      actionListener.actionPerformed(new ActionEvent(this, 1, command));
+    }
+  }
 }
