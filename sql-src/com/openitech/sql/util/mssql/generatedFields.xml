@@ -17,10 +17,13 @@
                 [TabName] [varchar](50) NULL,
                 [StTabNames] [int] NULL,
                 [ZapSt] [int] NULL,
+                [FieldOptions] [varchar](max) NULL,
+                [FieldModel] [varchar](max) NULL,
                 [NewLine] [bit] NULL,
                 [Hidden] [bit] NULL,
                 [Potrebno] [bit] NULL,
                 [ShowInTable] [bit] NULL,
+                [SearchField] [bit] NULL,
                 [PrimaryKey] [bit] NOT NULL,
                 [UporabiPrivzetoVrednost] [bit] NULL,
                 [UrejajPrivzetoVrednost] [bit] NULL,
@@ -118,10 +121,13 @@
                ,[TabName]
                ,[StTabNames]
                ,[ZapSt]
+               ,[FieldOptions]
+               ,[FieldModel]
                ,[NewLine]
                ,[Hidden]
                ,[Potrebno]
                ,[ShowInTable]
+               ,[SearchField]
                ,[PrimaryKey]
                ,[UporabiPrivzetoVrednost]
                ,[UrejajPrivzetoVrednost]
@@ -186,6 +192,39 @@
                 ELSE SifrantiPolja.[ZapSt]
               END AS [ZapSt],
               CASE
+                WHEN ActivityEventsPolja.[FieldOptions] IS NOT NULL
+                THEN (CASE WHEN ActivityEventsPolja.[FieldOptions] = 'null'
+                        THEN null
+                        ELSE ActivityEventsPolja.[FieldOptions]
+                      END)
+                ELSE
+                  (CASE WHEN SifrantiPolja.[FieldOptions] IS NOT NULL
+                    THEN (CASE WHEN SifrantiPolja.[FieldOptions] = 'null'
+                        THEN null
+                        ELSE SifrantiPolja.[FieldOptions]
+                      END)
+                    ELSE
+                      SifrantVnosnihPolj.FieldOptions
+                  END)
+              END AS [FieldOptions],
+              CASE
+                WHEN ActivityEventsPolja.[FieldModel] IS NOT NULL
+                THEN (CASE WHEN ActivityEventsPolja.[FieldModel] = 'null'
+                        THEN null
+                        ELSE ActivityEventsPolja.[FieldModel]
+                      END)
+                ELSE
+                  (CASE WHEN SifrantiPolja.[FieldModel] IS NOT NULL
+                    THEN (CASE WHEN SifrantiPolja.[FieldModel] = 'null'
+                        THEN null
+                        ELSE SifrantiPolja.[FieldModel]
+                      END)
+                    ELSE
+                      SifrantVnosnihPolj.FieldModel
+                  END)
+              END AS [FieldModel],
+
+              CASE
                 WHEN ActivityEventsPolja.[NewLine] IS NOT NULL
                 THEN ActivityEventsPolja.[NewLine]
                 ELSE SifrantiPolja.[NewLine]
@@ -205,6 +244,7 @@
                 THEN ActivityEventsPolja.[ShowInTable]
                 ELSE SifrantiPolja.[ShowInTable]
               END AS [ShowInTable],
+              SifrantiPolja.SearchField,
               SifrantiPolja.[PrimaryKey],
               CASE
                 WHEN ActivityEventsPolja.[UporabiPrivzetoVrednost] IS NOT NULL

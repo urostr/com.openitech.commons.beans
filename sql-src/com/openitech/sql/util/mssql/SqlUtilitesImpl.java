@@ -4,6 +4,7 @@
  */
 package com.openitech.sql.util.mssql;
 
+import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.xml.config.MaterializedView.CacheEvents;
 import com.openitech.value.events.EventType;
 import com.openitech.db.model.xml.config.MaterializedView;
@@ -43,7 +44,6 @@ import com.openitech.value.events.EventPK;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.CallableStatement;
@@ -88,7 +88,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
  */
 public class SqlUtilitesImpl extends SqlUtilities {
 
-  protected boolean override = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_OVERRIDE_CACHED_VIEWS, "false"));
+  protected boolean override = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_OVERRIDE_CACHED, "false"));
   protected boolean useStoreEvent = Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(ConnectionManager.DB_CALL_STORE_EVENT, "false"));
   PreparedStatement logChanges;
   PreparedStatement logValues;
@@ -157,6 +157,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
   private final static LogWriter LOG_WRITER = new LogWriter(Logger.getLogger(SqlUtilitesImpl.class.getName()), Level.INFO);
   private final static SQLWorker SQL_WORKER = new SQLWorker(LOG_WRITER);
   private final String callStoreValueSql = ReadInputStream.getResourceAsString(getClass(), "callStoreValue.sql", "cp1250");
+
+  @Override
+  public boolean getRunParameterBoolean(String parameter, boolean defaultValue) {
+    return Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(parameter, Boolean.valueOf(defaultValue).toString()));
+  }
 
   @Override
   public long getScopeIdentity() throws SQLException {
@@ -714,6 +719,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   private static class DbEventPK extends EventPK {
+
     private final String pk;
 
     public DbEventPK(Event event, String pk) {
@@ -798,7 +804,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
 
             if (rs != null) {
-                rs.close();
+              rs.close();
             }
           } else {
             result = null;
@@ -2528,6 +2534,51 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
+  public void createEventViews(int idSifranta, String idSifre, boolean overrideIdExists) {
+    final String eventsDb = SqlUtilities.getEventsDB();
+    String eventsViewVersioned;
+    String eventsViewValid;
+    try {
+      Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
+      try {
+        TransactionManager tm = TransactionManager.getInstance(temporaryConnection);
+
+        CallableStatement callStoredValue = temporaryConnection.prepareCall(ReadInputStream.getResourceAsString(getClass(), "callCreateEventsView.sql", "cp1250"));
+        try {
+          eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "]";
+          eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "_valid]";
+
+
+          if (overrideIdExists || !(isViewReady(eventsDb, eventsViewVersioned) && isViewReady(eventsDb, eventsViewValid))) {
+            Logger.getLogger(getClass().getName()).log(Level.INFO, "CREATE:EVENTS:{0}", eventsViewVersioned);
+            tm.beginTransaction();
+            boolean commit = false;
+            int param = 1;
+            try {
+              callStoredValue.setInt(param++, idSifranta);
+              if (idSifre != null) {
+                callStoredValue.setString(param++, idSifre);
+              } else {
+                callStoredValue.setNull(param++, java.sql.Types.VARCHAR);
+              }
+              callStoredValue.execute();
+              commit = true;
+            } finally {
+              tm.endTransaction(commit);
+            }
+          }
+        } finally {
+          callStoredValue.close();
+        }
+      } finally {
+        temporaryConnection.close();
+      }
+    } catch (SQLException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+
+  @Override
   public DbDataSource joinSecondaryDataSources(List<DbDataSource> dataSources) throws SQLException {
     MergedSecondaryDataSource result = null;
     EventFilterSearch mergedFilter = null;
@@ -2618,6 +2669,41 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public static class MergedSecondaryDataSource extends DbDataSource {
   }
 
+  public static class EventLookupValuesFilterSearch extends DataSourceFilters {
+
+    private final SubstSqlParameter sqlFind;
+    private String evFilterOperator = "WHERE";
+
+    public EventLookupValuesFilterSearch(SubstSqlParameter sqlFind) {
+      super(sqlFind.getReplace());
+      super.setOperator("");
+      this.sqlFind = sqlFind;
+    }
+
+    @Override
+    public void setOperator(String operator) {
+      this.evFilterOperator = operator;
+    }
+
+    @Override
+    public String getValue() {
+      StringBuilder sb = new StringBuilder();
+
+      if (sqlFind.getValue() != null && sqlFind.getValue().length() > 0) {
+        sb.append(sqlFind.getValue()).append("\n");
+      }
+
+      final String searchValue = super.getValue();
+      if (sb.length() == 0 && searchValue != null && searchValue.length() > 0) {
+        sb.append(" ").append(evFilterOperator).append(" ");
+        sb.append(searchValue).append("\n");
+      }
+
+
+      return sb.toString();
+    }
+  }
+
   public static class EventFilterSearch extends EventQueryParameter {
 
     private static final String EV_VERSIONED_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_values_versioned.sql", "cp1250");
@@ -2626,6 +2712,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     private static final String EV_SEARCH_BY_VERSION_PK_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_version_PK.sql", "cp1250");
     private static final String EV_CREATE_EVENTS_VIEW = ReadInputStream.getResourceAsString(EventFilterSearch.class, "callCreateEventsView.sql", "cp1250");
     private static final String EV_FIND_IDSIFRE = ReadInputStream.getResourceAsString(EventFilterSearch.class, "findIdSifre.sql", "cp1250");
+    DbDataSource.SubstSqlParameter sqlFindEventEventId = new DbDataSource.SubstSqlParameter("<%ev_eventid_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventVersion = new DbDataSource.SubstSqlParameter("<%ev_version_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventValid = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
@@ -2685,12 +2772,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
       this.validOnly = validOnly;
       this.eventPK = eventPK;
 
-      if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_PREPARE_EVENT_VIEWS, "false"))) {
+      if (lookup || Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_PREPARE_EVENT_VIEWS, "false"))) {
         for (Integer idSifranta : sifranti) {
           createEventViews(idSifranta);
         }
       }
 
+      sqlFindEventEventId.clearParameters();
       sqlFindEventVersion.clearParameters();
       sqlFindEventType.clearParameters();
       sqlFindEventValid.clearParameters();
@@ -2740,6 +2828,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlEventTable.setValue(ev_table + " ev WITH (NOLOCK)");
       }
 
+      sqlFindEventEventId.setValue("");
       sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
       if (sifra == null || (sifra.length == 1 && sifra[0] == null)) {
         StringBuilder sbSifrant = new StringBuilder();
@@ -2801,16 +2890,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       //  setEventPK(eventPK);
 
-      evVersionedParameters.clear();
-      evVersionedParameters.add(sqlEventAlias);
-      evVersionedParameters.add(sqlFindEventVersion);
-      evVersionedParameters.add(sqlEventTable);
-      evVersionedParameters.add(sqlFindEventVersion);
-      evVersionedParameters.add(sqlFindEventType);
-      evVersionedParameters.add(sqlFindEventSource);
-      evVersionedParameters.add(sqlFindEventDate);
-      evVersionedParameters.add(sqlFindEventVersionPk);
-      evVersionedSubquery = SqlUtilitesImpl.SQL_WORKER.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
 
       if (sqlFindEventType.getValue().length() == 0
               && sqlFindEventValid.getValue().length() == 0
@@ -2822,16 +2901,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         sqlEventWhere.setValue("WHERE");
       }
 
-      evNonVersionedParameters.clear();
-      evNonVersionedParameters.add(sqlEventAlias);
-      evNonVersionedParameters.add(sqlEventTable);
-      evNonVersionedParameters.add(sqlFindEventType);
-      evNonVersionedParameters.add(sqlFindEventValid);
-      evNonVersionedParameters.add(sqlFindEventSource);
-      evNonVersionedParameters.add(sqlFindEventDate);
-      evNonVersionedParameters.add(sqlFindEventPk);
-      evNonVersionedParameters.add(sqlEventWhere);
-      evNonVersionedSubquery = SqlUtilitesImpl.SQL_WORKER.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
+      refreshParameters();
     }
 
     private String[] getSifre(int idSifranta) {
@@ -3010,11 +3080,63 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     @Override
     public String getValue() {
-      return hasVersionId() ? evVersionedSubquery : evNonVersionedSubquery;
+      if (lookup) {
+        return lookupEventId == null ? evNonVersionedSubquery : evNonVersionedSubquery;
+      } else {
+        return hasVersionId() ? evVersionedSubquery : evNonVersionedSubquery;
+      }
     }
 
     public Collection<Integer> getSifrant() {
       return sifrant;
+    }
+    private boolean lookup = false;
+    private Long lookupEventId = null;
+    private Long lookupVersionId = null;
+
+    public void setLookupValues(Long eventId, Long versionId) {
+      this.lookupEventId = eventId;
+      this.lookupVersionId = versionId;
+
+      sqlFindEventEventId.clearParameters();
+
+      if (eventId != null) {
+        sqlFindEventEventId.setValue("AND EventId = ?");
+        sqlFindEventEventId.addParameter(new SqlParameter<Long>(java.sql.Types.BIGINT, eventId));
+        sqlFindEventValid.setValue("");
+      } else {
+        sqlFindEventEventId.setValue("");
+        sqlFindEventValid.setValue(validOnly ? " AND ev.valid = 1 " : "");
+      }
+
+      refreshParameters();
+    }
+
+    private void refreshParameters() {
+      evVersionedParameters.clear();
+      evVersionedParameters.add(sqlEventAlias);
+      evVersionedParameters.add(sqlFindEventVersion);
+      evVersionedParameters.add(sqlEventTable);
+      evVersionedParameters.add(sqlFindEventVersion);
+      evVersionedParameters.add(sqlFindEventType);
+      evVersionedParameters.add(sqlFindEventSource);
+      evVersionedParameters.add(sqlFindEventDate);
+      evVersionedParameters.add(sqlFindEventVersionPk);
+      evVersionedSubquery = SqlUtilitesImpl.SQL_WORKER.substParameters(EV_VERSIONED_SUBQUERY, evVersionedParameters);
+
+
+      evNonVersionedParameters.clear();
+      evNonVersionedParameters.add(sqlEventAlias);
+      evNonVersionedParameters.add(sqlEventTable);
+      evNonVersionedParameters.add(sqlFindEventType);
+      evNonVersionedParameters.add(sqlFindEventEventId);
+      evNonVersionedParameters.add(sqlFindEventValid);
+      evNonVersionedParameters.add(sqlFindEventSource);
+      evNonVersionedParameters.add(sqlFindEventDate);
+      evNonVersionedParameters.add(sqlFindEventPk);
+      evNonVersionedParameters.add(sqlEventWhere);
+      evNonVersionedSubquery = SqlUtilitesImpl.SQL_WORKER.substParameters(EV_NONVERSIONED_SUBQUERY, evNonVersionedParameters);
+
     }
   }
 
@@ -4111,14 +4233,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
     EventFilterSearch eventSearchFilter = new EventFilterSearch(namedParameters, searchFields.contains(Event.EVENT_SOURCE) ? event.getEventSource() : null, searchFields.contains(Event.EVENT_DATE) ? event.getDatum() : null, sifrant, sifra, validOnly, useView, eventPK);
     parameters.add(eventSearchFilter);
     DbDataSource.SubstSqlParameter sqlFind = new DbDataSource.SubstSqlParameter("<%ev_values_filter%>");
-    parameters.add(sqlFind);
+
+    EventLookupValuesFilterSearch lookupValuesFilterSearch = new EventLookupValuesFilterSearch(sqlFind);
+    parameters.add(lookupValuesFilterSearch);
     DbDataSource.SubstSqlParameter sqlValidOnly = new DbDataSource.SubstSqlParameter("<%ev_valid_filter%>");
     parameters.add(sqlValidOnly);
-//    if (validOnly) {
-//      sqlValidOnly.setValue("WHERE (ev.[validTo] IS NULL OR ev.[ValidTo] >= GETDATE())");
-//    } else {
+
     sqlValidOnly.setValue("");
-//    }
 
     Set<String> viewColumns;
     if (eventSearchFilter.usesView()) {
@@ -4754,7 +4875,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       return searchByEventPK;
     }
   }
-  
+
   private static class NamespacePrefixMapper extends com.sun.xml.bind.marshaller.NamespacePrefixMapper {
 
     private final static String[][] prefixes = new String[][]{
