@@ -43,6 +43,10 @@ public class FieldValue extends Field implements Cloneable{
     this.value = value;
     this.valueId = valueId;
   }
+
+  public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, Long valueId) {
+    this(idPolja, name, type, fieldValueIndex, null, valueId);
+  }
   private Object value;
 
   /**
