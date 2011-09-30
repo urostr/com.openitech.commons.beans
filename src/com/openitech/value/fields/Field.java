@@ -196,7 +196,6 @@ public class Field implements Cloneable {
   public void setLookupType(LookupType lookupType) {
     this.lookupType = lookupType;
   }
-
   protected boolean showInTable;
 
   /**
@@ -207,7 +206,6 @@ public class Field implements Cloneable {
   public boolean isShowInTable() {
     return showInTable;
   }
-
   protected boolean lookup;
 
   /**
@@ -228,7 +226,6 @@ public class Field implements Cloneable {
     this.lookup = lookup;
   }
 
-
   /**
    * Set the value of showInTable
    *
@@ -237,7 +234,34 @@ public class Field implements Cloneable {
   public void setShowInTable(boolean showInTable) {
     this.showInTable = showInTable;
   }
+  protected boolean primaryKey;
 
+  /**
+   * Get the value of primaryKey
+   *
+   * @return the value of primaryKey
+   */
+  public boolean isPrimaryKey() {
+    return primaryKey;
+  }
+
+  /**
+   * Set the value of primaryKey
+   *
+   * @param primaryKey new value of primaryKey
+   */
+  public void setPrimaryKey(boolean primaryKey) {
+    this.primaryKey = primaryKey;
+  }
+  int uporabiSifrantIdSifranta;
+
+  public void setUporabiSifrantIdSifranta(int uporabiSifrantIdSifranta) {
+    this.uporabiSifrantIdSifranta = uporabiSifrantIdSifranta;
+  }
+
+  public int getUporabiSifrantIdSifranta() {
+    return uporabiSifrantIdSifranta;
+  }
 
   @Override
   public int hashCode() {
