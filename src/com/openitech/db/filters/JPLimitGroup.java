@@ -13,6 +13,7 @@ package com.openitech.db.filters;
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,16 +26,16 @@ public class JPLimitGroup extends javax.swing.JPanel {
   public JPLimitGroup() {
     initComponents();
   }
-  private List<DataSourceLimit> parameter;
+  private List<DataSourceLimit> parameters = new ArrayList<DataSourceLimit>();
 
-  public void setParameter(List<DataSourceLimit> parameters) {
-    this.parameter = parameters;
-    for (final DataSourceLimit limit : this.parameter) {
-      limit.addPropertyChangeListener("value", new PropertyChangeListener() {
+  public void addParameter(final DataSourceLimit parameter) {
+    if (!parameters.contains(parameter)) {
+      this.parameters.add(parameter);
+      parameter.addPropertyChangeListener("value", new PropertyChangeListener() {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-          limit.reloadDataSources();
+          parameter.reloadDataSources();
         }
       });
     }
@@ -87,7 +88,7 @@ public class JPLimitGroup extends javax.swing.JPanel {
 
     private void jrbLimit10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jrbLimit10ActionPerformed
       // TODO add your handling code here:
-      for (SubstSqlParameter substSqlParameter : parameter) {
+      for (SubstSqlParameter substSqlParameter : parameters) {
         substSqlParameter.setValue(" TOP 10 ");
       }
 
@@ -96,7 +97,7 @@ public class JPLimitGroup extends javax.swing.JPanel {
 
     private void jrbLimit50ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jrbLimit50ActionPerformed
       // TODO add your handling code here:
-      for (SubstSqlParameter substSqlParameter : parameter) {
+      for (SubstSqlParameter substSqlParameter : parameters) {
         substSqlParameter.setValue(" TOP 50 ");
       }
 
@@ -104,7 +105,7 @@ public class JPLimitGroup extends javax.swing.JPanel {
 
     private void jrbLimit100ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jrbLimit100ActionPerformed
       // TODO add your handling code here:
-      for (SubstSqlParameter substSqlParameter : parameter) {
+      for (SubstSqlParameter substSqlParameter : parameters) {
         substSqlParameter.setValue(" TOP 100 ");
       }
 
