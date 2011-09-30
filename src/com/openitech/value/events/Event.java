@@ -6,7 +6,6 @@ package com.openitech.value.events;
 
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.connection.DbConnection;
-import com.openitech.sql.events.xml.Operation;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.util.Equals;
@@ -259,6 +258,11 @@ public class Event extends EventType implements Cloneable {
     getFieldValues(fieldValue).remove(fieldValue);
     eventValues.remove(fieldValue);
     return values.remove(fieldValue);
+  }
+
+   public void replaceAddValue(FieldValue fieldValue) {
+    removeValue(fieldValue);
+    addValue(fieldValue);
   }
 
   /**
