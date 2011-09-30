@@ -25,7 +25,6 @@ import com.openitech.value.events.AfterUpdateEvent;
 import com.openitech.value.events.EventType;
 import com.openitech.value.events.UpdateEventFields;
 import java.sql.Clob;
-import java.sql.Connection;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -54,8 +53,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public static final String RPP_DB = "[RPP]";
   public static final String RPE_DB = "[RPE]";
   public static final String MVIEW_CACHE_DB = "[MViewCache]";
-  private static Map<Class, SqlUtilities> instances = new HashMap<Class, SqlUtilities>();
-
+  
   protected SqlUtilities() {
   }
 
@@ -695,6 +693,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract Set<String> getEventViewColumns(String viewName);
 
   public abstract void createEventViews(int idSifranta, String idSifre, boolean overrideIdExists);
+
+  public abstract String getViewName(int idSifranta, String idSifre, boolean valid);
 
   public boolean getRunParameterBoolean(String parameter){
     return getRunParameterBoolean(parameter, false);
