@@ -43,6 +43,7 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+        <xsd:element name="Separator" minOccurs="0"  type="xsd:string" />
         <xsd:element name="TableColumns">
           <xsd:complexType>
             <xsd:sequence maxOccurs="unbounded">
