@@ -2534,6 +2534,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
+  public String getViewName(int idSifranta, String idSifre, boolean valid) {
+    return "E_" + idSifranta + (idSifre == null ? "" : ("_" + idSifre)) + (valid ? "_valid" : "");
+  }
+
+  @Override
   public void createEventViews(int idSifranta, String idSifre, boolean overrideIdExists) {
     final String eventsDb = SqlUtilities.getEventsDB();
     String eventsViewVersioned;
