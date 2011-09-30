@@ -266,10 +266,14 @@ public class SQLWorker {
   public ResultSet executeQuery(PreparedStatement statement, List<?> parameters) throws SQLException {
     ResultSet resultSet = null;
 //    synchronized (statement.getConnection()) {
-    List<Object> queryParameters = preprocessParameters(parameters, statement);
-
-    setParameters(statement, queryParameters, 1, false);
-
+    try {
+      List<Object> queryParameters = preprocessParameters(parameters, statement);
+      setParameters(statement, queryParameters, 1, false);
+    } finally {
+      if (DbDataSource.DUMP_SQL) {
+        logWriter.flush();
+      }
+    }
     resultSet = statement.executeQuery();
 //    }
     return resultSet;
