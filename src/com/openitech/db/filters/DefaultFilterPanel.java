@@ -87,17 +87,19 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
   }
 
   private void setLimitParameter() {
-    List<DataSourceLimit> params = new ArrayList<DataSourceLimit>();
+    boolean removeLimitPanel = true;
     for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
       for (Object param : dbDataSource.getParameters()) {
         if (param instanceof DataSourceLimit) {
-          params.add((DataSourceLimit) param);
+          jPLimitGroup1.addParameter((DataSourceLimit) param);
+          removeLimitPanel = false;
         }
       }
-
     }
-    jPLimitGroup1.setParameter(params);
-
+    if(removeLimitPanel){
+      remove(jpLimitParameter);
+      invalidate();
+    }
   }
 
   public JPDbDataSourceFilter getJPDbDataSourceFilter() {
@@ -140,11 +142,13 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
 
     dbDataSourceFilter = dbDataSourceFilter==null?new com.openitech.db.filters.JPDbDataSourceFilter():dbDataSourceFilter;
     jPanel1 = new javax.swing.JPanel();
+    jpLimitParameter = new javax.swing.JPanel();
     jlLimit = new javax.swing.JLabel();
     jPLimitGroup1 = new com.openitech.db.filters.JPLimitGroup();
     jSeparator1 = new javax.swing.JSeparator();
     jcbAutomaticSearch = new javax.swing.JCheckBox();
     jsDataSourceDelay = new javax.swing.JSpinner();
+    jbRefresh = new javax.swing.JButton();
     jbPocisti = new javax.swing.JButton();
     jbIsci = new javax.swing.JButton();
 
@@ -158,9 +162,13 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
 
     jPanel1.setLayout(new java.awt.GridBagLayout());
 
+    jpLimitParameter.setLayout(new java.awt.GridBagLayout());
+
     jlLimit.setText("Prikaži najveè:");
-    jPanel1.add(jlLimit, new java.awt.GridBagConstraints());
-    jPanel1.add(jPLimitGroup1, new java.awt.GridBagConstraints());
+    jpLimitParameter.add(jlLimit, new java.awt.GridBagConstraints());
+    jpLimitParameter.add(jPLimitGroup1, new java.awt.GridBagConstraints());
+
+    jPanel1.add(jpLimitParameter, new java.awt.GridBagConstraints());
 
     jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
     jPanel1.add(jSeparator1, new java.awt.GridBagConstraints());
@@ -182,6 +190,16 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
     gridBagConstraints.weightx = 1.0;
     jPanel1.add(jsDataSourceDelay, gridBagConstraints);
+
+    jbRefresh.setText("Osveži");
+    jbRefresh.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jbRefreshActionPerformed(evt);
+      }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
+    jPanel1.add(jbRefresh, gridBagConstraints);
 
     jbPocisti.setText("Poèisti");
     jbPocisti.addActionListener(new java.awt.event.ActionListener() {
@@ -267,6 +285,13 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     fireActionPerformed("CLEAR_FILTERS");
 
   }//GEN-LAST:event_jbPocistiActionPerformed
+
+  private void jbRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbRefreshActionPerformed
+    // TODO add your handling code here:
+    dbDataSourceFilter.reload(true);
+    fireActionPerformed("RELOAD");
+  }//GEN-LAST:event_jbRefreshActionPerformed
+
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private com.openitech.db.filters.JPDbDataSourceFilter dbDataSourceFilter;
   private com.openitech.db.filters.JPLimitGroup jPLimitGroup1;
@@ -274,8 +299,10 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
   private javax.swing.JSeparator jSeparator1;
   private javax.swing.JButton jbIsci;
   private javax.swing.JButton jbPocisti;
+  private javax.swing.JButton jbRefresh;
   private javax.swing.JCheckBox jcbAutomaticSearch;
   private javax.swing.JLabel jlLimit;
+  private javax.swing.JPanel jpLimitParameter;
   private javax.swing.JSpinner jsDataSourceDelay;
   // End of variables declaration//GEN-END:variables
   private List<ActionListener> actionListeners = new ArrayList<ActionListener>();
