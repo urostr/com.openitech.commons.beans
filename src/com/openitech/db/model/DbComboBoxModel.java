@@ -225,7 +225,7 @@ public class DbComboBoxModel<K> extends AbstractListModel implements ComboBoxMod
         dataSource.setSafeMode(false);
       }
       try {
-        int size = dataSource.getRowCount();
+        int size = Math.max(0, dataSource.getRowCount());
         StringBuilder result;
         Set<String> columns;
         java.util.Map<String, Integer> columnIndex;
