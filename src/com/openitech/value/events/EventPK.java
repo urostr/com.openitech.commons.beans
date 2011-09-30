@@ -22,8 +22,8 @@ public class EventPK {
 
     @Override
     public int compare(FieldValue o1, FieldValue o2) {
-      if (o1.getIdPolja() != o1.getIdPolja()) {
-        return o1.getIdPolja().compareTo(o1.getIdPolja());
+      if (o1.getIdPolja() != o2.getIdPolja()) {
+        return o1.getIdPolja().compareTo(o2.getIdPolja());
       } else {
         return o1.getFieldIndex() < o2.getFieldIndex() ? -1 : (o1.getFieldIndex() == o2.getFieldIndex() ? 0 : 1);
       }
