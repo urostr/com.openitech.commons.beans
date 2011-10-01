@@ -29,7 +29,7 @@ public class EventType {
   public int getSifrant() {
     return sifrant;
   }
-  protected final String sifra;
+  protected String sifra;
 
   /**
    * Get the value of sifra
@@ -39,6 +39,12 @@ public class EventType {
   public String getSifra() {
     return sifra;
   }
+
+
+  public void setIdSifre(String sifra) {
+    this.sifra = sifra;
+  }
+
   protected final boolean cacheOnUpdate;
 
   /**
