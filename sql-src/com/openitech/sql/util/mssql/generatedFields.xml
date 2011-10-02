@@ -23,7 +23,6 @@
                 [Hidden] [bit] NULL,
                 [Potrebno] [bit] NULL,
                 [ShowInTable] [bit] NULL,
-                [SearchField] [bit] NULL,
                 [PrimaryKey] [bit] NOT NULL,
                 [UporabiPrivzetoVrednost] [bit] NULL,
                 [UrejajPrivzetoVrednost] [bit] NULL,
@@ -127,7 +126,6 @@
                ,[Hidden]
                ,[Potrebno]
                ,[ShowInTable]
-               ,[SearchField]
                ,[PrimaryKey]
                ,[UporabiPrivzetoVrednost]
                ,[UrejajPrivzetoVrednost]
@@ -244,7 +242,6 @@
                 THEN ActivityEventsPolja.[ShowInTable]
                 ELSE SifrantiPolja.[ShowInTable]
               END AS [ShowInTable],
-              SifrantiPolja.SearchField,
               SifrantiPolja.[PrimaryKey],
               CASE
                 WHEN ActivityEventsPolja.[UporabiPrivzetoVrednost] IS NOT NULL
