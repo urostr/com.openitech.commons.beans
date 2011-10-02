@@ -22,6 +22,9 @@ SELECT
            SifrantiPolja.IdSifre = ev.IdSifre AND
            SifrantiPolja.IdPolja = eval.[IdPolja] AND
            SifrantiPolja.FieldValueIndex = eval.[FieldValueIndex]) AS [PrimaryKey],
+    (SELECT versioned FROM <%ChangeLog%>.[dbo].Sifranti WITH (NOLOCK)
+        WHERE Sifranti.IdSifranta =  ev.IdSifranta
+        AND Sifranti.IdSifre = ev.IdSifre) AS Versioned,
            --ne dotikaj se imen stolpec za lookup
     EventLookupKeys.VersionId AS LOOKUP_VERSIONID_,
     EventLookupKeys.IdSifranta AS LOOKUP_IDSIFRANTA_,
@@ -44,7 +47,7 @@ ON
     (
         eval.[ValueId] = vval.[Id]
     )
-LEFT OUTER JOIN ChangeLog.[dbo].[EventLookupKeys] WITH (NOLOCK)
+LEFT OUTER JOIN <%ChangeLog%>.[dbo].[EventLookupKeys] WITH (NOLOCK)
 ON
     (
         EventLookupKeys.[EventId] = ev.[Id]
