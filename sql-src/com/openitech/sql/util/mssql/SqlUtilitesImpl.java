@@ -2725,8 +2725,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
       final String searchValue = super.getValue();
-      if (sb.length() == 0 && searchValue != null && searchValue.length() > 0) {
+      if (searchValue != null && searchValue.length() > 0) {
         sb.append(" ").append(evFilterOperator).append(" ");
+
         sb.append(searchValue).append("\n");
       }
 
