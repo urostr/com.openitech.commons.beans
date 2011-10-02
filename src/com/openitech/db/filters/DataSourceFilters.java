@@ -261,6 +261,12 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       this.p_count = p_count;
     }
 
+    public void setParameter_count(int parameter_count) {
+      this.p_count = parameter_count;
+    }
+
+
+
     public String getField() {
       return field;
     }
@@ -467,6 +473,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public SeekType(String field, int i_type, int min_length, int p_count) {
       super(field, i_type, p_count);
       this.def_i_type = 1;
+      this.min_length = min_length;
+    }
+
+    public void setMin_length(int min_length) {
       this.min_length = min_length;
     }
 
