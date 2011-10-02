@@ -555,7 +555,7 @@ public class Event extends EventType implements Cloneable {
    * @return the value of versionParent
    */
   public Event getVersionParent() {
-    return versionParent;
+    return versionParent == null ? this : versionParent;
   }
 
   /**
