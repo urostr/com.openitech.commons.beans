@@ -1761,6 +1761,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           result.setId(eventId);
           result.setEventSource(rs.getInt("IdEventSource"));
           result.setDatum(rs.getTimestamp("Datum"));
+          result.setVersioned(rs.getBoolean("Versioned"));
           java.sql.Clob opomba = rs.getClob("Opomba");
           if (!rs.wasNull()) {
             if (opomba.length() > 0) {
@@ -3610,6 +3611,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         int param = 1;
         find_event_by_PK.clearParameters();
         find_event_by_PK.setInt(param++, idSifranta);
+        find_event_by_PK.setInt(param++, idSifre == null ? 1 : 0);
         find_event_by_PK.setString(param++, idSifre);
         find_event_by_PK.setString(param++, primaryKeyHex);
 
