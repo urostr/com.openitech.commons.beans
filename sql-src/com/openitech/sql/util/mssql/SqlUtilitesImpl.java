@@ -70,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -1889,38 +1890,44 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
   private Map<String, TemporaryTable> cachedTemporaryTables = null;
+  ReentrantLock cacheLock = new ReentrantLock();
 
   @Override
-  public synchronized Map<String, TemporaryTable> getCachedTemporaryTables() {
-    if (cachedTemporaryTables == null) {
-      Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();
-      try {
-        Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+  public Map<String, TemporaryTable> getCachedTemporaryTables() {
+    cacheLock.lock();
+    try {
+      if (cachedTemporaryTables == null) {
+        Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();
         try {
-          ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
+          Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+          try {
+            ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
 
-          while (cachedObjects.next()) {
-            if (cachedObjects.getObject("CachedObjectXML") != null) {
-              String object = cachedObjects.getString("Object");
-              com.openitech.db.model.xml.config.TemporaryTable temporaryTable;
+            while (cachedObjects.next()) {
+              if (cachedObjects.getObject("CachedObjectXML") != null) {
+                String object = cachedObjects.getString("Object");
+                com.openitech.db.model.xml.config.TemporaryTable temporaryTable;
 
-              try {
-                Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
-                temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream())).getTemporaryTable();
+                try {
+                  Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
+                  temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream())).getTemporaryTable();
 
-                result.put(object, convertToIndexedView(temporaryTable));
-              } catch (JAXBException ex) {
-                Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
+                  result.put(object, convertToIndexedView(temporaryTable));
+                } catch (JAXBException ex) {
+                  Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
+                }
               }
             }
+          } finally {
+            statement.close();
           }
-        } finally {
-          statement.close();
+        } catch (SQLException ex) {
+          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
-      } catch (SQLException ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+        cachedTemporaryTables = result;
       }
-      cachedTemporaryTables = result;
+    } finally {
+      cacheLock.unlock();
     }
     return cachedTemporaryTables;
   }
