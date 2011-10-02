@@ -176,14 +176,16 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               Integer parameterCount = parameter.getParameterCount();
 
               DataSourceFilters.SeekType seekType;
-              if (type == null) {
-                seekType = new DataSourceFilters.SeekType(field);
-              } else if (minumumLength == null) {
-                seekType = new DataSourceFilters.SeekType(field, getSeekType(type));
-              } else if (parameterCount == null) {
-                seekType = new DataSourceFilters.SeekType(field, getSeekType(type), minumumLength);
-              } else {
-                seekType = new DataSourceFilters.SeekType(field, getSeekType(type), minumumLength, parameterCount);
+              seekType = new DataSourceFilters.SeekType(field);
+
+              if (type != null) {
+                seekType.setSeekType(getSeekType(type));
+              }
+              if (parameterCount != null) {
+                seekType.setParameter_count(parameterCount);
+              }
+              if (minumumLength != null) {
+                seekType.setMin_length(minumumLength);
               }
               if (convertToVarchar != null) {
                 seekType.setConvertToVarchar(convertToVarchar);
