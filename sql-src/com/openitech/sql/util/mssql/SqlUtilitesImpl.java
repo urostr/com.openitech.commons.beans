@@ -2565,7 +2565,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public void createEventViews(int idSifranta, String idSifre, boolean overrideIdExists) {
+  public void createEventViews(int idSifranta, String idSifre, boolean overrideIdExists, boolean createIndexPK) {
     final String eventsDb = SqlUtilities.getEventsDB();
     String eventsViewVersioned;
     String eventsViewValid;
