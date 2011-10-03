@@ -38,6 +38,21 @@
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
+              <xsd:element name="ViewsParameters">
+                <xsd:complexType>
+                  <xsd:sequence maxOccurs="unbounded">
+                    <xsd:element name="Views">
+                      <xsd:complexType>
+                        <xsd:all>
+                          <xsd:element name="IdSifranta" maxOccurs="1" type="xsd:int"/>
+                          <xsd:element name="IdSifre" maxOccurs="1" type="xsd:string"/>
+                        </xsd:all>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="CreateIndexPK" type="xsd:boolean" default="true"/>
+                </xsd:complexType>
+              </xsd:element>
               <xsd:element name="Listeners" minOccurs="0">
                 <xsd:complexType>
                   <xsd:sequence minOccurs="1" maxOccurs="unbounded">
