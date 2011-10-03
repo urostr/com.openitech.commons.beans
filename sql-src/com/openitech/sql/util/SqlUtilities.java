@@ -53,7 +53,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public static final String RPP_DB = "[RPP]";
   public static final String RPE_DB = "[RPE]";
   public static final String MVIEW_CACHE_DB = "[MViewCache]";
-  
+
   protected SqlUtilities() {
   }
 
@@ -692,22 +692,25 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Set<String> getEventViewColumns(String viewName);
 
-  public abstract void createEventViews(int idSifranta, String idSifre, boolean overrideIdExists);
+  public void createEventViews(int idSifranta, String idSifre) {
+    createEventViews(idSifranta, idSifre, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), true);
+  }
+  public void createEventViews(int idSifranta, String idSifre, boolean createIndexPK) {
+    createEventViews(idSifranta, idSifre, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), createIndexPK);
+  }
+
+  public abstract void createEventViews(int idSifranta, String idSifre, boolean overrideIfExists, boolean createIndexPK);
 
   public abstract String getViewName(int idSifranta, String idSifre, boolean valid);
 
-  public boolean getRunParameterBoolean(String parameter){
+  public boolean getRunParameterBoolean(String parameter) {
     return getRunParameterBoolean(parameter, false);
   }
 
   public abstract boolean getRunParameterBoolean(String parameter, boolean defaultValue);
 
   public abstract void loadCaches() throws SQLException;
-//  public void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre) throws SQLException {
-//    updateUsePrimaryKeyForSearch(idSifranta, idSifre, false);
-//  }
-//
-//  public abstract void updateUsePrimaryKeyForSearch(int idSifranta, String idSifre, boolean useTemporaryConnection) throws SQLException;
+  
   public abstract String getDataSourceSQL(int idSifranta, String idSifre) throws SQLException;
 
   public static enum Operation {
