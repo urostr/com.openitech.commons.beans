@@ -54,6 +54,8 @@ public class JPLimitGroup extends javax.swing.JPanel {
     jrbLimit10 = new javax.swing.JRadioButton();
     jrbLimit50 = new javax.swing.JRadioButton();
     jrbLimit100 = new javax.swing.JRadioButton();
+    jrbLimit1000 = new javax.swing.JRadioButton();
+    jrbLimitAll = new javax.swing.JRadioButton();
 
     setLayout(new java.awt.GridBagLayout());
 
@@ -84,6 +86,24 @@ public class JPLimitGroup extends javax.swing.JPanel {
       }
     });
     add(jrbLimit100, new java.awt.GridBagConstraints());
+
+    buttonGroup1.add(jrbLimit1000);
+    jrbLimit1000.setText("1000");
+    jrbLimit1000.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jrbLimit1000ActionPerformed(evt);
+      }
+    });
+    add(jrbLimit1000, new java.awt.GridBagConstraints());
+
+    buttonGroup1.add(jrbLimitAll);
+    jrbLimitAll.setText("Vsi");
+    jrbLimitAll.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jrbLimitAllActionPerformed(evt);
+      }
+    });
+    add(jrbLimitAll, new java.awt.GridBagConstraints());
   }// </editor-fold>//GEN-END:initComponents
 
     private void jrbLimit10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jrbLimit10ActionPerformed
@@ -110,10 +130,27 @@ public class JPLimitGroup extends javax.swing.JPanel {
       }
 
     }//GEN-LAST:event_jrbLimit100ActionPerformed
+
+    private void jrbLimit1000ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jrbLimit1000ActionPerformed
+      // TODO add your handling code here:
+      for (SubstSqlParameter substSqlParameter : parameters) {
+        substSqlParameter.setValue(" TOP 1000 ");
+      }
+    }//GEN-LAST:event_jrbLimit1000ActionPerformed
+
+    private void jrbLimitAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jrbLimitAllActionPerformed
+     // TODO add your handling code here:
+      for (SubstSqlParameter substSqlParameter : parameters) {
+        substSqlParameter.setValue("  ");
+      }
+    }//GEN-LAST:event_jrbLimitAllActionPerformed
+
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.ButtonGroup buttonGroup1;
   private javax.swing.JRadioButton jrbLimit10;
   private javax.swing.JRadioButton jrbLimit100;
+  private javax.swing.JRadioButton jrbLimit1000;
   private javax.swing.JRadioButton jrbLimit50;
+  private javax.swing.JRadioButton jrbLimitAll;
   // End of variables declaration//GEN-END:variables
 }
