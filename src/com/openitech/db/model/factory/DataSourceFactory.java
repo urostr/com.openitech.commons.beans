@@ -21,6 +21,7 @@ import com.openitech.db.model.xml.config.Workarea.DataSource;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners.Listener;
+import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.SQLMaterializedView;
 import com.openitech.db.model.sql.SQLOrderByParameter;
@@ -33,6 +34,7 @@ import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
+import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views;
 import com.openitech.events.concurrent.RefreshDataSource;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
@@ -96,6 +98,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           dataSource.setQueuedDelay(Integer.MAX_VALUE);
           this.dataSourceLimit = createDataSourceLimit();
 
+          createViews();
+          
           List<Object> parameters = new ArrayList<Object>();
           parameters.addAll(dataSource.getParameters());
           parameters.addAll(createDataSourceParameters());
@@ -183,6 +187,22 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             if (!cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue())) {
               SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
             }
+          }
+        }
+      }
+    }
+  }
+
+  protected void createViews() {
+    SqlUtilities sqlUtilities = SqlUtilities.getInstance();
+    final DataSource dataSourceElement = dataSourceXML.getDataSource();
+    if (dataSourceElement != null) {
+      ViewsParameters viewsParameters = dataSourceElement.getViewsParameters();
+      if (viewsParameters != null) {
+        List<Views> views = viewsParameters.getViews();
+        if (views != null) {
+          for (Views view : views) {
+            sqlUtilities.createEventViews(view.getIdSifranta(), view.getIdSifre(), viewsParameters.isCreateIndexPK());
           }
         }
       }
