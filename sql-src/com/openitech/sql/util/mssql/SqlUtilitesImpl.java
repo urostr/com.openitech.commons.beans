@@ -44,6 +44,7 @@ import com.openitech.value.events.EventPK;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.CallableStatement;
@@ -1914,7 +1915,18 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
                   result.put(object, convertToIndexedView(temporaryTable));
                 } catch (JAXBException ex) {
-                  Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage());
+                  Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage() + "CachedTemporaryTable ni pravilen!");
+                  try {
+                    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
+                    Clob clob = cachedObjects.getClob("CachedObjectXML");
+                    String subString = clob.getSubString(1, (int) clob.length());
+                    subString = subString.replaceAll("http://xml.netbeans.org/schema/sifranti_custom", "http://xml.openitech.com/schema/datasource");
+                    temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(new StringReader(subString))).getTemporaryTable();
+
+                    result.put(object, convertToIndexedView(temporaryTable));
+                  } catch (JAXBException ex2) {
+                    Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex2);
+                  }
                 }
               }
             }
