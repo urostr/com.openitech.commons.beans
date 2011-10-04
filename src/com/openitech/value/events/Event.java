@@ -260,7 +260,7 @@ public class Event extends EventType implements Cloneable {
     return values.remove(fieldValue);
   }
 
-   public void replaceAddValue(FieldValue fieldValue) {
+  public void replaceAddValue(FieldValue fieldValue) {
     removeValue(fieldValue);
     addValue(fieldValue);
   }
@@ -665,6 +665,23 @@ public class Event extends EventType implements Cloneable {
     }
 
     return result;
+  }
+
+  public void replaceAddChild(Event newEvent) {
+    if (children != null) {
+      Event removeEvent = null;
+      for (Event event : children) {
+        if (event.getSifrant() == newEvent.getSifrant()
+                && event.getSifra().equals(newEvent.getSifra())) {
+          removeEvent = event;
+          break;
+        }
+      }
+      if (removeEvent != null) {
+        children.remove(removeEvent);
+      }
+    }
+    addChild(newEvent);
   }
 
   public static enum EventOperation {
