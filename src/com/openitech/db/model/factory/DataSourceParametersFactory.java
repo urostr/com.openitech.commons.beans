@@ -34,7 +34,9 @@ import org.codehaus.groovy.control.CompilationFailedException;
  */
 public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
 
-  protected boolean override = SqlUtilities.getInstance().getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_CACHED);;
+  protected boolean override = SqlUtilities.getInstance().getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_CACHED);
+
+  ;
   protected static java.util.Map<String, TemporaryTable> cachedTemporaryTables;
   protected T config;
   protected DbDataSource dataSource = new DbDataSource();
@@ -196,7 +198,11 @@ public abstract class DataSourceParametersFactory<T extends DataSourceConfig> {
       tt = cachedTemporaryTables.get(tt.getMaterializedView().getValue());
       Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "CACHED:TT:{0}", tt.getMaterializedView().getValue());
     } else if (tt.getMaterializedView() != null) {
-      SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
+      try {
+        SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
+      } catch (Exception ex) {
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Can't CACHED:TT:{0}", tt.getMaterializedView().getValue());
+      }
       cachedTemporaryTables.put(tt.getMaterializedView().getValue(), tt);
     }
     return tt;
