@@ -104,11 +104,13 @@ public final class RefreshDataSource extends DataSourceEvent {
 
         public void run() {
           for (JXDimBusyLabel busyLabel : busyLabels) {
-            busyLabel.setBusy(true);
-            if (label != null && !label.equals("")) {
-              busyLabel.setText(label);
-            } else {
-              busyLabel.setText("Osvežujem podatke ...");
+            if (busyLabel != null) {
+              busyLabel.setBusy(true);
+              if (label != null && !label.equals("")) {
+                busyLabel.setText(label);
+              } else {
+                busyLabel.setText("Osvežujem podatke ...");
+              }
             }
           }
           busy.setBusy(true);
