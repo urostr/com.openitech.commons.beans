@@ -200,6 +200,22 @@ public enum ValueType {
     public String getValueColumn() {
       return "BlobValue";
     }
+  }, FileValue {
+
+    @Override
+    public int getTypeIndex() {
+      return 12;
+    }
+
+    @Override
+    public int getSqlType() {
+      return Types.BLOB;
+    }
+
+    @Override
+    public String getValueColumn() {
+      return "BlobValue";
+    }
   };
 
   public abstract int getTypeIndex();

@@ -140,6 +140,25 @@ public class EventPK {
     this.versioned = versioned;
   }
 
+  private List<Long> extraVersionedEventIds = new ArrayList<Long>();
+
+  /**
+   * Get the value of extraVersionedEventIds
+   *
+   * @return the value of extraVersionedEventIds
+   */
+  public List<Long> getExtraVersionedEventIds() {
+    return extraVersionedEventIds;
+  }
+
+  /**
+   * Set the value of extraVersionedEventIds
+   *
+   * @param extraVersionedEventIds new value of extraVersionedEventIds
+   */
+  public void addExtraVersionedEventId(Long extraVersionedEventIds) {
+    this.extraVersionedEventIds.add(extraVersionedEventIds);
+  }
   /**
    * Get the value of primaryKey
    *
