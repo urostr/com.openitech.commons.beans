@@ -359,19 +359,22 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  protected Integer assignEventVersion(EventType parent, List<EventPK> eventPKs) throws SQLException {
+  public Integer assignEventVersion(EventType parent, List<EventPK> eventPKs) throws SQLException {
     if (!eventPKs.isEmpty()) {
       //iskanje verzije, ampak se naj nebi noben event dodal oz spremenil,
       //zato je to brez veze
       Integer versionId = getVersion(eventPKs);
 
-      if (versionId == null) {
+      //vsak klic te metode mora vzpostaviti novo verzijo... po mojem mnenju
+      //problem nastane pri deleteEventu, ker je verzija ze obstajala
+      if (true || versionId == null) {
 
         if (isVersioned(eventPKs)) {
           //najprej dodaj verzijo (tabela Versions)
           versionId = new Integer((int) storeVersion(parent));
           //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je
           List<Long> storedEventIds = new ArrayList<Long>();
+          List<Long> extraEventIds = new ArrayList<Long>();
           for (EventPK eventPK : eventPKs) {
             if (!storedEventIds.contains(eventPK.getEventId())) {
               storedEventIds.add(eventPK.getEventId());
@@ -380,6 +383,15 @@ public class SqlUtilitesImpl extends SqlUtilities {
               if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SAVE_PK, Boolean.toString(true)))) {
                 storePrimaryKeyVersions(eventPK);
               }
+            }
+            for (Long extraEventId : eventPK.getExtraVersionedEventIds()) {
+              extraEventIds.add(extraEventId);
+            }
+          }
+          for (Long extraEventId : extraEventIds) {
+            if (!storedEventIds.contains(extraEventId) && isValidEventId(extraEventId)) {
+              storedEventIds.add(extraEventId);
+              storeEventVersion(versionId, extraEventId);
             }
           }
         }
@@ -594,6 +606,31 @@ public class SqlUtilitesImpl extends SqlUtilities {
     //shranim se vse nove EventId-je
     for (Long eventId : eventIds) {
       storeEventVersion(newVersionID, eventId);
+    }
+  }
+  private PreparedStatement checkEvent;
+
+  public boolean isValidEventId(Long eventId) throws SQLException {
+    if (checkEvent == null) {
+      checkEvent = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "checkEvent.sql", "cp1250"), java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY);
+    }
+    if (eventId == null) {
+      return true;
+    } else {
+      int result = Integer.MIN_VALUE;
+      try {
+        checkEvent.clearParameters();
+        int pos = 1;
+        checkEvent.setLong(pos++, eventId);
+        ResultSet rs = checkEvent.executeQuery();
+        if (rs.next()) {
+          result = rs.getInt(1);
+        }
+      } catch (SQLException ex) {
+        result = Integer.MIN_VALUE;
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, null, ex);
+      }
+      return result > 0;
     }
   }
 
@@ -1115,6 +1152,23 @@ public class SqlUtilitesImpl extends SqlUtilities {
                             insertTEventValues.setNull(param++, Types.LONGVARBINARY);
                             insertTEventValues.setObject(param++, value, Types.VARCHAR);
                             break;
+                          case FileValue:
+                            if (value instanceof byte[]) {
+                              insertTEventValues.setNull(param++, Types.BIGINT);
+                              insertTEventValues.setNull(param++, Types.DECIMAL);
+                              insertTEventValues.setNull(param++, Types.VARCHAR);
+                              insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                              insertTEventValues.setObject(param++, value, Types.LONGVARBINARY);
+                              insertTEventValues.setNull(param++, Types.VARCHAR);
+                            } else {
+                              insertTEventValues.setNull(param++, Types.BIGINT);
+                              insertTEventValues.setNull(param++, Types.DECIMAL);
+                              insertTEventValues.setObject(param++, value, Types.VARCHAR);
+                              insertTEventValues.setNull(param++, Types.TIMESTAMP);
+                              insertTEventValues.setNull(param++, Types.LONGVARBINARY);
+                              insertTEventValues.setNull(param++, Types.VARCHAR);
+                            }
+                            break;
                         }
                       }
                       success = success && insertTEventValues.executeUpdate() > 0;
@@ -1518,6 +1572,23 @@ public class SqlUtilitesImpl extends SqlUtilities {
               fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
               fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, value);
               fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
+              break;
+            case FileValue:
+              if (value instanceof byte[]) {
+                fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+                fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+                fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, null);
+                fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+                fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, value);
+                fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
+              } else {
+                fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
+                fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
+                fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, value);
+                fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
+                fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, null);
+                fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
+              }
               break;
             case ClobValue:
               fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
@@ -2491,22 +2562,28 @@ public class SqlUtilitesImpl extends SqlUtilities {
     return result;
   }
 
-  private boolean storeVeljavnost(Long events_ID, Long veljavnost) throws SQLException {
-    boolean success = true;
+  private boolean storeVeljavnost(Long events_ID, Long veljavnost) {
+    //predpriprava, da bo triger to delal
+    //boolean success = true;
+    try {
 
-    if (insertScheduler == null) {
-      insertScheduler = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "insertScheduler.sql", "cp1250"));
-    }
+      if (insertScheduler == null) {
+        insertScheduler = ConnectionManager.getInstance().getTxConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "insertScheduler.sql", "cp1250"));
+      }
 
-    synchronized (insertScheduler) {
       int param = 1;
       insertScheduler.clearParameters();
 
       insertScheduler.setLong(param++, veljavnost);
       insertScheduler.setLong(param++, events_ID);
-      success = success && insertScheduler.executeUpdate() > 0;
+      insertScheduler.executeUpdate();
+      //success = success && insertScheduler.executeUpdate() > 0;
+
+    } catch (SQLException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
     }
-    return success;
+
+    return true;
   }
 
   public Field getField(String fieldName) throws SQLException {
@@ -3119,7 +3196,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     @Override
     public List<Object> getParameters() {
-      return Collections.unmodifiableList(hasVersionId() ? evVersionedParameters : evNonVersionedParameters);
+      return Collections.unmodifiableList((hasVersionId() && !lookup) ? evVersionedParameters : evNonVersionedParameters);
     }
 
     @Override
@@ -3139,6 +3216,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     private Long lookupVersionId = null;
 
     public void setLookupValues(Long eventId, Long versionId) {
+      lookup = true;
       this.lookupEventId = eventId;
       this.lookupVersionId = versionId;
 
@@ -4250,7 +4328,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
           sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
           sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
           sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-          sql = sql.replaceAll(f.getModel().getReplace(), value);
+          if(value != null){
+            sql = sql.replaceAll(f.getModel().getReplace(), value);
+          }
           sbresult.append(",\n").append(sql);
         }
       }
@@ -4259,7 +4339,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
           sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
           sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
           sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-          sql = sql.replaceAll(f.getModel().getReplace(), value);
+          if(value != null){
+            sql = sql.replaceAll(f.getModel().getReplace(), value);
+          }
           sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
         }
       }
@@ -4515,7 +4597,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
             String value = "ev.[" + f.getName() + "]";
 
             sbresult.append(",\n").append(value);
-            prepareFieldModel(f, value, sbresult, sbSearch);
+            //FieldModel mora biti v result fieldu
+            //prepareFieldModel(f, value, sbresult, sbSearch);
+            for (Field rf : resultFields) {
+              if (rf.equals(f)) {
+                prepareFieldModel(rf, value, sbresult, sbSearch);
+              }
+            }
+
           }
 
           sbWhere.append(sbWhere.length() > 0 ? "    AND " : " WHERE ");
@@ -4643,6 +4732,14 @@ public class SqlUtilitesImpl extends SqlUtilities {
                           qIdPolja,
                           f.getFieldIndex()
                         })).append(" AS BIT) AS [").append(f.getName() + fieldValueIndex).append("]");
+                break;
+//                case 12:
+//                //File
+//                sbresult.append(",\n").append(resultFormat.format(new Object[]{
+//                          "StringValue",
+//                          qIdPolja,
+//                          2
+//                        })).append(" AS [").append(f.getName() + fieldValueIndex).append("FileName").append("]");
             }
           } else {
             sbSearch.append("\nLEFT OUTER JOIN ").append(eventValues).append(" ").append(ev_alias).append(" WITH (NOLOCK) ON (");
