@@ -3,7 +3,8 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             targetNamespace="http://xml.openitech.com/schema/fieldmodel"
             xmlns:tns="http://xml.openitech.com/schema/fieldmodel"
-            elementFormDefault="qualified">
+            elementFormDefault="qualified" xmlns:ds="http://xml.openitech.com/schema/datasource">
+  <xsd:import schemaLocation="../../../com/openitech/xsd/DataSource.xsd" namespace="http://xml.openitech.com/schema/datasource"/>
   <xsd:element name="FieldModel">
     <xsd:complexType>
       <xsd:all>
@@ -52,6 +53,22 @@
                   <xsd:sequence>
                     <xsd:element name="TableColumnEntry" maxOccurs="unbounded" type="xsd:string"/>
                   </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="Renderer" minOccurs="0"  type="ds:Factory" />        
+        <xsd:element name="Attributes" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence maxOccurs="unbounded">
+              <xsd:element name="AttributesList" minOccurs="1">
+                <xsd:complexType>
+                  <xsd:all>
+                    <xsd:element name="FieldId" type="xsd:int" minOccurs="0"/>
+                    <xsd:element name="FieldType" type="xsd:int"/>
+                    <xsd:element name="FieldName" type="xsd:string"/>
+                  </xsd:all>
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
