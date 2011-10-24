@@ -597,7 +597,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   protected abstract void invalidateCacheEvent(Event event) throws SQLException;
 
-  protected abstract Integer assignEventVersion(EventType parent, List<EventPK> eventIds) throws SQLException;
+  public abstract Integer assignEventVersion(EventType parent, List<EventPK> eventIds) throws SQLException;
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
@@ -712,6 +712,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract void loadCaches() throws SQLException;
   
   public abstract String getDataSourceSQL(int idSifranta, String idSifre) throws SQLException;
+
+  public abstract boolean isValidEventId(Long eventId) throws SQLException;
 
   public static enum Operation {
 
