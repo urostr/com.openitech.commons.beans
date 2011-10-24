@@ -16,6 +16,7 @@
         <xsd:element name="OpisVBorderju" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="RazsiriCeZadnji" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="LookupAsComboBox" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="LookupShowAddButton" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="LookupAsPopup" type="xsd:boolean" default="true"></xsd:element>
         <xsd:element name="UseValueLookup" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="AddFitPanel" type="xsd:boolean" default="true"></xsd:element>

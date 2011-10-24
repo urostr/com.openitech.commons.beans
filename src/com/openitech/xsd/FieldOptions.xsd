@@ -9,6 +9,9 @@
     <xsd:complexType>
       <xsd:sequence>
         <xsd:element name="SearchField" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="IgnoreSelectAll" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="DisableLookupInsert" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="AddEmailButton" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="Lookup">
           <xsd:complexType>
             <xsd:all>
