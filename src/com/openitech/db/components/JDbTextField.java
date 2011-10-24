@@ -81,7 +81,28 @@ public class JDbTextField extends JTextField implements DocumentListener, ListDa
   }
 
   public void this_focusGained(FocusEvent e) {
-    EventQueue.invokeLater(selector);
+    if (!ignoreSelectAll) {
+      EventQueue.invokeLater(selector);
+    }
+  }
+  private boolean ignoreSelectAll = false;
+
+  /**
+   * Get the value of ignoreSelectAll
+   *
+   * @return the value of ignoreSelectAll
+   */
+  public boolean isIgnoreSelectAll() {
+    return ignoreSelectAll;
+  }
+
+  /**
+   * Set the value of ignoreSelectAll
+   *
+   * @param ignoreSelectAll new value of ignoreSelectAll
+   */
+  public void setIgnoreSelectAll(boolean ignoreSelectAll) {
+    this.ignoreSelectAll = ignoreSelectAll;
   }
 
   public void this_focusLost(FocusEvent e) {
