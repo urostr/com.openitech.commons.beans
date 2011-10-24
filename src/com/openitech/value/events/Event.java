@@ -179,6 +179,26 @@ public class Event extends EventType implements Cloneable {
       event.setPreparedFields(preparedFields);
     }
   }
+  private List<Long> extraVersionedEventIds = new ArrayList<Long>();
+
+  /**
+   * Get the value of extraVersionedEventIds
+   *
+   * @return the value of extraVersionedEventIds
+   */
+  public List<Long> getExtraVersionedEventIds() {
+    return extraVersionedEventIds;
+  }
+
+  /**
+   * Set the value of extraVersionedEventIds
+   *
+   * @param extraVersionedEventIds new value of extraVersionedEventIds
+   */
+  public void addExtraVersionedEventId(Long extraVersionedEventIds) {
+    this.extraVersionedEventIds.add(extraVersionedEventIds);
+  }
+
   protected boolean versioned = false;
 
   /**
@@ -481,6 +501,7 @@ public class Event extends EventType implements Cloneable {
       eventPK = new EventPK(id, sifrant, sifra);
       eventPK.setEventOperation(operation);
       eventPK.setVersioned(versioned);
+      eventPK.getExtraVersionedEventIds().addAll(extraVersionedEventIds);
       final Field[] eventPrimaryKey = getPrimaryKey();
       if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
         for (Field pkField : eventPrimaryKey) {
@@ -655,14 +676,14 @@ public class Event extends EventType implements Cloneable {
     List<com.openitech.sql.events.xml.Field> xFieldValues = result.getEventValues();
 
     for (FieldValue fieldValue : getValues()) {
-      xFieldValues.add(fieldValue.getField());
+      xFieldValues.add(fieldValue.getFieldXML());
     }
 
-    List<com.openitech.sql.events.xml.Event> xChildren = result.getChildren();
+//    List<com.openitech.sql.events.xml.Event> xChildren = result.getChildren();
 
-    for (Event child : getChildren()) {
-      xChildren.add(child.getEvent());
-    }
+//    for (Event child : getChildren()) {
+//      xChildren.add(child.getEvent());
+//    }
 
     return result;
   }
