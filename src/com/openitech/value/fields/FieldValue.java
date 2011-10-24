@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-public class FieldValue extends Field implements Cloneable{
+public class FieldValue extends Field implements Cloneable {
 
   public FieldValue(Field field) {
     this(field.idPolja, field.name, field.type, field.fieldIndex, null);
@@ -148,18 +150,38 @@ public class FieldValue extends Field implements Cloneable{
     return result;
   }
 
-
-  public com.openitech.sql.events.xml.Field getField() throws DatatypeConfigurationException, IOException {
-    final ValueType valueType = ValueType.getType(type);
+  public com.openitech.sql.events.xml.Field getFieldXML() throws DatatypeConfigurationException, IOException {
+    ValueType valueType = ValueType.getType(type);
 
     com.openitech.sql.events.xml.Field result = new com.openitech.sql.events.xml.Field();
 
     result.setFieldId(idPolja);
-    result.setValueId(valueId);
+    result.setValueId(lookupType == null ? valueId : null);
     result.setFieldName(name);
     result.setFieldValueIndex(fieldIndex);
     result.setFieldType(valueType.getTypeIndex());
-    
+    if (lookupType != null) {
+      switch (lookupType) {
+        case ID_SIFRANTA:
+          result.setLookupType(com.openitech.sql.events.xml.LookupType.ID_SIFRANTA);
+          valueType = ValueType.IntValue;
+          break;
+        case ID_SIFRE:
+          result.setLookupType(com.openitech.sql.events.xml.LookupType.ID_SIFRE);
+          valueType = ValueType.StringValue;
+          break;
+        case VERSION_ID:
+          result.setLookupType(com.openitech.sql.events.xml.LookupType.VERSION_ID);
+          valueType = ValueType.IntValue;
+          break;
+        case PRIMARY_KEY:
+          result.setLookupType(com.openitech.sql.events.xml.LookupType.PRIMARY_KEY);
+          valueType = ValueType.StringValue;
+          break;
+      }
+
+    }
+
     if (value != null) {
 
       switch (valueType) {
@@ -197,21 +219,32 @@ public class FieldValue extends Field implements Cloneable{
         case DateTimeValue:
         case TimeValue:
         case DateValue:
-          GregorianCalendar calendar = new GregorianCalendar();
+          Calendar cal = Calendar.getInstance();
+
+//          calendar.setGregorianChange(new Date(Long.MIN_VALUE));
           if (value instanceof Date) {
-            calendar.setGregorianChange((Date) value);
+//            calendar.setTime((Date) value);
+            cal.setTime((Date) value);
+
           } else if (value instanceof Number) {
-            calendar.setTimeInMillis(((Number) value).longValue());
+//            calendar.setTimeInMillis(((Number) value).longValue());
+            cal.setTimeInMillis(((Number) value).longValue());
           }
+
+          GregorianCalendar calendar = new GregorianCalendar(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
+          calendar.setTimeZone(TimeZone.getTimeZone("GMT+00"));
           final XMLGregorianCalendar xmlGregorianCalendar = javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
 
           switch (valueType) {
             case MonthValue:
-              result.setMonthValue(xmlGregorianCalendar); break;
+              result.setMonthValue(xmlGregorianCalendar);
+              break;
             case DateTimeValue:
-              result.setDateTimeValue(xmlGregorianCalendar); break;
+              result.setDateTimeValue(xmlGregorianCalendar);
+              break;
             case TimeValue:
-              result.setTimeValue(xmlGregorianCalendar); break;
+              result.setTimeValue(xmlGregorianCalendar);
+              break;
             case DateValue:
               result.setDateValue(xmlGregorianCalendar);
               break;
@@ -225,7 +258,10 @@ public class FieldValue extends Field implements Cloneable{
           break;
         case BlobValue:
         case ObjectValue:
-          if (value instanceof byte[]) {
+        case FileValue:
+          if (value instanceof String) {
+            result.setStringValue((String) value);
+          } else if (value instanceof byte[]) {
             result.setObjectValue((byte[]) value);
           } else {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
