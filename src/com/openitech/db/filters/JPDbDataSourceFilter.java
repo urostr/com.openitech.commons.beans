@@ -410,8 +410,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jcbSifrantOnPanel.setModel(sifranti.get(item));
             jcbSifrantOnPanel.addActionListener(new ActionListener() {
 
-              private boolean updating = false;
-
+              
               @Override
               public void actionPerformed(ActionEvent e) {
                 if (!updating) {
