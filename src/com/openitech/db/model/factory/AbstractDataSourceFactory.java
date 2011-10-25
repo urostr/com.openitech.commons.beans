@@ -11,7 +11,6 @@ import com.openitech.db.model.DbTableModel;
 import com.openitech.swing.framework.context.AssociatedTasks;
 import com.openitech.value.fields.Field;
 import java.awt.Component;
-import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -23,9 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import org.jdesktop.swingx.JXTaskPane;
 
 /**
@@ -76,15 +73,11 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   }
 
   public void configure(String opis, String xml) throws SQLException, JAXBException {
-    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
-    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(new StringReader(xml));
-    configure(opis, workareaXML, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel));
+    configure(opis, unmarshal(xml, null, null, null), new com.openitech.db.model.factory.DataSourceConfig(dbDataModel));
   }
 
   public void configure(String opis, Clob resource, com.openitech.db.model.factory.DataSourceConfig config) throws SQLException, JAXBException {
-    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
-    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(resource.getCharacterStream());
-    configure(opis, workareaXML, config);
+    configure(opis, unmarshal(null, resource, null, null), config);
   }
 
   public void configure(String opis, com.openitech.db.model.xml.config.Workarea workareaXML, com.openitech.db.model.factory.DataSourceConfig config) throws SQLException {
@@ -96,13 +89,23 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   }
 
   protected void configure(final AbstractDataSourceFactory waConfig, final String opis, com.openitech.db.model.factory.DataSourceConfig config, Class clazz, String resourceName) throws SQLException, JAXBException {
-    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.Workarea.class).createUnmarshaller();
-    com.openitech.db.model.xml.config.Workarea workareaXML = (com.openitech.db.model.xml.config.Workarea) unmarshaller.unmarshal(clazz.getResourceAsStream(resourceName));
     try {
-      configure(waConfig, opis, config, workareaXML);
+      configure(waConfig, opis, config, unmarshal(null, null, clazz, resourceName));
     } catch (ClassNotFoundException ex) {
       Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
     }
+  }
+
+  private com.openitech.db.model.xml.config.Workarea unmarshal(String xml, Clob resource, Class clazz, String resourceName) throws SQLException, JAXBException {
+    com.openitech.db.model.xml.config.Workarea result = null;
+    if (xml != null) {
+      result = (com.openitech.db.model.xml.config.Workarea) JaxbUnmarshaller.getInstance().unmarshall(com.openitech.db.model.xml.config.Workarea.class, xml);
+    } else if (resource != null) {
+      result = (com.openitech.db.model.xml.config.Workarea) JaxbUnmarshaller.getInstance().unmarshall(com.openitech.db.model.xml.config.Workarea.class, resource);
+    } else if (clazz != null && resourceName != null) {
+      result = (com.openitech.db.model.xml.config.Workarea) JaxbUnmarshaller.getInstance().unmarshall(com.openitech.db.model.xml.config.Workarea.class, clazz.getResourceAsStream(resourceName));
+    }
+    return result;
   }
 
   protected void configure(final AbstractDataSourceFactory factory, final String opis, com.openitech.db.model.factory.DataSourceConfig config, com.openitech.db.model.xml.config.Workarea dataSourceXML) throws SQLException, ClassNotFoundException {
@@ -130,7 +133,7 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   protected List<FieldObserver> fieldObservers = new ArrayList<FieldObserver>();
   protected Set<Field> dataEntryValues = new java.util.HashSet<com.openitech.value.fields.Field>();
   protected String opis;
-  
+
   /**
    * Get the value of opis
    *
