@@ -391,7 +391,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             }
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             JLabel jlOpis = new javax.swing.JLabel();
-            JDbTextField jtfSifraOnPanel = new com.openitech.db.components.JDbTextField();
+            final JDbTextField jtfSifraOnPanel = new com.openitech.db.components.JDbTextField();
             final JDbComboBox jcbSifrantOnPanel = new com.openitech.db.components.JDbComboBox();
 
             int index = 0;
@@ -404,9 +404,35 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints = new java.awt.GridBagConstraints();
             jtfSifraOnPanel.setColumns(layout.getColumns() == null ? 4 : layout.getColumns());
             jtfSifraOnPanel.setDocument(documents.get(item)[0]);
+            jtfSifraOnPanel.setSearchField(true);
             jpHoldingPanel.add(jtfSifraOnPanel, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
 
             jcbSifrantOnPanel.setModel(sifranti.get(item));
+            jcbSifrantOnPanel.addActionListener(new ActionListener() {
+
+              private boolean updating = false;
+
+              @Override
+              public void actionPerformed(ActionEvent e) {
+                if (!updating) {
+                  if ((jcbSifrantOnPanel.getSelectedItem() != null) && (jcbSifrantOnPanel.getSelectedItem() instanceof DbComboBoxModel.DbComboBoxEntry)) {
+                    updating = true;
+                    try {
+                      Object value = (((DbComboBoxModel.DbComboBoxEntry) jcbSifrantOnPanel.getSelectedItem()).getKey());
+                      if (value == null) {
+                        jtfSifraOnPanel.setText("");
+                      } else {
+                        jtfSifraOnPanel.setText(value.toString());
+                      }
+                    } finally {
+                      updating = false;
+                    }
+                  }
+                }
+              }
+            });
+
+
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
@@ -597,27 +623,29 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
             jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
 
-            if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
-              item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-            }
-            if (item.getSeekType() >= jcbNumberType.getItemCount()) {
-              jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-            } else {
-              jDbComboBox1.setSelectedIndex(item.getSeekType());
-            }
-
-            jDbComboBox1.setFocusable(false);
-            jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
-
-              @Override
-              public void actionPerformed(java.awt.event.ActionEvent evt) {
-                if (!refreshing) {
-
-                  filters.getFilterFor(listenerItem).setSeekType(listenerItem, jDbComboBox1.getSelectedIndex());
-                }
+            if (item.getSeekType() != DataSourceFilters.SeekType.PREFORMATTED) { //preformated
+              if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+                item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
               }
-            });
-            jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, new java.awt.GridBagConstraints()));
+              if (item.getSeekType() >= jcbNumberType.getItemCount()) {
+                jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+              } else {
+                jDbComboBox1.setSelectedIndex(item.getSeekType());
+              }
+
+              jDbComboBox1.setFocusable(false);
+              jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
+
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                  if (!refreshing) {
+
+                    filters.getFilterFor(listenerItem).setSeekType(listenerItem, jDbComboBox1.getSelectedIndex());
+                  }
+                }
+              });
+              jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, new java.awt.GridBagConstraints()));
+            }
 
             jDbTextField1.setColumns(layout.getColumns() == null ? 20 : layout.getColumns());
             jDbTextField1.setSearchField(true);
