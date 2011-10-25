@@ -335,7 +335,16 @@
               SifrantVnosnihPolj.[UporabiSifrantSvetovalcev],
               SifrantVnosnihPolj.[UporabiSifrantPodjetji],
               SifrantVnosnihPolj.[UporabiSifrantPonudb],
-              SifrantVnosnihPolj.[UporabiSifrantXML],
+              CASE
+                WHEN SifrantiPolja.[UporabiSifrantXML] IS NOT NULL
+                THEN
+                  (CASE WHEN SifrantiPolja.[UporabiSifrantXML] = 'null'
+                    THEN null
+                    ELSE SifrantiPolja.[UporabiSifrantXML]
+                  END
+                  )
+                ELSE SifrantVnosnihPolj.[UporabiSifrantXML]
+              END AS [UporabiSifrantXML],
               CASE
                 WHEN SifrantiPolja.[LookupXML] is not null
                 THEN SifrantiPolja.[LookupXML]
