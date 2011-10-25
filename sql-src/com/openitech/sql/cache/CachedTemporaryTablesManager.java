@@ -6,6 +6,7 @@ package com.openitech.sql.cache;
 
 import com.openitech.db.model.factory.DataSourceConfig;
 import com.openitech.db.model.factory.DataSourceParametersFactory;
+import com.openitech.db.model.factory.JaxbUnmarshaller;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.sql.util.SqlUtilities;
@@ -51,9 +52,7 @@ public class CachedTemporaryTablesManager extends DataSourceParametersFactory<Da
       is = new LineNumberReader(new InputStreamReader(clazz.getResourceAsStream(resource)));
     }
     try {
-      JAXBContext ctx = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class);
-      Unmarshaller um = ctx.createUnmarshaller();
-      com.openitech.db.model.xml.config.CachedTemporaryTable ctt = (com.openitech.db.model.xml.config.CachedTemporaryTable) um.unmarshal(is);
+      com.openitech.db.model.xml.config.CachedTemporaryTable ctt = (com.openitech.db.model.xml.config.CachedTemporaryTable) JaxbUnmarshaller.getInstance().unmarshall(com.openitech.db.model.xml.config.CachedTemporaryTable.class, is);
       return getCachedTemporarySubselectSqlParameter(ctt.getTemporaryTable());
     } catch (JAXBException ex) {
       Logger.getLogger(CachedTemporaryTablesManager.class.getName()).log(Level.SEVERE, null, ex);
