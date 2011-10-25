@@ -20,6 +20,7 @@ import com.openitech.db.model.DbDataSourceIndex;
 import com.openitech.db.model.factory.DataSourceConfig;
 import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.factory.DataSourceParametersFactory;
+import com.openitech.db.model.factory.JaxbUnmarshaller;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.io.LogWriter;
 import com.openitech.value.fields.Field;
@@ -1160,7 +1161,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                               insertTEventValues.setNull(param++, Types.TIMESTAMP);
                               insertTEventValues.setObject(param++, value, Types.LONGVARBINARY);
                               insertTEventValues.setNull(param++, Types.VARCHAR);
-                            } else {
+                            } else if (value instanceof String) {
                               insertTEventValues.setNull(param++, Types.BIGINT);
                               insertTEventValues.setNull(param++, Types.DECIMAL);
                               insertTEventValues.setObject(param++, value, Types.VARCHAR);
@@ -1581,7 +1582,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 fieldValues[pos++] = new FieldValue("DateValue", Types.TIMESTAMP, null);
                 fieldValues[pos++] = new FieldValue("ObjectValue", Types.LONGVARBINARY, value);
                 fieldValues[pos++] = new FieldValue("ClobValue", Types.VARCHAR, null);
-              } else {
+              } else if (value instanceof String) {
                 fieldValues[pos++] = new FieldValue("IntValue", Types.BIGINT, null);
                 fieldValues[pos++] = new FieldValue("RealValue", Types.DECIMAL, null);
                 fieldValues[pos++] = new FieldValue("StringValue", Types.VARCHAR, value);
@@ -1981,23 +1982,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 com.openitech.db.model.xml.config.TemporaryTable temporaryTable;
 
                 try {
-                  Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
-                  temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(cachedObjects.getClob("CachedObjectXML").getCharacterStream())).getTemporaryTable();
+                  temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) JaxbUnmarshaller.getInstance().unmarshall(com.openitech.db.model.xml.config.CachedTemporaryTable.class, cachedObjects.getClob("CachedObjectXML"))).getTemporaryTable();
 
                   result.put(object, convertToIndexedView(temporaryTable));
                 } catch (JAXBException ex) {
-                  Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.WARNING, ex.getMessage() + "CachedTemporaryTable ni pravilen!");
-                  try {
-                    Unmarshaller unmarshaller = JAXBContext.newInstance(com.openitech.db.model.xml.config.CachedTemporaryTable.class).createUnmarshaller();
-                    Clob clob = cachedObjects.getClob("CachedObjectXML");
-                    String subString = clob.getSubString(1, (int) clob.length());
-                    subString = subString.replaceAll("http://xml.netbeans.org/schema/sifranti_custom", "http://xml.openitech.com/schema/datasource");
-                    temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) unmarshaller.unmarshal(new StringReader(subString))).getTemporaryTable();
+                  Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
 
-                    result.put(object, convertToIndexedView(temporaryTable));
-                  } catch (JAXBException ex2) {
-                    Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex2);
-                  }
                 }
               }
             }
@@ -4328,7 +4318,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
           sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
           sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-          if(value != null){
+          if (value != null) {
             sql = sql.replaceAll(f.getModel().getReplace(), value);
           }
           sbresult.append(",\n").append(sql);
@@ -4339,7 +4329,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
           sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
           sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
-          if(value != null){
+          if (value != null) {
             sql = sql.replaceAll(f.getModel().getReplace(), value);
           }
           sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
