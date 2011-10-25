@@ -41,6 +41,12 @@ public class ClassInstanceFactory<T> {
     return new ClassInstanceFactory(name, factory, constructorClass);
   }
 
+  public static ClassInstanceFactory getInstance(String className) {
+    Factory factory = new Factory();
+    factory.setClassName(className);
+    return new ClassInstanceFactory(null, factory, new Class[]{});
+  }
+
   protected Factory factory;
 
   /**
