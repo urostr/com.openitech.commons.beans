@@ -10,7 +10,10 @@
  */
 package com.openitech.db.components;
 
+import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.factory.ClassInstanceFactory.Custom;
+import com.openitech.xml.binarymodel.BinaryModel.Attributes;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,19 +27,18 @@ import javax.swing.JFileChooser;
  *
  * @author domenbasic
  */
-public class JDbFilePanel extends javax.swing.JPanel {
+public class JDbFilePanel extends javax.swing.JPanel implements DataSourceObserver, Custom{
 
-  private final DbDataSource dataSource;
-  private final String columnName;
+  private  DbDataSource dataSource;
+  private  String columnName;
+  private  Attributes attributes;
 
   /** Creates new form JDbFilePanel */
-  public JDbFilePanel(DbDataSource dataSource, String columnName) {
-    this.dataSource = dataSource;
-    this.columnName = columnName;
+  public JDbFilePanel(String columnName) {
     initComponents();
-
+    
     jtfFileName.setColumnName(columnName + "FileName");
-    jtfFileName.setDataSource(dataSource);
+    
   }
 
   public void setColumnLength(Integer columnLength) {
@@ -164,4 +166,16 @@ public class JDbFilePanel extends javax.swing.JPanel {
   private javax.swing.JButton jbOpen;
   private com.openitech.db.components.JDbTextField jtfFileName;
   // End of variables declaration//GEN-END:variables
+
+  @Override
+  public DbDataSource getDataSource() {
+    return dataSource;
+  }
+
+  @Override
+  public void setDataSource(DbDataSource dataSource) {
+    this.dataSource = dataSource;
+
+    jtfFileName.setDataSource(dataSource);
+  }
 }
