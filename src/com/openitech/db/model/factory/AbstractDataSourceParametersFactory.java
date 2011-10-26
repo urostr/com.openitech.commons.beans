@@ -8,12 +8,16 @@ import com.openitech.db.components.JDbTable;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
+import com.openitech.db.filters.JWorkAreaFilter;
+import com.openitech.db.model.AutoInsertValue;
 import com.openitech.db.model.DbComboBoxModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.DataModel;
 import com.openitech.db.model.xml.config.DataModel.TableColumns.TableColumnDefinition;
 import com.openitech.db.model.xml.config.DataSourceFilter;
+import com.openitech.db.model.xml.config.DataSourceFilter.AutoInsertColumns;
+import com.openitech.db.model.xml.config.DataSourceFilter.FilterParameter;
 import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.RezultatKlicaValues;
@@ -134,6 +138,17 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
   public DataSourceParametersFactory getDataSourceParametersFactory() {
     return dataSourceParametersFactory;
   }
+  private List<JWorkAreaFilter> workAreaFilters = new ArrayList<JWorkAreaFilter>();
+
+  public List<JWorkAreaFilter> getWorkAreaFilters() {
+    return workAreaFilters;
+  }
+
+  private List<AutoInsertValue> autoInsertValues = new ArrayList<AutoInsertValue>();
+
+  public List<AutoInsertValue> getAutoInsertValue() {
+    return autoInsertValues;
+  }
 
   /**
    * Set the value of dataSourceParametersFactory
@@ -159,6 +174,79 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
         if (!filter.getDataSources().contains(dataSource)) {
           filter.addDataSource(dataSource);
         }
+        if (dataSourceFilter.getFilterParameter() != null) {
+          FilterParameter filterParameter = dataSourceFilter.getFilterParameter();
+          for (FilterParameter.WorkAreaParameter workAreaParameter : filterParameter.getWorkAreaParameter()) {
+            int workAreaId = workAreaParameter.getWorkAreaId();
+
+            String otherColumName = workAreaParameter.getOtherColumName();
+            SeekParameters seekParameter = workAreaParameter.getSeekParameter();
+            Boolean convertToVarchar = null;
+            String convertToVarcharS = seekParameter.getConvertToVarchar();
+            if (convertToVarcharS != null) {
+              convertToVarchar = Boolean.valueOf(convertToVarcharS);
+            }
+            if (seekParameter.getSeekType() != null) {
+              final SeekParameters.SeekType parameter = seekParameter.getSeekType();
+
+              String field = parameter.getField();
+              com.openitech.db.model.xml.config.SeekType type = parameter.getType();
+              Integer minumumLength = parameter.getMinumumLength();
+              Integer parameterCount = parameter.getParameterCount();
+
+              DataSourceFilters.SeekType seekType;
+              seekType = new DataSourceFilters.SeekType(field);
+
+              if (type != null) {
+                seekType.setSeekType(getSeekType(type));
+              }
+              if (parameterCount != null) {
+                seekType.setParameter_count(parameterCount);
+              }
+              if (minumumLength != null) {
+                seekType.setMin_length(minumumLength);
+              }
+              if (convertToVarchar != null) {
+                seekType.setConvertToVarchar(convertToVarchar);
+              }
+              seekType.setName(parameter.getName());
+              seekType.setLayout(parameter.getLayout());
+
+              workAreaFilters.add(new JWorkAreaFilter(workAreaId, filter, seekType, otherColumName));
+            } else if (seekParameter.getIntegerSeekType() != null) {
+              final SeekParameters.IntegerSeekType parameter = seekParameter.getIntegerSeekType();
+
+              String field = parameter.getField();
+              com.openitech.db.model.xml.config.SeekType type = parameter.getType();
+
+              DataSourceFilters.IntegerSeekType integerSeekType;
+              if (type == null) {
+                integerSeekType = new DataSourceFilters.IntegerSeekType(field);
+              } else {
+                integerSeekType = new DataSourceFilters.IntegerSeekType(field, getSeekType(type));
+              }
+              if (convertToVarchar != null) {
+                integerSeekType.setConvertToVarchar(convertToVarchar);
+              }
+              integerSeekType.setName(parameter.getName());
+              integerSeekType.setLayout(parameter.getLayout());
+
+              workAreaFilters.add(new JWorkAreaFilter(workAreaId, filter, integerSeekType, otherColumName));
+            }
+          }
+
+        }
+
+        if(dataSourceFilter.getAutoInsertColumns() != null){
+          AutoInsertColumns autoInsertColumns = dataSourceFilter.getAutoInsertColumns();
+          for (AutoInsertColumns.Column column : autoInsertColumns.getColumn()) {
+            Integer workAreaId = column.getWorkAreaId();
+            String columName = column.getColumName();
+            String otherColumName = column.getOtherColumName();
+            autoInsertValues.add(new AutoInsertValue(workAreaId,dataSource, columName, otherColumName));
+          }
+        }
+
         if (dataSourceFilter.getParameters() != null) {
           for (SeekParameters seekParameter : dataSourceFilter.getParameters().getSeekParameters()) {
             Boolean convertToVarchar = null;
