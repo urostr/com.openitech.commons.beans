@@ -247,6 +247,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
                 this.filtersMap = instance.getFiltersMap();
                 this.filterPanel = instance.getFilterPanel();
                 this.viewMenuItems.addAll(instance.getViewMenuItems());
+                this.workAreaFilters = instance.getWorkAreaFilters();
+                this.autoInsertValues = instance.getAutoInsertValue();
                 parameters.addAll(instance.getParameters());
               }
             }
