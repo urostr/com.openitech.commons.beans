@@ -6,6 +6,8 @@ package com.openitech.db.model.factory;
 
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
+import com.openitech.db.filters.JWorkAreaFilter;
+import com.openitech.db.model.AutoInsertValue;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.swing.framework.context.AssociatedTasks;
@@ -205,6 +207,18 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public DataSourceFiltersMap getFiltersMap() {
     return filtersMap;
   }
+  protected List<JWorkAreaFilter> workAreaFilters = new ArrayList<JWorkAreaFilter>();
+
+  public List<JWorkAreaFilter> getWorkAreaFilters() {
+    return workAreaFilters;
+  }
+
+  protected List<AutoInsertValue> autoInsertValues = new ArrayList<AutoInsertValue>();
+
+  public List<AutoInsertValue> getAutoInsertValue() {
+    return autoInsertValues;
+  }
+
   protected boolean canExportData = true;
 
   /**
