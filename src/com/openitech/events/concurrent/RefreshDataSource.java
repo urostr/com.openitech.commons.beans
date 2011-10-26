@@ -136,8 +136,10 @@ public final class RefreshDataSource extends DataSourceEvent {
           }
           if (busyCount == 0) {
             for (JXDimBusyLabel busyLabel : busyLabels) {
-              busyLabel.setBusy(false);
-              busyLabel.setText("Pripravljen...");
+              if (busyLabel != null) {
+                busyLabel.setBusy(false);
+                busyLabel.setText("Pripravljen...");
+              }
             }
             busy.setBusy(false);
             busy.setText("Pripravljen...");
