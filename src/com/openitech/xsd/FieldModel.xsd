@@ -58,22 +58,6 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
-        <xsd:element name="Renderer" minOccurs="0"  type="ds:Factory" />        
-        <xsd:element name="Attributes" minOccurs="0">
-          <xsd:complexType>
-            <xsd:sequence maxOccurs="unbounded">
-              <xsd:element name="AttributesList" minOccurs="1">
-                <xsd:complexType>
-                  <xsd:all>
-                    <xsd:element name="FieldId" type="xsd:int" minOccurs="0"/>
-                    <xsd:element name="FieldType" type="xsd:int"/>
-                    <xsd:element name="FieldName" type="xsd:string"/>
-                  </xsd:all>
-                </xsd:complexType>
-              </xsd:element>
-            </xsd:sequence>
-          </xsd:complexType>
-        </xsd:element>
       </xsd:all>
     </xsd:complexType>
   </xsd:element>
