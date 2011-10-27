@@ -23,26 +23,26 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
   }
 
   public FieldValueProxy(String name, int type, DbFieldObserver fieldObserver) {
-    this(new Field(name, type), null, fieldObserver);
+    this(new Field(name, type), fieldObserver, null);
   }
 
   public FieldValueProxy(String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver) {
-    this(null, name, type, fieldValueIndex, fieldObserver, null);
+    this(new Field(name, type, fieldValueIndex), fieldObserver, null);
   }
 
-  public FieldValueProxy(String imePolja, int tipPolja, DbFieldObserver fieldObserver, Object value) {
-    this(null, imePolja, tipPolja, 1, fieldObserver, value);
+  public FieldValueProxy(String name, int type, DbFieldObserver fieldObserver, Object value) {
+    this(new Field(name, type), fieldObserver, value);
   }
 
   public FieldValueProxy(Integer idPolja, String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver) {
-    this(idPolja, name, type, fieldValueIndex, fieldObserver, null);
+    this(new Field(idPolja, name, type, fieldValueIndex), fieldObserver, null);
   }
 
   public FieldValueProxy(Integer idPolja, String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver, Object value) {
-    this(new Field(idPolja, name, type, fieldValueIndex), value, fieldObserver);
+    this(new Field(idPolja, name, type, fieldValueIndex), fieldObserver, value);
   }
 
-  public FieldValueProxy(Field field, Object value, DbFieldObserver fieldObserver) {
+  public FieldValueProxy(Field field, DbFieldObserver fieldObserver, Object value) {
     super(field, value);
     this.fieldObserver = fieldObserver;
   }
