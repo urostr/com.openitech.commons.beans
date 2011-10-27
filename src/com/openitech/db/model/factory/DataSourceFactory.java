@@ -36,6 +36,8 @@ import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views;
 import com.openitech.sql.util.SqlUtilities;
+import com.openitech.text.CaseInsensitiveString;
+import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
@@ -98,7 +100,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           this.dataSourceLimit = createDataSourceLimit();
 
           createViews();
-          
+
           List<Object> parameters = new ArrayList<Object>();
           parameters.addAll(dataSource.getParameters());
           parameters.addAll(createDataSourceParameters());
@@ -488,11 +490,17 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       dataSource.setSafeMode(true);
 
       for (String imePolja : eventColumns) {
-        int tipPolja = dataSource.getType(imePolja);
+        Field field = SqlUtilities.getInstance().getPreparedFields().get(new CaseInsensitiveString(imePolja));
+        if (field != null) {
+          field.setFieldIndex(1);
+        } else {
+          int tipPolja = dataSource.getType(imePolja);
+          field = new Field(imePolja, tipPolja);
+        }
         DbFieldObserver fieldObserver = new DbFieldObserver();
         fieldObserver.setColumnName(imePolja);
         fieldObserver.setDataSource(dataSource);
-        final FieldValueProxy fieldValueProxy = new FieldValueProxy(imePolja, tipPolja, fieldObserver, dataSource.getObject(imePolja));
+        final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver, dataSource.getObject(imePolja));
         if (!this.dataEntryValues.contains(fieldValueProxy)) {
           this.dataEntryValues.add(fieldValueProxy);
         }
