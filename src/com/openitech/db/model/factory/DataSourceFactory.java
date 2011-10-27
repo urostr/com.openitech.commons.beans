@@ -35,7 +35,6 @@ import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views;
-import com.openitech.events.concurrent.RefreshDataSource;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
@@ -104,7 +103,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           parameters.addAll(dataSource.getParameters());
           parameters.addAll(createDataSourceParameters());
 
-          dataSource.setParameters(parameters);
+          dataSource.setParameters(parameters, false);
 
           if (dataSourceElement.getCOUNTSQL() != null) {
             dataSource.setCountSql(getReplacedSql(dataSourceElement.getCOUNTSQL()));
@@ -310,7 +309,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       } catch (SQLException ex) {
         Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
       }
-      DataSourceEvent.submit(new RefreshDataSource(dataSource));
+      dataSource.reload();
     }
   }
 
