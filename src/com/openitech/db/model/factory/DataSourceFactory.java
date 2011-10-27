@@ -483,24 +483,25 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   protected void createEventColumns() throws SQLException {
     List<String> eventColumns = dataSourceXML.getDataSource().getEventColumns();
     if (eventColumns.size() > 0) {
-      dataSource.setSafeMode(false);
-      dataSource.setQueuedDelay(0);
-      dataSource.filterChanged();
-      dataSource.loadData();
-      dataSource.setSafeMode(true);
-
       for (String imePolja : eventColumns) {
         Field field = SqlUtilities.getInstance().getPreparedFields().get(new CaseInsensitiveString(imePolja));
         if (field != null) {
           field.setFieldIndex(1);
         } else {
+          dataSource.setSafeMode(false);
+          dataSource.setQueuedDelay(0);
+          dataSource.filterChanged();
+          dataSource.loadData();
+          dataSource.setSafeMode(true);
+
+
           int tipPolja = dataSource.getType(imePolja);
           field = new Field(imePolja, tipPolja);
         }
         DbFieldObserver fieldObserver = new DbFieldObserver();
         fieldObserver.setColumnName(imePolja);
         fieldObserver.setDataSource(dataSource);
-        final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver, dataSource.getObject(imePolja));
+        final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
         if (!this.dataEntryValues.contains(fieldValueProxy)) {
           this.dataEntryValues.add(fieldValueProxy);
         }
