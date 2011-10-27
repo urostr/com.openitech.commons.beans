@@ -151,6 +151,12 @@ public class Field implements Cloneable {
     return fieldIndex;
   }
 
+  public void setFieldIndex(int fieldIndex) {
+    this.fieldIndex = fieldIndex;
+  }
+
+  
+
   public Integer getIdPolja() {
     return idPolja;
   }
