@@ -19,12 +19,11 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
   private ActiveRowChangeWeakListener listener = new ActiveRowChangeWeakListener(this);
 
   public FieldValueProxy(String name, int type) {
-    super(name, type);
+    this(new Field(name, type), null, null);
   }
 
   public FieldValueProxy(String name, int type, DbFieldObserver fieldObserver) {
-    super(name, type);
-    setFieldObserver(fieldObserver);
+    this(new Field(name, type), null, fieldObserver);
   }
 
   public FieldValueProxy(String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver) {
@@ -40,9 +39,15 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
   }
 
   public FieldValueProxy(Integer idPolja, String name, int type, int fieldValueIndex, DbFieldObserver fieldObserver, Object value) {
-    super(idPolja, name, type, fieldValueIndex, value);
-    setFieldObserver(fieldObserver);
+    this(new Field(idPolja, name, type, fieldValueIndex), value, fieldObserver);
   }
+
+  public FieldValueProxy(Field field, Object value, DbFieldObserver fieldObserver) {
+    super(field, value);
+    this.fieldObserver = fieldObserver;
+  }
+  
+  
 
   /**
    * Get the value of fieldObserver
