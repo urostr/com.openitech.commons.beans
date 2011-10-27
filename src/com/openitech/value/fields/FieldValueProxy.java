@@ -42,6 +42,10 @@ public class FieldValueProxy extends FieldValue implements ActiveRowChangeListen
     this(new Field(idPolja, name, type, fieldValueIndex), fieldObserver, value);
   }
 
+  public FieldValueProxy(Field field, DbFieldObserver fieldObserver) {
+    this(field, fieldObserver, null);
+  }
+
   public FieldValueProxy(Field field, DbFieldObserver fieldObserver, Object value) {
     super(field, value);
     this.fieldObserver = fieldObserver;
