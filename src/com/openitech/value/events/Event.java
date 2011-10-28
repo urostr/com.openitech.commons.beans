@@ -179,26 +179,7 @@ public class Event extends EventType implements Cloneable {
       event.setPreparedFields(preparedFields);
     }
   }
-  private List<Long> extraVersionedEventIds = new ArrayList<Long>();
-
-  /**
-   * Get the value of extraVersionedEventIds
-   *
-   * @return the value of extraVersionedEventIds
-   */
-  public List<Long> getExtraVersionedEventIds() {
-    return extraVersionedEventIds;
-  }
-
-  /**
-   * Set the value of extraVersionedEventIds
-   *
-   * @param extraVersionedEventIds new value of extraVersionedEventIds
-   */
-  public void addExtraVersionedEventId(Long extraVersionedEventIds) {
-    this.extraVersionedEventIds.add(extraVersionedEventIds);
-  }
-
+  
   protected boolean versioned = false;
 
   /**
@@ -390,6 +371,21 @@ public class Event extends EventType implements Cloneable {
     }
     return children;
   }
+
+  public Event getChild(Long eventId) {
+    Event result = null;
+
+    if (children != null && eventId != null) {
+      for (Event child : children) {
+        if (eventId.equals(child.getId())) {
+          result = child;
+          break;
+        }
+      }
+    }
+
+    return result;
+  }
   protected List<UpdateEventFields> updateEventFields;
 
   /**
@@ -501,7 +497,6 @@ public class Event extends EventType implements Cloneable {
       eventPK = new EventPK(id, sifrant, sifra);
       eventPK.setEventOperation(operation);
       eventPK.setVersioned(versioned);
-      eventPK.getExtraVersionedEventIds().addAll(extraVersionedEventIds);
       final Field[] eventPrimaryKey = getPrimaryKey();
       if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
         for (Field pkField : eventPrimaryKey) {
