@@ -375,7 +375,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
           versionId = new Integer((int) storeVersion(parent));
           //nato v tabelo EventVersions vpisi z gornjo verzijo vse podane eventId-je
           List<Long> storedEventIds = new ArrayList<Long>();
-          List<Long> extraEventIds = new ArrayList<Long>();
           for (EventPK eventPK : eventPKs) {
             if (!storedEventIds.contains(eventPK.getEventId())) {
               storedEventIds.add(eventPK.getEventId());
@@ -384,17 +383,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
               if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SAVE_PK, Boolean.toString(true)))) {
                 storePrimaryKeyVersions(eventPK);
               }
-            }
-            for (Long extraEventId : eventPK.getExtraVersionedEventIds()) {
-              extraEventIds.add(extraEventId);
-            }
-          }
-          for (Long extraEventId : extraEventIds) {
-            if (!storedEventIds.contains(extraEventId) && isValidEventId(extraEventId)) {
-              storedEventIds.add(extraEventId);
-              storeEventVersion(versionId, extraEventId);
-            }
-          }
+            }            
+          }          
         }
       }
 
