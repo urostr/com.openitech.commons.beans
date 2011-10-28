@@ -265,8 +265,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       this.p_count = parameter_count;
     }
 
-
-
     public String getField() {
       return field;
     }
@@ -786,7 +784,16 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
 
     public void addRezultat(RezultatKlica rezultatKlica) {
-      rezultati.add(rezultatKlica);
+      if (!rezultati.contains(rezultatKlica)) {
+        rezultati.add(rezultatKlica);
+      } else {
+        for (RezultatKlica rk : rezultati) {
+          if (rk.equals(rezultatKlica)) {
+            rk.setChecked(rezultatKlica.isChecked());
+            break;
+          }
+        }
+      }
     }
 
     public List<RezultatKlica> getRezultati() {
@@ -852,16 +859,14 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
         if ((this.value == null) ? (other.value != null) : !this.value.equals(other.value)) {
           return false;
         }
-        if (this.isChecked != other.isChecked) {
-          return false;
-        }
+
         return true;
       }
 
       @Override
       public int hashCode() {
         int hash = 7;
-        hash = hash * (opis != null ? opis.hashCode() : 1) + (value != null ? value.hashCode() : 0) + (isChecked ? 12 : 8);
+        hash = hash * (opis != null ? opis.hashCode() : 1) + (value != null ? value.hashCode() : 0);
         return hash;
       }
     }
