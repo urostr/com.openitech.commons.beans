@@ -640,6 +640,14 @@ public class JDbTable extends JTable implements ListSelectionListener, DbNavigat
       actionListeners = v;
     }
   }
+  
+  /*
+   * @see http://www.javalobby.org/java/forums/t45536.html
+   */
+  @Override
+  public boolean getScrollableTracksViewportHeight() {
+    return getPreferredSize().height < getParent().getHeight();
+  }
 
   private class UpdateViewRunnable implements Runnable {
 
