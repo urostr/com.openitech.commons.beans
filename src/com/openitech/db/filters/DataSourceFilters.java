@@ -874,6 +874,8 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public final static class IntegerSeekType extends AbstractSeekType<java.lang.Integer> {
 
+    private int min_length = 1;
+
     public IntegerSeekType(String field) {
       this(field, EQUALS, 1);
     }
@@ -886,8 +888,21 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       super(field, i_type, p_count);
     }
 
+    public void setMinLength(int min_len) {
+      this.min_length = min_len;
+    }
+
+    
     @Override
     public boolean setValue(java.lang.Integer value) {
+      try {
+        String convert = value == null ? null : value.toString();
+        if (convert != null & convert.length() < min_length) {
+          value = null;
+        }
+      } catch (Exception ex) {
+        //ignore
+      }
       if (!Equals.equals(getValue(), value)) {
         this.value = value;
         return true;

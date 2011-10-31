@@ -410,7 +410,6 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jcbSifrantOnPanel.setModel(sifranti.get(item));
             jcbSifrantOnPanel.addActionListener(new ActionListener() {
 
-              
               @Override
               public void actionPerformed(ActionEvent e) {
                 if (!updating) {
@@ -467,20 +466,33 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             customPanel.add(jlOpis, gridBagConstraints);
 //            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
-            //jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
-            jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
-            jDbComboBox1.setFocusable(false);
-            jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            if (item.getSeekType() != DataSourceFilters.SeekType.PREFORMATTED) {
+              //jcbNumberType.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
+              jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "je veèje ali enako od", "je manjše ali enako kot"}));
+              jDbComboBox1.setFocusable(false);
+              jDbComboBox1.addActionListener(new java.awt.event.ActionListener() {
 
-              @Override
-              public void actionPerformed(java.awt.event.ActionEvent evt) {
-                if (!refreshing) {
-                  filters.getFilterFor(listenerItem).setSeekType(listenerItem, jDbComboBox1.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                  if (!refreshing) {
+                    filters.getFilterFor(listenerItem).setSeekType(listenerItem, jDbComboBox1.getSelectedIndex() + com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+                  }
                 }
-              }
-            });
-            jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+              });
 
+              //ker se za integer equals zaène z 4, zato vedno odštejem EQUALS, da dobim index v moboboxu
+              //èe pa je sluèajno index veèji kot je možnosti pa ponastavim na equals
+              try {
+                if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+                  item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+                }
+                jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
+              } catch (Exception ex) {
+              }
+
+              jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            }
+            
             jDbTextField1.setSearchField(true);
             jDbTextField1.setColumns(layout.getColumns() == null ? 10 : layout.getColumns());
             jDbTextField1.setDocument(documents.get(item)[0]);
@@ -490,15 +502,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.weightx = 1.0;
             jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
 
-            //ker se za integer equals zaène z 4, zato vedno odštejem EQUALS, da dobim index v moboboxu
-            //èe pa je sluèajno index veèji kot je možnosti pa ponastavim na equals
-            try {
-              if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
-                item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-              }
-              jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
-            } catch (Exception ex) {
-            }
+
           } else if (item instanceof DataSourceFilters.BooleanSeekType) {
             final JCheckBox jCheckBox = new JCheckBox();
 
