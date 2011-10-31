@@ -225,6 +225,12 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               } else {
                 integerSeekType = new DataSourceFilters.IntegerSeekType(field, getSeekType(type));
               }
+              if(parameter.getMinumumLength() != null){
+                integerSeekType.setMinLength(parameter.getMinumumLength());
+              }
+              if(parameter.getParameterCount() != null){
+                integerSeekType.setParameter_count(parameter.getParameterCount());
+              }
               if (convertToVarchar != null) {
                 integerSeekType.setConvertToVarchar(convertToVarchar);
               }
@@ -293,6 +299,12 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 integerSeekType = new DataSourceFilters.IntegerSeekType(field);
               } else {
                 integerSeekType = new DataSourceFilters.IntegerSeekType(field, getSeekType(type));
+              }
+              if(parameter.getMinumumLength() != null){
+                integerSeekType.setMinLength(parameter.getMinumumLength());
+              }
+              if(parameter.getParameterCount() != null){
+                integerSeekType.setParameter_count(parameter.getParameterCount());
               }
               if (convertToVarchar != null) {
                 integerSeekType.setConvertToVarchar(convertToVarchar);
