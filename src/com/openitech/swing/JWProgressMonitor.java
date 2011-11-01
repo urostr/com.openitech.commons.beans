@@ -5,7 +5,10 @@
  */
 package com.openitech.swing;
 
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.EventQueue;
+import java.awt.event.ActionListener;
 
 /**
  *
@@ -13,19 +16,41 @@ import java.awt.EventQueue;
  */
 public class JWProgressMonitor extends javax.swing.JDialog {
 
+  Component owner;
+  private boolean addCancelButton = false;
+
   /** Creates new form JWProgressMonitor */
   public JWProgressMonitor(java.awt.Frame owner) {
     super(owner, true);
-    setUndecorated(true);
-    initComponents();
-    setLocationRelativeTo(owner);
+    this.owner = owner;
+    init();
   }
 
   public JWProgressMonitor(java.awt.Dialog owner) {
     super(owner, true);
+    this.owner = owner;
+    init();
+  }
+
+  public JWProgressMonitor(java.awt.Window owner, boolean addCancelButton) {
+    super(owner);
+    setModal(true);
+    this.owner = owner;
+    this.addCancelButton = addCancelButton;
+    init();
+  }
+
+  private void init() {
     setUndecorated(true);
     initComponents();
     setLocationRelativeTo(owner);
+    if (addCancelButton) {
+      setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+    }
+  }
+
+  public void addCancelActionListener(ActionListener l) {
+    jbPreklici.addActionListener(l);
   }
 
   /** This method is called from within the constructor to
@@ -41,6 +66,8 @@ public class JWProgressMonitor extends javax.swing.JDialog {
     jlTitle = new javax.swing.JLabel();
     jlPage = new javax.swing.JLabel();
     jProgressBar = new javax.swing.JProgressBar();
+    jPanel2 = new javax.swing.JPanel();
+    jbPreklici = new com.openitech.swing.JMnemonicButton();
 
     setAlwaysOnTop(true);
     setCursor(new java.awt.Cursor(java.awt.Cursor.WAIT_CURSOR));
@@ -68,6 +95,17 @@ public class JWProgressMonitor extends javax.swing.JDialog {
     jPanel1.add(jProgressBar, gridBagConstraints);
 
     getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
+
+    jPanel2.setPreferredSize(new java.awt.Dimension(93, 31));
+    jPanel2.setLayout(new java.awt.GridBagLayout());
+
+    jbPreklici.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openitech/icons/button_cancel1.png"))); // NOI18N
+    jbPreklici.setText("Preklièi");
+    if(addCancelButton){
+      jPanel2.add(jbPreklici, new java.awt.GridBagConstraints());
+    }
+
+    getContentPane().add(jPanel2, java.awt.BorderLayout.SOUTH);
 
     pack();
   }// </editor-fold>//GEN-END:initComponents
@@ -127,12 +165,17 @@ public class JWProgressMonitor extends javax.swing.JDialog {
 
   @Override
   public void setVisible(final boolean b) {
+
     EventQueue.invokeLater(new Runnable() {
 
       @Override
       public void run() {
-        setModal(b);
-        inheritedVisible(b);
+        try {
+          setModal(b);
+          inheritedVisible(b);
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        }
       }
     });
   }
@@ -142,7 +185,9 @@ public class JWProgressMonitor extends javax.swing.JDialog {
   }
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel jPanel1;
+  private javax.swing.JPanel jPanel2;
   private javax.swing.JProgressBar jProgressBar;
+  private com.openitech.swing.JMnemonicButton jbPreklici;
   private javax.swing.JLabel jlPage;
   private javax.swing.JLabel jlTitle;
   // End of variables declaration//GEN-END:variables
