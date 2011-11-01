@@ -95,22 +95,17 @@ public class ReconnectableSQLConnection implements DbConnection {
   }
 
   @Override
-  public Connection getTemporaryConnection() {
-    try {
-      Connection result;
-      if (dataSource == null) {
-        result = DriverManager.getConnection(sqlConnectionInitializer.DB_URL, connect);
-      } else if (temporaryPool != null) {
-        result = temporaryPool.getConnection();
-      } else {
-        result = new ConnectionProxy(this.dataSource);
-      }
-      fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
-      return result;
-    } catch (SQLException ex) {
-      Logger.getLogger(AbstractSQLConnection.class.getName()).log(Level.SEVERE, null, ex);
+  public Connection getTemporaryConnection() throws SQLException {
+    Connection result;
+    if (dataSource == null) {
+      result = DriverManager.getConnection(sqlConnectionInitializer.DB_URL, connect);
+    } else if (temporaryPool != null) {
+      result = temporaryPool.getConnection();
+    } else {
+      result = new ConnectionProxy(this.dataSource);
     }
-    return null;
+    fireActionPerformed(new ActionEvent(result, DbConnection.ACTION_DB_CONNECT, DbConnection.ACTION_GET_TEMP_CONNECTION));
+    return result;
   }
 
   @Override
@@ -168,7 +163,7 @@ public class ReconnectableSQLConnection implements DbConnection {
       if (ds != null) {
         this.dataSource = ds;
         if (Boolean.valueOf(settings.getProperty(DB_USE_TEMPORARY_POOL, "false"))) {
-          this.temporaryPool = new TemporaryConnectionPool(ds, Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")),  Integer.parseInt(settings.getProperty(DB_TEMP_POOL_SIZE, "0")), executeOnCreate);
+          this.temporaryPool = new TemporaryConnectionPool(ds, Boolean.parseBoolean(settings.getProperty(DB_AUTOCOMMIT, "true")), Integer.parseInt(settings.getProperty(DB_TEMP_POOL_SIZE, "0")), executeOnCreate);
         } else {
           this.temporaryPool = null;
         }
