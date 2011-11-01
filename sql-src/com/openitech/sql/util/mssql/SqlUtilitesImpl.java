@@ -383,8 +383,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
               if (Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SAVE_PK, Boolean.toString(true)))) {
                 storePrimaryKeyVersions(eventPK);
               }
-            }            
-          }          
+            }
+          }
         }
       }
 
@@ -3203,7 +3203,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       sqlFindEventEventId.clearParameters();
 
       if (eventId != null) {
-        sqlFindEventEventId.setValue("AND EventId = ?");
+        sqlFindEventEventId.setValue("AND ev.Id = ?");
         sqlFindEventEventId.addParameter(new SqlParameter<Long>(java.sql.Types.BIGINT, eventId));
         sqlFindEventValid.setValue("");
       } else {
@@ -4063,7 +4063,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
               rsFindIdentity = findIdentityAsString.executeQuery();
               break;
             default:
-              throw new IllegalArgumentException("Nepodprti tip polja");
+              throw new SQLException("Nepodprti tip polja");
           }
 
           if (rsFindIdentity != null) {
@@ -4076,7 +4076,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
                 shranjenTipPolja = rsFindIdentity.getInt("TipPolja");
                 shranjenValueType = ValueType.valueOf(shranjenTipPolja);
                 if (!type.equals(shranjenValueType)) {
-                  throw new IllegalArgumentException("Identity Tip polja se ne ujema");
+                  throw new SQLException("Identity Tip polja se ne ujema");
                 }
                 switch (shranjenValueType) {
                   case IntValue:
