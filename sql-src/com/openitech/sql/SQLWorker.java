@@ -291,6 +291,20 @@ public class SQLWorker {
     return execute(selectSQL, parameters, ConnectionManager.getInstance().getConnection());
   }
 
+  public boolean execute(String selectSQL, final ConnectionType connectionType) throws SQLException {
+
+    PreparedStatement statement = connectionType.getConnection().prepareStatement(selectSQL);
+
+    return execute(statement, new ArrayList<Object>());
+  }
+
+  public boolean execute(String selectSQL, List<?> parameters, final ConnectionType connectionType) throws SQLException {
+    String sql = substParameters(selectSQL, parameters);
+    PreparedStatement statement = connectionType.getConnection().prepareStatement(sql);
+
+    return execute(statement, parameters);
+  }
+
   public boolean execute(String selectSQL, List<?> parameters, final java.sql.Connection connection) throws SQLException {
     String sql = substParameters(selectSQL, parameters);
     PreparedStatement statement = connection.prepareStatement(sql);
@@ -344,5 +358,32 @@ public class SQLWorker {
 
   private List<Object> preprocessParameters(List<?> parameters, PreparedStatement statement) throws SQLException {
     return preprocessParameters(parameters, statement.getConnection());
+  }
+
+  public static enum ConnectionType {
+
+    Connection {
+
+      @Override
+      public Connection getConnection() {
+        return ConnectionManager.getInstance().getConnection();
+      }
+    },
+    TxConnection {
+
+      @Override
+      public Connection getConnection() {
+        return ConnectionManager.getInstance().getTxConnection();
+      }
+    },
+    TemporaryConection {
+
+      @Override
+      public Connection getConnection() throws SQLException {
+        return ConnectionManager.getInstance().getTemporaryConnection();
+      }
+    };
+
+    public abstract Connection getConnection() throws SQLException;
   }
 }
