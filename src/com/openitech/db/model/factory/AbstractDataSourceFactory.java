@@ -10,6 +10,7 @@ import com.openitech.db.filters.JWorkAreaFilter;
 import com.openitech.db.model.AutoInsertValue;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbTableModel;
+import com.openitech.importer.JImportEventsModel;
 import com.openitech.swing.framework.context.AssociatedTasks;
 import com.openitech.value.fields.Field;
 import java.awt.Component;
@@ -153,6 +154,14 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public Set<Field> getDataEntryValues() {
     return dataEntryValues;
   }
+
+  protected List<JImportEventsModel> imporEventsModels = new ArrayList<JImportEventsModel>();
+
+  public List<JImportEventsModel> getImporEventsModels() {
+    return imporEventsModels;
+  }
+
+  
   protected boolean taskList;
 
   /**
