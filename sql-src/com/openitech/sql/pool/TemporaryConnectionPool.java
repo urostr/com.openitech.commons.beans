@@ -120,6 +120,7 @@ public class TemporaryConnectionPool {
       }
     } catch (InterruptedException ex) {
       Logger.getLogger(TemporaryConnectionPool.class.getName()).log(Level.SEVERE, null, ex);
+      throw new SQLException(ex);
     }
 
     if (result == null) {
