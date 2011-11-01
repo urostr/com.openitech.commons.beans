@@ -22,8 +22,6 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 /**
@@ -179,7 +177,6 @@ public class Event extends EventType implements Cloneable {
       event.setPreparedFields(preparedFields);
     }
   }
-  
   protected boolean versioned = false;
 
   /**
@@ -478,46 +475,42 @@ public class Event extends EventType implements Cloneable {
     return "E:" + sifrant + "-" + sifra + ":" + id + ":" + operation;
   }
 
-  public EventPK getEventPK() {
+  public EventPK getEventPK() throws SQLException {
     long start = System.currentTimeMillis();
     EventPK eventPK = null;
-    try {
+//    try {
       eventPK = getEventPK(this.preparedFields == null ? SqlUtilities.getInstance().getPreparedFields() : preparedFields);
-    } catch (SQLException ex) {
-      Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
-    }
+//    } catch (SQLException ex) {
+//      Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
+//    }
     long end = System.currentTimeMillis();
     System.out.println("CAS:getEventPK=" + (end - start));
     return eventPK;
   }
 
-  public EventPK getEventPK(final Map<CaseInsensitiveString, Field> preparedFields) {
+  public EventPK getEventPK(final Map<CaseInsensitiveString, Field> preparedFields) throws SQLException {
     EventPK eventPK = null;
-    try {
-      eventPK = new EventPK(id, sifrant, sifra);
-      eventPK.setEventOperation(operation);
-      eventPK.setVersioned(versioned);
-      final Field[] eventPrimaryKey = getPrimaryKey();
-      if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
-        for (Field pkField : eventPrimaryKey) {
-          for (FieldValue fieldValue : values) {
-            if (pkField.equals(fieldValue)) {
-              if (fieldValue.getIdPolja() == null) {
-                CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(fieldValue.getNonIndexedField().getName());
-                Integer idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : fieldValue.getIdPolja();
-                fieldValue.setIdPolja(idPolja);
-              }
-              if (fieldValue.getValueId() == null) {
-                fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
-              }
-              eventPK.addPrimaryKeyField(fieldValue);
-              break;
+    eventPK = new EventPK(id, sifrant, sifra);
+    eventPK.setEventOperation(operation);
+    eventPK.setVersioned(versioned);
+    final Field[] eventPrimaryKey = getPrimaryKey();
+    if (eventPrimaryKey != null && eventPrimaryKey.length > 0) {
+      for (Field pkField : eventPrimaryKey) {
+        for (FieldValue fieldValue : values) {
+          if (pkField.equals(fieldValue)) {
+            if (fieldValue.getIdPolja() == null) {
+              CaseInsensitiveString fieldName_ci = new CaseInsensitiveString(fieldValue.getNonIndexedField().getName());
+              Integer idPolja = preparedFields.containsKey(fieldName_ci) ? preparedFields.get(fieldName_ci).getIdPolja() : fieldValue.getIdPolja();
+              fieldValue.setIdPolja(idPolja);
             }
+            if (fieldValue.getValueId() == null) {
+              fieldValue.setValueId(SqlUtilities.getInstance().storeValue(ValueType.getType(fieldValue.getType()), fieldValue.getValue()));
+            }
+            eventPK.addPrimaryKeyField(fieldValue);
+            break;
           }
         }
       }
-    } catch (SQLException ex) {
-      Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
     }
     return eventPK;
 
