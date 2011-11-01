@@ -111,6 +111,23 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+        <xsd:element name="EventImporters" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="EventImporter" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="EventColumns" maxOccurs="unbounded" type="xsd:string" minOccurs="0"></xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="Title" type="xsd:string"/>
+                  <xsd:attribute name="IdSifranta" type="xsd:int"/>
+                  <xsd:attribute name="IdSifre" type="xsd:string"/>
+                  <xsd:attribute name="ActivityId" type="xsd:int"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
         <xsd:element name="DataEntryPanel" minOccurs="0">
           <xsd:complexType>
             <xsd:choice>
