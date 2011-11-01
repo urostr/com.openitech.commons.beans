@@ -3845,7 +3845,12 @@ public class WebDataSource implements DbDataSourceImpl {
     if (this.connection == null) {
       if (ConnectionManager.getInstance() != null) {
         if (owner.isConnectOnDemand()) {
-          return ConnectionManager.getInstance().getTemporaryConnection();
+          try {
+            return ConnectionManager.getInstance().getTemporaryConnection();
+          } catch (SQLException ex) {
+            Logger.getLogger(WebDataSource.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+          }
         } else {
           return ConnectionManager.getInstance().getConnection();
         }
