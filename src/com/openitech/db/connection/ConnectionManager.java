@@ -10,6 +10,7 @@ package com.openitech.db.connection;
 import com.openitech.sql.logger.SQLLogger;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  *
@@ -123,7 +124,7 @@ public class ConnectionManager implements DbConnection {
   }
 
   @Override
-  public Connection getTemporaryConnection() {
+  public Connection getTemporaryConnection() throws SQLException {
     return getDbConnection() == null ? null : getDbConnection().getTemporaryConnection();
   }
 
