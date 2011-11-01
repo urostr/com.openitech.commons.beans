@@ -22,6 +22,8 @@ import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners.Listener;
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters;
+import com.openitech.db.model.xml.config.Workarea.EventImporters;
+import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.SQLMaterializedView;
 import com.openitech.db.model.sql.SQLOrderByParameter;
@@ -35,6 +37,7 @@ import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views;
+import com.openitech.importer.JImportEventsModel;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.value.fields.Field;
@@ -43,7 +46,9 @@ import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.event.ListDataListener;
@@ -556,6 +561,48 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
     } catch (InvocationTargetException ex) {
       Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    EventImporters eventImporters = dataSourceXML.getEventImporters();
+    if (eventImporters != null) {
+      List<EventImporter> eventImporterList = eventImporters.getEventImporter();
+      if (eventImporterList != null) {
+        for (EventImporter eventImporter : eventImporterList) {
+          Integer idSifranta = eventImporter.getIdSifranta();
+          String idSifre = eventImporter.getIdSifre();
+          Integer activityId = eventImporter.getActivityId();
+          List<String> eventColumns = eventImporter.getEventColumns();
+          String title = eventImporter.getTitle();
+          Set<Field> eventColumnsList = new HashSet<Field>();
+
+          for (String imePolja : eventColumns) {
+            try {
+              Field field = SqlUtilities.getInstance().getPreparedFields().get(new CaseInsensitiveString(imePolja));
+              if (field != null) {
+                field.setFieldIndex(1);
+              } else {
+                dataSource.setSafeMode(false);
+                dataSource.setQueuedDelay(0);
+                dataSource.filterChanged();
+                dataSource.loadData();
+                dataSource.setSafeMode(true);
+                int tipPolja = dataSource.getType(imePolja);
+                field = new Field(imePolja, tipPolja);
+              }
+              DbFieldObserver fieldObserver = new DbFieldObserver();
+              fieldObserver.setColumnName(imePolja);
+              fieldObserver.setDataSource(dataSource);
+              final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
+              if (!eventColumnsList.contains(fieldValueProxy)) {
+                eventColumnsList.add(fieldValueProxy);
+              }
+            } catch (SQLException ex) {
+              Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+            }
+          }
+
+          imporEventsModels.add(new JImportEventsModel(title, dataSource, idSifranta, idSifre, activityId, eventColumnsList));
+        }
+      }
     }
 
     return result;
