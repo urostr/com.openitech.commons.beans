@@ -80,7 +80,7 @@ public abstract class AbstractSQLConnection implements DbConnection {
   }
 
   @Override
-  public Connection getTemporaryConnection() {
+  public Connection getTemporaryConnection()  throws SQLException{
     return implementation.getTemporaryConnection();
   }
 
