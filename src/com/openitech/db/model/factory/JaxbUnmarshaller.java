@@ -47,8 +47,9 @@ public class JaxbUnmarshaller {
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "Xml ima napacno shemo. Class={0}", clazz);
         result = reUnmarshall(clazz, xml);
       } else {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, null, ex);
-        throw new JAXBException(ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "ERROR:Xml ima napacno shemo. Class={0}", clazz);
+//        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, null, ex);
+//        throw new JAXBException(ex);
       }
     }
     return result;
