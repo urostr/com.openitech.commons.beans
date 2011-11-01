@@ -3291,7 +3291,12 @@ public class SpringDataSource implements DbDataSourceImpl {
     if (this.connection == null) {
       if (ConnectionManager.getInstance() != null) {
         if (owner.isConnectOnDemand()) {
-          return ConnectionManager.getInstance().getTemporaryConnection();
+          try {
+            return ConnectionManager.getInstance().getTemporaryConnection();
+          } catch (SQLException ex) {
+            Logger.getLogger(SpringDataSource.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+          }
         } else {
           return ConnectionManager.getInstance().getConnection();
         }
