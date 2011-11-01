@@ -3881,7 +3881,12 @@ public class SQLDataSource extends AbstractDataSourceImpl {
     if (this.connection == null) {
       if (ConnectionManager.getInstance() != null) {
         if (owner.isConnectOnDemand()) {
-          return ConnectionManager.getInstance().getTemporaryConnection();
+          try {
+            return ConnectionManager.getInstance().getTemporaryConnection();
+          } catch (SQLException ex) {
+            Logger.getLogger(SQLDataSource.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+          }
         } else {
           return ConnectionManager.getInstance().getConnection();
         }
