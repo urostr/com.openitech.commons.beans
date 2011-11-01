@@ -523,7 +523,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     }
   }
 
-  private Long updateEvent(Event newValues, Event oldValues, List<EventPK> eventIds/*, List<Event> oldEvents//*/) throws SQLException {
+  private Long updateEvent(Event newValues, Event oldValues, List<EventPK> eventIds) throws SQLException {
     Event find = findEvent(oldValues);
     if (find != null) {
       newValues.setId(find.getId());
@@ -560,7 +560,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
     return eventPK.getEventId();
   }
 
-  private void addIngoredEventIds(Event newValues, List<EventPK> eventIds) {
+  private void addIngoredEventIds(Event newValues, List<EventPK> eventIds) throws SQLException {
     if ((newValues.getId() != null) && (newValues.getId() > 0)) {
       eventIds.add(newValues.getEventPK());
       for (Event childEvent : newValues.getChildren()) {
