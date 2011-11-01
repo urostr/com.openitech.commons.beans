@@ -11,6 +11,7 @@ package com.openitech.db.connection;
 
 import java.awt.event.ActionListener;
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  *
@@ -73,7 +74,7 @@ public interface DbConnection {
   String DB_CALL_STORE_EVENT = "db.use.storeEvent";
 
 
-  Connection getTemporaryConnection();
+  Connection getTemporaryConnection() throws SQLException;
   Connection getConnection();
   Connection getTxConnection();
 
