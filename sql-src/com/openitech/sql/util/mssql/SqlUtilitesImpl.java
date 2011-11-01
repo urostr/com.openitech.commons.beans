@@ -1841,6 +1841,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
             final int fieldValueIndex = rs.getInt("FieldValueIndex");
             final long valueId = rs.getLong("ValueId");
             final int fieldType = rs.getInt("FieldType");
+            if(valueId == 0){
+              continue;
+            }
             final String lookupPrimaryKey = rs.getString(Field.LookupType.PRIMARY_KEY.getColumnPrefix());
 
             fv = new FieldValue(idPolja, imePolja, ValueType.valueOf(fieldType).getSqlType(), fieldValueIndex, valueId);
@@ -4172,7 +4175,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
     } catch (InterruptedException ex) {
       Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-      return null;
+      throw new SQLException(ex);
     }
   }
 
