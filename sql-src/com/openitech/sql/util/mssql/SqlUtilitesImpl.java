@@ -155,6 +155,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement is_transaction_valid;
   PreparedStatement is_valueid_valid;
   CallableStatement callStoreEvent;
+  PreparedStatement findPrimaryKey;
   Map<CaseInsensitiveString, Field> preparedFields;
   Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
   private final static LogWriter LOG_WRITER = new LogWriter(Logger.getLogger(SqlUtilitesImpl.class.getName()), Level.INFO);
@@ -1841,7 +1842,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
             final int fieldValueIndex = rs.getInt("FieldValueIndex");
             final long valueId = rs.getLong("ValueId");
             final int fieldType = rs.getInt("FieldType");
-            if(valueId == 0){
+            if (valueId == 0) {
               continue;
             }
             final String lookupPrimaryKey = rs.getString(Field.LookupType.PRIMARY_KEY.getColumnPrefix());
@@ -2125,6 +2126,29 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
 
     }
+  }
+
+  @Override
+  public Set<Field> getPrimaryKey(int idSifranta, String idSifre) throws SQLException {
+    Set<Field> primaryKeys = new HashSet<Field>();
+    if (findPrimaryKey == null) {
+      findPrimaryKey = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findPrimaryKeys.sql", "cp1250"));
+    }
+
+    int param = 1;
+    findPrimaryKey.clearParameters();
+    findPrimaryKey.setInt(param++, idSifranta);
+    findPrimaryKey.setString(param++, idSifre);
+    ResultSet rs_pk = findPrimaryKey.executeQuery();
+    try {
+      while (rs_pk.next()) {
+        primaryKeys.add(new Field(rs_pk.getString("ImePolja"), rs_pk.getInt("TipPolja"), rs_pk.getInt("FieldValueIndex")));
+      }
+    } finally {
+      rs_pk.close();
+    }
+
+    return primaryKeys;
   }
 
   @Override
