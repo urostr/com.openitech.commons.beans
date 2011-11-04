@@ -16,6 +16,10 @@ import com.openitech.db.components.JDbTextField;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.filters.DataSourceFilters.AbstractSeekType;
+import com.openitech.db.filters.DataSourceFilters.CheckBoxSeekType;
+import com.openitech.db.filters.DataSourceFilters.CheckBoxSeekType.CheckBoxValue;
+import com.openitech.db.filters.DataSourceFilters.RezultatExistsSeekType;
+import com.openitech.db.filters.DataSourceFilters.RezultatExistsSeekType.RezultatExistsValue;
 import com.openitech.db.filters.DataSourceFilters.RezultatiKlicaSeekType;
 import com.openitech.db.filters.DataSourceFilters.RezultatiKlicaSeekType.RezultatKlica;
 import com.openitech.db.model.DbComboBoxModel;
@@ -492,7 +496,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
               jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
             }
-            
+
             jDbTextField1.setSearchField(true);
             jDbTextField1.setColumns(layout.getColumns() == null ? 10 : layout.getColumns());
             jDbTextField1.setDocument(documents.get(item)[0]);
@@ -611,6 +615,98 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
             jpHoldingPanel.add(jpChechBoxHolder, gridBagConstraints);
 
+          } else if (item instanceof DataSourceFilters.RezultatExistsSeekType) {
+
+            final JLabel jlOpis = new javax.swing.JLabel();
+            jlOpis.setText(item.toString());
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            customPanel.add(jlOpis, gridBagConstraints);
+
+            final DataSourceFilters.RezultatExistsSeekType existsSeekType = (RezultatExistsSeekType) item;
+
+            JPanel jpBoxes = new JPanel(new GridBagLayout());
+            jpBoxes.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+
+            List<RezultatExistsValue> rezultati = existsSeekType.getRezultati();
+            for (final RezultatExistsValue rezultatKlica : rezultati) {
+              final JCheckBox checkBox = new JCheckBox(rezultatKlica.getOpis());
+              checkBox.setSelected(rezultatKlica.isChecked());
+              checkBox.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                  rezultatKlica.setChecked(checkBox.isSelected());
+                  existsSeekType.reload();
+                }
+              });
+              jpBoxes.add(checkBox, new java.awt.GridBagConstraints());
+            }
+
+            //ko je dataSource pripravljen, mu dodam default filtre
+            for (DbDataSource dataSource : filter.getDataSources()) {
+              dataSource.addActiveRowChangeListener(new ExistsSeekTypeActiveRowChangeListener(existsSeekType));
+            }
+
+            JPanel jpChechBoxHolder = new JPanel(new GridBagLayout());
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            jpChechBoxHolder.add(jpBoxes, gridBagConstraints);
+
+
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
+            jpHoldingPanel.add(jpChechBoxHolder, gridBagConstraints);
+
+          } else if (item instanceof DataSourceFilters.CheckBoxSeekType) {
+
+            final JLabel jlOpis = new javax.swing.JLabel();
+            jlOpis.setText(item.toString());
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            customPanel.add(jlOpis, gridBagConstraints);
+
+            final DataSourceFilters.CheckBoxSeekType existsSeekType = (CheckBoxSeekType) item;
+
+            JPanel jpBoxes = new JPanel(new GridBagLayout());
+            jpBoxes.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+
+            List<CheckBoxValue> rezultati = existsSeekType.getRezultati();
+            for (final CheckBoxValue rezultatKlica : rezultati) {
+              final JCheckBox checkBox = new JCheckBox(rezultatKlica.getOpis());
+              checkBox.setSelected(rezultatKlica.isChecked());
+              checkBox.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                  rezultatKlica.setChecked(checkBox.isSelected());
+                  existsSeekType.reload();
+                }
+              });
+              jpBoxes.add(checkBox, new java.awt.GridBagConstraints());
+            }
+
+            //ko je dataSource pripravljen, mu dodam default filtre
+            for (DbDataSource dataSource : filter.getDataSources()) {
+              dataSource.addActiveRowChangeListener(new CheckBoxSeekTypeActiveRowChangeListener(existsSeekType));
+            }
+
+            JPanel jpChechBoxHolder = new JPanel(new GridBagLayout());
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            jpChechBoxHolder.add(jpBoxes, gridBagConstraints);
+
+
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
+            jpHoldingPanel.add(jpChechBoxHolder, gridBagConstraints);
+
           } else {
             final JLabel jlOpis = new javax.swing.JLabel();
             final JComboBox jDbComboBox1 = new JComboBox();
@@ -713,10 +809,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   private java.awt.GridBagConstraints getCustomGridBagConstraints(SeekLayout.Layout layout, int index, java.awt.GridBagConstraints defaultConstraint) {
     java.awt.GridBagConstraints gridBagConstraints;
     if (layout != null && layout.getGroup() != null) {
-      gridBagConstraints = getCustomGridBagConstraints(layout.getGroup());
+      gridBagConstraints = getCustomGridBagConstraints(layout.getGroup(), defaultConstraint);
     } else if (layout != null && layout.getConstraints() != null) {
       if (index < layout.getConstraints().getGridBagConstraints().size()) {
-        gridBagConstraints = getCustomGridBagConstraints(layout.getConstraints().getGridBagConstraints().get(index));
+        gridBagConstraints = getCustomGridBagConstraints(layout.getConstraints().getGridBagConstraints().get(index), defaultConstraint);
       } else {
         gridBagConstraints = defaultConstraint;
       }
@@ -730,19 +826,27 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     return gridBagConstraints;
   }
 
-  private java.awt.GridBagConstraints getCustomGridBagConstraints(final GridBagConstraints customGridBagConstraints) {
+  private java.awt.GridBagConstraints getCustomGridBagConstraints(final GridBagConstraints customGridBagConstraints, final java.awt.GridBagConstraints defaultConstraints) {
     java.awt.GridBagConstraints gridBagConstraints = new java.awt.GridBagConstraints();
     if (customGridBagConstraints.getGridX() != null) {
       gridBagConstraints.gridx = customGridBagConstraints.getGridX();
+    } else {
+      gridBagConstraints.gridx = defaultConstraints.gridx;
     }
     if (customGridBagConstraints.getGridY() != null) {
       gridBagConstraints.gridy = customGridBagConstraints.getGridY();
+    } else {
+      gridBagConstraints.gridy = defaultConstraints.gridy;
     }
     if (customGridBagConstraints.getGridWidth() != null) {
       gridBagConstraints.gridwidth = customGridBagConstraints.getGridWidth();
+    } else {
+      gridBagConstraints.gridwidth = defaultConstraints.gridwidth;
     }
     if (customGridBagConstraints.getGridHeight() != null) {
       gridBagConstraints.gridheight = customGridBagConstraints.getGridHeight();
+    } else {
+      gridBagConstraints.gridheight = defaultConstraints.gridheight;
     }
     if (customGridBagConstraints.getFill() != null) {
       switch (customGridBagConstraints.getFill()) {
@@ -759,6 +863,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
           gridBagConstraints.fill = java.awt.GridBagConstraints.VERTICAL;
           break;
       }
+    } else {
+      gridBagConstraints.fill = defaultConstraints.fill;
     }
     if (customGridBagConstraints.getAnchor() != null) {
       switch (customGridBagConstraints.getAnchor()) {
@@ -841,22 +947,34 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
           gridBagConstraints.anchor = java.awt.GridBagConstraints.BELOW_BASELINE_TRAILING;
           break;
       }
+    } else {
+      gridBagConstraints.anchor = defaultConstraints.anchor;
     }
     if (customGridBagConstraints.getWeightX() != null) {
       gridBagConstraints.weightx = customGridBagConstraints.getWeightX();
+    } else {
+      gridBagConstraints.weightx = defaultConstraints.weightx;
     }
     if (customGridBagConstraints.getWeightY() != null) {
       gridBagConstraints.weighty = customGridBagConstraints.getWeightY();
+    } else {
+      gridBagConstraints.weighty = defaultConstraints.weighty;
     }
     if (customGridBagConstraints.getIPadX() != null) {
       gridBagConstraints.ipadx = customGridBagConstraints.getIPadX();
+    } else {
+      gridBagConstraints.ipadx = defaultConstraints.ipadx;
     }
     if (customGridBagConstraints.getIPadY() != null) {
       gridBagConstraints.ipady = customGridBagConstraints.getIPadY();
+    } else {
+      gridBagConstraints.ipady = defaultConstraints.ipady;
     }
 
     if (customGridBagConstraints.getInsets() != null) {
       gridBagConstraints.insets = new java.awt.Insets(customGridBagConstraints.getInsets().getTop(), customGridBagConstraints.getInsets().getLeft(), customGridBagConstraints.getInsets().getBottom(), customGridBagConstraints.getInsets().getRight());
+    } else {
+      gridBagConstraints.insets = defaultConstraints.insets;
     }
     return gridBagConstraints;
   }
@@ -1288,6 +1406,46 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
       event.getSource().removeActiveRowChangeListener(this);
       rezultatiKlicaSeekType.reload();
       rezultatiKlicaSeekType = null;
+    }
+
+    @Override
+    public void fieldValueChanged(ActiveRowChangeEvent event) {
+    }
+  }
+
+  private static class ExistsSeekTypeActiveRowChangeListener implements ActiveRowChangeListener {
+
+    DataSourceFilters.RezultatExistsSeekType existsSeekTypeSeekType;
+
+    public ExistsSeekTypeActiveRowChangeListener(RezultatExistsSeekType existsSeekType) {
+      this.existsSeekTypeSeekType = existsSeekType;
+    }
+
+    @Override
+    public void activeRowChanged(ActiveRowChangeEvent event) {
+      event.getSource().removeActiveRowChangeListener(this);
+      existsSeekTypeSeekType.reload();
+      existsSeekTypeSeekType = null;
+    }
+
+    @Override
+    public void fieldValueChanged(ActiveRowChangeEvent event) {
+    }
+  }
+
+  private static class CheckBoxSeekTypeActiveRowChangeListener implements ActiveRowChangeListener {
+
+    DataSourceFilters.CheckBoxSeekType existsSeekTypeSeekType;
+
+    public CheckBoxSeekTypeActiveRowChangeListener(CheckBoxSeekType existsSeekType) {
+      this.existsSeekTypeSeekType = existsSeekType;
+    }
+
+    @Override
+    public void activeRowChanged(ActiveRowChangeEvent event) {
+      event.getSource().removeActiveRowChangeListener(this);
+      existsSeekTypeSeekType.reload();
+      existsSeekTypeSeekType = null;
     }
 
     @Override
