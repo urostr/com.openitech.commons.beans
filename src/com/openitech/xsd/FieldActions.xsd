@@ -23,13 +23,58 @@
                   </xsd:choice>
                 </xsd:complexType>
               </xsd:element>
+              <xsd:element name="CopyValue" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ColumnName" type="xsd:string" maxOccurs="1"></xsd:element>
+                    <xsd:element name="OtherColumnName" type="xsd:string" maxOccurs="1"></xsd:element>
+                  </xsd:sequence>
+                  <xsd:attribute name="Override" type="xsd:boolean" default="false"/>
+                </xsd:complexType>
+              </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+
+        <xsd:element name="CopyEvent" minOccurs="0" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"/>
+              <xsd:element name="ToSifrant" minOccurs="1">
+                <xsd:complexType>
+                  <xsd:all>
+                    <xsd:element name="IdSifranta" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+                    <xsd:element name="IdSifre" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+                  </xsd:all>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="ColumnJoins" minOccurs="1" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ColumnName" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+                    <xsd:element name="OtherColumnName" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="DefaultValues" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:choice>
+                    <xsd:element name="StringValue" type="xsd:string"></xsd:element>
+                    <xsd:element name="IntValue" type="xsd:int"></xsd:element>
+                    <xsd:element name="RealValue" type="xsd:double"></xsd:element>
+                    <xsd:element name="DateValue" type="xsd:dateTime"></xsd:element>
+                  </xsd:choice>
+                  <xsd:attribute name="ColumnName" type="xsd:string"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
         <xsd:element name="ActionListener" maxOccurs="unbounded" minOccurs="0">
           <xsd:complexType>
             <xsd:all>
-              <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"></xsd:element>
+              <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"/>
               <xsd:element name="actionPerformed" type="tns:ScriptType"></xsd:element>
             </xsd:all>
           </xsd:complexType>
@@ -37,7 +82,7 @@
         <xsd:element name="ActiveRowChangeListener" maxOccurs="unbounded" minOccurs="0">
           <xsd:complexType>
             <xsd:all>
-              <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"></xsd:element>
+              <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"/>
               <xsd:element name="activeRowChange" type="tns:ScriptType"></xsd:element>
             </xsd:all>
           </xsd:complexType>
@@ -45,8 +90,8 @@
         <xsd:element name="Constraint" maxOccurs="unbounded" minOccurs="0">
           <xsd:complexType>
             <xsd:choice>
-              <xsd:element name="AllowedValues" type="xsd:string" maxOccurs="unbounded"></xsd:element>
-              <xsd:element name="ExcludedValues" maxOccurs="unbounded" type="xsd:string"></xsd:element>
+              <xsd:element name="AllowedValues" type="xsd:string" maxOccurs="unbounded"/>
+              <xsd:element name="ExcludedValues" maxOccurs="unbounded" type="xsd:string"/>
             </xsd:choice>
             <xsd:attribute name="IdSifranta" type="xsd:int"/>
           </xsd:complexType>
