@@ -128,6 +128,29 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+        
+        <xsd:element name="TableActionListeners">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="TableActionListener">
+                <xsd:complexType>
+                  <xsd:choice>
+                    <xsd:element name="Factory" type="tns:Factory" minOccurs="0" maxOccurs="1"/>
+                    <xsd:element name="OpenDataEntry" type="xsd:boolean" minOccurs="0" maxOccurs="1"/>
+                    <xsd:element name="SelectWorkArea" minOccurs="0" maxOccurs="1">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="WorkAreaId" type="xsd:int" maxOccurs="1"/>
+                        </xsd:sequence>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:choice>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+    
         <xsd:element name="DataEntryPanel" minOccurs="0">
           <xsd:complexType>
             <xsd:choice>
@@ -229,6 +252,7 @@
         </xsd:complexType>
       </xsd:element>
     </xsd:all>
+    <xsd:attribute name="FilterRequred" type="xsd:boolean"/>
   </xsd:complexType>
   <xsd:complexType name="DataSourceParametersFactory">
     <xsd:all>
@@ -456,6 +480,39 @@
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
+      <xsd:element name="RezultatExistsSeekType">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="Field" type="xsd:string"></xsd:element>
+            <xsd:element name="Select" type="xsd:string"></xsd:element>
+            <xsd:element name="Replace" type="xsd:string"></xsd:element>
+            <xsd:element name="Rezultati">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="RezultatiValues" type="tns:RezultatKlicaValues" maxOccurs="unbounded"></xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="CheckBoxSeekType">
+        <xsd:complexType>
+          <xsd:all>
+            <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="Rezultati">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="RezultatiValues" type="tns:RezultatKlicaValues" maxOccurs="unbounded"></xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
+          </xsd:all>
+        </xsd:complexType>
+      </xsd:element>
       <xsd:element name="ConfigureFilterSeekType">
         <xsd:complexType>
           <xsd:all>
@@ -535,6 +592,7 @@
       </xsd:element>
     </xsd:choice>
     <xsd:attribute name="ConvertToVarchar" type="xsd:string"/>
+    <xsd:attribute name="Required" type="xsd:boolean"/>
   </xsd:complexType>
   <xsd:simpleType name="SeekType">
     <xsd:restriction base="xsd:string">
@@ -777,6 +835,7 @@
       <xsd:element name="Opis" type="xsd:string"/>
       <xsd:element name="Sifra" type="xsd:string"/>
       <xsd:element name="Checked" type="xsd:boolean" default="false"/>
+      <xsd:element name="AsString" type="xsd:boolean" default="false"/>
     </xsd:sequence>
   </xsd:complexType>
 </xsd:schema>
