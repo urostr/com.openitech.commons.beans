@@ -22,7 +22,9 @@ import com.openitech.db.model.xml.config.DataSourceParametersFactory;
 import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.RezultatKlicaValues;
 import com.openitech.db.model.xml.config.SeekParameters;
+import com.openitech.db.model.xml.config.SeekParameters.CheckBoxSeekType;
 import com.openitech.db.model.xml.config.SeekParameters.ConfigureFilterSeekType;
+import com.openitech.db.model.xml.config.SeekParameters.RezultatExistsSeekType;
 import com.openitech.db.model.xml.config.SeekParameters.RezultatKlicaSeekType;
 import com.openitech.db.model.xml.config.SeekParameters.RezultatKlicaSeekType.Rezultati;
 import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.ComboBoxModel;
@@ -143,7 +145,6 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
   public List<JWorkAreaFilter> getWorkAreaFilters() {
     return workAreaFilters;
   }
-
   private List<AutoInsertValue> autoInsertValues = new ArrayList<AutoInsertValue>();
 
   public List<AutoInsertValue> getAutoInsertValue() {
@@ -174,6 +175,11 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
         if (!filter.getDataSources().contains(dataSource)) {
           filter.addDataSource(dataSource);
         }
+
+        if (dataSourceFilter.isFilterRequred() != null) {
+          filter.setFilterRequired(dataSourceFilter.isFilterRequred());
+        }
+
         if (dataSourceFilter.getFilterParameter() != null) {
           FilterParameter filterParameter = dataSourceFilter.getFilterParameter();
           for (FilterParameter.WorkAreaParameter workAreaParameter : filterParameter.getWorkAreaParameter()) {
@@ -212,6 +218,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               seekType.setName(parameter.getName());
               seekType.setLayout(parameter.getLayout());
 
+              if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
+                filter.addRequired(seekType);
+              }
+
               workAreaFilters.add(new JWorkAreaFilter(workAreaId, filter, seekType, otherColumName));
             } else if (seekParameter.getIntegerSeekType() != null) {
               final SeekParameters.IntegerSeekType parameter = seekParameter.getIntegerSeekType();
@@ -225,10 +235,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               } else {
                 integerSeekType = new DataSourceFilters.IntegerSeekType(field, getSeekType(type));
               }
-              if(parameter.getMinumumLength() != null){
+              if (parameter.getMinumumLength() != null) {
                 integerSeekType.setMinLength(parameter.getMinumumLength());
               }
-              if(parameter.getParameterCount() != null){
+              if (parameter.getParameterCount() != null) {
                 integerSeekType.setParameter_count(parameter.getParameterCount());
               }
               if (convertToVarchar != null) {
@@ -237,19 +247,23 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               integerSeekType.setName(parameter.getName());
               integerSeekType.setLayout(parameter.getLayout());
 
+              if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
+                filter.addRequired(integerSeekType);
+              }
+
               workAreaFilters.add(new JWorkAreaFilter(workAreaId, filter, integerSeekType, otherColumName));
             }
           }
 
         }
 
-        if(dataSourceFilter.getAutoInsertColumns() != null){
+        if (dataSourceFilter.getAutoInsertColumns() != null) {
           AutoInsertColumns autoInsertColumns = dataSourceFilter.getAutoInsertColumns();
           for (AutoInsertColumns.Column column : autoInsertColumns.getColumn()) {
             Integer workAreaId = column.getWorkAreaId();
             String columName = column.getColumName();
             String otherColumName = column.getOtherColumName();
-            autoInsertValues.add(new AutoInsertValue(workAreaId,dataSource, columName, otherColumName));
+            autoInsertValues.add(new AutoInsertValue(workAreaId, dataSource, columName, otherColumName));
           }
         }
 
@@ -287,6 +301,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               seekType.setName(parameter.getName());
               seekType.setLayout(parameter.getLayout());
 
+              if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
+                filter.addRequired(seekType);
+              }
+
               filtersMap.put(filter, seekType);
             } else if (seekParameter.getIntegerSeekType() != null) {
               final SeekParameters.IntegerSeekType parameter = seekParameter.getIntegerSeekType();
@@ -300,10 +318,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               } else {
                 integerSeekType = new DataSourceFilters.IntegerSeekType(field, getSeekType(type));
               }
-              if(parameter.getMinumumLength() != null){
+              if (parameter.getMinumumLength() != null) {
                 integerSeekType.setMinLength(parameter.getMinumumLength());
               }
-              if(parameter.getParameterCount() != null){
+              if (parameter.getParameterCount() != null) {
                 integerSeekType.setParameter_count(parameter.getParameterCount());
               }
               if (convertToVarchar != null) {
@@ -311,6 +329,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               integerSeekType.setName(parameter.getName());
               integerSeekType.setLayout(parameter.getLayout());
+
+              if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
+                filter.addRequired(integerSeekType);
+              }
 
               filtersMap.put(filter, integerSeekType);
             } else if (seekParameter.getBetweenDateSeekType() != null) {
@@ -324,6 +346,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               betweenDateSeekType.setName(parameter.getName());
               betweenDateSeekType.setLayout(parameter.getLayout());
+
+              if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
+                filter.addRequired(betweenDateSeekType);
+              }
 
               filtersMap.put(filter, betweenDateSeekType);
             } else if (seekParameter.getSifrantSeekType() != null) {
@@ -415,6 +441,9 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                   sifrantSeekType.setName(parameter.getName());
                   sifrantSeekType.setLayout(parameter.getLayout());
 
+                  if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
+                    filter.addRequired(sifrantSeekType);
+                  }
                   filtersMap.put(filter, sifrantSeekType);
                 }
               }
@@ -431,6 +460,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               preformatedSeekType.setName(parameter.getName());
               preformatedSeekType.setLayout(parameter.getLayout());
+
+              if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
+                filter.addRequired(preformatedSeekType);
+              }
 
               filtersMap.put(filter, preformatedSeekType);
             } else if (seekParameter.getRezultatKlicaSeekType() != null) {
@@ -454,6 +487,48 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
 
               filtersMap.put(filter, rezultatiSeekType);
+            } else if (seekParameter.getRezultatExistsSeekType() != null) {
+              RezultatExistsSeekType parameter = seekParameter.getRezultatExistsSeekType();
+
+              DataSourceFilters.RezultatExistsSeekType existsSeekType;
+
+              existsSeekType = new DataSourceFilters.RezultatExistsSeekType(parameter.getSelect(), parameter.getReplace(), parameter.getField(), filter);
+
+              if (convertToVarchar != null) {
+                existsSeekType.setConvertToVarchar(convertToVarchar);
+              }
+              existsSeekType.setName(parameter.getName());
+              existsSeekType.setLayout(parameter.getLayout());
+              RezultatExistsSeekType.Rezultati rezultati = parameter.getRezultati();
+              if (rezultati != null) {
+                List<RezultatKlicaValues> rezultatiValues = rezultati.getRezultatiValues();
+                for (RezultatKlicaValues rezultat : rezultatiValues) {
+                  existsSeekType.addRezultat(new DataSourceFilters.RezultatExistsSeekType.RezultatExistsValue(rezultat.getOpis(), rezultat.getSifra(), rezultat.isChecked(), rezultat.isAsString()));
+                }
+              }
+
+              filtersMap.put(filter, existsSeekType);
+            } else if (seekParameter.getCheckBoxSeekType() != null) {
+              CheckBoxSeekType parameter = seekParameter.getCheckBoxSeekType();
+
+              DataSourceFilters.CheckBoxSeekType checkBoxSeekType;
+
+              checkBoxSeekType = new DataSourceFilters.CheckBoxSeekType(filter);
+
+              if (convertToVarchar != null) {
+                checkBoxSeekType.setConvertToVarchar(convertToVarchar);
+              }
+              checkBoxSeekType.setName(parameter.getName());
+              checkBoxSeekType.setLayout(parameter.getLayout());
+              CheckBoxSeekType.Rezultati rezultati = parameter.getRezultati();
+              if (rezultati != null) {
+                List<RezultatKlicaValues> rezultatiValues = rezultati.getRezultatiValues();
+                for (RezultatKlicaValues rezultat : rezultatiValues) {
+                  checkBoxSeekType.addRezultat(new DataSourceFilters.CheckBoxSeekType.CheckBoxValue(rezultat.getOpis(), rezultat.getSifra(), rezultat.isChecked()));
+                }
+              }
+
+              filtersMap.put(filter, checkBoxSeekType);
             }
           }
         }
