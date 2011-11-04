@@ -759,17 +759,23 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     @Override
     public StringBuilder getSQLSegment() {
       StringBuilder sbValues = new StringBuilder();
+      boolean addIsnull = false;
       if (value != null) {
         for (RezultatKlica rezultatKlica : value) {
           if (rezultatKlica.isChecked()) {
-            sbValues.append(sbValues.length() > 0 ? ", " : " ").append(" '").append(rezultatKlica.getValue()).append("' ");
+            final String rezultatValue = rezultatKlica.getValue();
+            if (rezultatValue != null && rezultatValue.toLowerCase().equals("nullvalue")) {
+              addIsnull = true;
+            } else {
+              sbValues.append(sbValues.length() > 0 ? ", " : " ").append(" '").append(rezultatValue).append("' ");
+            }
           }
         }
       }
       if (sbValues.length() > 0) {
-        return new StringBuilder(field + " IN (" + sbValues.toString() + " )");
+        return new StringBuilder("(" + (addIsnull ? (" " + field + " is null " + " OR ") : "") + field + " IN (" + sbValues.toString() + " ))");
       } else {
-        return new StringBuilder(field + " is null ");
+        return new StringBuilder(" " + field + " is null ");
       }
     }
 
@@ -810,6 +816,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
           break;
         }
       }
+      setNull = setNull || rezultati.isEmpty();
 
       filters.setSeekValue(this, setNull ? null : rezultati);
     }
@@ -872,6 +879,291 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     }
   }
 
+  public final static class RezultatExistsSeekType extends AbstractSeekType<List<DataSourceFilters.RezultatExistsSeekType.RezultatExistsValue>> {
+
+    private RezultatExistsValue vsi = new RezultatExistsValue("Vsi", "", false, false);
+    private List<RezultatExistsValue> rezultati = new ArrayList<RezultatExistsValue>();
+    private final DataSourceFilters filters;
+    private final String select;
+    private final String replace;
+
+    public RezultatExistsSeekType(String select, String replace, String field, DataSourceFilters filters) {
+      super(field, PREFORMATTED, 0);
+      this.filters = filters;
+      this.select = select;
+      this.replace = replace;
+      addRezultat(vsi);
+    }
+
+    @Override
+    public StringBuilder getSQLSegment() {
+      //ce je izpolnjeno "vsi", potem sploh ne pride do sem
+      StringBuilder sbValues = new StringBuilder();
+      boolean addIsNull = false;
+      boolean addIsNotNull = false;
+      if (value != null) {
+        for (RezultatExistsValue rezultatKlica : value) {
+          if (rezultatKlica.isChecked()) {
+            final String rezultatValue = rezultatKlica.getValue();
+            if (rezultatValue != null && rezultatValue.toLowerCase().equals("nullvalue")) {
+              addIsNull = true;
+            } else if (rezultatValue != null && rezultatValue.toLowerCase().equals("notnullvalue")) {
+              addIsNotNull = true;
+            } else {
+              sbValues.append(sbValues.length() > 0 ? ", " : " ").append(rezultatKlica.isAsString() ? " '" : "").append(rezultatValue).append(rezultatKlica.isAsString() ? "' " : "");
+            }
+          }
+        }
+      }
+      if (sbValues.length() > 0) {
+        StringBuilder sbResult = new StringBuilder(200);
+        sbResult.append(" ( ").append("\n");
+        sbResult.append((addIsNull ? (" " + field + " is null " + " OR ") : "")).append("\n");
+        sbResult.append((addIsNotNull ? (" " + field + " is NOT null " + " OR ") : "")).append("\n");
+        sbResult.append(" EXISTS ( ").append("\n").append(select.replaceAll(replace, " IN (" + sbValues.toString() + " )")).append(" ) ").append("\n");
+        sbResult.append(" ) \n");
+        return sbResult;
+      } else {
+        return new StringBuilder(" " + field + " is null ");
+      }
+    }
+
+    @Override
+    public boolean setValue(List<RezultatExistsValue> value) {
+      if (value != null && value.isEmpty()) {
+        value = null;
+      }
+      this.value = value;
+      return true;
+
+    }
+
+    public void addRezultat(RezultatExistsValue rezultatKlica) {
+      if (!rezultati.contains(rezultatKlica)) {
+        rezultati.add(rezultatKlica);
+      } else {
+        for (RezultatExistsValue rk : rezultati) {
+          if (rk.equals(rezultatKlica)) {
+            rk.setChecked(rezultatKlica.isChecked());
+            break;
+          }
+        }
+      }
+    }
+
+    public List<RezultatExistsValue> getRezultati() {
+      return rezultati;
+    }
+
+    public void reload() {
+      boolean setNull = false;
+      for (RezultatExistsValue rezultatKlica : rezultati) {
+        if (rezultatKlica.equals(vsi)) {
+          if (rezultatKlica.isChecked()) {
+            setNull = true;
+          }
+          break;
+        }
+      }
+      setNull = setNull || rezultati.isEmpty();
+
+      filters.setSeekValue(this, setNull ? null : rezultati);
+    }
+
+    public RezultatExistsValue getRezultatVsi() {
+      return vsi;
+    }
+
+    public static class RezultatExistsValue {
+
+      private String opis;
+      private String value;
+      private boolean isChecked;
+      private boolean isAsString;
+
+      public RezultatExistsValue(String opis, String value, boolean isChecked, boolean isAsString) {
+        this.opis = opis;
+        this.value = value;
+        this.isChecked = isChecked;
+        this.isAsString = isAsString;
+      }
+
+      public String getOpis() {
+        return opis;
+      }
+
+      public String getValue() {
+        return value;
+      }
+
+      public boolean isChecked() {
+        return isChecked;
+      }
+
+      public boolean isAsString() {
+        return isAsString;
+      }
+
+      public void setChecked(boolean isChecked) {
+        this.isChecked = isChecked;
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        if (obj == null) {
+          return false;
+        }
+
+        final RezultatExistsValue other = (RezultatExistsValue) obj;
+        if ((this.opis == null) ? (other.opis != null) : !this.opis.equals(other.opis)) {
+          return false;
+        }
+        if ((this.value == null) ? (other.value != null) : !this.value.equals(other.value)) {
+          return false;
+        }
+
+        return true;
+      }
+
+      @Override
+      public int hashCode() {
+        int hash = 7;
+        hash = hash * (opis != null ? opis.hashCode() : 1) + (value != null ? value.hashCode() : 0);
+        return hash;
+      }
+    }
+  }
+
+  public final static class CheckBoxSeekType extends AbstractSeekType<List<DataSourceFilters.CheckBoxSeekType.CheckBoxValue>> {
+
+    private CheckBoxValue vsi = new CheckBoxValue("Vsi", "", true);
+    private List<CheckBoxValue> rezultati = new ArrayList<CheckBoxValue>();
+    private final DataSourceFilters filters;
+
+    public CheckBoxSeekType(DataSourceFilters filters) {
+      super("", PREFORMATTED, 0);
+      this.filters = filters;
+      addRezultat(vsi);
+    }
+
+    @Override
+    public StringBuilder getSQLSegment() {
+      //ce je izpolnjeno "vsi", potem sploh ne pride do sem
+      StringBuilder sbValues = new StringBuilder();
+      if (value != null) {
+        for (CheckBoxValue rezultatKlica : value) {
+          if (rezultatKlica.isChecked()) {
+            final String rezultatValue = rezultatKlica.getValue();
+
+            sbValues.append(sbValues.length() > 0 ? " AND " : " ").append(rezultatValue).append("\n");
+
+          }
+        }
+      }
+      return sbValues;
+
+    }
+
+    @Override
+    public boolean setValue(List<CheckBoxValue> value) {
+      if (value != null && value.isEmpty()) {
+        value = null;
+      }
+      this.value = value;
+      return true;
+
+    }
+
+    public void addRezultat(CheckBoxValue rezultatKlica) {
+      if (!rezultati.contains(rezultatKlica)) {
+        rezultati.add(rezultatKlica);
+      } else {
+        for (CheckBoxValue rk : rezultati) {
+          if (rk.equals(rezultatKlica)) {
+            rk.setChecked(rezultatKlica.isChecked());
+            break;
+          }
+        }
+      }
+    }
+
+    public List<CheckBoxValue> getRezultati() {
+      return rezultati;
+    }
+
+    public void reload() {
+      boolean setNull = false;
+      for (CheckBoxValue rezultatKlica : rezultati) {
+        if (rezultatKlica.equals(vsi)) {
+          if (rezultatKlica.isChecked()) {
+            setNull = true;
+          }
+          break;
+        }
+      }
+      setNull = setNull || rezultati.isEmpty();
+
+      filters.setSeekValue(this, setNull ? null : rezultati);
+    }
+
+    public CheckBoxValue getRezultatVsi() {
+      return vsi;
+    }
+
+    public static class CheckBoxValue {
+
+      private String opis;
+      private String value;
+      private boolean isChecked;
+
+      public CheckBoxValue(String opis, String value, boolean isChecked) {
+        this.opis = opis;
+        this.value = value;
+        this.isChecked = isChecked;
+      }
+
+      public String getOpis() {
+        return opis;
+      }
+
+      public String getValue() {
+        return value;
+      }
+
+      public boolean isChecked() {
+        return isChecked;
+      }
+
+      public void setChecked(boolean isChecked) {
+        this.isChecked = isChecked;
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        if (obj == null) {
+          return false;
+        }
+
+        final CheckBoxValue other = (CheckBoxValue) obj;
+        if ((this.opis == null) ? (other.opis != null) : !this.opis.equals(other.opis)) {
+          return false;
+        }
+        if ((this.value == null) ? (other.value != null) : !this.value.equals(other.value)) {
+          return false;
+        }
+
+        return true;
+      }
+
+      @Override
+      public int hashCode() {
+        int hash = 7;
+        hash = hash * (opis != null ? opis.hashCode() : 1) + (value != null ? value.hashCode() : 0);
+        return hash;
+      }
+    }
+  }
+
   public final static class IntegerSeekType extends AbstractSeekType<java.lang.Integer> {
 
     private int min_length = 1;
@@ -892,7 +1184,6 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       this.min_length = min_len;
     }
 
-    
     @Override
     public boolean setValue(java.lang.Integer value) {
       try {
