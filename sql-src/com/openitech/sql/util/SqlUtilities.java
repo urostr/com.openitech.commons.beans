@@ -695,6 +695,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public void createEventViews(int idSifranta, String idSifre) {
     createEventViews(idSifranta, idSifre, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), true);
   }
+
   public void createEventViews(int idSifranta, String idSifre, boolean createIndexPK) {
     createEventViews(idSifranta, idSifre, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), createIndexPK);
   }
@@ -710,10 +711,12 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract boolean getRunParameterBoolean(String parameter, boolean defaultValue);
 
   public abstract void loadCaches() throws SQLException;
-  
+
   public abstract String getDataSourceSQL(int idSifranta, String idSifre) throws SQLException;
 
   public abstract boolean isValidEventId(Long eventId) throws SQLException;
+
+  public abstract Set<Field> getPrimaryKey(int idSifranta, String idSifre) throws SQLException;
 
   public static enum Operation {
 
