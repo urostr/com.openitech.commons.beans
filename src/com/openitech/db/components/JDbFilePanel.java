@@ -36,7 +36,7 @@ public class JDbFilePanel extends javax.swing.JPanel implements DataSourceObserv
   /** Creates new form JDbFilePanel */
   public JDbFilePanel(String columnName) {
     initComponents();
-    
+    this.columnName = columnName;
     jtfFileName.setColumnName(columnName + "FileName");
     
   }
