@@ -18,14 +18,16 @@ import java.util.logging.Logger;
  */
 public class JWorkAreaFilter implements ActiveRowChangeListener {
 
-  private int workAreaId;
+  private Integer workAreaId;
   private DbDataSource dsWorkArea;
+  private final Integer workSpaceId;
   private DataSourceFilters dataSourceFilters;
   private DataSourceFilters.AbstractSeekType seekType;
   private final String otherColumName;
 
-  public JWorkAreaFilter(int workAreaId, DataSourceFilters dataSourceFilters, AbstractSeekType seekType, String otherColumName) {
+  public JWorkAreaFilter(Integer workAreaId, Integer workSpaceId, DataSourceFilters dataSourceFilters, AbstractSeekType seekType, String otherColumName) {
     this.workAreaId = workAreaId;
+    this.workSpaceId = workSpaceId;
     this.dataSourceFilters = dataSourceFilters;
     this.seekType = seekType;
     this.otherColumName = otherColumName;

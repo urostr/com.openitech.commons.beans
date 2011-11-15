@@ -70,6 +70,15 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     initComponents();
     invalidate();
 
+    if (dbDataSourceFilter.getDataSources().isEmpty()) {
+      hideTopPanel();
+      invalidate();
+    } else {
+      for (DbDataSource dataSource : dbDataSourceFilter.getDataSources()) {
+        jcbAutomaticSearch.setSelected(dataSource.isAutoReload());
+        toggleAutomaticSearch(dataSource.isAutoReload());
+      }
+    }
     for (DbDataSource dbDataSource : dbDataSourceFilter.getDataSources()) {
       dbDataSource.addActiveRowChangeListener(new ActiveRowChangeListener() {
 
@@ -84,6 +93,10 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
         }
       });
     }
+
+    if (dbDataSourceFilter.getFilters().isEmpty()) {
+      removeAllItems();
+    }
   }
 
   private void setLimitParameter() {
@@ -96,8 +109,8 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
         }
       }
     }
-    if(removeLimitPanel){
-      remove(jpLimitParameter);
+    if (removeLimitPanel) {
+      hideTopPanel();
       invalidate();
     }
   }
@@ -141,11 +154,12 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     java.awt.GridBagConstraints gridBagConstraints;
 
     dbDataSourceFilter = dbDataSourceFilter==null?new com.openitech.db.filters.JPDbDataSourceFilter():dbDataSourceFilter;
-    jPanel1 = new javax.swing.JPanel();
+    jpOptions = new javax.swing.JPanel();
     jpLimitParameter = new javax.swing.JPanel();
     jlLimit = new javax.swing.JLabel();
     jPLimitGroup1 = new com.openitech.db.filters.JPLimitGroup();
-    jSeparator1 = new javax.swing.JSeparator();
+    jPanel3 = new javax.swing.JPanel();
+    jpAvtomaticnoIskanje = new javax.swing.JPanel();
     jcbAutomaticSearch = new javax.swing.JCheckBox();
     jsDataSourceDelay = new javax.swing.JSpinner();
     jbRefresh = new javax.swing.JButton();
@@ -160,7 +174,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     gridBagConstraints.weightx = 1.0;
     add(dbDataSourceFilter, gridBagConstraints);
 
-    jPanel1.setLayout(new java.awt.GridBagLayout());
+    jpOptions.setLayout(new java.awt.GridBagLayout());
 
     jpLimitParameter.setLayout(new java.awt.GridBagLayout());
 
@@ -168,10 +182,14 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     jpLimitParameter.add(jlLimit, new java.awt.GridBagConstraints());
     jpLimitParameter.add(jPLimitGroup1, new java.awt.GridBagConstraints());
 
-    jPanel1.add(jpLimitParameter, new java.awt.GridBagConstraints());
+    jpOptions.add(jpLimitParameter, new java.awt.GridBagConstraints());
 
-    jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
-    jPanel1.add(jSeparator1, new java.awt.GridBagConstraints());
+    jPanel3.setLayout(new java.awt.GridBagLayout());
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.weightx = 1.0;
+    jpOptions.add(jPanel3, gridBagConstraints);
+
+    jpAvtomaticnoIskanje.setLayout(new java.awt.GridBagLayout());
 
     jcbAutomaticSearch.setSelected(!addSearchButton);
     jcbAutomaticSearch.setText("Avtomatièno iskanje");
@@ -182,14 +200,19 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     });
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-    jPanel1.add(jcbAutomaticSearch, gridBagConstraints);
+    gridBagConstraints.weightx = 1.0;
+    jpAvtomaticnoIskanje.add(jcbAutomaticSearch, gridBagConstraints);
 
     jsDataSourceDelay.setModel(this.getSpinnerModel());
     jsDataSourceDelay.setToolTipText("Zamik pri avtomatiènem iskanju");
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
     gridBagConstraints.weightx = 1.0;
-    jPanel1.add(jsDataSourceDelay, gridBagConstraints);
+    jpAvtomaticnoIskanje.add(jsDataSourceDelay, gridBagConstraints);
+
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+    jpOptions.add(jpAvtomaticnoIskanje, gridBagConstraints);
 
     jbRefresh.setText("Osveži");
     jbRefresh.addActionListener(new java.awt.event.ActionListener() {
@@ -199,7 +222,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     });
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-    jPanel1.add(jbRefresh, gridBagConstraints);
+    jpOptions.add(jbRefresh, gridBagConstraints);
 
     jbPocisti.setText("Poèisti");
     jbPocisti.addActionListener(new java.awt.event.ActionListener() {
@@ -210,7 +233,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-    jPanel1.add(jbPocisti, gridBagConstraints);
+    jpOptions.add(jbPocisti, gridBagConstraints);
 
     jbIsci.setText("Išèi");
     jbIsci.setEnabled(addSearchButton);
@@ -222,11 +245,11 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-    jPanel1.add(jbIsci, gridBagConstraints);
+    jpOptions.add(jbIsci, gridBagConstraints);
 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    add(jPanel1, gridBagConstraints);
+    add(jpOptions, gridBagConstraints);
   }// </editor-fold>//GEN-END:initComponents
 
   private void jbIsciActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbIsciActionPerformed
@@ -291,18 +314,18 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     dbDataSourceFilter.reload(true);
     fireActionPerformed("RELOAD");
   }//GEN-LAST:event_jbRefreshActionPerformed
-
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private com.openitech.db.filters.JPDbDataSourceFilter dbDataSourceFilter;
   private com.openitech.db.filters.JPLimitGroup jPLimitGroup1;
-  private javax.swing.JPanel jPanel1;
-  private javax.swing.JSeparator jSeparator1;
+  private javax.swing.JPanel jPanel3;
   private javax.swing.JButton jbIsci;
   private javax.swing.JButton jbPocisti;
   private javax.swing.JButton jbRefresh;
   private javax.swing.JCheckBox jcbAutomaticSearch;
   private javax.swing.JLabel jlLimit;
+  private javax.swing.JPanel jpAvtomaticnoIskanje;
   private javax.swing.JPanel jpLimitParameter;
+  private javax.swing.JPanel jpOptions;
   private javax.swing.JSpinner jsDataSourceDelay;
   // End of variables declaration//GEN-END:variables
   private List<ActionListener> actionListeners = new ArrayList<ActionListener>();
@@ -315,5 +338,34 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     for (ActionListener actionListener : actionListeners) {
       actionListener.actionPerformed(new ActionEvent(this, 1, command));
     }
+  }
+
+  public void hideAutoSeekPanel() {
+    jpOptions.remove(jpAvtomaticnoIskanje);
+  }
+
+  public void hideClearButton() {
+    jpOptions.remove(jbPocisti);
+  }
+
+  public void hideSeekButton() {
+    jpOptions.remove(jbIsci);
+  }
+
+  public void hidePanel() {
+    jpOptions.remove(jpOptions);
+  }
+
+  public void hideReloadButton() {
+    jpOptions.remove(jbRefresh);
+  }
+
+  public void hideTopPanel() {
+    jpOptions.remove(jpLimitParameter);
+  }
+
+  public void removeAllItems() {
+    setBorder(null);
+    remove(jpOptions);
   }
 }

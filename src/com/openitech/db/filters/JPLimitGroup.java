@@ -38,6 +38,23 @@ public class JPLimitGroup extends javax.swing.JPanel {
           parameter.reloadDataSources();
         }
       });
+
+      if (parameter.isHideTop10()) {
+        remove(jrbLimit10);
+      }
+      if (parameter.isHideTop50()) {
+        remove(jrbLimit50);
+      }
+      if (parameter.isHideTop100()) {
+        remove(jrbLimit100);
+      }
+      if (parameter.isHideTop1000()) {
+        remove(jrbLimit1000);
+      }
+
+      if (parameter.isHideTopAll()) {
+        remove(jrbLimitAll);
+      }
     }
   }
 
@@ -139,12 +156,11 @@ public class JPLimitGroup extends javax.swing.JPanel {
     }//GEN-LAST:event_jrbLimit1000ActionPerformed
 
     private void jrbLimitAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jrbLimitAllActionPerformed
-     // TODO add your handling code here:
+      // TODO add your handling code here:
       for (SubstSqlParameter substSqlParameter : parameters) {
         substSqlParameter.setValue("  ");
       }
     }//GEN-LAST:event_jrbLimitAllActionPerformed
-
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.ButtonGroup buttonGroup1;
   private javax.swing.JRadioButton jrbLimit10;

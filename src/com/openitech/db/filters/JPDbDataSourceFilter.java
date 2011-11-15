@@ -436,7 +436,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
 
             gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            //gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.weightx = 1.0;
             jpHoldingPanel.add(jcbSifrantOnPanel, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
 
@@ -723,10 +724,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
 
             if (item.getSeekType() != DataSourceFilters.SeekType.PREFORMATTED) { //preformated
-              if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jcbNumberType.getItemCount()) {
+              if ((item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS) >= jDbComboBox1.getItemCount()) {
                 item.setSeekType(com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
               }
-              if (item.getSeekType() >= jcbNumberType.getItemCount()) {
+              if (item.getSeekType() >= jDbComboBox1.getItemCount()) {
                 jDbComboBox1.setSelectedIndex(item.getSeekType() - com.openitech.db.filters.DataSourceFilters.SeekType.EQUALS);
               } else {
                 jDbComboBox1.setSelectedIndex(item.getSeekType());

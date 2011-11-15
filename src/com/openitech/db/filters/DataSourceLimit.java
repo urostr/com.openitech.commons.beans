@@ -19,6 +19,107 @@ public class DataSourceLimit extends DbDataSource.SubstSqlParameter {
     super.setValue(limit.getValue());
   }
 
+  protected boolean hideTop10 = false;
+
+  /**
+   * Get the value of hideTop10
+   *
+   * @return the value of hideTop10
+   */
+  public boolean isHideTop10() {
+    return hideTop10;
+  }
+
+  /**
+   * Set the value of hideTop10
+   *
+   * @param hideTop10 new value of hideTop10
+   */
+  public void setHideTop10(boolean hideTop10) {
+    this.hideTop10 = hideTop10;
+  }
+
+  protected boolean hideTop50 = false;
+
+  /**
+   * Get the value of hideTop10
+   *
+   * @return the value of hideTop10
+   */
+  public boolean isHideTop50() {
+    return hideTop50;
+  }
+
+  /**
+   * Set the value of hideTop10
+   *
+   * @param hideTop10 new value of hideTop10
+   */
+  public void setHideTop50(boolean hideTop50) {
+    this.hideTop50 = hideTop50;
+  }
+
+  protected boolean hideTop100 = false;
+
+  /**
+   * Get the value of hideTop10
+   *
+   * @return the value of hideTop10
+   */
+  public boolean isHideTop100() {
+    return hideTop100;
+  }
+
+  /**
+   * Set the value of hideTop10
+   *
+   * @param hideTop10 new value of hideTop10
+   */
+  public void setHideTop100(boolean hideTop100) {
+    this.hideTop100 = hideTop100;
+  }
+
+  protected boolean hideTop1000 = false;
+
+  /**
+   * Get the value of hideTop10
+   *
+   * @return the value of hideTop10
+   */
+  public boolean isHideTop1000() {
+    return hideTop1000;
+  }
+
+  /**
+   * Set the value of hideTop10
+   *
+   * @param hideTop10 new value of hideTop10
+   */
+  public void setHideTop1000(boolean hideTop1000) {
+    this.hideTop1000 = hideTop1000;
+  }
+
+  protected boolean hideTopAll = false;
+
+  /**
+   * Get the value of hideTop10
+   *
+   * @return the value of hideTop10
+   */
+  public boolean isHideTopAll() {
+    return hideTopAll;
+  }
+
+  /**
+   * Set the value of hideTop10
+   *
+   * @param hideTop10 new value of hideTop10
+   */
+  public void setHideTopAll(boolean hideTopAll) {
+    this.hideTopAll = hideTopAll;
+  }
+
+
   public enum Limit {
 
     L10 {
