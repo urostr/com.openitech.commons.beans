@@ -400,6 +400,23 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 
   @Override
   public Dimension getMaximumSize() {
+//    final Image temp = img == null ? defaultImage : img;
+//    if (temp != null) {
+//      //it has not been explicitly set, so return the width/height of the image
+//      int imgWidth = temp.getWidth(null);
+//      int imgHeight = temp.getHeight(null);
+//      if (imgWidth == -1 || imgHeight == -1) {
+//        return new Dimension(600, 400);
+//      }
+//
+//      Dimension maximumSize = new Dimension(getWidth(), getHeight());
+//      if (imgWidth < maximumSize.width && imgHeight < maximumSize.height) {
+//        return new Dimension(imgWidth, imgHeight);
+//      } else {
+//        return maximumSize;
+//      }
+//
+//    }
     return new Dimension(600, 400);
   }
 
@@ -440,17 +457,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
     } else {
       return getMaximumSize();
     }
-//    if (preferredSize == null && img != null) {
-//      //it has not been explicitly set, so return the width/height of the image
-//      int width = img.getWidth(null);
-//      int height = img.getHeight(null);
-//      if (width == -1 || height == -1) {
-//        return super.getPreferredSize();
-//      }
-//      return new Dimension(width, height);
-//    } else {
-//      return super.getPreferredSize();
-//    }
+
   }
   private final Runnable repaint = new Runnable() {
 
