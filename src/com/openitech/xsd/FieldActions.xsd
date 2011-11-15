@@ -46,6 +46,7 @@
                     <xsd:element name="IdSifranta" type="xsd:int" minOccurs="1" maxOccurs="1"/>
                     <xsd:element name="IdSifre" type="xsd:string" minOccurs="1" maxOccurs="1"/>
                   </xsd:all>
+                  <xsd:attribute name="DontOverride" type="xsd:boolean"/>
                 </xsd:complexType>
               </xsd:element>
               <xsd:element name="ColumnJoins" minOccurs="1" maxOccurs="unbounded">

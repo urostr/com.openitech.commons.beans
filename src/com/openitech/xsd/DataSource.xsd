@@ -35,6 +35,18 @@
                     <xsd:element name="ClassName" type="xsd:string" minOccurs="0"></xsd:element>
                     <xsd:element name="ProviderClassName" type="xsd:string" minOccurs="0"></xsd:element>
                     <xsd:element name="Sharing" type="tns:Sharing" minOccurs="0" default="SHARING_GLOBAL"></xsd:element>
+                    <xsd:element name="DisableAutoSeek" type="xsd:boolean" minOccurs="0"></xsd:element>
+                    <xsd:element name="TopList" minOccurs="0">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="HideTop10" type="xsd:boolean"/>
+                          <xsd:element name="HideTop50" type="xsd:boolean"/>
+                          <xsd:element name="HideTop100" type="xsd:boolean"/>
+                          <xsd:element name="HideTop1000" type="xsd:boolean"/>
+                          <xsd:element name="HideTopAll" type="xsd:boolean"/>
+                        </xsd:sequence>
+                      </xsd:complexType>
+                    </xsd:element>
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
@@ -90,6 +102,39 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+
+        <xsd:element name="WorkSpaceInformation" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="Panels" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:choice>
+                    <xsd:element name="ClassName" type="xsd:string"></xsd:element>
+                    <xsd:element name="Model">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="ColumnDefinition"  maxOccurs="unbounded">
+                            <xsd:complexType>
+                              <xsd:sequence>
+                                <xsd:element name="ColumnEntry" maxOccurs="unbounded" type="xsd:string"/>
+                              </xsd:sequence>
+                              <xsd:attribute name="Description" type="xsd:string"/>
+                              <xsd:attribute name="DataSourceWorkSpaceId" type="xsd:int"/>
+                              <xsd:attribute name="DataSourceWorkAreaId" type="xsd:int"/>
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:sequence>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:choice>
+                  <xsd:attribute name="Title" type="xsd:string"/>
+                  <xsd:attribute name="WorkSpaceId" type="xsd:int"/>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+
         <xsd:element name="AssociatedTasks" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
@@ -104,11 +149,74 @@
                       </xsd:complexType>
                     </xsd:element>
                     <xsd:element name="Factory" type="tns:Factory"></xsd:element>
+                    <xsd:element name="AutoInsert">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="AutoInsert" maxOccurs="1" type="xsd:boolean"></xsd:element>
+                        </xsd:sequence>
+                        <xsd:attribute name="DontMerge" type="xsd:boolean"/>
+                      </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="Back">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="Back" maxOccurs="1" type="xsd:boolean"></xsd:element>
+                        </xsd:sequence>
+                        <xsd:attribute name="DontMerge" type="xsd:boolean"/>
+                      </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="OpenWorkArea" minOccurs="0">
+                      <xsd:complexType>
+                        <xsd:all>
+                          <xsd:element name="WorkSpaceId" type="xsd:int" minOccurs="0"/>
+                          <xsd:element name="WorkAreaId" type="xsd:int" minOccurs="0"/>
+                        </xsd:all>
+                        <xsd:attribute name="OpenDataEntry" type="xsd:boolean"/>
+                        <xsd:attribute name="DontMerge" type="xsd:boolean"/>
+                      </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="DefaultTask" minOccurs="0">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="Title" type="xsd:string" minOccurs="0"/>
+                          <xsd:element name="TaskTitle" type="xsd:string" minOccurs="0"/>
+                          <xsd:element name="Hide" type="xsd:boolean" minOccurs="0"/>
+                        </xsd:sequence>
+                      </xsd:complexType>
+                    </xsd:element>
                   </xsd:choice>
                   <xsd:attribute name="Title" type="xsd:string"/>
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="TableDoubleClick" minOccurs="0">
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="OpenWorkArea" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:all>
+                    <xsd:element name="WorkSpaceId" type="xsd:int" minOccurs="0"/>
+                    <xsd:element name="WorkAreaId" type="xsd:int" minOccurs="0"/>
+                  </xsd:all>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="OpenDataEntry" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:all>
+                    <xsd:element name="OpenDataEntry" type="xsd:boolean" minOccurs="0"/>
+                  </xsd:all>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="Ignore" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:all>
+                    <xsd:element name="Ignore" type="xsd:boolean" minOccurs="0"/>
+                  </xsd:all>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:choice>
           </xsd:complexType>
         </xsd:element>
         <xsd:element name="EventImporters" minOccurs="0">
@@ -175,6 +283,7 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+        <xsd:element name="DisableTab" minOccurs="0" type="xsd:boolean"/>
       </xsd:all>
       <xsd:attribute name="readOnly" type="xsd:boolean" default="false"/>
       <xsd:attribute name="CanExportData" type="xsd:boolean" default="true"/>
@@ -228,6 +337,7 @@
                   <xsd:element name="SeekParameter" type="tns:SeekParameters" maxOccurs="1"></xsd:element>
                 </xsd:all>
                 <xsd:attribute name="WorkAreaId" type="xsd:int"/>
+                <xsd:attribute name="WorkSpaceId" type="xsd:int"/>
               </xsd:complexType>
 
             </xsd:element>
@@ -245,10 +355,24 @@
                   <xsd:element name="OtherColumName" type="xsd:string" maxOccurs="1"></xsd:element>
                 </xsd:all>
                 <xsd:attribute name="WorkAreaId" type="xsd:int"/>
+                <xsd:attribute name="WorkSpaceId" type="xsd:int"/>
               </xsd:complexType>
             </xsd:element>
           </xsd:sequence>
 
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="Layout" minOccurs="0">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="HideTop" type="xsd:boolean"/>
+            <xsd:element name="HideAutoSeek" type="xsd:boolean" />
+            <xsd:element name="HideReload" type="xsd:boolean"/>
+            <xsd:element name="HideClear" type="xsd:boolean"/>
+            <xsd:element name="HideSeek" type="xsd:boolean"/>
+            <xsd:element name="HidePanel" type="xsd:boolean"/>
+            
+          </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
     </xsd:all>
@@ -538,6 +662,7 @@
           <xsd:all>
             <xsd:element name="Name" type="xsd:string"></xsd:element>
             <xsd:element name="Field" type="xsd:string"></xsd:element>
+            <xsd:element name="Preformated" type="xsd:boolean" minOccurs="0"/>
             <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
