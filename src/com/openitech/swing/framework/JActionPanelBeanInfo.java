@@ -29,14 +29,15 @@ public class JActionPanelBeanInfo extends SimpleBeanInfo {
     private static final int PROPERTY_childUpdatesPanels = 0;
     private static final int PROPERTY_filterPanel = 1;
     private static final int PROPERTY_filterPanelContainer = 2;
-    private static final int PROPERTY_taskPane = 3;
-    private static final int PROPERTY_taskPaneContainer = 4;
-    private static final int PROPERTY_taskPanes = 5;
+    private static final int PROPERTY_informationPaneContainer = 3;
+    private static final int PROPERTY_taskPane = 4;
+    private static final int PROPERTY_taskPaneContainer = 5;
+    private static final int PROPERTY_taskPanes = 6;
 
     // Property array 
     /*lazy PropertyDescriptor*/
     private static PropertyDescriptor[] getPdescriptor(){
-        PropertyDescriptor[] properties = new PropertyDescriptor[6];
+        PropertyDescriptor[] properties = new PropertyDescriptor[7];
     
         try {
             properties[PROPERTY_childUpdatesPanels] = new PropertyDescriptor ( "childUpdatesPanels", com.openitech.swing.framework.JActionPanel.class, "isChildUpdatesPanels", "setChildUpdatesPanels" ); // NOI18N
@@ -44,6 +45,8 @@ public class JActionPanelBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_filterPanel].setPreferred ( true );
             properties[PROPERTY_filterPanelContainer] = new PropertyDescriptor ( "filterPanelContainer", com.openitech.swing.framework.JActionPanel.class, "getFilterPanelContainer", "setFilterPanelContainer" ); // NOI18N
             properties[PROPERTY_filterPanelContainer].setPreferred ( true );
+            properties[PROPERTY_informationPaneContainer] = new PropertyDescriptor ( "informationPaneContainer", com.openitech.swing.framework.JActionPanel.class, "getInformationPaneContainer", "setInformationPaneContainer" ); // NOI18N
+            properties[PROPERTY_informationPaneContainer].setPreferred ( true );
             properties[PROPERTY_taskPane] = new PropertyDescriptor ( "taskPane", com.openitech.swing.framework.JActionPanel.class, "getTaskPane", "setTaskPane" ); // NOI18N
             properties[PROPERTY_taskPane].setPreferred ( true );
             properties[PROPERTY_taskPaneContainer] = new PropertyDescriptor ( "taskPaneContainer", com.openitech.swing.framework.JActionPanel.class, "getTaskPaneContainer", "setTaskPaneContainer" ); // NOI18N
@@ -51,7 +54,7 @@ public class JActionPanelBeanInfo extends SimpleBeanInfo {
             properties[PROPERTY_taskPanes] = new PropertyDescriptor ( "taskPanes", com.openitech.swing.framework.JActionPanel.class, "getTaskPanes", null ); // NOI18N
         }
         catch(IntrospectionException e) {
-            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
+            e.printStackTrace();
         }//GEN-HEADEREND:Properties
     
     // Here you can add code for customizing the properties array.
@@ -79,9 +82,9 @@ public class JActionPanelBeanInfo extends SimpleBeanInfo {
         MethodDescriptor[] methods = new MethodDescriptor[2];
     
         try {
-            methods[METHOD_add0] = new MethodDescriptor ( com.openitech.swing.framework.JActionPanel.class.getMethod("add", new Class[] {org.jdesktop.swingx.JXTaskPane.class})); // NOI18N
+            methods[METHOD_add0] = new MethodDescriptor(com.openitech.swing.framework.JActionPanel.class.getMethod("add", new Class[] {org.jdesktop.swingx.JXTaskPane.class})); // NOI18N
             methods[METHOD_add0].setDisplayName ( "" );
-            methods[METHOD_remove1] = new MethodDescriptor ( com.openitech.swing.framework.JActionPanel.class.getMethod("remove", new Class[] {org.jdesktop.swingx.JXTaskPane.class})); // NOI18N
+            methods[METHOD_remove1] = new MethodDescriptor(com.openitech.swing.framework.JActionPanel.class.getMethod("remove", new Class[] {org.jdesktop.swingx.JXTaskPane.class})); // NOI18N
             methods[METHOD_remove1].setDisplayName ( "" );
         }
         catch( Exception e) {}//GEN-HEADEREND:Methods
