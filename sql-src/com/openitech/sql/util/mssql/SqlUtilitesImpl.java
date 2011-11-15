@@ -2132,7 +2132,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   public Set<Field> getPrimaryKey(int idSifranta, String idSifre) throws SQLException {
     Set<Field> primaryKeys = new HashSet<Field>();
     if (findPrimaryKey == null) {
-      findPrimaryKey = ConnectionManager.getInstance().getConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findPrimaryKeys.sql", "cp1250"));
+      findPrimaryKey = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findPrimaryKeys.sql", "cp1250"));
     }
 
     int param = 1;
@@ -4266,7 +4266,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException {
+  public synchronized Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException {
     Map<CaseInsensitiveString, Field> result = new HashMap<CaseInsensitiveString, Field>();
     if (preparedFields == null) {
       if (get_fields == null) {
