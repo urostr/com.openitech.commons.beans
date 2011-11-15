@@ -4,6 +4,9 @@
  */
 package com.openitech.db.model.factory;
 
+import com.openitech.db.components.dogodki.BackTask;
+import com.openitech.db.components.dogodki.InsertTask;
+import com.openitech.db.components.dogodki.OpenWorkAreaTask;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.filters.DataSourceLimit;
@@ -19,11 +22,14 @@ import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
+import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters.TopList;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners;
 import com.openitech.db.model.xml.config.Workarea.DataSource.Listeners.Listener;
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters;
+
 import com.openitech.db.model.xml.config.Workarea.EventImporters;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
+import com.openitech.db.model.xml.config.Workarea.WorkSpaceInformation;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.SQLMaterializedView;
 import com.openitech.db.model.sql.SQLOrderByParameter;
@@ -36,6 +42,7 @@ import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Sharing;
 import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
+import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.DefaultTask;
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views;
 import com.openitech.importer.JImportEventsModel;
 import com.openitech.sql.util.SqlUtilities;
@@ -47,10 +54,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JPanel;
 import javax.swing.event.ListDataListener;
 import javax.xml.bind.JAXBException;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -146,14 +155,14 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         this.tableModel = createTableModel();
 
 
-        if (dataSourceXML.getInformation() != null) {
-          createInformationPanels();
-        }
+        createInformationPanels();
+
         getTaskPanes().addAll(createTaskPanes(dataSourceXML));
 
-        if (dataSourceXML.getDataEntryPanel() != null) {
-          createDataEntryPanel();
-        }
+        createDataEntryPanel();
+
+        configureOptions();
+
       } catch (Throwable ex) {
         Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
       } finally {
@@ -348,6 +357,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         canAddRows = dataSourceElement.isCanAddRows();
         canDeleteRows = dataSourceElement.isCanDeleteRows();
       }
+      if (creationParameters != null) {
+        if (creationParameters.isDisableAutoSeek() != null) {
+          dataSource.setAutoReload(!creationParameters.isDisableAutoSeek());
+        }
+      }
 
       setCanExportData(dataSourceXML.isCanExportData());
 
@@ -420,6 +434,20 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         dataSourceLimit = new DataSourceLimit(DATA_SOURCE_LIMIT);
         dataSourceLimit.setValue(" TOP 0 ");
         dataSourceLimit.addDataSource(dataSource);
+
+        if (creationParameters != null) {
+          if (dataSourceLimit != null) {
+            TopList topList = creationParameters.getTopList();
+            if (topList != null) {
+              dataSourceLimit.setHideTop10(topList.isHideTop10());
+              dataSourceLimit.setHideTop50(topList.isHideTop50());
+              dataSourceLimit.setHideTop100(topList.isHideTop100());
+              dataSourceLimit.setHideTop1000(topList.isHideTop1000());
+              dataSourceLimit.setHideTopAll(topList.isHideTopAll());
+            }
+          }
+        }
+
       }
 
       return dataSourceLimit;
@@ -445,22 +473,62 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void createInformationPanels() {
-    for (com.openitech.db.model.xml.config.Workarea.Information.Panels panel : dataSourceXML.getInformation().getPanels()) {
-      try {
-        Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), panel.getGroovy(), panel.getClassName(), config.getClass()).newInstance(config);
+    if (dataSourceXML.getInformation() != null) {
+      for (com.openitech.db.model.xml.config.Workarea.Information.Panels panel : dataSourceXML.getInformation().getPanels()) {
+        try {
+          Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), panel.getGroovy(), panel.getClassName(), config.getClass()).newInstance(config);
 
-        if (newInstance instanceof java.awt.Component) {
-          this.informationPanels.put(panel.getTitle(), (java.awt.Component) newInstance);
-        } else {
-          this.linkedObjects.put(panel.getTitle(), newInstance);
+          if (newInstance instanceof java.awt.Component) {
+            this.informationPanels.put(panel.getTitle(), (java.awt.Component) newInstance);
+          } else {
+            this.linkedObjects.put(panel.getTitle(), newInstance);
+          }
+          if (newInstance instanceof DataSourceObserver) {
+            ((DataSourceObserver) newInstance).setDataSource(dataSource);
+          }
+        } catch (Exception ex) {
+          Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (newInstance instanceof DataSourceObserver) {
-          ((DataSourceObserver) newInstance).setDataSource(dataSource);
-        }
-      } catch (Exception ex) {
-        Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
+
+    if (dataSourceXML.getWorkSpaceInformation() != null) {
+      WorkSpaceInformation workSpaceInformation = dataSourceXML.getWorkSpaceInformation();
+      for (WorkSpaceInformation.Panels panels : workSpaceInformation.getPanels()) {
+        Integer workSpaceId = panels.getWorkSpaceId();
+        if (workSpaceId != null) {
+          List<JPanel> components;
+          if (this.workSpaceInformationPanels.containsKey(workSpaceId)) {
+            components = workSpaceInformationPanels.get(workSpaceId);
+          } else {
+            components = new LinkedList<JPanel>();
+            this.workSpaceInformationPanels.put(workSpaceId, components);
+          }
+          if (panels.getClassName() != null) {
+            try {
+              Object newInstance = ClassInstanceFactory.getInstance("wa" + this.getOpis() + "_" + System.currentTimeMillis(), null, panels.getClassName(), config.getClass()).newInstance(config);
+
+
+              components.add(new com.openitech.db.components.dogodki.WorkSpaceInformation(panels, (java.awt.Component) newInstance));
+              if (newInstance instanceof DataSourceObserver) {
+                ((DataSourceObserver) newInstance).setDataSource(dataSource);
+              }
+            } catch (Exception ex) {
+              Logger.getLogger(DbDataModel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+          } else if (panels.getModel() != null) {
+            components.add(new com.openitech.db.components.dogodki.WorkSpaceInformation(panels));
+
+          }
+        }
+      }
+
+    }
+  }
+
+  public void configureOptions() {
+    Boolean disableTab = dataSourceXML.isDisableTab();
+    this.disabledTab = disableTab != null && disableTab;
   }
 
   protected DbTableModel createTableModel() {
@@ -529,6 +597,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   protected List<JXTaskPane> createTaskPanes(com.openitech.db.model.xml.config.Workarea dataSourceXML) throws ClassNotFoundException {
     List<JXTaskPane> result = new ArrayList<JXTaskPane>();
     try {
+
       final AssociatedTasks associatedTasks = dataSourceXML.getAssociatedTasks();
       if ((associatedTasks != null) && !associatedTasks.getTaskPanes().isEmpty()) {
         for (TaskPanes taskPane : associatedTasks.getTaskPanes()) {
@@ -539,6 +608,16 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             newInstance = new JXDataSourceTaskPane(config, dataSource);
             ((JXDataSourceTaskPane) newInstance).setTitle(taskPane.getTitle());
             ((JXDataSourceTaskPane) newInstance).addTasks(taskPane.getTaskList().getTasks());
+          } else if (taskPane.getAutoInsert() != null && taskPane.getAutoInsert().isAutoInsert()) {
+            newInstance = new InsertTask(taskPane.getTitle(), taskPane.getAutoInsert().isDontMerge());
+          } else if (taskPane.getBack() != null && taskPane.getBack().isBack()) {
+            newInstance = new BackTask(taskPane.getTitle(), taskPane.getBack().isDontMerge());
+          } else if (taskPane.getOpenWorkArea() != null) {
+            TaskPanes.OpenWorkArea openWorkArea = taskPane.getOpenWorkArea();
+            newInstance = new OpenWorkAreaTask(taskPane.getTitle(), openWorkArea.getWorkSpaceId(), openWorkArea.getWorkAreaId(), openWorkArea.isOpenDataEntry(), openWorkArea.isDontMerge());
+          } else if (taskPane.getDefaultTask() != null) {
+            DefaultTask defaultTask = taskPane.getDefaultTask();
+            newInstance = (new com.openitech.db.components.dogodki.DefaultTask(defaultTask.getTitle(), defaultTask.getTaskTitle(), defaultTask.isHide() == null ? false : defaultTask.isHide()));
           }
           if (newInstance != null) {
             if (newInstance instanceof DataSourceObserver) {
@@ -609,31 +688,35 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   private void createDataEntryPanel() throws ClassNotFoundException {
-    com.openitech.db.model.xml.config.Workarea.DataEntryPanel panel = dataSourceXML.getDataEntryPanel();
+    if (dataSourceXML.getDataEntryPanel() != null) {
 
-    try {
-      Object newInstance = ClassInstanceFactory.getInstance("wa_dep_" + this.getOpis() + "_" + System.currentTimeMillis(), panel.getGroovy(), panel.getClassName(), config.getClass()).newInstance(config);
-      if (newInstance instanceof javax.swing.JComponent) {
-        this.dataEntryPanel = (javax.swing.JComponent) newInstance;
+      com.openitech.db.model.xml.config.Workarea.DataEntryPanel panel = dataSourceXML.getDataEntryPanel();
+
+      try {
+        Object newInstance = ClassInstanceFactory.getInstance("wa_dep_" + this.getOpis() + "_" + System.currentTimeMillis(), panel.getGroovy(), panel.getClassName(), config.getClass()).newInstance(config);
+        if (newInstance instanceof javax.swing.JComponent) {
+          this.dataEntryPanel = (javax.swing.JComponent) newInstance;
+        }
+        if (newInstance instanceof DataSourceObserver) {
+          ((DataSourceObserver) newInstance).setDataSource(dataSource);
+        }
+      } catch (NoSuchMethodException ex) {
+        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (InstantiationException ex) {
+        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (IllegalAccessException ex) {
+        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (IllegalArgumentException ex) {
+        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (InvocationTargetException ex) {
+        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
       }
-      if (newInstance instanceof DataSourceObserver) {
-        ((DataSourceObserver) newInstance).setDataSource(dataSource);
-      }
-    } catch (NoSuchMethodException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (InstantiationException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (IllegalAccessException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (IllegalArgumentException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (InvocationTargetException ex) {
-      Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
 
   private void addListeners() {
     try {
+      tableDoubleClick = dataSourceXML.getTableDoubleClick();
       final DataSource dataSourceElement = dataSourceXML.getDataSource();
       if (dataSourceElement != null) {
         Listeners listeners = dataSourceElement.getListeners();
