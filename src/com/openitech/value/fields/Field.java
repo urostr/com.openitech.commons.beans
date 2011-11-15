@@ -104,6 +104,16 @@ public class Field implements Cloneable {
   public void setOpis(String opis) {
     this.opis = opis;
   }
+  private boolean uporabiPrivzetoVrednost = true;
+
+  public void setUporabiPrivzetoVrednost(boolean uporabiPrivzetoVrednost) {
+    this.uporabiPrivzetoVrednost = uporabiPrivzetoVrednost;
+  }
+
+  public boolean isUporabiPrivzetoVrednost() {
+    return uporabiPrivzetoVrednost;
+  }
+  
 
   @Override
   public boolean equals(Object obj) {
@@ -154,8 +164,6 @@ public class Field implements Cloneable {
   public void setFieldIndex(int fieldIndex) {
     this.fieldIndex = fieldIndex;
   }
-
-  
 
   public Integer getIdPolja() {
     return idPolja;
