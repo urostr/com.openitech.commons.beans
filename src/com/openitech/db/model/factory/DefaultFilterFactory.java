@@ -8,6 +8,9 @@ import com.openitech.db.filters.DefaultFilterPanel;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.xml.config.DataSourceFilter;
+import com.openitech.db.model.xml.config.DataSourceFilter.Layout;
+import com.openitech.db.model.xml.config.DataSourceParametersFactory.Filters;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,10 +67,42 @@ public class DefaultFilterFactory extends AbstractDataSourceParametersFactory im
     configure(viewMenuItems);
 
     filterPanel = new DefaultFilterPanel(config.getDataModel().getDocuments(), filtersMap);
-    config.getDataModel().getDocuments().putAll(filterPanel.getJPDbDataSourceFilter().getNamedDocuments());
-
+    if (config.getDataModel() != null) {
+      if (config.getDataModel().getDocuments() != null) {
+        config.getDataModel().getDocuments().putAll(filterPanel.getJPDbDataSourceFilter().getNamedDocuments());
+      }
+    }
     viewMenuItems.add(filterPanel.getJPDbDataSourceFilter().getFilterMenuItem());
-
+    if(dataSourceParametersFactory != null){
+    Filters filters1 = dataSourceParametersFactory.getFilters();
+      List<DataSourceFilter> dataSourceFilters = filters1.getDataSourceFilter();
+      if(dataSourceFilters != null){
+        for (DataSourceFilter dataSourceFilter : dataSourceFilters) {
+          Layout layout = dataSourceFilter.getLayout();
+          if(layout != null){
+            if(layout.isHideAutoSeek()){
+              filterPanel.hideAutoSeekPanel();
+            }
+            if(layout.isHideClear()){
+              filterPanel.hideClearButton();
+            }
+            if(layout.isHidePanel()){
+              filterPanel.hidePanel();
+            }
+            if(layout.isHideReload()){
+              filterPanel.hideReloadButton();
+            }
+            if(layout.isHideSeek()){
+              filterPanel.hideSeekButton();
+            }
+            if(layout.isHideTop()){
+              filterPanel.hideTopPanel();
+            }
+            break;
+          }
+        }
+      }
+    }
   }
 
   @Override

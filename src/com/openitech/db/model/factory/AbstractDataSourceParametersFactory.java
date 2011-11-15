@@ -183,7 +183,8 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
         if (dataSourceFilter.getFilterParameter() != null) {
           FilterParameter filterParameter = dataSourceFilter.getFilterParameter();
           for (FilterParameter.WorkAreaParameter workAreaParameter : filterParameter.getWorkAreaParameter()) {
-            int workAreaId = workAreaParameter.getWorkAreaId();
+            Integer workAreaId = workAreaParameter.getWorkAreaId();
+            Integer workSpaceId = workAreaParameter.getWorkSpaceId();
 
             String otherColumName = workAreaParameter.getOtherColumName();
             SeekParameters seekParameter = workAreaParameter.getSeekParameter();
@@ -222,7 +223,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 filter.addRequired(seekType);
               }
 
-              workAreaFilters.add(new JWorkAreaFilter(workAreaId, filter, seekType, otherColumName));
+              workAreaFilters.add(new JWorkAreaFilter(workAreaId, workSpaceId, filter, seekType, otherColumName));
             } else if (seekParameter.getIntegerSeekType() != null) {
               final SeekParameters.IntegerSeekType parameter = seekParameter.getIntegerSeekType();
 
@@ -251,7 +252,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 filter.addRequired(integerSeekType);
               }
 
-              workAreaFilters.add(new JWorkAreaFilter(workAreaId, filter, integerSeekType, otherColumName));
+              workAreaFilters.add(new JWorkAreaFilter(workAreaId, workSpaceId, filter, integerSeekType, otherColumName));
             }
           }
 
@@ -261,9 +262,10 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
           AutoInsertColumns autoInsertColumns = dataSourceFilter.getAutoInsertColumns();
           for (AutoInsertColumns.Column column : autoInsertColumns.getColumn()) {
             Integer workAreaId = column.getWorkAreaId();
+            Integer workSpaceId = column.getWorkSpaceId();
             String columName = column.getColumName();
             String otherColumName = column.getOtherColumName();
-            autoInsertValues.add(new AutoInsertValue(workAreaId, dataSource, columName, otherColumName));
+            autoInsertValues.add(new AutoInsertValue(workAreaId, workSpaceId, dataSource, columName, otherColumName));
           }
         }
 
@@ -338,9 +340,15 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
             } else if (seekParameter.getBetweenDateSeekType() != null) {
               final SeekParameters.BetweenDateSeekType parameter = seekParameter.getBetweenDateSeekType();
 
+
               String field = parameter.getField();
 
-              DataSourceFilters.BetweenDateSeekType betweenDateSeekType = new DataSourceFilters.BetweenDateSeekType(field);
+              DataSourceFilters.BetweenDateSeekType betweenDateSeekType;
+              if (parameter.isPreformated() != null) {
+                betweenDateSeekType = new DataSourceFilters.BetweenDateSeekType(field, parameter.isPreformated());
+              } else {
+                betweenDateSeekType = new DataSourceFilters.BetweenDateSeekType(field);
+              }
               if (convertToVarchar != null) {
                 betweenDateSeekType.setConvertToVarchar(convertToVarchar);
               }

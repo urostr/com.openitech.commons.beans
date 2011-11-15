@@ -4,12 +4,14 @@
  */
 package com.openitech.db.model.factory;
 
+import com.openitech.db.components.dogodki.WorkSpaceInformation;
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.filters.JWorkAreaFilter;
 import com.openitech.db.model.AutoInsertValue;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbTableModel;
+import com.openitech.db.model.xml.config.Workarea.TableDoubleClick;
 import com.openitech.importer.JImportEventsModel;
 import com.openitech.swing.framework.context.AssociatedTasks;
 import com.openitech.value.fields.Field;
@@ -25,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
+import javax.swing.JPanel;
 import javax.xml.bind.JAXBException;
 import org.jdesktop.swingx.JXTaskPane;
 
@@ -58,15 +61,6 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
     return additionalParameters;
   }
 
-  /**
-   * Get the value of dbDataModel
-   *
-   * @return the value of dbDataModel
-   */
-  public DbDataModel getDbDataModel() {
-    return dbDataModel;
-  }
-
   public void configure(String opis, Class clazz, String resourceName) throws SQLException, JAXBException {
     configure(this, opis, new com.openitech.db.model.factory.DataSourceConfig(dbDataModel), clazz, resourceName);
   }
@@ -77,6 +71,10 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
 
   public void configure(String opis, String xml) throws SQLException, JAXBException {
     configure(opis, unmarshal(xml, null, null, null), new com.openitech.db.model.factory.DataSourceConfig(dbDataModel));
+  }
+
+  public void configure(String opis, String xml, com.openitech.db.model.factory.DataSourceConfig config) throws SQLException, JAXBException {
+    configure(opis, unmarshal(xml, null, null, null), config);
   }
 
   public void configure(String opis, Clob resource, com.openitech.db.model.factory.DataSourceConfig config) throws SQLException, JAXBException {
@@ -154,14 +152,11 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public Set<Field> getDataEntryValues() {
     return dataEntryValues;
   }
-
   protected List<JImportEventsModel> imporEventsModels = new ArrayList<JImportEventsModel>();
 
   public List<JImportEventsModel> getImporEventsModels() {
     return imporEventsModels;
   }
-
-  
   protected boolean taskList;
 
   /**
@@ -201,6 +196,16 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public Map<String, Component> getInformationPanels() {
     return informationPanels;
   }
+  protected Map<Integer, List<JPanel>> workSpaceInformationPanels = new LinkedHashMap<Integer, List<JPanel>>();
+
+  /**
+   * Get the value of informationPanels
+   *
+   * @return the value of informationPanels
+   */
+  public Map<Integer, List<JPanel>> getWorkSpaceInformationPanels() {
+    return workSpaceInformationPanels;
+  }
   protected Map<String, Object> linkedObjects = new LinkedHashMap<String, Object>();
 
   /**
@@ -221,13 +226,21 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   public List<JWorkAreaFilter> getWorkAreaFilters() {
     return workAreaFilters;
   }
-
   protected List<AutoInsertValue> autoInsertValues = new ArrayList<AutoInsertValue>();
 
   public List<AutoInsertValue> getAutoInsertValue() {
     return autoInsertValues;
   }
+  protected TableDoubleClick tableDoubleClick = null;
 
+  public TableDoubleClick getTableDoubleClick() {
+    return tableDoubleClick;
+  }
+  protected boolean disabledTab = false;
+
+  public boolean isDisabledTab() {
+    return disabledTab;
+  }
   protected boolean canExportData = true;
 
   /**
