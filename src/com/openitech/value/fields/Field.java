@@ -113,7 +113,6 @@ public class Field implements Cloneable {
   public boolean isUporabiPrivzetoVrednost() {
     return uporabiPrivzetoVrednost;
   }
-  
 
   @Override
   public boolean equals(Object obj) {
@@ -301,6 +300,14 @@ public class Field implements Cloneable {
   private final static Pattern indexed = Pattern.compile("(.*)(\\d+)$");
 
   public static Field getField(String name, int fieldValueIndex, final java.util.Map<CaseInsensitiveString, Field> fields) {
+    LookupType fLookupType = null;
+    for (LookupType lookupType : LookupType.values()) {
+      if (name.startsWith(lookupType.getColumnPrefix())) {
+        name = name.substring(lookupType.getColumnPrefix().length());
+        fLookupType = lookupType;
+        break;
+      }
+    }
     Field field = fields.get(CaseInsensitiveString.valueOf(name));
     if (field == null) {
       final Matcher matcher = indexed.matcher(name);
@@ -311,7 +318,14 @@ public class Field implements Cloneable {
         field = fields.get(CaseInsensitiveString.valueOf(name));
       }
     }
-    return new Field(field.getIdPolja(), field.getName(), field.getType(), fieldValueIndex);
+    if (fLookupType != null) {
+      Field result = new Field(field.getIdPolja(), fLookupType.getColumnPrefix() + field.getName(), field.getType(), fieldValueIndex);
+      result.setLookup(true);
+      result.setLookupType(fLookupType);
+      return result;
+    } else {
+      return new Field(field.getIdPolja(), field.getName(), field.getType(), fieldValueIndex);
+    }
   }
 
   public Field getNonIndexedField() {
