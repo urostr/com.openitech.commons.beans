@@ -557,10 +557,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     List<String> eventColumns = dataSourceXML.getDataSource().getEventColumns();
     if (eventColumns.size() > 0) {
       for (String imePolja : eventColumns) {
-        Field field = SqlUtilities.getInstance().getPreparedFields().get(new CaseInsensitiveString(imePolja));
-        if (field != null) {
-          field.setFieldIndex(1);
-        } else {
+        Field field = Field.getField(imePolja, 1, SqlUtilities.getInstance().getPreparedFields());
+        if (field == null) {
           dataSource.setSafeMode(false);
           dataSource.setQueuedDelay(0);
           dataSource.filterChanged();
@@ -655,10 +653,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
           for (String imePolja : eventColumns) {
             try {
-              Field field = SqlUtilities.getInstance().getPreparedFields().get(new CaseInsensitiveString(imePolja));
-              if (field != null) {
-                field.setFieldIndex(1);
-              } else {
+              Field field = Field.getField(imePolja, 1, SqlUtilities.getInstance().getPreparedFields());
+              if (field == null) {
                 dataSource.setSafeMode(false);
                 dataSource.setQueuedDelay(0);
                 dataSource.filterChanged();
