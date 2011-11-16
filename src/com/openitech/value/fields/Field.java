@@ -319,7 +319,7 @@ public class Field implements Cloneable {
       }
     }
     if (fLookupType != null) {
-      Field result = new Field(field.getIdPolja(), fLookupType.getColumnPrefix() + field.getName(), field.getType(), fieldValueIndex);
+      Field result = new Field(field.getIdPolja(), fLookupType.getColumnPrefix() + field.getName(), fLookupType.getSqlType(), fieldValueIndex);
       result.setLookup(true);
       result.setLookupType(fLookupType);
       return result;
