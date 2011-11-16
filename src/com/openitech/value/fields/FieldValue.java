@@ -17,11 +17,11 @@ import javax.xml.datatype.XMLGregorianCalendar;
 public class FieldValue extends Field implements Cloneable {
 
   public FieldValue(Field field) {
-    this(field.idPolja, field.name, field.type, field.fieldIndex, null);
+    this(field, null);
   }
 
   public FieldValue(Field field, Object value) {
-    this(field.idPolja, field.name, field.type, field.fieldIndex, value);
+    this(field.idPolja, field.name, field.type, field.fieldIndex, field.lookupType, value);
   }
 
   public FieldValue(String name, int type) {
@@ -33,21 +33,27 @@ public class FieldValue extends Field implements Cloneable {
   }
 
   public FieldValue(String name, int type, int fieldValueIndex, Object value) {
-    this(null, name, type, fieldValueIndex, value);
+    this(null, name, type, fieldValueIndex, null, value);
+  }
+
+  public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, LookupType lookupType, Object value) {
+    this(idPolja, name, type, fieldValueIndex, lookupType, value, null);
   }
 
   public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, Object value) {
-    this(idPolja, name, type, fieldValueIndex, value, null);
-  }
-
-  public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, Object value, Long valueId) {
-    super(idPolja, name, type, fieldValueIndex);
-    this.value = value;
-    this.valueId = valueId;
+    this(idPolja, name, type, fieldValueIndex, null, value, null);
   }
 
   public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, Long valueId) {
-    this(idPolja, name, type, fieldValueIndex, null, valueId);
+    this(idPolja, name, type, fieldValueIndex, null, null, valueId);
+  }
+
+  public FieldValue(Integer idPolja, String name, int type, int fieldValueIndex, LookupType lookupType, Object value, Long valueId) {
+    super(idPolja, name, type, fieldValueIndex);
+    this.value = value;
+    this.valueId = valueId;
+    setLookupType(lookupType);
+    setLookup(lookupType != null);
   }
   private Object value;
 
