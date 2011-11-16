@@ -33,7 +33,7 @@ public class JWorkAreaFilter implements ActiveRowChangeListener {
     this.otherColumName = otherColumName;
   }
 
-  public int getWorkAreaId() {
+  public Integer getWorkAreaId() {
     return workAreaId;
   }
 
@@ -60,5 +60,9 @@ public class JWorkAreaFilter implements ActiveRowChangeListener {
 
   @Override
   public void fieldValueChanged(ActiveRowChangeEvent event) {
+  }
+
+  public Integer getWorkSpaceId() {
+    return workSpaceId;
   }
 }
