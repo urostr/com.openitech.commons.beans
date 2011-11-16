@@ -16,26 +16,31 @@ import java.util.logging.Logger;
  */
 public class AutoInsertValue implements ActionListener {
 
-  private final int workAreaId;
+  private final Integer workAreaId;
   private DbDataSource dsWorkAreaFrom;
   private final DbDataSource dsWorkAreaTo;
   private final String columName;
   private final String otherColumName;
   private final Integer workSpaceId;
 
-  public AutoInsertValue(int workAreaId, Integer workSpaceId, DbDataSource dataSource, String columName, String otherColumName) {
+  public AutoInsertValue(Integer workAreaId, Integer workSpaceId, DbDataSource dataSource, String columName, String otherColumName) {
     this.workAreaId = workAreaId;
     this.workSpaceId = workSpaceId;
     this.dsWorkAreaTo = dataSource;
     this.columName = columName;
-    this.otherColumName = otherColumName;
-
+    this.otherColumName = otherColumName == null ? columName : otherColumName;
+    
     this.dsWorkAreaTo.addActionListener(this);
   }
 
-  public int getWorkAreaId() {
+  public Integer getWorkAreaId() {
     return workAreaId;
   }
+
+  public Integer getWorkSpaceId() {
+    return workSpaceId;
+  }
+
 
   public void setDataSourceFrom(DbDataSource dataSource) {
     this.dsWorkAreaFrom = dataSource;
