@@ -1,6 +1,5 @@
 package com.openitech.events.concurrent;
 
-import com.openitech.Settings;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.connection.DbConnection;
 import com.openitech.swing.JXDimBusyLabel;
@@ -99,55 +98,58 @@ public final class RefreshDataSource extends DataSourceEvent {
   private static volatile int busyCount = 0;
 
   private synchronized static void setBusy(final String label) {
-    if (busy != null) {
-      EventQueue.invokeLater(new Runnable() {
+    EventQueue.invokeLater(new Runnable() {
 
-        public void run() {
-          for (JXDimBusyLabel busyLabel : busyLabels) {
-            if (busyLabel != null) {
-              busyLabel.setBusy(true);
-              if (label != null && !label.equals("")) {
-                busyLabel.setText(label);
-              } else {
-                busyLabel.setText("Osvežujem podatke ...");
-              }
+      public void run() {
+        for (JXDimBusyLabel busyLabel : busyLabels) {
+          if (busyLabel != null) {
+            busyLabel.setBusy(true);
+            if (label != null && !label.equals("")) {
+              busyLabel.setText(label);
+            } else {
+              busyLabel.setText("Osvežujem podatke ...");
             }
           }
+        }
+        if (busy != null) {
           busy.setBusy(true);
-          busyCount++;
           if (label != null && !label.equals("")) {
             busy.setText(label);
           } else {
             busy.setText("Osvežujem podatke ...");
           }
         }
-      });
-    }
+        busyCount++;
+
+      }
+    });
+
 //    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Busy!");
   }
 
   public synchronized static void setReady() {
-    if (busy != null) {
-      EventQueue.invokeLater(new Runnable() {
+    EventQueue.invokeLater(new Runnable() {
 
-        public void run() {
-          if (busyCount > 0) {
-            busyCount--;
-          }
-          if (busyCount == 0) {
-            for (JXDimBusyLabel busyLabel : busyLabels) {
-              if (busyLabel != null) {
-                busyLabel.setBusy(false);
-                busyLabel.setText("Pripravljen...");
-              }
+      public void run() {
+        if (busyCount > 0) {
+          busyCount--;
+        }
+        if (busyCount == 0) {
+          for (JXDimBusyLabel busyLabel : busyLabels) {
+            if (busyLabel != null) {
+              busyLabel.setBusy(false);
+              busyLabel.setText("Pripravljen...");
             }
+          }
+          if (busy != null) {
             busy.setBusy(false);
             busy.setText("Pripravljen...");
 //            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Ready!");
           }
         }
-      });
-    }
+      }
+    });
+
 
   }
 
