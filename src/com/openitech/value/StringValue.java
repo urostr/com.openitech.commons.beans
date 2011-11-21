@@ -24,7 +24,7 @@ public class StringValue {
       String sLastdigit = compare.group(3);
       String sstring = compare.group(2);
       if (sLastdigit.length() > 0) {
-        String nextLastdigit = Integer.toString(Integer.parseInt(sLastdigit) + 1);
+        String nextLastdigit = Long.toString(Long.parseLong(sLastdigit) + 1);
         if (nextLastdigit.length() > sLastdigit.length() && sstring.length() > 0) {
           nextLastdigit = "0";
           try {
@@ -66,14 +66,14 @@ public class StringValue {
     return sb.toString();
   }
 
-  public static Integer getLastNumbers(String value) {
-    Integer result = null;
+  public static Long getLastNumbers(String value) {
+    Long result = null;
 
     Matcher compare = numbers.matcher(value);
     if (compare.matches()) {
       String sdigit = compare.group(3);
       if (sdigit.length() > 0) {
-        result = Integer.parseInt(sdigit);
+        result = Long.parseLong(sdigit);
       }
     }
     return result;
