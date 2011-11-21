@@ -299,6 +299,14 @@ public class Field implements Cloneable {
   }
   private final static Pattern indexed = Pattern.compile("(.*)(\\d+)$");
 
+  public static Field getField(String name) throws SQLException {
+    return getField(name, 1);
+  }
+
+  public static Field getField(String name, int fieldValueIndex) throws SQLException {
+    return getField(name, fieldValueIndex, SqlUtilities.getInstance().getPreparedFields());
+  }
+
   public static Field getField(String name, int fieldValueIndex, final java.util.Map<CaseInsensitiveString, Field> fields) {
     LookupType fLookupType = null;
     for (LookupType lookupType : LookupType.values()) {
@@ -316,6 +324,7 @@ public class Field implements Cloneable {
         fieldValueIndex = Integer.parseInt(matcher.group(2));
 
         field = fields.get(CaseInsensitiveString.valueOf(name));
+
       }
     }
     if (fLookupType != null) {
@@ -324,7 +333,7 @@ public class Field implements Cloneable {
       result.setLookupType(fLookupType);
       return result;
     } else {
-      return new Field(field.getIdPolja(), field.getName(), field.getType(), fieldValueIndex);
+      return new Field(field.getIdPolja(), field.getName() + (fieldValueIndex > 1 ? fieldValueIndex : ""), field.getType(), fieldValueIndex);
     }
   }
 
