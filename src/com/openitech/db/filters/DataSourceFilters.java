@@ -4,6 +4,7 @@ import com.openitech.db.model.xml.config.SeekLayout;
 import com.openitech.value.ValuesList;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.model.*;
+import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.text.FormatFactory;
 import com.openitech.util.Equals;
 import com.openitech.util.Telefon;
@@ -1466,6 +1467,10 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private FutureTask<DbComboBoxModel> model;
     private AbstractSeekType<String> seekType;
+    private String dataBase;
+    private List<String> allowedValues;
+    private List<String> excludedValues;
+    private DbSifrantModel sifrantModel;
 
     public SifrantSeekType(String field, final String sifrantSkupina, final String sifrantOpis) {
       this(field, sifrantSkupina, sifrantOpis, null);
@@ -1492,22 +1497,26 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
       this.sifrantOpis = sifrantOpis;
       this.textNotDefined = textNotDefined == null ? "Ni doloèen" : textNotDefined;
 
-      this.model = new FutureTask<DbComboBoxModel>(new Callable<DbComboBoxModel>() {
+      this.model = null;
+      this.dataBase = dataBase;
+      this.allowedValues = allowedValues;
+      this.excludedValues = excludedValues;
+      /*this.model = new FutureTask<DbComboBoxModel>(new Callable<DbComboBoxModel>() {
 
-        @Override
-        public DbComboBoxModel call() {
-          DbSifrantModel result = null;
-          try {
-            result = new DbSifrantModel(textNotDefined, dataBase, allowedValues, excludedValues);
-            result.setSifrantOpis(sifrantOpis);
-            result.setSifrantSkupina(sifrantSkupina);
-          } catch (SQLException ex) {
-            Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
-          }
-          return result;
-        }
+      @Override
+      public DbComboBoxModel call() {
+      DbSifrantModel result = null;
+      try {
+      result = new DbSifrantModel(textNotDefined, dataBase, allowedValues, excludedValues);
+      result.setSifrantOpis(sifrantOpis);
+      result.setSifrantSkupina(sifrantSkupina);
+      } catch (SQLException ex) {
+      Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      return result;
+      }
       });
-
+       */
     }
 
     public SifrantSeekType(String field, Callable<DbComboBoxModel> callable) {
@@ -1564,8 +1573,27 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public DbComboBoxModel getModel() {
       DbComboBoxModel result = null;
       try {
-        executorService.execute(model);
-        result = model.get();
+        if (model == null) {
+          if (sifrantModel == null) {
+            try {
+              sifrantModel = new DbSifrantModel(textNotDefined, dataBase, allowedValues, excludedValues);
+              DbDataSource dataSource = sifrantModel.getDataSource();
+              DataSourceEvent.suspend(dataSource);
+              DataSourceEvent.cancel(dataSource);
+              sifrantModel.setSifrantOpis(sifrantOpis);
+              sifrantModel.setSifrantSkupina(sifrantSkupina);
+              DataSourceEvent.resume(dataSource);
+              dataSource.reload(true);
+            } catch (SQLException ex) {
+              Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
+            }
+          }
+          result = sifrantModel;
+        } else {
+          executorService.execute(model);
+          result = model.get();
+        }
+
       } catch (InterruptedException ex) {
         Logger.getLogger(DataSourceFilters.class.getName()).log(Level.SEVERE, null, ex);
       } catch (ExecutionException ex) {
