@@ -79,6 +79,7 @@ public abstract class DataSourceEvent implements Runnable, ConcurrentEvent {
 
   public static void cancel(DbDataSource dataSource) {
     timestamp(new Event(dataSource, Event.Type.CANCEL));
+    suspendedTasks.remove(dataSource);
   }
 
   public static void resume(DbDataSource dataSource) {
