@@ -69,18 +69,19 @@ public class DbSifrantModel extends DbComboBoxModel<String> {
 
     StringBuilder values = new StringBuilder();
 
-    if (allowedValues != null) {
+    if (allowedValues != null && allowedValues.length > 0) {
+      StringBuilder sbAllowed = new StringBuilder();
       for (String allowedV : allowedValues) {
-        values.append(values.length() > 0 ? " , " : " ").append("'").append(allowedV).append("' ");
+        sbAllowed.append(sbAllowed.length() > 0 ? " , " : " ").append("'").append(allowedV).append("' ");
       }
-      values.insert(0, " Sifranti.IdSifre IN ( ");
-      values.append(" ) AND ");
-    } else if (excludedValues != null) {
+      values.append(" Sifranti.IdSifre IN ( ").append(sbAllowed).append(" ) AND ");
+    }
+    if (excludedValues != null && excludedValues.length > 0) {
+      StringBuilder sbExclude = new StringBuilder();
       for (String excludedV : excludedValues) {
-        values.append(values.length() > 0 ? " , " : " ").append("'").append(excludedV).append("' ");
+        sbExclude.append(sbExclude.length() > 0 ? " , " : " ").append("'").append(excludedV).append("' ");
       }
-      values.insert(0, " Sifranti.IdSifre NOT IN ( ");
-      values.append(" ) AND ");
+      values.append(" Sifranti.IdSifre NOT IN ( ").append(sbExclude).append(" ) AND ");
     }
 
 
