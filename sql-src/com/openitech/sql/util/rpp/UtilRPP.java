@@ -87,7 +87,7 @@ public class UtilRPP {
         ps_findIdKontakta.clearParameters();
         ps_findIdKontakta.setInt(param++, omrezna);
         ps_findIdKontakta.setInt(param++, telefonska);
-        ps_findIdKontakta.setString(param++, tip);
+        //ps_findIdKontakta.setString(param++, tip);
         ResultSet rs_findIdKontakta = ps_findIdKontakta.executeQuery();
         try {
           if (rs_findIdKontakta.next()) {
