@@ -29,6 +29,8 @@ import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters;
 
 import com.openitech.db.model.xml.config.Workarea.EventImporters;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
+import com.openitech.db.model.xml.config.Workarea.ExtendWorkarea;
+import com.openitech.db.model.xml.config.Workarea.IncludeWorkarea;
 import com.openitech.db.model.xml.config.Workarea.WorkSpaceInformation;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.db.model.sql.SQLMaterializedView;
@@ -46,7 +48,6 @@ import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.Defa
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views;
 import com.openitech.importer.JImportEventsModel;
 import com.openitech.sql.util.SqlUtilities;
-import com.openitech.text.CaseInsensitiveString;
 import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
@@ -89,11 +90,16 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     }
     Workarea original = dataSourceXML;
     try {
-      if (dataSourceXML.getExtendWorkarea() != null) {
+      final ExtendWorkarea extendWorkarea = dataSourceXML.getExtendWorkarea();
+      if (extendWorkarea != null) {
         try {
-          List<Integer> workareaIDs = dataSourceXML.getExtendWorkarea().getWorkareaID();
+          List<Integer> workSpaceIDs = extendWorkarea.getWorkSpaceID();
+          List<Integer> workareaIDs = extendWorkarea.getWorkareaID();
           for (Integer workAreaId : workareaIDs) {
-            configure(opis, SqlUtilities.getInstance().getWorkArea(workAreaId), config);
+            configure(opis, SqlUtilities.getInstance().getWorkArea(null, workAreaId), config);
+          }
+          for (Integer workSpaceID : workSpaceIDs) {
+            configure(opis, SqlUtilities.getInstance().getWorkArea(workSpaceID, null), config);
           }
         } catch (JAXBException ex) {
           Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
@@ -168,11 +174,16 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       } finally {
         dataSource.unlock();
       }
-      if (dataSourceXML.getIncludeWorkarea() != null) {
+      final IncludeWorkarea includeWorkarea = dataSourceXML.getIncludeWorkarea();
+      if (includeWorkarea != null) {
         try {
-          List<Integer> workareaIDs = dataSourceXML.getIncludeWorkarea().getWorkareaID();
+          List<Integer> workSpaceIDs = includeWorkarea.getWorkSpaceID();
+          List<Integer> workareaIDs = includeWorkarea.getWorkareaID();
           for (Integer workAreaId : workareaIDs) {
-            configure(opis, SqlUtilities.getInstance().getWorkArea(workAreaId), config);
+            configure(opis, SqlUtilities.getInstance().getWorkArea(null, workAreaId), config);
+          }
+          for (Integer workSpaceID : workSpaceIDs) {
+            configure(opis, SqlUtilities.getInstance().getWorkArea(workSpaceID, null), config);
           }
 
         } catch (JAXBException ex) {
