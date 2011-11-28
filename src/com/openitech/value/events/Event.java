@@ -22,6 +22,7 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 /**
@@ -479,7 +480,7 @@ public class Event extends EventType implements Cloneable {
     long start = System.currentTimeMillis();
     EventPK eventPK = null;
 //    try {
-      eventPK = getEventPK(this.preparedFields == null ? SqlUtilities.getInstance().getPreparedFields() : preparedFields);
+    eventPK = getEventPK(this.preparedFields == null ? SqlUtilities.getInstance().getPreparedFields() : preparedFields);
 //    } catch (SQLException ex) {
 //      Logger.getLogger(Event.class.getName()).log(Level.SEVERE, null, ex);
 //    }
@@ -517,41 +518,53 @@ public class Event extends EventType implements Cloneable {
   }
 
   public static Object getValue(Event event, String imePolja, int type) {
-    Object result = null;
-    if (event != null && event.getEventValues().containsKey(new Field(imePolja, type))) {
-      Object value = event.getEventValues().get(new Field(imePolja, type)).get(0).getValue();
+    return getValue(event, new Field(imePolja, type));
+  }
 
-      switch (type) {
-        case java.sql.Types.INTEGER:
-          if (value instanceof Number) {
-            result = ((Number) value).intValue();
-          } else if (value instanceof String && value != null) {
-            result = Integer.parseInt((String) value);
-          } else {
-            result = (Integer) null;
-          }
+  public static Object getValue(Event event, Field field) {
+    Object result = null;
+    if (event != null && field != null) {
+      Object value = null;
+      for (FieldValue fieldValue : event.getValues()) {
+        if (fieldValue.equals(field)) {
+          value = fieldValue.getValue();
           break;
-        case java.sql.Types.VARCHAR:
-          result = (String) value;
-          break;
-        case java.sql.Types.DATE:
-          if (value != null) {
-            result = new java.sql.Date(((java.util.Date) value).getTime());
-          } else {
-            result = (java.sql.Date) null;
-          }
-          break;
-        case java.sql.Types.BIT:
-          if (value != null) {
-            if (value instanceof Integer) {
-              result = ((Integer) value) > 0;
-            } else if (value instanceof Boolean) {
-              result = (Boolean) value;
+        }
+      }
+
+      if (value != null) {
+        switch (field.getType()) {
+          case java.sql.Types.INTEGER:
+            if (value instanceof Number) {
+              result = ((Number) value).intValue();
+            } else if (value instanceof String && value != null) {
+              result = Integer.parseInt((String) value);
+            } else {
+              result = (Integer) null;
             }
-          } else {
-            result = (Boolean) null;
-          }
-          break;
+            break;
+          case java.sql.Types.VARCHAR:
+            result = (String) value;
+            break;
+          case java.sql.Types.DATE:
+            if (value != null) {
+              result = new java.sql.Date(((java.util.Date) value).getTime());
+            } else {
+              result = (java.sql.Date) null;
+            }
+            break;
+          case java.sql.Types.BIT:
+            if (value != null) {
+              if (value instanceof Integer) {
+                result = ((Integer) value) > 0;
+              } else if (value instanceof Boolean) {
+                result = (Boolean) value;
+              }
+            } else {
+              result = (Boolean) null;
+            }
+            break;
+        }
       }
     }
     return result;
@@ -691,6 +704,17 @@ public class Event extends EventType implements Cloneable {
       }
     }
     addChild(newEvent);
+  }
+
+  public void removeChild(Event child) {
+    if (child != null) {
+      getChildren().remove(child);
+    }
+  }
+
+  public void updatePrimaryKey() throws SQLException {
+    Set<Field> primaryKeys = SqlUtilities.getInstance().getPrimaryKey(sifrant, sifra);
+    setPrimaryKey(primaryKeys.toArray(new Field[]{}));
   }
 
   public static enum EventOperation {
