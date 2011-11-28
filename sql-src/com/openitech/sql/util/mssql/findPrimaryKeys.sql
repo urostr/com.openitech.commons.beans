@@ -1,4 +1,5 @@
 SELECT
+    SifrantVnosnihPolj.Id AS IdPolja,
     SifrantVnosnihPolj.ImePolja,
     SifrantVnosnihPolj.TipPolja,
     [FieldValueIndex]

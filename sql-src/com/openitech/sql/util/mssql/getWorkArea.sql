@@ -1,5 +1,8 @@
-SELECT
+SELECT TOP 1
     [WorkAreaXML]
 FROM
     ChangeLog.[dbo].[WorkArea]
-WHERE Id = ?
+WHERE validTo is null
+<%Filter%>
+
+ORDER BY ZapSt
