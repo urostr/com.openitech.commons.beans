@@ -272,6 +272,7 @@
         <xsd:element name="ExtendWorkarea" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
+              <xsd:element name="WorkSpaceID" type="xsd:int" maxOccurs="unbounded"></xsd:element>
               <xsd:element name="WorkareaID" type="xsd:int" maxOccurs="unbounded"></xsd:element>
             </xsd:sequence>
           </xsd:complexType>
@@ -279,6 +280,7 @@
         <xsd:element name="IncludeWorkarea" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
+              <xsd:element name="WorkSpaceID" type="xsd:int" maxOccurs="unbounded"></xsd:element>
               <xsd:element name="WorkareaID" type="xsd:int" maxOccurs="unbounded"></xsd:element>
             </xsd:sequence>
           </xsd:complexType>
