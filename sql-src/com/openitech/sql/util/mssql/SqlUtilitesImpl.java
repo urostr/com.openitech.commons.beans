@@ -302,20 +302,43 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public Clob getWorkArea(int workAreaId) throws SQLException {
-    Clob result = null;
-    PreparedStatement ps_getWorkArea = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "getWorkArea.sql", "cp1250"));
-
-    int param = 1;
-    ps_getWorkArea.clearParameters();
-    ps_getWorkArea.setInt(param++, workAreaId);
-    ResultSet rs_getWorkArea = ps_getWorkArea.executeQuery();
-    if (rs_getWorkArea.next()) {
-      result = rs_getWorkArea.getClob(1);
+  public Clob getWorkArea(Integer workSpaceId, Integer workAreaId) throws SQLException {
+    if (workSpaceId == null && workAreaId == null) {
+      return null;
     }
-    rs_getWorkArea.close();
-    ps_getWorkArea.close();
-
+    Clob result = null;
+    String workAreaSql = ReadInputStream.getResourceAsString(getClass(), "getWorkArea.sql", "cp1250");
+    StringBuilder sbFilter = new StringBuilder(" AND ");
+    if (workSpaceId != null) {
+      sbFilter.append(" workSpaceId = ? ");
+      if (workAreaId != null) {
+        sbFilter.append(" AND Id = ? ");
+      }
+    } else {
+      sbFilter.append(" Id = ? ");
+    }
+    workAreaSql = workAreaSql.replaceAll("<%Filter%>", sbFilter.toString());
+    PreparedStatement ps_getWorkArea = ConnectionManager.getInstance().getConnection().prepareStatement(workAreaSql);
+    try {
+      int param = 1;
+      ps_getWorkArea.clearParameters();
+      if (workSpaceId != null) {
+        ps_getWorkArea.setInt(param++, workSpaceId);
+      }
+      if (workAreaId != null) {
+        ps_getWorkArea.setInt(param++, workAreaId);
+      }
+      ResultSet rs_getWorkArea = ps_getWorkArea.executeQuery();
+      try {
+        if (rs_getWorkArea.next()) {
+          result = rs_getWorkArea.getClob(1);
+        }
+      } finally {
+        rs_getWorkArea.close();
+      }
+    } finally {
+      ps_getWorkArea.close();
+    }
     return result;
   }
 
@@ -2127,27 +2150,36 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     }
   }
+  private Map<EventType, Set<Field>> pkFieldsCache = new HashMap<EventType, Set<Field>>();
 
   @Override
   public Set<Field> getPrimaryKey(int idSifranta, String idSifre) throws SQLException {
+    EventType eventType = new EventType(idSifranta, idSifre);
     Set<Field> primaryKeys = new HashSet<Field>();
-    if (findPrimaryKey == null) {
-      findPrimaryKey = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findPrimaryKeys.sql", "cp1250"));
-    }
 
-    int param = 1;
-    findPrimaryKey.clearParameters();
-    findPrimaryKey.setInt(param++, idSifranta);
-    findPrimaryKey.setString(param++, idSifre);
-    ResultSet rs_pk = findPrimaryKey.executeQuery();
-    try {
-      while (rs_pk.next()) {
-        primaryKeys.add(new Field(rs_pk.getString("ImePolja"), rs_pk.getInt("TipPolja"), rs_pk.getInt("FieldValueIndex")));
+    if (!pkFieldsCache.containsKey(eventType)) {
+
+      if (findPrimaryKey == null) {
+        findPrimaryKey = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findPrimaryKeys.sql", "cp1250"));
       }
-    } finally {
-      rs_pk.close();
-    }
 
+      int param = 1;
+      findPrimaryKey.clearParameters();
+      findPrimaryKey.setInt(param++, idSifranta);
+      findPrimaryKey.setString(param++, idSifre);
+      ResultSet rs_pk = findPrimaryKey.executeQuery();
+      try {
+        while (rs_pk.next()) {
+          primaryKeys.add(new Field(rs_pk.getInt("IdPolja"), rs_pk.getString("ImePolja"), rs_pk.getInt("TipPolja"), rs_pk.getInt("FieldValueIndex")));
+        }
+      } finally {
+        rs_pk.close();
+      }
+
+      pkFieldsCache.put(eventType, primaryKeys);
+    } else {
+      primaryKeys = pkFieldsCache.get(eventType);
+    }
     return primaryKeys;
   }
 
@@ -2924,6 +2956,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       ev_table = eventsDb + ".[dbo].[Events]";
 
+      /**
+       * sifra se narobe uporablja, ker je vezana na >>canuseView<<
+       * zato je v custom secondarijih samo idSifranta
+       */
       if (canUseView && sifranti.size() == 1) {
         for (Integer s : sifranti) {
           final String[] sifrant_sifre = getSifre(s);
