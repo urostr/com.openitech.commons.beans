@@ -688,7 +688,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract String getPPJoinFields();
 
-  public abstract Clob getWorkArea(int workAreaId) throws SQLException;
+  public abstract Clob getWorkArea(Integer workSpaceId, Integer workAreaId) throws SQLException;
 
   public abstract Set<String> getEventViewColumns(String viewName);
 
