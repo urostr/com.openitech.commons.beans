@@ -170,8 +170,9 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     setLayout(new java.awt.GridBagLayout());
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
     gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.weighty = 1.0;
     add(dbDataSourceFilter, gridBagConstraints);
 
     jpOptions.setLayout(new java.awt.GridBagLayout());
@@ -248,6 +249,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     jpOptions.add(jbIsci, gridBagConstraints);
 
     gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     add(jpOptions, gridBagConstraints);
   }// </editor-fold>//GEN-END:initComponents
