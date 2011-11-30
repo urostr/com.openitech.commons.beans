@@ -28,7 +28,6 @@ package com.openitech.db.components;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-import com.openitech.Settings;
 import com.openitech.awt.Desktop;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
@@ -49,6 +48,7 @@ import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -58,15 +58,18 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.JButton;
 
 import javax.swing.JFileChooser;
@@ -235,14 +238,39 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
         public void actionPerformed(ActionEvent e) {
           try {
             if (img != null) {
-              String filename = System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "Image " + System.currentTimeMillis() + ".jpg"; //NOI18N
+
+
+              byte[] byteArray = dbFieldObserver.getValueAsByteArray();
+              //System.out.println(byteArray[0] + " ::: " + byteArray[1]);
+
+              BufferedInputStream is = new BufferedInputStream(new ByteArrayInputStream(byteArray));
+
+              String formatName = "jpg"; //default
+              ImageInputStream iis = ImageIO.createImageInputStream(is);
+              Iterator iter = ImageIO.getImageReaders(iis);
+              if (iter.hasNext()) {
+                ImageReader reader = (ImageReader) iter.next();
+                reader.setInput(iis);
+
+                formatName = reader.getFormatName();
+                Logger.getLogger(JDbJXImagePanel.class.getName()).log(Level.INFO, "formatName");
+                //System.out.println(formatName);
+              }
+              String filename = System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "Image_" + System.currentTimeMillis() + "." + formatName; //NOI18N
               java.io.File tempFile = new java.io.File(filename);
               if (tempFile.exists()) {
                 tempFile.delete();
               }
               tempFile.createNewFile();
-
-              ImageIO.write((BufferedImage) img, "jpg", tempFile); //NOI18N
+              /**
+               *
+               * ce ne grem preko ImageIO, potem je file vecji, neoptimiziran,
+               * ter se veliko pocaseje odpira
+               */
+//              FileOutputStream fos = new FileOutputStream(tempFile);
+//              fos.write(byteArray);
+//              fos.flush();
+              ImageIO.write((BufferedImage) img, formatName, tempFile); //NOI18N
               Desktop.open(tempFile);
             }
           } catch (IOException ex) {
@@ -281,7 +309,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
     if (evt.getPropertyName().equals("image")) { //NOI18N
-      updateColumn();
+//      updateColumn();
     }
   }
 
@@ -301,21 +329,21 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
     }
   }
 
-  private void updateColumn() {
+  private void updateColumn(byte[] byteArray) {
     if (!updating) {
       activeRowChangeWeakListener.setEnabled(false);
       try {
-        if (img != null) {
-          ByteArrayOutputStream baos = new ByteArrayOutputStream(2000);
-          BufferedImage bufferedImage = (BufferedImage) this.img;
-          ImageIO.write(bufferedImage, "jpg", baos); //NOI18N
-          baos.flush();
-          byte[] byteArray = baos.toByteArray();
-          dbFieldObserver.updateValue(byteArray);
+//        if (img != null) {
+//          ByteArrayOutputStream baos = new ByteArrayOutputStream(2000);
+//          BufferedImage bufferedImage = (BufferedImage) this.img;
+//          ImageIO.write(bufferedImage, "jpg", baos); //NOI18N
+//          baos.flush();
+//          byte[] byteArray = baos.toByteArray();
+        dbFieldObserver.updateValue(byteArray);
 
-        } else {
-          dbFieldObserver.updateValue(new byte[]{});
-        }
+//        } else {
+//          dbFieldObserver.updateValue(new byte[]{});
+//        }
       } catch (Exception ex) {
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex); //NOI18N
       } finally {
@@ -347,6 +375,13 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
     BufferedImage bufferedImage = ImageIO.read(file);
 //    Image image = Toolkit.getDefaultToolkit().getImage(file.toString());
     setImage(bufferedImage);
+
+    FileInputStream fin = new FileInputStream(file);
+
+    byte[] fileContent = new byte[(int) file.length()];
+
+    fin.read(fileContent);
+    updateColumn(fileContent);
   }
 
   /**
@@ -417,7 +452,8 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
 //      }
 //
 //    }
-    return new Dimension(600, 400);
+//    return Toolkit.getDefaultToolkit().getScreenSize();
+    return new Dimension(1024, 800);
   }
 
   @Override
@@ -430,7 +466,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
       if (width == -1 || height == -1) {
         return super.getMinimumSize();
       }
-
+      
       Dimension maximumSize = getMaximumSize();
       if (width < maximumSize.width && height < maximumSize.height) {
         return new Dimension(width, height);
@@ -453,9 +489,9 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
     Dimension maximumSize = getMaximumSize();
     Dimension minimumSize = getMinimumSize();
     if (minimumSize.width < maximumSize.width && minimumSize.height < maximumSize.height) {
-      return getMinimumSize();
+      return minimumSize;
     } else {
-      return getMaximumSize();
+      return maximumSize;
     }
 
   }
@@ -471,7 +507,7 @@ public class JDbJXImagePanel extends JXPanel implements PropertyChangeListener, 
       }
 
       if (ready) {
-        final Container owner = JDbJXImagePanel.this.getParent()==null?JDbJXImagePanel.this:JDbJXImagePanel.this.getParent();
+        final Container owner = JDbJXImagePanel.this.getParent() == null ? JDbJXImagePanel.this : JDbJXImagePanel.this.getParent();
         owner.invalidate();
         owner.validate();
         owner.repaint(10);
