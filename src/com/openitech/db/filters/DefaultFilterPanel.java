@@ -162,9 +162,9 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     jpAvtomaticnoIskanje = new javax.swing.JPanel();
     jcbAutomaticSearch = new javax.swing.JCheckBox();
     jsDataSourceDelay = new javax.swing.JSpinner();
+    jbIsci = new javax.swing.JButton();
     jbRefresh = new javax.swing.JButton();
     jbPocisti = new javax.swing.JButton();
-    jbIsci = new javax.swing.JButton();
 
     setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
     setLayout(new java.awt.GridBagLayout());
@@ -215,6 +215,17 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
     gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
     jpOptions.add(jpAvtomaticnoIskanje, gridBagConstraints);
 
+    jbIsci.setText("Išèi");
+    jbIsci.setEnabled(addSearchButton);
+    jbIsci.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jbIsciActionPerformed(evt);
+      }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
+    jpOptions.add(jbIsci, gridBagConstraints);
+
     jbRefresh.setText("Osveži");
     jbRefresh.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -232,21 +243,9 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
       }
     });
     gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-    jpOptions.add(jbPocisti, gridBagConstraints);
-
-    jbIsci.setText("Išèi");
-    jbIsci.setEnabled(addSearchButton);
-    jbIsci.addActionListener(new java.awt.event.ActionListener() {
-      public void actionPerformed(java.awt.event.ActionEvent evt) {
-        jbIsciActionPerformed(evt);
-      }
-    });
-    gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-    jpOptions.add(jbIsci, gridBagConstraints);
+    jpOptions.add(jbPocisti, gridBagConstraints);
 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
