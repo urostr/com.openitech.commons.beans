@@ -168,6 +168,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
+  public String getRunParameterString(String parameter, String defaultValue) {
+    return ConnectionManager.getInstance().getProperty(parameter, defaultValue);
+  }
+
+  @Override
   public long getScopeIdentity() throws SQLException {
     Statement statement = ConnectionManager.getInstance().getTxConnection().createStatement();
     try {
