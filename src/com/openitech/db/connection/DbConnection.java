@@ -73,6 +73,10 @@ public interface DbConnection {
   String DB_SAVE_PK = "db.save.pk";
   String DB_CALL_STORE_EVENT = "db.use.storeEvent";
 
+  String SUPPORT_HOST = "support.redmine.host";
+  String SUPPORT_API_KEY = "support.redmine.apikey";
+  String SUPPORT_PROJECT = "support.redmine.project";
+
 
   Connection getTemporaryConnection() throws SQLException;
   Connection getConnection();
