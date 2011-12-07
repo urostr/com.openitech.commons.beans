@@ -601,6 +601,10 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Map<CaseInsensitiveString, Field> getPreparedFields() throws SQLException;
 
+  public FieldValue getNextIdentity(String fieldName) throws SQLException {
+    return getNextIdentity(Field.getField(fieldName));
+  }
+
   public FieldValue getNextIdentity(Field field) throws SQLException {
     return getNextIdentity(field, null);
   }
@@ -713,6 +717,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public String getRunParameterString(String parameter) {
     return getRunParameterString(parameter, null);
   }
+
   public abstract String getRunParameterString(String parameter, String defaultValue);
 
   public abstract void loadCaches() throws SQLException;
@@ -722,8 +727,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract boolean isValidEventId(Long eventId) throws SQLException;
 
   public abstract Set<Field> getPrimaryKey(int idSifranta, String idSifre) throws SQLException;
-
-
 
   public static enum Operation {
 
