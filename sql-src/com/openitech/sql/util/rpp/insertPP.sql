@@ -8,6 +8,6 @@ INTO
     VALUES
     (
 
-        2
+        1
 
     )
