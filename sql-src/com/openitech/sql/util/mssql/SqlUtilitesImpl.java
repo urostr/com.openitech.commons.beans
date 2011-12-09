@@ -6,6 +6,7 @@ package com.openitech.sql.util.mssql;
 
 import com.openitech.db.model.DbDataSource.SubstSqlParameter;
 import com.openitech.db.model.xml.config.MaterializedView.CacheEvents;
+import com.openitech.value.events.Activity;
 import com.openitech.value.events.EventType;
 import com.openitech.db.model.xml.config.MaterializedView;
 import com.openitech.db.model.xml.config.TemporaryTable;
@@ -22,6 +23,7 @@ import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.factory.DataSourceParametersFactory;
 import com.openitech.db.model.factory.JaxbUnmarshaller;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
+import com.openitech.db.model.xml.config.CachedTemporaryTable;
 import com.openitech.io.LogWriter;
 import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
@@ -45,7 +47,6 @@ import com.openitech.value.events.EventPK;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.CallableStatement;
@@ -82,7 +83,6 @@ import javax.swing.JOptionPane;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 /**
@@ -157,10 +157,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
   CallableStatement callStoreEvent;
   PreparedStatement findPrimaryKey;
   Map<CaseInsensitiveString, Field> preparedFields;
-  Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects;
+  Map<EventType, List<EventCacheTemporaryParameter>> cachedEventObjects = new HashMap<EventType, List<EventCacheTemporaryParameter>>();
   private final static LogWriter LOG_WRITER = new LogWriter(Logger.getLogger(SqlUtilitesImpl.class.getName()), Level.INFO);
   private final static SQLWorker SQL_WORKER = new SQLWorker(LOG_WRITER);
   private final String callStoreValueSql = ReadInputStream.getResourceAsString(getClass(), "callStoreValue.sql", "cp1250");
+  PreparedStatement getActivity;
+  PreparedStatement getActivityEvent;
 
   @Override
   public boolean getRunParameterBoolean(String parameter, boolean defaultValue) {
@@ -343,6 +345,50 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
     } finally {
       ps_getWorkArea.close();
+    }
+    return result;
+  }
+
+  @Override
+  public ActivityEvent getActivityEvent(int activityId) throws SQLException {
+    ActivityEvent result = null;
+
+    if (getActivityEvent == null) {
+      getActivityEvent = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "get_activityEvent.sql"));
+    }
+
+    int param = 1;
+    getActivityEvent.clearParameters();
+    getActivityEvent.setInt(param++, activityId);
+    ResultSet rsGetActivityEvent = getActivityEvent.executeQuery();
+    try {
+      if (rsGetActivityEvent.next()) {
+        result = new ActivityEvent(rsGetActivityEvent.getLong("ActivityId"), rsGetActivityEvent.getInt("IDSifranta"), rsGetActivityEvent.getString("IDSifre"));
+      }
+    } finally {
+      rsGetActivityEvent.close();
+    }
+    return result;
+  }
+
+  @Override
+  public Activity getActivity(int workAreaId) throws SQLException {
+    Activity result = null;
+
+    if (getActivity == null) {
+      getActivity = ConnectionManager.getInstance().getConnection().prepareStatement(ReadInputStream.getResourceAsString(getClass(), "get_activity.sql"));
+    }
+
+    int param = 1;
+    getActivity.clearParameters();
+    getActivity.setInt(param++, workAreaId);
+    ResultSet rsGetActivity = getActivity.executeQuery();
+    try {
+      if (rsGetActivity.next()) {
+        result = new Activity(rsGetActivity.getLong("Id"), rsGetActivity.getString("Opis"));
+      }
+    } finally {
+      rsGetActivity.close();
     }
     return result;
   }
@@ -656,56 +702,106 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   @Override
   public void loadCaches() throws SQLException {
-    getCachedEventObjects();
+//    getCachedEventObjects();
     getPreparedFields();
   }
 
-  private Map<EventType, List<EventCacheTemporaryParameter>> getCachedEventObjects() throws SQLException {
-    Map<EventType, List<EventCacheTemporaryParameter>> result = new HashMap<EventType, List<EventCacheTemporaryParameter>>();
-    if (cachedEventObjects == null) {
-      Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+//  private Map<EventType, List<EventCacheTemporaryParameter>> getCachedEventObjects() throws SQLException {
+//    if (cachedEventObjects == null) {
+//      return getCachedEventObject(null);
+//    } else {
+//      return cachedEventObjects;
+//    }
+//  }
+  private List<EventCacheTemporaryParameter> getCachedEventObject(EventType eventType) throws SQLException {
+    List<EventCacheTemporaryParameter> result = null;
+
+    if (cachedEventObjects != null && cachedEventObjects.containsKey(eventType)) {
+      result = cachedEventObjects.get(eventType);
+    } else {
+      TemporaryParametersFactory temporaryParametersFactory = new TemporaryParametersFactory();
+
+      List parameters = new ArrayList();
+      parameters.add(new SqlParameter(Types.INTEGER, eventType.getSifrant()));
+      parameters.add(new SqlParameter(Types.VARCHAR, eventType.getSifra()));
+      ResultSet rs = SQL_WORKER.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedEventObject.sql", "cp1250"), parameters);
       try {
-        Map<String, TemporaryTable> cachedTemporaryTables = getCachedTemporaryTables();
-        TemporaryParametersFactory temporaryParametersFactory = new TemporaryParametersFactory();
-        ResultSet rs = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedEventObjects.sql", "cp1250"));
         while (rs.next()) {
           String object = rs.getString("Object");
-
-          if (cachedTemporaryTables.containsKey(object)) {
-            EventType key = new EventType(rs.getInt("IdSifranta"), rs.getString("IdSifre"));
-            List<EventCacheTemporaryParameter> parameters;
-
-            if (result.containsKey(key)) {
-              parameters = result.get(key);
-            } else {
-              parameters = new ArrayList<EventCacheTemporaryParameter>();
-              result.put(key, parameters);
+          TemporaryTable cachedTemporaryTable = getCachedTemporaryTable(object);
+          if (cachedTemporaryTable != null) {
+            if (result == null) {
+              result = new ArrayList<EventCacheTemporaryParameter>();
             }
+            EventCacheTemporaryParameter tt = (EventCacheTemporaryParameter) temporaryParametersFactory.createTemporaryTable(cachedTemporaryTable);
+            result.add(tt);
 
-            EventCacheTemporaryParameter tt = (EventCacheTemporaryParameter) temporaryParametersFactory.createTemporaryTable(cachedTemporaryTables.get(object));
-            parameters.add(tt);
           }
         }
       } finally {
-        statement.close();
+        rs.close();
       }
-
-      if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_CACHEFIELDS, "true"))) {
-        this.cachedEventObjects = result;
+      if (result != null) {
+        cachedEventObjects.put(eventType, result);
       }
-    } else {
-      result = this.cachedEventObjects;
     }
-
     return result;
   }
 
+//  private Map<EventType, List<EventCacheTemporaryParameter>> getCachedEventObjects() throws SQLException {
+//    Map<EventType, List<EventCacheTemporaryParameter>> result = new HashMap<EventType, List<EventCacheTemporaryParameter>>();
+//    if (cachedEventObjects == null) {
+//      Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+//      try {
+////        Map<String, TemporaryTable> cachedTemporaryTables = getCachedTemporaryTables();
+//        TemporaryParametersFactory temporaryParametersFactory = new TemporaryParametersFactory();
+//        ResultSet rs = null;
+////        if(eventType == null){
+//        rs = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedEventObjects.sql", "cp1250"));
+////        }else{
+////          List parameters = new ArrayList();
+////          parameters.add(new SqlParameter(Types.INTEGER, eventType.getSifrant()));
+////          parameters.add(new SqlParameter(Types.VARCHAR, eventType.getSifra()));
+////          rs = SQL_WORKER.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedEventObject.sql", "cp1250"), parameters);
+////        }
+//        while (rs.next()) {
+//          String object = rs.getString("Object");
+//          TemporaryTable cachedTemporaryTable = getCachedTemporaryTable(object);
+//          if (cachedTemporaryTable != null) {
+//            EventType key = new EventType(rs.getInt("IdSifranta"), rs.getString("IdSifre"));
+//            List<EventCacheTemporaryParameter> parameters;
+//
+//            if (result.containsKey(key)) {
+//              parameters = result.get(key);
+//            } else {
+//              parameters = new ArrayList<EventCacheTemporaryParameter>();
+//              result.put(key, parameters);
+//            }
+//
+//            EventCacheTemporaryParameter tt = (EventCacheTemporaryParameter) temporaryParametersFactory.createTemporaryTable(cachedTemporaryTable);
+//            parameters.add(tt);
+//          }
+//        }
+//      } finally {
+//        statement.close();
+//      }
+//
+//      if (Boolean.parseBoolean(ConnectionManager.getInstance().getProperty(DbConnection.DB_CACHEFIELDS, "true"))) {
+//        this.cachedEventObjects = result;
+//      }
+//    } else {
+//      result = this.cachedEventObjects;
+//    }
+//
+//    return result;
+//  }
+
   @Override
   protected void cacheEvent(Event event) throws SQLException {
-    Map<EventType, List<EventCacheTemporaryParameter>> eventObjects = getCachedEventObjects();
+    List<EventCacheTemporaryParameter> eventObjects = getCachedEventObject(event);
     EventType key = new EventType(event);
 
-    if (eventObjects.containsKey(key)) {
+    if (eventObjects != null) {
       if (DbDataSource.DUMP_SQL) {
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Caching:" + key);
       }
@@ -715,7 +811,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       if (event.getOperation().isUpdateCache()) {
         boolean cache = true;
-        for (EventCacheTemporaryParameter tt : eventObjects.get(key)) {
+        for (EventCacheTemporaryParameter tt : eventObjects) {
           if (tt.getSqlMaterializedView().getCacheEventTypes().contains(key)) {
             for (EventType eventType : tt.getSqlMaterializedView().getCacheEventTypes()) {
               cache = cache && eventType.isCacheOnUpdate();
@@ -1984,49 +2080,88 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
     return result;
   }
-  private Map<String, TemporaryTable> cachedTemporaryTables = null;
+  private Map<String, TemporaryTable> cachedTemporaryTables = new HashMap<String, TemporaryTable>();
   ReentrantLock cacheLock = new ReentrantLock();
 
   @Override
-  public Map<String, TemporaryTable> getCachedTemporaryTables() {
-    cacheLock.lock();
-    try {
-      if (cachedTemporaryTables == null) {
-        Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();
+  public TemporaryTable getCachedTemporaryTable(String tableName) {
+    TemporaryTable result = null;
+
+    if (cachedTemporaryTables != null && cachedTemporaryTables.containsKey(tableName)) {
+      result = cachedTemporaryTables.get(tableName);
+    } else {
+      List parameters = new ArrayList();
+      parameters.add(tableName);
+      try {
+        ResultSet rsTempTable = SQL_WORKER.executeQuery(ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTable.sql"), parameters);
         try {
-          Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
-          try {
-            ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
+          if (rsTempTable.next()) {
+            String objectName = rsTempTable.getString("Object");
+            if (objectName != null && objectName.length() > 0) {
 
-            while (cachedObjects.next()) {
-              if (cachedObjects.getObject("CachedObjectXML") != null) {
-                String object = cachedObjects.getString("Object");
-                com.openitech.db.model.xml.config.TemporaryTable temporaryTable;
+              try {
+                TemporaryTable temporaryTable = ((CachedTemporaryTable) JaxbUnmarshaller.getInstance().unmarshall(CachedTemporaryTable.class, rsTempTable.getClob("CachedObjectXML"))).getTemporaryTable();
 
-                try {
-                  temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) JaxbUnmarshaller.getInstance().unmarshall(com.openitech.db.model.xml.config.CachedTemporaryTable.class, cachedObjects.getClob("CachedObjectXML"))).getTemporaryTable();
-
-                  result.put(object, convertToIndexedView(temporaryTable));
-                } catch (JAXBException ex) {
-                  Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-
-                }
+                result = convertToIndexedView(temporaryTable);
+              } catch (JAXBException ex) {
+                Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+                result = null;
               }
             }
-          } finally {
-            statement.close();
           }
-        } catch (SQLException ex) {
-          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+          rsTempTable.close();
         }
-        cachedTemporaryTables = result;
+      } catch (SQLException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+        result = null;
       }
-    } finally {
-      cacheLock.unlock();
+      if (result != null) {
+        cachedTemporaryTables.put(tableName, result);
+      }
     }
-    return cachedTemporaryTables;
+    return result;
   }
 
+//  @Override
+//  public Map<String, TemporaryTable> getCachedTemporaryTables() {
+//    cacheLock.lock();
+//    try {
+//      if (cachedTemporaryTables == null) {
+//        Map<String, TemporaryTable> result = new HashMap<String, TemporaryTable>();
+//        try {
+//          Statement statement = ConnectionManager.getInstance().getConnection().createStatement();
+//          try {
+//            ResultSet cachedObjects = statement.executeQuery(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "getCachedTemporaryTables.sql", "cp1250"));
+//
+//            while (cachedObjects.next()) {
+//              if (cachedObjects.getObject("CachedObjectXML") != null) {
+//                String object = cachedObjects.getString("Object");
+//                com.openitech.db.model.xml.config.TemporaryTable temporaryTable;
+//
+//                try {
+//                  temporaryTable = ((com.openitech.db.model.xml.config.CachedTemporaryTable) JaxbUnmarshaller.getInstance().unmarshall(com.openitech.db.model.xml.config.CachedTemporaryTable.class, cachedObjects.getClob("CachedObjectXML"))).getTemporaryTable();
+//
+//                  result.put(object, convertToIndexedView(temporaryTable));
+//                } catch (JAXBException ex) {
+//                  Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+//
+//                }
+//              }
+//            }
+//          } finally {
+//            statement.close();
+//          }
+//        } catch (SQLException ex) {
+//          Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        cachedTemporaryTables = result;
+//      }
+//    } finally {
+//      cacheLock.unlock();
+//    }
+//    return cachedTemporaryTables;
+//  }
   private com.openitech.db.model.xml.config.TemporaryTable convertToIndexedView(com.openitech.db.model.xml.config.TemporaryTable temporaryTable) {
     if (temporaryTable.getMaterializedView() != null
             && !temporaryTable.getMaterializedView().isIndexedView()
