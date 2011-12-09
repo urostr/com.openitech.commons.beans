@@ -299,12 +299,17 @@ public class Field implements Cloneable {
   }
   private final static Pattern indexed = Pattern.compile("(.*)(\\d+)$");
 
-  public static Field getField(String name) throws SQLException {
+  public static Field getField(String name) {
     return getField(name, 1);
   }
 
-  public static Field getField(String name, int fieldValueIndex) throws SQLException {
-    return getField(name, fieldValueIndex, SqlUtilities.getInstance().getPreparedFields());
+  public static Field getField(String name, int fieldValueIndex) {
+    try {
+      return getField(name, fieldValueIndex, SqlUtilities.getInstance().getPreparedFields());
+    } catch (SQLException ex) {
+      Logger.getLogger(Field.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return null;
   }
 
   public static Field getField(String name, int fieldValueIndex, final java.util.Map<CaseInsensitiveString, Field> fields) {
@@ -333,7 +338,12 @@ public class Field implements Cloneable {
       result.setLookupType(fLookupType);
       return result;
     } else {
-      return new Field(field.getIdPolja(), field.getName() + (fieldValueIndex > 1 ? fieldValueIndex : ""), field.getType(), fieldValueIndex);
+      if (field != null) {
+        Field result =  new Field(field.getIdPolja(), field.getName() + (fieldValueIndex > 1 ? fieldValueIndex : ""), field.getType(), fieldValueIndex);
+        return result;
+      } else {
+        return null;
+      }
     }
   }
 
