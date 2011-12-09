@@ -9,6 +9,7 @@ package com.openitech.sql;
 
 import com.openitech.db.model.*;
 import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.model.DbDataSource.SqlParameter;
 import com.openitech.io.LogWriter;
 import com.openitech.io.ReadInputStream;
 import java.sql.Connection;
@@ -187,14 +188,19 @@ public class SQLWorker {
     for (Iterator values = parameters.iterator(); (pos <= parameterCount) && values.hasNext();) {
       value = values.next();
       if (value instanceof DbDataSource.SqlParameter) {
-        type = ((DbDataSource.SqlParameter) value).getType();
+        final SqlParameter sqlParameter = (DbDataSource.SqlParameter) value;
+        type = sqlParameter.getType();
         if (!(type.equals(Types.SUBST_ALL) || type.equals(Types.SUBST) || type.equals(Types.SUBST_FIRST))) {
-          if (((DbDataSource.SqlParameter) value).getValue() != null) {
-            sql = sql.replaceFirst("\\?", ((DbDataSource.SqlParameter) value).getValue().toString());
+          if (sqlParameter.getValue() != null) {
+            if (type == java.sql.Types.VARCHAR) {
+              sql = sql.replaceFirst("\\?", "'" + sqlParameter.getValue().toString() + "'");
+            } else {
+              sql = sql.replaceFirst("\\?", sqlParameter.getValue().toString());
+            }
 //            statement.setObject(pos++, ((DbDataSource.SqlParameter) value).getValue(),
 //                    ((DbDataSource.SqlParameter) value).getType());
             if (DbDataSource.DUMP_SQL) {
-              logWriter.println("--[" + (pos - 1) + "]=" + ((DbDataSource.SqlParameter) value).getValue().toString());
+              logWriter.println("--[" + (pos - 1) + "]=" + sqlParameter.getValue().toString());
             }
           } else {
             sql = sql.replaceFirst("\\?", "''");
@@ -214,7 +220,11 @@ public class SQLWorker {
             logWriter.println("--[" + (pos - 1) + "]=''");
           }
         } else {
-          sql = sql.replaceFirst("\\?", value.toString());
+          if (value instanceof String) {
+            sql = sql.replaceFirst("\\?", "'" + value.toString() + "'");
+          } else {
+            sql = sql.replaceFirst("\\?", value.toString());
+          }
 //          statement.setObject(pos++, value);
           if (DbDataSource.DUMP_SQL) {
             logWriter.println("--[" + (pos - 1) + "]=" + value.toString());
@@ -232,6 +242,10 @@ public class SQLWorker {
     return sql;
   }
 
+  public ResultSet executeQuery(String selectSQL) throws SQLException {
+    return executeQuery(selectSQL, null, ConnectionManager.getInstance().getConnection());
+  }
+
   public ResultSet executeQuery(String selectSQL, List<?> parameters) throws SQLException {
     return executeQuery(selectSQL, parameters, ConnectionManager.getInstance().getConnection());
   }
@@ -241,6 +255,9 @@ public class SQLWorker {
   }
 
   public ResultSet executeQuery(String selectSQL, List<?> parameters, Connection connection, int timeout) throws SQLException {
+    if (parameters == null) {
+      parameters = new ArrayList();
+    }
     String sql = substParameters(selectSQL, parameters);
     PreparedStatement statement = connection.prepareStatement(sql,
             ResultSet.TYPE_SCROLL_INSENSITIVE,
