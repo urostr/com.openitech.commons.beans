@@ -4,6 +4,8 @@
  */
 package com.openitech.jdbc.proxy;
 
+import com.openitech.db.connection.ConnectionManager;
+import com.openitech.db.connection.DbConnection;
 import com.openitech.events.concurrent.Interruptable;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -26,6 +28,7 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
   protected final int resultSetConcurrency;
   protected final AbstractConnection connection;
   java.sql.Statement statement;
+  protected boolean dumpSQL = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"));
 
   protected StatementProxy(AbstractConnection connection, int resultSetType, int resultSetConcurrency) throws SQLException {
     this.connection = connection;
@@ -33,6 +36,10 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
     this.resultSetConcurrency = resultSetConcurrency;
     connection.addStatement(this);
     connection.getActiveConnection();
+  }
+
+  public void setDumpSQL(boolean dumpSQL) {
+    this.dumpSQL = dumpSQL;
   }
 
   protected java.sql.Statement createStatement() throws SQLException {
@@ -89,23 +96,55 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
 
   @Override
   public ResultSet executeQuery(final String sql) throws SQLException {
-    if (connection.isShadowLoading()) {
-      Callable<ResultSet> callable = new Callable<ResultSet>() {
+    long startTime = System.currentTimeMillis();
+    try {
 
-        @Override
-        public ResultSet call() throws Exception {
-          return getActiveStatement().executeQuery(sql);
-        }
-      };
-      return executor.get(callable);
-    } else {
-      return getActiveStatement().executeQuery(sql);
+      if (connection.isShadowLoading()) {
+        Callable<ResultSet> callable = new Callable<ResultSet>() {
+
+          @Override
+          public ResultSet call() throws Exception {
+            return getActiveStatement().executeQuery(sql);
+          }
+        };
+        return executor.get(callable);
+      } else {
+        return getActiveStatement().executeQuery(sql);
+      }
+    } catch (SQLException ex) {
+      Logger.getAnonymousLogger().log(Level.INFO, null, ex);
+      throw ex;
+    } finally {
+      long endTime = System.currentTimeMillis();
+      if (dumpSQL) {
+        StringBuilder sb = new StringBuilder("Executing query: sql=\n");
+        sb.append(sql);
+
+        sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
+        Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
+      }
     }
   }
 
   @Override
   public int executeUpdate(String sql) throws SQLException {
-    return getActiveStatement().executeUpdate(sql);
+    long startTime = System.currentTimeMillis();
+    try {
+
+      return getActiveStatement().executeUpdate(sql);
+    } catch (SQLException ex) {
+      Logger.getAnonymousLogger().log(Level.INFO, null, ex);
+      throw ex;
+    } finally {
+      long endTime = System.currentTimeMillis();
+      if (dumpSQL) {
+        StringBuilder sb = new StringBuilder("Executing query: sql=\n");
+        sb.append(sql);
+
+        sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
+        Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
+      }
+    }
   }
 
   @Override
@@ -187,7 +226,23 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
 
   @Override
   public boolean execute(String sql) throws SQLException {
-    return getActiveStatement().execute(sql);
+    long startTime = System.currentTimeMillis();
+    try {
+
+      return getActiveStatement().execute(sql);
+    } catch (SQLException ex) {
+      Logger.getAnonymousLogger().log(Level.INFO, null, ex);
+      throw ex;
+    } finally {
+      long endTime = System.currentTimeMillis();
+      if (dumpSQL) {
+        StringBuilder sb = new StringBuilder("Executing query: sql=\n");
+        sb.append(sql);
+
+        sb.append("\nexecutingTime=").append(endTime - startTime).append(" ms.");
+        Logger.getAnonymousLogger().log(Level.INFO, sb.toString());
+      }
+    }
   }
 
   @Override

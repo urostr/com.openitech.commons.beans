@@ -4,8 +4,6 @@
  */
 package com.openitech.jdbc.proxy;
 
-import com.openitech.db.connection.ConnectionManager;
-import com.openitech.db.connection.DbConnection;
 import com.openitech.jdbc.values.SQLValue;
 import java.io.InputStream;
 import java.io.Reader;
@@ -42,7 +40,6 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
 
   private final PreparedStatementFactory factory;
   private String sql = "";
-  private boolean dumpSQL = Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_DUMP_STATMENTS, "false"));
 
   protected PreparedStatementProxy(AbstractConnection connection, String sql) throws SQLException {
     this(connection, sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -77,11 +74,6 @@ public class PreparedStatementProxy extends StatementProxy implements PreparedSt
     this.factory = factory;
     this.sql = sql;
   }
-
-  public void setDumpSQL(boolean dumpSQL) {
-    this.dumpSQL = dumpSQL;
-  }
-
 
   @Override
   public ResultSet executeQuery() throws SQLException {
