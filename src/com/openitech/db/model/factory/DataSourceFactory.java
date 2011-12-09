@@ -48,10 +48,13 @@ import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.Defa
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views;
 import com.openitech.importer.JImportEventsModel;
 import com.openitech.sql.util.SqlUtilities;
+import com.openitech.value.events.Activity;
+import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -60,6 +63,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.rowset.CachedRowSet;
 import javax.swing.JPanel;
 import javax.swing.event.ListDataListener;
 import javax.xml.bind.JAXBException;
@@ -78,9 +82,19 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   private List<String> namedParameters = new ArrayList<String>();
   private Workarea root;
   private CreationParameters creationParameters;
+  private Integer workSpaceId;
+  private Integer workAreaId;
 
   public DataSourceFactory(DbDataModel dbDataModel) {
     super(dbDataModel);
+  }
+
+  public void setWorkAreaId(Integer workAreaId) {
+    this.workAreaId = workAreaId;
+  }
+
+  public void setWorkSpaceId(Integer workSpaceId) {
+    this.workSpaceId = workSpaceId;
   }
 
   @Override
@@ -130,9 +144,15 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           if (dataSourceElement.getCOUNTSQL() != null) {
             dataSource.setCountSql(getReplacedSql(dataSourceElement.getCOUNTSQL()));
           }
+
           if (dataSourceElement.getIdSifranta() != null) {
             String dataSourceSQL = SqlUtilities.getInstance().getDataSourceSQL(dataSourceElement.getIdSifranta(), dataSourceElement.getIdSifre());
             dataSource.setSelectSql(getReplacedSql(dataSourceSQL));
+          } else if (dataSourceElement.getSQL() == null) {
+            if (workAreaId != null) {
+              String dataSourceSQL = SqlUtilities.getInstance().getDataSourceSQL(workAreaId);
+              dataSource.setSelectSql(getReplacedSql(dataSourceSQL));
+            }
           } else {
             dataSource.setSelectSql(getReplacedSql(dataSourceElement.getSQL()));
           }
@@ -201,16 +221,16 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   }
 
   protected void storeCachedTemporaryTables() {
-    if (cachedTemporaryTables == null) {
-      cachedTemporaryTables = SqlUtilities.getInstance().getCachedTemporaryTables();
-    }
+//    if (cachedTemporaryTables == null) {
+//      cachedTemporaryTables = SqlUtilities.getInstance().getCachedTemporaryTables();
+//    }
     final DataSource dataSourceElement = dataSourceXML.getDataSource();
     if (dataSourceElement != null) {
       for (QueryParameter parameter : dataSourceElement.getParameters()) {
         if (parameter.getTemporaryTable() != null) {
           TemporaryTable tt = parameter.getTemporaryTable();
           if (tt.getMaterializedView() != null) {
-            if (!cachedTemporaryTables.containsKey(tt.getMaterializedView().getValue())) {
+            if (SqlUtilities.getInstance().getCachedTemporaryTable(tt.getMaterializedView().getValue()) == null) {
               SqlUtilities.getInstance().storeCachedTemporaryTable(tt);
             }
           }
@@ -506,14 +526,18 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     if (dataSourceXML.getWorkSpaceInformation() != null) {
       WorkSpaceInformation workSpaceInformation = dataSourceXML.getWorkSpaceInformation();
       for (WorkSpaceInformation.Panels panels : workSpaceInformation.getPanels()) {
-        Integer workSpaceId = panels.getWorkSpaceId();
-        if (workSpaceId != null) {
+
+        Integer panelWorkSpaceId = panels.getWorkSpaceId();
+        if (panelWorkSpaceId == null) {
+          panelWorkSpaceId = this.workSpaceId;
+        }
+        if (panelWorkSpaceId != null) {
           List<JPanel> components;
-          if (this.workSpaceInformationPanels.containsKey(workSpaceId)) {
-            components = workSpaceInformationPanels.get(workSpaceId);
+          if (this.workSpaceInformationPanels.containsKey(panelWorkSpaceId)) {
+            components = workSpaceInformationPanels.get(panelWorkSpaceId);
           } else {
             components = new LinkedList<JPanel>();
-            this.workSpaceInformationPanels.put(workSpaceId, components);
+            this.workSpaceInformationPanels.put(panelWorkSpaceId, components);
           }
           if (panels.getClassName() != null) {
             try {
@@ -545,20 +569,87 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   protected DbTableModel createTableModel() {
     com.openitech.db.model.DbTableModel tableModel = this.tableModel != null ? this.tableModel : new com.openitech.db.model.DbTableModel();
     final DataModel dataModel = dataSourceXML.getDataModel();
+    List<String[]> tableColumns = new ArrayList<String[]>();
+    boolean addDefaultColumns = false;
     if (dataModel != null) {
       final TableColumns tableColumnsElement = dataModel.getTableColumns();
       if (tableColumnsElement != null) {
         List<TableColumnDefinition> tableColumnDefinitions = tableColumnsElement.getTableColumnDefinition();
-        List<String[]> tableColumns = new ArrayList<String[]>();
-        for (TableColumnDefinition tableColumnDefinition : tableColumnDefinitions) {
-          tableColumns.add(tableColumnDefinition.getTableColumnEntry().toArray(new String[tableColumnDefinition.getTableColumnEntry().size()]));
+        if (tableColumnDefinitions.size() > 0) {
+          for (TableColumnDefinition tableColumnDefinition : tableColumnDefinitions) {
+            tableColumns.add(tableColumnDefinition.getTableColumnEntry().toArray(new String[tableColumnDefinition.getTableColumnEntry().size()]));
+          }
+          if (dataModel.getSeparator() != null) {
+            tableModel.setSeparator(dataModel.getSeparator());
+          }
+        } else {
+          addDefaultColumns = true;
         }
-        tableModel.setColumns(tableColumns.toArray(new String[tableColumns.size()][]));
-        if (dataModel.getSeparator() != null) {
-          tableModel.setSeparator(dataModel.getSeparator());
-        }
+      } else {
+        addDefaultColumns = true;
       }
+    } else {
+      addDefaultColumns = true;
     }
+    if (addDefaultColumns) {
+      List<String> ignoredColumns = new ArrayList<String>();
+      ignoredColumns.add("Id");
+      ignoredColumns.add("EventId");
+      ignoredColumns.add("IdSifranta");
+      ignoredColumns.add("IdSifre");
+      ignoredColumns.add("IdEventSource");
+      ignoredColumns.add("VersionId");
+      ignoredColumns.add("Version");
+      ignoredColumns.add("Datum");
+      ignoredColumns.add("DatumSpremembe");
+      try {
+        dataSource.setSafeMode(false);
+        dataSource.setQueuedDelay(0);
+        dataSource.filterChanged();
+        dataSource.loadData();
+        dataSource.setSafeMode(true);
+        ResultSetMetaData metaData = dataSource.getMetaData();
+        CachedRowSet generatedFields = null;
+        if (workAreaId != null) {
+          Activity activity = SqlUtilities.getInstance().getActivity(workAreaId);
+          if (activity != null) {
+            ActivityEvent activityEvent = SqlUtilities.getInstance().getActivityEvent((int) activity.getActivityId());
+            if (activityEvent != null) {
+              generatedFields = SqlUtilities.getInstance().getGeneratedFields(activityEvent.getIdSifranta(), activityEvent.getIdSifre());
+            }
+          }
+        }
+
+        if (generatedFields != null) {
+          int columnCount = metaData.getColumnCount();
+
+          for (int i = 1; i <= columnCount; i++) {
+            String columnLabel = metaData.getColumnLabel(i);
+            if (columnLabel != null && !ignoredColumns.contains(columnLabel)) {
+              String header = columnLabel;
+              boolean showInTable = true;
+              generatedFields.beforeFirst();
+              while (generatedFields.next()) {
+                String fieldName = generatedFields.getString("ImePolja");
+                if (fieldName != null && fieldName.equals(header)) {
+                  header = generatedFields.getString("Opis");
+                  showInTable = generatedFields.getBoolean("ShowInTable");
+                }
+              }
+              if (showInTable) {
+                tableColumns.add(new String[]{header, columnLabel});
+              }
+
+            }
+          }
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+    }
+    tableModel.setColumns(tableColumns.toArray(new String[tableColumns.size()][]));
+
     tableModel.setDataSource(dataSource);
     return tableModel;
 

@@ -4,7 +4,6 @@
  */
 package com.openitech.db.model.factory;
 
-import com.openitech.db.components.dogodki.WorkSpaceInformation;
 import com.openitech.db.model.FieldObserver;
 import com.openitech.db.filters.DataSourceFiltersMap;
 import com.openitech.db.filters.JWorkAreaFilter;
