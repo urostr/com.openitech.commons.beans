@@ -14,6 +14,7 @@ import com.openitech.db.connection.DbConnection;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
+import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
@@ -21,6 +22,7 @@ import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
 import com.openitech.util.Equals;
 import com.openitech.value.VariousValue;
+import com.openitech.value.events.Activity;
 import com.openitech.value.events.AfterUpdateEvent;
 import com.openitech.value.events.EventType;
 import com.openitech.value.events.UpdateEventFields;
@@ -651,7 +653,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract DbDataSource joinSecondaryDataSources(List<DbDataSource> dataSources) throws SQLException;
 
-  public abstract Map<String, com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
+//  public abstract Map<String, com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
 
   public abstract boolean getSearchByEventPK(int idSifranta, String... idSifre);
 
@@ -722,11 +724,22 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract void loadCaches() throws SQLException;
 
+  public abstract ActivityEvent getActivityEvent(int activityId) throws SQLException;
+
+  public abstract Activity getActivity(int workAreaId) throws SQLException;
+
+  public String getDataSourceSQL(int workAreaId) throws SQLException{
+    ActivityEvent activityEvent = getActivityEvent((int) getActivity(workAreaId).getActivityId());
+    return getDataSourceSQL(activityEvent.getIdSifranta(), activityEvent.getIdSifre());
+  }
+
   public abstract String getDataSourceSQL(int idSifranta, String idSifre) throws SQLException;
 
   public abstract boolean isValidEventId(Long eventId) throws SQLException;
 
   public abstract Set<Field> getPrimaryKey(int idSifranta, String idSifre) throws SQLException;
+
+  public abstract TemporaryTable getCachedTemporaryTable(String value);
 
   public static enum Operation {
 
