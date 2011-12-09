@@ -517,6 +517,14 @@ public class Event extends EventType implements Cloneable {
 
   }
 
+  public Object getValue(String imePolja) {
+    return getValue(this, Field.getField(imePolja));
+  }
+
+  public static Object getValue(Event event, String imePolja) {
+    return getValue(event, Field.getField(imePolja));
+  }
+
   public static Object getValue(Event event, String imePolja, int type) {
     return getValue(event, new Field(imePolja, type));
   }
