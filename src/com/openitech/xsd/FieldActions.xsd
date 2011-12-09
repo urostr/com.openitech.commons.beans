@@ -72,85 +72,93 @@
           </xsd:complexType>
         </xsd:element>
 
-        <xsd:element name="ActionListener" maxOccurs="unbounded" minOccurs="0">
+        <xsd:element name="UnmodifiableValue" maxOccurs="1" minOccurs="0">
           <xsd:complexType>
             <xsd:all>
-              <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"/>
-              <xsd:element name="actionPerformed" type="tns:ScriptType"></xsd:element>
-            </xsd:all>
-          </xsd:complexType>
-        </xsd:element>
-        <xsd:element name="ActiveRowChangeListener" maxOccurs="unbounded" minOccurs="0">
-          <xsd:complexType>
-            <xsd:all>
-              <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"/>
-              <xsd:element name="activeRowChange" type="tns:ScriptType"></xsd:element>
-            </xsd:all>
-          </xsd:complexType>
-        </xsd:element>
-        <xsd:element name="Constraint" maxOccurs="unbounded" minOccurs="0">
-          <xsd:complexType>
-            <xsd:choice>
-              <xsd:element name="AllowedValues" type="xsd:string" maxOccurs="unbounded"/>
-              <xsd:element name="ExcludedValues" maxOccurs="unbounded" type="xsd:string"/>
-            </xsd:choice>
-            <xsd:attribute name="IdSifranta" type="xsd:int"/>
-          </xsd:complexType>
-        </xsd:element>
-        <xsd:element name="Scheduler" maxOccurs="unbounded" minOccurs="0">
-          <xsd:complexType>
-            <xsd:choice>
-              <xsd:element name="ScheduleInvalidation">
-                <xsd:complexType>
-                  <xsd:sequence>
-                    <xsd:element name="ToEvent" maxOccurs="unbounded">
-                      <xsd:complexType>
-                        <xsd:all>
-                          <xsd:element name="IdSifranta" type="xsd:int"></xsd:element>
-                          <xsd:element name="IdSifre" type="xsd:string"></xsd:element>
-                        </xsd:all>
-                      </xsd:complexType>
-                    </xsd:element>
-                  </xsd:sequence>
-                  <xsd:attribute name="FromIdSifranta" type="xsd:int"/>
-                </xsd:complexType>
-              </xsd:element>
-            </xsd:choice>
-          </xsd:complexType>
-        </xsd:element>
-        <xsd:element name="Editor" minOccurs="0" maxOccurs="unbounded">
-          <xsd:complexType>
-            <xsd:sequence>
-              <xsd:element name="Sifra" type="xsd:string"></xsd:element>
-              <xsd:element name="Script" type="tns:ScriptType"></xsd:element>
-            </xsd:sequence>
-          </xsd:complexType>
-        </xsd:element>
-        <xsd:element name="StoreProcedure" maxOccurs="1" minOccurs="0">
-          <xsd:complexType>
-            <xsd:all>
-              <xsd:element name="Script" type="tns:ScriptType"></xsd:element>
-            </xsd:all>
-          </xsd:complexType>
-        </xsd:element>
-      </xsd:sequence>
+              <xsd:element name="UnmodifiableValue" type="xsd:boolean" maxOccurs="1" minOccurs="1"/>
+              </xsd:all>
+            </xsd:complexType>
+          </xsd:element>
+          
+          <xsd:element name="ActionListener" maxOccurs="unbounded" minOccurs="0">
+            <xsd:complexType>
+              <xsd:all>
+                <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"/>
+                <xsd:element name="actionPerformed" type="tns:ScriptType"></xsd:element>
+              </xsd:all>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="ActiveRowChangeListener" maxOccurs="unbounded" minOccurs="0">
+            <xsd:complexType>
+              <xsd:all>
+                <xsd:element name="dataSource" type="tns:dataSource" default="PRIMARY"/>
+                <xsd:element name="activeRowChange" type="tns:ScriptType"></xsd:element>
+              </xsd:all>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="Constraint" maxOccurs="unbounded" minOccurs="0">
+            <xsd:complexType>
+              <xsd:choice>
+                <xsd:element name="AllowedValues" type="xsd:string" maxOccurs="unbounded"/>
+                <xsd:element name="ExcludedValues" maxOccurs="unbounded" type="xsd:string"/>
+              </xsd:choice>
+              <xsd:attribute name="IdSifranta" type="xsd:int"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="Scheduler" maxOccurs="unbounded" minOccurs="0">
+            <xsd:complexType>
+              <xsd:choice>
+                <xsd:element name="ScheduleInvalidation">
+                  <xsd:complexType>
+                    <xsd:sequence>
+                      <xsd:element name="ToEvent" maxOccurs="unbounded">
+                        <xsd:complexType>
+                          <xsd:all>
+                            <xsd:element name="IdSifranta" type="xsd:int"></xsd:element>
+                            <xsd:element name="IdSifre" type="xsd:string"></xsd:element>
+                          </xsd:all>
+                        </xsd:complexType>
+                      </xsd:element>
+                    </xsd:sequence>
+                    <xsd:attribute name="FromIdSifranta" type="xsd:int"/>
+                  </xsd:complexType>
+                </xsd:element>
+              </xsd:choice>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="Editor" minOccurs="0" maxOccurs="unbounded">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="Sifra" type="xsd:string"></xsd:element>
+                <xsd:element name="Script" type="tns:ScriptType"></xsd:element>
+              </xsd:sequence>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="StoreProcedure" maxOccurs="1" minOccurs="0">
+            <xsd:complexType>
+              <xsd:all>
+                <xsd:element name="Script" type="tns:ScriptType"></xsd:element>
+              </xsd:all>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="ScriptType">
+      <xsd:choice>
+        <xsd:element name="Groovy" type="xsd:string"></xsd:element>
+        <xsd:element name="ClassName" type="xsd:string"></xsd:element>
+      </xsd:choice>
     </xsd:complexType>
-  </xsd:element>
-  <xsd:complexType name="ScriptType">
-    <xsd:choice>
-      <xsd:element name="Groovy" type="xsd:string"></xsd:element>
-      <xsd:element name="ClassName" type="xsd:string"></xsd:element>
-    </xsd:choice>
-  </xsd:complexType>
-  <xsd:simpleType name="dataSource">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="PARENT"/>
-      <xsd:enumeration value="PRIMARY"/>
-      <xsd:enumeration value="SECONDARY"/>
-    </xsd:restriction>
-  </xsd:simpleType>
+    <xsd:simpleType name="dataSource">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="PARENT"/>
+        <xsd:enumeration value="PRIMARY"/>
+        <xsd:enumeration value="SECONDARY"/>
+      </xsd:restriction>
+    </xsd:simpleType>
   
-</xsd:schema>
+  </xsd:schema>
 
 
 

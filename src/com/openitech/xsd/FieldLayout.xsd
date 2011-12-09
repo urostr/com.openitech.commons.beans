@@ -9,6 +9,7 @@
     <xsd:complexType>
       <xsd:sequence>
         <xsd:element name="Layout" type="ds:GridBagConstraints"></xsd:element>
+        <xsd:element name="PasswordField" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="ShowLabel" type="xsd:boolean" default="true"></xsd:element>
         <xsd:element name="OpisNadVnosnoMasko" type="xsd:boolean" default="false"></xsd:element>
         <xsd:element name="OpisVNaslovu" type="xsd:boolean" default="false"></xsd:element>
