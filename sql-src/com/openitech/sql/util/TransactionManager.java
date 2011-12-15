@@ -54,8 +54,16 @@ public class TransactionManager {
   }
 
   public Savepoint beginTransaction() throws SQLException {
+    return beginTransaction(false);
+  }
+
+  public Savepoint beginTransaction(boolean wait) throws SQLException {
     try {
-      lock.tryLock(3, TimeUnit.SECONDS);
+      if (wait) {
+        lock.lock();
+      } else {
+        lock.tryLock(3, TimeUnit.SECONDS);
+      }
       if (connection.getAutoCommit()) {
         autocommit = connection.getAutoCommit();
         connection.setAutoCommit(false);
@@ -95,61 +103,61 @@ public class TransactionManager {
 
   public boolean endTransaction(boolean commit, Savepoint savepoint) throws SQLException {
     try {
-    if (!connection.getAutoCommit()) {
-      if (isTransactionValid()) {
-        if (!lock.isHeldByCurrentThread()) {
-          throw new SQLException("Concurrent transaction access is not allowed", "T-Lock", 100);
-        }
-        if (commit) {
-          if (savepoint != null) {
-            try {
-              connection.releaseSavepoint(savepoint);
-            } catch (SQLException err) {
-              Logger.getLogger(SqlUtilities.class.getName()).log(Level.WARNING, err.getMessage(), err);
-            }
+      if (!connection.getAutoCommit()) {
+        if (isTransactionValid()) {
+          if (!lock.isHeldByCurrentThread()) {
+            throw new SQLException("Concurrent transaction access is not allowed", "T-Lock", 100);
           }
-          if (activeSavepoints.empty()) {
-            connection.commit();
-            if (DbDataSource.DUMP_SQL) {
-              System.err.println("-- COMMIT TRANSACTION -- ");
+          if (commit) {
+            if (savepoint != null) {
+              try {
+                connection.releaseSavepoint(savepoint);
+              } catch (SQLException err) {
+                Logger.getLogger(SqlUtilities.class.getName()).log(Level.WARNING, err.getMessage(), err);
+              }
+            }
+            if (activeSavepoints.empty()) {
+              connection.commit();
+              if (DbDataSource.DUMP_SQL) {
+                System.err.println("-- COMMIT TRANSACTION -- ");
+              }
+            } else if (savepoint != null) {
+              System.err.println("-- RELEASE SAVEPOINT (" + savepoint.toString() + ") -- ");
             }
           } else if (savepoint != null) {
-            System.err.println("-- RELEASE SAVEPOINT (" + savepoint.toString() + ") -- ");
+            connection.rollback(savepoint);
+          } else {
+            activeSavepoints.clear();
+            connection.rollback();
           }
-        } else if (savepoint != null) {
-          connection.rollback(savepoint);
+          if (savepoint != null) {
+            activeSavepoints.remove(savepoint);
+          }
+          if (!commit) {
+            if (activeSavepoints.empty()) {
+              System.err.println("-- ROLLBACK TRANSACTION -- ");
+            } else {
+              System.err.println("-- ROLLBACK TO SAVEPOINT (" + savepoint.toString() + ") -- ");
+            }
+          }
+
+          if (activeSavepoints.empty()) {
+            connection.setAutoCommit(autocommit);
+          }
+          return true;
         } else {
           activeSavepoints.clear();
-          connection.rollback();
-        }
-        if (savepoint != null) {
-          activeSavepoints.remove(savepoint);
-        }
-        if (!commit) {
-          if (activeSavepoints.empty()) {
-            System.err.println("-- ROLLBACK TRANSACTION -- ");
-          } else {
-            System.err.println("-- ROLLBACK TO SAVEPOINT (" + savepoint.toString() + ") -- ");
-          }
-        }
-
-        if (activeSavepoints.empty()) {
           connection.setAutoCommit(autocommit);
+          if (commit) {
+            throw new SQLException("Trying to commit an invalid transaction!");
+          } else {
+            System.err.println("-- TRANSACTION CLEARED [CAUSE:INVALID TRANSACTION] -- ");
+          }
+          return false;
         }
-        return true;
       } else {
-        activeSavepoints.clear();
-        connection.setAutoCommit(autocommit);
-        if (commit) {
-          throw new SQLException("Trying to commit an invalid transaction!");
-        } else {
-          System.err.println("-- TRANSACTION CLEARED [CAUSE:INVALID TRANSACTION] -- ");
-        }
         return false;
       }
-    } else {
-      return false;
-    }
     } finally {
       if (activeSavepoints.isEmpty() && lock.isHeldByCurrentThread()) {
         lock.unlock();
