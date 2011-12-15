@@ -795,7 +795,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
 //
 //    return result;
 //  }
-
   @Override
   protected void cacheEvent(Event event) throws SQLException {
     List<EventCacheTemporaryParameter> eventObjects = getCachedEventObject(event);
@@ -3024,6 +3023,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     DbDataSource.SubstSqlParameter sqlEventSifra = new DbDataSource.SubstSqlParameter("<%ev_sifra%>");
     DbDataSource.SubstSqlParameter sqlEventAlias = new DbDataSource.SubstSqlParameter("<%ev_alias%>");
     DbDataSource.SubstSqlParameter sqlEventTable = new DbDataSource.SubstSqlParameter("<%ev_table%>");
+    DbDataSource.SubstSqlParameter sqlEventTableVersioned = new DbDataSource.SubstSqlParameter("<%ev_table%>");
     DbDataSource.SubstSqlParameter sqlEventWhere = new DbDataSource.SubstSqlParameter("<%ev_where%>");
     String evVersionedSubquery;
     String evNonVersionedSubquery;
@@ -3037,6 +3037,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
     boolean usesView = false;
     String ev_table;
     String view_versioned;
+    String view_NOTversioned;
 
     public EventFilterSearch(EventFilterSearch eventFilterSearch, Set<Integer> sifranti) {
       super(eventFilterSearch.namedParameters);
@@ -3112,11 +3113,13 @@ public class SqlUtilitesImpl extends SqlUtilities {
           }
 
           final String chk_versioned = eventsDb + ".[dbo].[E_" + s + qSifra + "]";
+          final String chk_NOTversioned = eventsDb + ".[dbo].[E_" + s + qSifra + "_valid]";
 
-          usesView = isViewReady(eventsDb, chk_versioned);
+          usesView = isViewReady(eventsDb, chk_NOTversioned);
 
           if (usesView) {
             view_versioned = chk_versioned;
+            view_NOTversioned = chk_NOTversioned;
           }
         }
       } else {
@@ -3126,6 +3129,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       if (usesView) {
         sqlEventAlias.setValue("ev_view");
         sqlEventTable.setValue(ev_table + " ev WITH (NOLOCK)\n"
+                + "INNER JOIN " + view_NOTversioned + " AS ev_view WITH (NOLOCK,NOEXPAND) ON ev_view.id = ev.id");
+        sqlEventTableVersioned.setValue(ev_table + " ev WITH (NOLOCK)\n"
                 + "INNER JOIN " + view_versioned + " AS ev_view WITH (NOLOCK,NOEXPAND) ON ev_view.id = ev.id");
       } else {
         sqlEventAlias.setValue("ev");
@@ -3421,7 +3426,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evVersionedParameters.clear();
       evVersionedParameters.add(sqlEventAlias);
       evVersionedParameters.add(sqlFindEventVersion);
-      evVersionedParameters.add(sqlEventTable);
+      if (!usesView) {
+        evVersionedParameters.add(sqlEventTable);
+      } else {
+        evVersionedParameters.add(sqlEventTableVersioned);
+      }
       evVersionedParameters.add(sqlFindEventVersion);
       evVersionedParameters.add(sqlFindEventType);
       evVersionedParameters.add(sqlFindEventSource);
