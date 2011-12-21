@@ -97,7 +97,7 @@
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jXDatePicker2" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="67" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -152,7 +152,7 @@
                   <Group type="102" attributes="0">
                       <Component id="jcbType" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jtfValue" pref="231" max="32767" attributes="0"/>
+                      <Component id="jtfValue" pref="130" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -207,7 +207,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jtfSifrant" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jcbSifrant" pref="269" max="32767" attributes="0"/>
+                      <Component id="jcbSifrant" pref="157" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -249,7 +249,7 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jtfPreformattedValue" alignment="0" pref="313" max="32767" attributes="0"/>
+                  <Component id="jtfPreformattedValue" alignment="0" pref="260" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
@@ -280,7 +280,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jcbNumberType" min="-2" pref="130" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jtfNumberValue" pref="177" max="32767" attributes="0"/>
+                      <Component id="jtfNumberValue" pref="123" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>

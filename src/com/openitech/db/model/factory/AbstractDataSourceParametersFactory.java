@@ -528,6 +528,8 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               checkBoxSeekType.setName(parameter.getName());
               checkBoxSeekType.setLayout(parameter.getLayout());
+              checkBoxSeekType.setGrouped(parameter.isButtonGroup());
+              
               CheckBoxSeekType.Rezultati rezultati = parameter.getRezultati();
               if (rezultati != null) {
                 List<RezultatKlicaValues> rezultatiValues = rezultati.getRezultatiValues();

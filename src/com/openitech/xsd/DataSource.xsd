@@ -52,8 +52,8 @@
               </xsd:element>
               <xsd:element name="ViewsParameters">
                 <xsd:complexType>
-                  <xsd:sequence maxOccurs="unbounded">
-                    <xsd:element name="Views">
+                  <xsd:sequence>
+                    <xsd:element name="Views" minOccurs="1" maxOccurs="unbounded">
                       <xsd:complexType>
                         <xsd:all>
                           <xsd:element name="IdSifranta" maxOccurs="1" type="xsd:int"/>
@@ -67,8 +67,8 @@
               </xsd:element>
               <xsd:element name="Listeners" minOccurs="0">
                 <xsd:complexType>
-                  <xsd:sequence minOccurs="1" maxOccurs="unbounded">
-                    <xsd:element name="Listener">
+                  <xsd:sequence>
+                    <xsd:element name="Listener" minOccurs="1" maxOccurs="unbounded">
                       <xsd:complexType>
                         <xsd:choice>
                           <xsd:element name="ActionListener" type="tns:Factory"></xsd:element>
@@ -624,7 +624,10 @@
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
-      <xsd:element name="CheckBoxSeekType">
+      <xsd:element name="CheckBoxSeekType">        
+        <xsd:annotation>
+          <xsd:documentation>Deprecated</xsd:documentation>
+        </xsd:annotation>
         <xsd:complexType>
           <xsd:all>
             <xsd:element name="Name" type="xsd:string"></xsd:element>
@@ -637,6 +640,7 @@
             </xsd:element>
             <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
           </xsd:all>
+          <xsd:attribute name="ButtonGroup" type="xsd:boolean" default="false"></xsd:attribute>
         </xsd:complexType>
       </xsd:element>
       <xsd:element name="ConfigureFilterSeekType">

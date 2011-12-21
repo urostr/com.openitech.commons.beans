@@ -1040,6 +1040,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     private CheckBoxValue vsi = new CheckBoxValue("Vsi", "", true);
     private List<CheckBoxValue> rezultati = new ArrayList<CheckBoxValue>();
     private final DataSourceFilters filters;
+    private boolean grouped = false;
 
     public CheckBoxSeekType(DataSourceFilters filters) {
       super("", PREFORMATTED, 0);
@@ -1109,6 +1110,24 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     public CheckBoxValue getRezultatVsi() {
       return vsi;
+    }
+
+    /**
+     * Get the value of grouped
+     *
+     * @return the value of grouped
+     */
+    public boolean isGrouped() {
+      return grouped;
+    }
+
+    /**
+     * Set the value of grouped
+     *
+     * @param grouped new value of grouped
+     */
+    public void setGrouped(boolean grouped) {
+      this.grouped = grouped;
     }
 
     public static class CheckBoxValue {

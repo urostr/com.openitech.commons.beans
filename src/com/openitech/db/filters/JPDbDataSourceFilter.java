@@ -40,6 +40,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractButton;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -48,6 +50,8 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
@@ -64,6 +68,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
   private final java.util.Map<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]> documents = new HashMap<DataSourceFilters.AbstractSeekType<? extends Object>, javax.swing.text.Document[]>();
   private final java.util.Map<DataSourceFilters.AbstractSeekType<? extends Object>, DbComboBoxModel> sifranti = new HashMap<DataSourceFilters.AbstractSeekType<? extends Object>, DbComboBoxModel>();
   private final java.util.Set<DbDataSource> dataSources = new HashSet<DbDataSource>();
+  private final java.util.List<ButtonGroup> buttonGroups = new java.util.ArrayList<ButtonGroup>();
 
   /** Creates new form JPDbDataSourceFilter */
   public JPDbDataSourceFilter() {
@@ -267,6 +272,14 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     filtersInPanel = 0;
     documents.clear();
     dataSources.clear();
+    
+    for (ButtonGroup bg : buttonGroups) {
+      for (Enumeration<AbstractButton>  elements = bg.getElements();elements.hasMoreElements();) {
+        bg.remove(elements.nextElement());
+      }
+    }
+    
+    buttonGroups.clear();
 
     for (java.util.Map.Entry<DataSourceFilters, java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>>> entry : filters.entrySet()) {
       java.util.List<DataSourceFilters.AbstractSeekType<? extends Object>> seekTypeList = entry.getValue();
@@ -671,23 +684,43 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             customPanel.add(jlOpis, gridBagConstraints);
 
             final DataSourceFilters.CheckBoxSeekType existsSeekType = (CheckBoxSeekType) item;
+            final ButtonGroup bg = new ButtonGroup();
 
             JPanel jpBoxes = new JPanel(new GridBagLayout());
             jpBoxes.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+            
 
             List<CheckBoxValue> rezultati = existsSeekType.getRezultati();
             for (final CheckBoxValue rezultatKlica : rezultati) {
               final JCheckBox checkBox = new JCheckBox(rezultatKlica.getOpis());
+
               checkBox.setSelected(rezultatKlica.isChecked());
+              
+              if (existsSeekType.isGrouped()) {
+                bg.add(checkBox);
+              }
+              
+              checkBox.getModel().addChangeListener(new ChangeListener() {
+
+                @Override
+                public void stateChanged(ChangeEvent e) {
+                  rezultatKlica.setChecked(checkBox.isSelected());
+                }
+              });
+
               checkBox.addActionListener(new ActionListener() {
 
                 @Override
-                public void actionPerformed(ActionEvent e) {
-                  rezultatKlica.setChecked(checkBox.isSelected());
+                public void actionPerformed(ActionEvent e) {                    
                   existsSeekType.reload();
                 }
               });
+              
               jpBoxes.add(checkBox, new java.awt.GridBagConstraints());
+            }
+            
+            if (bg.getButtonCount()>0) {
+              buttonGroups.add(bg);
             }
 
             //ko je dataSource pripravljen, mu dodam default filtre
