@@ -752,6 +752,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           List<String> eventColumns = eventImporter.getEventColumns();
           String title = eventImporter.getTitle();
           Set<Field> eventColumnsList = new HashSet<Field>();
+          Boolean hideUI = eventImporter.isHideUI();
 
           for (String imePolja : eventColumns) {
             try {
@@ -777,7 +778,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             }
           }
 
-          imporEventsModels.add(new JImportEventsModel(title, dataSource, idSifranta, idSifre, activityId, eventColumnsList));
+          imporEventsModels.add(new JImportEventsModel(title, dataSource, idSifranta, idSifre, activityId, eventColumnsList, hideUI));
         }
       }
     }
