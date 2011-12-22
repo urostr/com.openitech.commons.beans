@@ -2294,9 +2294,10 @@ public class SqlUtilitesImpl extends SqlUtilities {
   @Override
   public Set<Field> getPrimaryKey(int idSifranta, String idSifre) throws SQLException {
     EventType eventType = new EventType(idSifranta, idSifre);
-    Set<Field> primaryKeys = new HashSet<Field>();
+    Set<Field> primaryKeys;
 
     if (!pkFieldsCache.containsKey(eventType)) {
+      primaryKeys = new HashSet<Field>();
 
       if (findPrimaryKey == null) {
         findPrimaryKey = ConnectionManager.getInstance().getTxConnection().prepareStatement(com.openitech.io.ReadInputStream.getResourceAsString(getClass(), "findPrimaryKeys.sql", "cp1250"));
