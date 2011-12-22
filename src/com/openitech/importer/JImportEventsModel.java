@@ -20,14 +20,16 @@ public class JImportEventsModel {
   private String idSifre;
   private Integer activityId;
   Set<Field> defultFields;
+  private Boolean hideUI;
 
-  public JImportEventsModel(String title, DbDataSource dataSource, int idSifranta, String idSifre, Integer activityId, Set<Field> defultFields) {
+  public JImportEventsModel(String title, DbDataSource dataSource, int idSifranta, String idSifre, Integer activityId, Set<Field> defultFields, Boolean hideUI) {
     this.title = title;
     this.dataSource = dataSource;
     this.idSifranta = idSifranta;
     this.idSifre = idSifre;
     this.activityId = activityId;
     this.defultFields = defultFields;
+    this.hideUI = hideUI;
   }
 
   public String getTitle() {
@@ -52,5 +54,9 @@ public class JImportEventsModel {
 
   public String getIdSifre() {
     return idSifre;
+  }
+
+  public boolean isHideUI() {
+    return hideUI == null ? false : hideUI;
   }
 }
