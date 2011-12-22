@@ -231,6 +231,7 @@
                   <xsd:attribute name="IdSifranta" type="xsd:int"/>
                   <xsd:attribute name="IdSifre" type="xsd:string"/>
                   <xsd:attribute name="ActivityId" type="xsd:int"/>
+                  <xsd:attribute name="HideUI" type="xsd:boolean"/>
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
