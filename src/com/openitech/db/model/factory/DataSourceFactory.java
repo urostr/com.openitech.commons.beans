@@ -756,7 +756,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
           for (String imePolja : eventColumns) {
             try {
-              Field field = Field.getField(imePolja, 1, SqlUtilities.getInstance().getPreparedFields());
+              Field field = Field.getField(imePolja);
               if (field == null) {
                 dataSource.setSafeMode(false);
                 dataSource.setQueuedDelay(0);
