@@ -2833,8 +2833,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public void createEventViews(int idSifranta, String idSifre, boolean overrideIdExists, boolean createIndexPK) {
+  public void createEventViews(com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views view, boolean overrideIdExists, boolean createIndexPK) {
     final String eventsDb = SqlUtilities.getEventsDB();
+    int idSifranta = view.getIdSifranta();
+    String idSifre = view.getIdSifre();
+
     String eventsViewVersioned;
     String eventsViewValid;
     try {
@@ -2842,7 +2845,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       try {
         TransactionManager tm = TransactionManager.getInstance(temporaryConnection);
 
-        CallableStatement callStoredValue = temporaryConnection.prepareCall(ReadInputStream.getResourceAsString(getClass(), "callCreateEventsView.sql", "cp1250"));
+        CallableStatement createEventsView = temporaryConnection.prepareCall(ReadInputStream.getResourceAsString(getClass(), "callCreateEventsView.sql", "cp1250"));
         try {
           eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "]";
           eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "_valid]";
@@ -2854,20 +2857,63 @@ public class SqlUtilitesImpl extends SqlUtilities {
             boolean commit = false;
             int param = 1;
             try {
-              callStoredValue.setInt(param++, idSifranta);
+              createEventsView.setInt(param++, idSifranta);
               if (idSifre != null) {
-                callStoredValue.setString(param++, idSifre);
+                createEventsView.setString(param++, idSifre);
               } else {
-                callStoredValue.setNull(param++, java.sql.Types.VARCHAR);
+                createEventsView.setNull(param++, java.sql.Types.VARCHAR);
               }
-              callStoredValue.execute();
+              if (view.getFileGroup() != null) {
+                createEventsView.setString(param++, view.getFileGroup());
+              } else {
+                createEventsView.setNull(param++, java.sql.Types.NVARCHAR);
+              }
+              if (view.getSQLColumns() != null) {
+                createEventsView.setString(param++, view.getSQLColumns());
+              } else {
+                createEventsView.setNull(param++, java.sql.Types.NVARCHAR);
+              }
+              createEventsView.execute();
+
+
+              if (view.getCreateTableSqls() != null) {
+                String context = temporaryConnection.getCatalog();
+                String catalog = view.getCreateTableSqls().getCatalog();
+                String db_user = ConnectionManager.getInstance().getProperty(ConnectionManager.DB_USER, "");
+                final LogWriter logWriter = new LogWriter(Logger.getLogger(SqlUtilitesImpl.class.getName()), Level.INFO);
+                final SQLWorker sqlWorker = new SQLWorker(logWriter);
+
+                if (catalog != null) {
+                  temporaryConnection.setCatalog(catalog);
+                }
+
+                Statement createStatement = temporaryConnection.createStatement();
+                try {
+                  for (String sql : view.getCreateTableSqls().getQuery()) {
+                    String createSQL = sqlWorker.substParameters(sql.replaceAll("<%TS%>", "_" + db_user + Long.toString(System.currentTimeMillis())), new ArrayList<Object>());
+
+                    try {
+                      createStatement.execute(createSQL);
+                    } catch (SQLException ex1) {
+                      Logger.getAnonymousLogger().log(Level.SEVERE, null, ex1);
+                      throw new SQLException(ex1);
+                    }
+                  }
+                } finally {
+                  createStatement.close();
+
+                  if (catalog != null) {
+                    temporaryConnection.setCatalog(context);
+                  }
+                }
+              }
               commit = true;
             } finally {
               tm.endTransaction(commit);
             }
           }
         } finally {
-          callStoredValue.close();
+          createEventsView.close();
         }
       } finally {
         temporaryConnection.close();

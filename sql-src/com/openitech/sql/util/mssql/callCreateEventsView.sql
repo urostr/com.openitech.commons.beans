@@ -1,1 +1,1 @@
-{CALL <%ChangeLog%>.[dbo].[CreateEventsView] (?,?)}
+{CALL <%ChangeLog%>.[dbo].[CreateEventsView] (?,?,?,?)}

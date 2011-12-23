@@ -697,16 +697,26 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract Clob getWorkArea(Integer workSpaceId, Integer workAreaId) throws SQLException;
 
   public abstract Set<String> getEventViewColumns(String viewName);
+  
+  public void createEventViews(com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views view) {
+    createEventViews(view, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), true);
+  }
 
   public void createEventViews(int idSifranta, String idSifre) {
-    createEventViews(idSifranta, idSifre, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), true);
+    com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views view = new com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views();
+    view.setIdSifranta(idSifranta);
+    view.setIdSifre(idSifre);
+    createEventViews(view, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), true);
   }
 
   public void createEventViews(int idSifranta, String idSifre, boolean createIndexPK) {
-    createEventViews(idSifranta, idSifre, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), createIndexPK);
+    com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views view = new com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views();
+    view.setIdSifranta(idSifranta);
+    view.setIdSifre(idSifre);
+    createEventViews(view, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), createIndexPK);
   }
 
-  public abstract void createEventViews(int idSifranta, String idSifre, boolean overrideIfExists, boolean createIndexPK);
+  protected abstract void createEventViews(com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views view, boolean overrideIfExists, boolean createIndexPK);
 
   public abstract String getViewName(int idSifranta, String idSifre, boolean valid);
 
