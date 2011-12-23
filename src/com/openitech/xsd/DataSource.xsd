@@ -240,6 +240,32 @@
                 <xsd:complexType>
                   <xsd:sequence>
                     <xsd:element name="EventColumns" maxOccurs="unbounded" type="xsd:string" minOccurs="0"></xsd:element>
+                    <xsd:element name="Options" minOccurs="0" maxOccurs="1">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="IncludeEvent" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:complexType>
+                              <xsd:sequence>
+                                <xsd:element name="IdSifranta" maxOccurs="1" type="xsd:int" minOccurs="1"></xsd:element>
+                                <xsd:element name="IdSifre" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
+                                <xsd:element name="GroupyByColumn" maxOccurs="1" type="xsd:string" minOccurs="0"></xsd:element>
+                              </xsd:sequence>
+                  
+                            </xsd:complexType>
+                          </xsd:element>
+                          <xsd:element name="IdentityGroupBy" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:complexType>
+                              <xsd:sequence>
+                                <xsd:element name="ColumnName" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
+                                <xsd:element name="IdentityColumnName" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
+                              </xsd:sequence>
+
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:sequence>
+                  
+                      </xsd:complexType>
+                    </xsd:element>
                   </xsd:sequence>
                   <xsd:attribute name="Title" type="xsd:string"/>
                   <xsd:attribute name="IdSifranta" type="xsd:int"/>
@@ -639,7 +665,7 @@
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
-      <xsd:element name="CheckBoxSeekType">        
+      <xsd:element name="CheckBoxSeekType">
         <xsd:annotation>
           <xsd:documentation>Deprecated</xsd:documentation>
         </xsd:annotation>
