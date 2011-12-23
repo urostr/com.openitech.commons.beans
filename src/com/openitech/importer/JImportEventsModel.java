@@ -5,8 +5,15 @@
 package com.openitech.importer;
 
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
+import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options;
+import com.openitech.sql.util.SqlUtilities;
+import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
+import java.sql.SQLException;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -16,20 +23,36 @@ public class JImportEventsModel {
 
   private final String title;
   private DbDataSource dataSource;
-  private int idSifranta;
+  private Integer idSifranta;
   private String idSifre;
   private Integer activityId;
   Set<Field> defultFields;
   private Boolean hideUI;
+  private EventImporter eventImporter;
 
-  public JImportEventsModel(String title, DbDataSource dataSource, int idSifranta, String idSifre, Integer activityId, Set<Field> defultFields, Boolean hideUI) {
-    this.title = title;
+  public JImportEventsModel(EventImporter eventImporter, DbDataSource dataSource, Set<Field> eventColumnsList) {
+    this.eventImporter = eventImporter;
+    this.title = eventImporter.getTitle();
     this.dataSource = dataSource;
-    this.idSifranta = idSifranta;
-    this.idSifre = idSifre;
-    this.activityId = activityId;
-    this.defultFields = defultFields;
-    this.hideUI = hideUI;
+    this.idSifranta = eventImporter.getIdSifranta();
+    this.idSifre = eventImporter.getIdSifre();
+    this.activityId = eventImporter.getActivityId();
+    this.defultFields = eventColumnsList;
+    this.hideUI = eventImporter.isHideUI();
+
+
+
+    if (activityId != null) {
+      if (idSifranta == null || idSifre == null) {
+        try {
+          ActivityEvent activityEvent = SqlUtilities.getInstance().getActivityEvent(activityId);
+          this.idSifranta = activityEvent.getIdSifranta();
+          this.idSifre = activityEvent.getIdSifre();
+        } catch (SQLException ex) {
+          Logger.getLogger(JImportEventsModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      }
+    }
   }
 
   public String getTitle() {
