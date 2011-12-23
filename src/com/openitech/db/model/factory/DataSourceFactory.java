@@ -778,7 +778,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             }
           }
 
-          imporEventsModels.add(new JImportEventsModel(title, dataSource, idSifranta, idSifre, activityId, eventColumnsList, hideUI));
+          imporEventsModels.add(new JImportEventsModel(eventImporter, dataSource, eventColumnsList));
         }
       }
     }
