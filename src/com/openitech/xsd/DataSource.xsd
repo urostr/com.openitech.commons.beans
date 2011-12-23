@@ -58,6 +58,20 @@
                         <xsd:all>
                           <xsd:element name="IdSifranta" maxOccurs="1" type="xsd:int"/>
                           <xsd:element name="IdSifre" maxOccurs="1" type="xsd:string"/>
+                          <xsd:element name="FileGroup" minOccurs="0" type="xsd:string"/>
+                          <xsd:element name="SQLColumns" minOccurs="0" type="xsd:string"/>
+                          <xsd:element name="CreateTableSqls" minOccurs="0">
+                            <xsd:complexType>
+                              <xsd:sequence>
+                                <xsd:element name="Query" maxOccurs="unbounded">
+                                  <xsd:simpleType>
+                                    <xsd:restriction base="xsd:string"/>
+                                  </xsd:simpleType>
+                                </xsd:element>
+                              </xsd:sequence>
+                              <xsd:attribute name="Catalog" type="xsd:string"/>
+                            </xsd:complexType>
+                          </xsd:element>
                         </xsd:all>
                       </xsd:complexType>
                     </xsd:element>

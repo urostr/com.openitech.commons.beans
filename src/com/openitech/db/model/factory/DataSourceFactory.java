@@ -248,7 +248,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         List<Views> views = viewsParameters.getViews();
         if (views != null) {
           for (Views view : views) {
-            sqlUtilities.createEventViews(view.getIdSifranta(), view.getIdSifre(), viewsParameters.isCreateIndexPK());
+            sqlUtilities.createEventViews(view);
           }
         }
       }

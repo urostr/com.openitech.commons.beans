@@ -23,6 +23,7 @@ import com.openitech.swing.framework.context.AssociatedSuspends;
 import com.openitech.swing.framework.context.AssociatedTasks;
 import com.openitech.ref.WeakMethodReference;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  *
@@ -63,9 +64,15 @@ public class JActionPanel extends JTabbedPane implements AssociatedTasks, Associ
     public void stateChanged(ChangeEvent e) {
       Object referent = this.get();
       if (referent != null && isEnabled()) {
-        ((JActionPanel) referent).updateRefreshSuspends();
-        ((JActionPanel) referent).updatePanels();
-        ((JActionPanel) referent).fireStateChanged();
+        try {
+
+          ((JActionPanel) referent).updateRefreshSuspends();
+          ((JActionPanel) referent).updatePanels();
+          ((JActionPanel) referent).fireStateChanged();
+
+        } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
+          Logger.getAnonymousLogger().warning(ex.getMessage());
+        }
       }
     }
   }

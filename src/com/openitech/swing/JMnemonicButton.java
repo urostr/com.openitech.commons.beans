@@ -142,8 +142,11 @@ public class JMnemonicButton extends JButton implements ActionListener {
     this.hideButtonBorder = hideButtonBorder;
     if (hideButtonBorder)
       setBorder(null);
-    else
-      setBorder((new JButton()).getBorder());
+    else {
+      final JButton button = new JButton();
+      setBorder(button.getBorder());
+      button.setBorder(null);
+    }
   }
 }
 
