@@ -84,6 +84,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   private CreationParameters creationParameters;
   private Integer workSpaceId;
   private Integer workAreaId;
+  private boolean editable = true;
 
   public DataSourceFactory(DbDataModel dbDataModel) {
     super(dbDataModel);
@@ -96,6 +97,16 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
   public void setWorkSpaceId(Integer workSpaceId) {
     this.workSpaceId = workSpaceId;
   }
+
+  /**
+   * Get the value of editable
+   *
+   * @return the value of editable
+   */
+  public boolean isEditable() {
+    return editable;
+  }
+
 
   @Override
   public void configure() throws SQLException, ClassNotFoundException {
@@ -717,6 +728,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             newInstance = new OpenWorkAreaTask(taskPane.getTitle(), openWorkArea.getWorkSpaceId(), openWorkArea.getWorkAreaId(), openWorkArea.isOpenDataEntry(), openWorkArea.isDontMerge());
           } else if (taskPane.getDefaultTask() != null) {
             DefaultTask defaultTask = taskPane.getDefaultTask();
+            this.editable = !defaultTask.isHide();
             newInstance = (new com.openitech.db.components.dogodki.DefaultTask(defaultTask.getTitle(), defaultTask.getTaskTitle(), defaultTask.isHide() == null ? false : defaultTask.isHide()));
           }
           if (newInstance != null) {

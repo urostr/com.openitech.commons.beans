@@ -420,6 +420,8 @@
       </xsd:element>
     </xsd:all>
     <xsd:attribute name="FilterRequred" type="xsd:boolean"/>
+    <xsd:attribute name="FilterRequired" type="xsd:boolean"/>
+    <xsd:attribute name="FilterSequence" type="xsd:short"/>
   </xsd:complexType>
   <xsd:complexType name="DataSourceParametersFactory">
     <xsd:all>
@@ -1023,6 +1025,7 @@
         </xsd:choice>
     </xsd:complexType>
 </xsd:schema>
+
 
 
 

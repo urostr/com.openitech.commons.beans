@@ -13,6 +13,7 @@ import com.openitech.db.model.xml.config.DataSourceFilter.Layout;
 import com.openitech.db.model.xml.config.DataSourceParametersFactory.Filters;
 import java.awt.Component;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,10 +59,21 @@ public class DefaultFilterFactory extends AbstractDataSourceParametersFactory im
     Map<String, DataSourceFilters> cfilters = filters == null ? new HashMap<String, DataSourceFilters>() : filters;
 
     configure(cfilters);
+    
+    List<DataSourceFilters> cparameters = new ArrayList<DataSourceFilters>();
+    
     for (Map.Entry<String, DataSourceFilters> entry : cfilters.entrySet()) {
-      if (!parameters.contains(entry.getValue())) {
-        parameters.add(entry.getValue());
+      if (!cparameters.contains(entry.getValue())) {
+        cparameters.add(entry.getValue());
       }
+    }
+    
+    Collections.sort(cparameters);
+    
+    for (DataSourceFilters parameter : cparameters) {
+      if (!parameters.contains(parameter)) {
+        parameters.add(parameter);
+      }  
     }
 
     configure(viewMenuItems);

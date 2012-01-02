@@ -4792,12 +4792,31 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     this.autoReload = autoReload;
   }
 
-  public static class SqlParameter<T> {
+  public static class SqlParameter<T> implements Comparable<SqlParameter> {
 
     protected int type = Types.NULL;
     protected T value = null;
     private PropertyChangeSupport changeSupport;
     protected boolean automaticReload = false;
+    protected int sequence = 1;
+
+    /**
+     * Get the value of sequence
+     *
+     * @return the value of sequence
+     */
+    public int getSequence() {
+      return sequence;
+    }
+
+    /**
+     * Set the value of sequence
+     *
+     * @param sequence new value of sequence
+     */
+    public void setSequence(int sequence) {
+      this.sequence = sequence;
+    }
 
     public SqlParameter() {
     }
@@ -5180,6 +5199,11 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
         return;
       }
       firePropertyChange(propertyName, new Double(oldValue), new Double(newValue));
+    }
+
+    @Override
+    public int compareTo(SqlParameter o) {
+      return (this.sequence < o.sequence ? -1 : (this.sequence == o.sequence ? 0 : 1));
     }
   }
 

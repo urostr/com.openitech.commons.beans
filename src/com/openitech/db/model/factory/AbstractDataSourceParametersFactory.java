@@ -181,6 +181,14 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
           filter.setFilterRequired(dataSourceFilter.isFilterRequred());
         }
 
+        if (dataSourceFilter.isFilterRequired() != null) {
+          filter.setFilterRequired(dataSourceFilter.isFilterRequired());
+        }
+        
+        if (dataSourceFilter.getFilterSequence() != null) {
+          filter.setSequence(dataSourceFilter.getFilterSequence());
+        }
+
         if (dataSourceFilter.getFilterParameter() != null) {
           FilterParameter filterParameter = dataSourceFilter.getFilterParameter();
           for (FilterParameter.WorkAreaParameter workAreaParameter : filterParameter.getWorkAreaParameter()) {
