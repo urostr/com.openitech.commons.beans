@@ -718,6 +718,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract void createEventViews(com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views view, boolean overrideIfExists, boolean createIndexPK);
 
+  public abstract boolean isViewReady(int idSifranta, String idSifre);
+  
   public abstract String getViewName(int idSifranta, String idSifre, boolean valid);
 
   public boolean getRunParameterBoolean(String parameter) {

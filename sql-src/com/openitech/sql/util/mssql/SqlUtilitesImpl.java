@@ -29,6 +29,7 @@ import com.openitech.value.fields.Field;
 import com.openitech.value.events.Event;
 import com.openitech.value.events.EventQuery;
 import com.openitech.sql.util.SqlUtilities;
+import com.openitech.value.fields.Field.FieldModel;
 import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import com.openitech.value.events.ActivityEvent;
@@ -2194,6 +2195,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
     }
     return temporaryTable;
+  }
+  
+  @Override
+  public boolean isViewReady(int idSifranta, String idSifre) {
+    final String eventsDb = SqlUtilities.getEventsDB();
+    
+    String  eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "]";
+    String  eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "_valid]";
+
+    return isViewReady(eventsDb, eventsViewVersioned) && isViewReady(eventsDb, eventsViewValid);
   }
 
   public boolean isViewReady(String database, String view) {
@@ -4561,25 +4572,27 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   private void prepareFieldModel(Field f, String value, StringBuilder sbresult, StringBuilder sbSearch) {
-    if (f.getModel() != null && f.getModel().getQuery() != null) {
-      if (f.getModel().getQuery().getSelect() != null) {
-        for (String sql : f.getModel().getQuery().getSelect().getSQL()) {
+    final FieldModel model = f.getModel();
+    
+    if (model != null && model.getQuery() != null) {
+      if (model.getQuery().getSelect() != null) {
+        for (String sql : model.getQuery().getSelect().getSQL()) {
           sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
           sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
           sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
           if (value != null) {
-            sql = sql.replaceAll(f.getModel().getReplace(), value);
+            sql = sql.replaceAll(model.getReplace(), value);
           }
           sbresult.append(",\n").append(sql);
         }
       }
-      if (f.getModel().getQuery().getJoin() != null) {
-        for (String sql : f.getModel().getQuery().getJoin().getSQL()) {
+      if (model.getQuery().getJoin() != null) {
+        for (String sql : model.getQuery().getJoin().getSQL()) {
           sql = sql.replaceAll("<%ChangeLog%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.CHANGE_LOG_DB, SqlUtilities.CHANGE_LOG_DB));
           sql = sql.replaceAll("<%RPP%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPP_DB, SqlUtilities.RPP_DB));
           sql = sql.replaceAll("<%RPE%>", SqlUtilities.DATABASES.getProperty(SqlUtilities.RPE_DB, SqlUtilities.RPE_DB));
           if (value != null) {
-            sql = sql.replaceAll(f.getModel().getReplace(), value);
+            sql = sql.replaceAll(model.getReplace(), value);
           }
           sbSearch.append("\nLEFT OUTER JOIN ").append(sql);
         }
