@@ -425,16 +425,17 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            customPanel.add(jlOd, gridBagConstraints);
-            jpHoldingPanel.add(jXDatePicker, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
-            jpHoldingPanel.add(jlDo, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            customPanel.add(jlOd, group ? gridBagConstraints : getCustomLabelGridBagConstraints(layout, gridBagConstraints));
+            jpHoldingPanel.add(jXDatePicker, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
+            jpHoldingPanel.add(jlDo, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
             gridBagConstraints = new java.awt.GridBagConstraints();
             //gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-            jpHoldingPanel.add(jXDatePicker3, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jXDatePicker3, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
 
             if (group) {
               gridBagConstraints = new java.awt.GridBagConstraints();
-              gridBagConstraints.weightx = 1;
+              gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+              gridBagConstraints.weightx = 1.0;
               jpHoldingPanel.add(new JPanel(), gridBagConstraints);
             }
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
@@ -447,13 +448,13 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomLabelGridBagConstraints(layout, gridBagConstraints));
 
             gridBagConstraints = new java.awt.GridBagConstraints();
             jtfSifraOnPanel.setColumns(layout.getColumns() == null ? 4 : layout.getColumns());
             jtfSifraOnPanel.setDocument(documents.get(item)[0]);
             jtfSifraOnPanel.setSearchField(true);
-            jpHoldingPanel.add(jtfSifraOnPanel, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jtfSifraOnPanel, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
 
             jcbSifrantOnPanel.setModel(sifranti.get(item));
             jcbSifrantOnPanel.addActionListener(new ActionListener() {
@@ -483,7 +484,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             //gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.weightx = 1.0;
-            jpHoldingPanel.add(jcbSifrantOnPanel, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jcbSifrantOnPanel, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
 
             documents.get(item)[0].addDocumentListener(new DocumentListener() {
 
@@ -516,7 +517,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            customPanel.add(jlOpis, gridBagConstraints);
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomLabelGridBagConstraints(layout, gridBagConstraints));
 //            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++));
 
             if (item.getSeekType() != DataSourceFilters.SeekType.PREFORMATTED) {
@@ -543,7 +544,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               } catch (Exception ex) {
               }
 
-              jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+              jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
             }
 
             jDbTextField1.setSearchField(true);
@@ -553,7 +554,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
-            jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
             
             if (((DataSourceFilters.IntegerSeekType) item).hasValue()) {
               jDbTextField1.setText(((DataSourceFilters.IntegerSeekType) item).getValue().toString());
@@ -583,7 +584,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
-            jpHoldingPanel.add(jCheckBox, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jCheckBox, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
           } else if (item instanceof DataSourceFilters.ValueSeekType) {
 
             int index = 0;
@@ -597,7 +598,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
-            jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
 
             JButton jbConfigureFilter = new JButton("Configure filter");
             final JDConfigureFilter jDConfigureFilter = new JDConfigureFilter(null, false);
@@ -617,7 +618,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
               }
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
-            jpHoldingPanel.add(jbConfigureFilter, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jbConfigureFilter, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
 
 
           } else if (item instanceof DataSourceFilters.RezultatiKlicaSeekType) {
@@ -626,7 +627,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            customPanel.add(jlOpis, gridBagConstraints);
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomLabelGridBagConstraints(layout, gridBagConstraints));
 
             final DataSourceFilters.RezultatiKlicaSeekType rezultatiKlicaSeekType = (RezultatiKlicaSeekType) item;
 
@@ -672,7 +673,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            customPanel.add(jlOpis, gridBagConstraints);
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomLabelGridBagConstraints(layout, gridBagConstraints));
 
             final DataSourceFilters.RezultatExistsSeekType existsSeekType = (RezultatExistsSeekType) item;
 
@@ -713,12 +714,12 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jpHoldingPanel.add(jpChechBoxHolder, gridBagConstraints);
 
           } else if (item instanceof DataSourceFilters.CheckBoxSeekType) {
-
+            int index = 0;
             final JLabel jlOpis = new javax.swing.JLabel();
             jlOpis.setText(item.toString());
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            customPanel.add(jlOpis, gridBagConstraints);
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomLabelGridBagConstraints(layout, gridBagConstraints));
 
             final DataSourceFilters.CheckBoxSeekType existsSeekType = (CheckBoxSeekType) item;
             final ButtonGroup bg = new ButtonGroup();
@@ -726,12 +727,14 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             JPanel jpBoxes = new JPanel(new GridBagLayout());
             jpBoxes.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
             
-
+            
+            List<JCheckBox> checkBoxes = new ArrayList<JCheckBox>();
             List<CheckBoxValue> rezultati = existsSeekType.getRezultati();
             for (final CheckBoxValue rezultatKlica : rezultati) {
               final JCheckBox checkBox = new JCheckBox(rezultatKlica.getOpis());
+              
+              checkBoxes.add(checkBox);
 
-              checkBox.setSelected(rezultatKlica.isChecked());
               
               if (existsSeekType.isGrouped()) {
                 bg.add(checkBox);
@@ -752,14 +755,23 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                   existsSeekType.reload();
                 }
               });
-              
-              jpBoxes.add(checkBox, new java.awt.GridBagConstraints());
             }
             
             if (bg.getButtonCount()>0) {
               buttonGroups.add(bg);
             }
 
+            int cb = 0;
+            for (final CheckBoxValue rezultatKlica : rezultati) {
+              final JCheckBox checkBox = checkBoxes.get(cb++);
+              
+              checkBox.setSelected(rezultatKlica.isChecked());
+              
+              jpBoxes.add(checkBox, new java.awt.GridBagConstraints());
+            }
+            
+            checkBoxes.clear();
+            
             //ko je dataSource pripravljen, mu dodam default filtre
             for (DbDataSource dataSource : filter.getDataSources()) {
               dataSource.addActiveRowChangeListener(new CheckBoxSeekTypeActiveRowChangeListener(existsSeekType));
@@ -775,8 +787,8 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
-            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
-            jpHoldingPanel.add(jpChechBoxHolder, gridBagConstraints);
+            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+            jpHoldingPanel.add(jpChechBoxHolder, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
 
           } else {
             final JLabel jlOpis = new javax.swing.JLabel();
@@ -789,7 +801,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
 //            customPanel.add(jlOpis, gridBagConstraints);
-            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            customPanel.add(jlOpis, group ? gridBagConstraints : getCustomLabelGridBagConstraints(layout, gridBagConstraints));
 
             jDbComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"je enako", "se zaène z", "se konèa z", "vsebuje"}));
 
@@ -814,7 +826,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                   }
                 }
               });
-              jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), index++, new java.awt.GridBagConstraints()));
+              jpHoldingPanel.add(jDbComboBox1, group ? new java.awt.GridBagConstraints() : getCustomGridBagConstraints(layout.getLayout(), false, index++, new java.awt.GridBagConstraints()));
             }
 
             jDbTextField1.setColumns(layout.getColumns() == null ? 20 : layout.getColumns());
@@ -823,7 +835,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
-            jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
+            jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), false, index++, gridBagConstraints));
             
             if (item.hasValue()) {
               jDbTextField1.setText(item.getValue().toString());
@@ -869,25 +881,52 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
     }
   }
 
+  private java.awt.GridBagConstraints getCustomLabelGridBagConstraints(SeekLayout layout, java.awt.GridBagConstraints defaultConstraint) {
+    java.awt.GridBagConstraints gridBagConstraints;
+    if (layout.getLayout() == null) {
+      gridBagConstraints = defaultConstraint;
+    } else {
+      gridBagConstraints = getCustomGridBagConstraints(layout.getLayout(), true, 0, defaultConstraint);
+    }
+    return gridBagConstraints;
+  }
+
   private java.awt.GridBagConstraints getCustomGridBagConstraints(SeekLayout layout, java.awt.GridBagConstraints defaultConstraint) {
     java.awt.GridBagConstraints gridBagConstraints;
     if (layout.getLayout() == null) {
       gridBagConstraints = defaultConstraint;
     } else {
-      gridBagConstraints = getCustomGridBagConstraints(layout.getLayout(), 0, defaultConstraint);
+      gridBagConstraints = getCustomGridBagConstraints(layout.getLayout(), false, 0, defaultConstraint);
     }
     return gridBagConstraints;
   }
 
-  private java.awt.GridBagConstraints getCustomGridBagConstraints(SeekLayout.Layout layout, int index, java.awt.GridBagConstraints defaultConstraint) {
+  private java.awt.GridBagConstraints getCustomGridBagConstraints(SeekLayout.Layout layout, boolean label, int index, java.awt.GridBagConstraints defaultConstraint) {
     java.awt.GridBagConstraints gridBagConstraints;
     if (layout != null && layout.getGroup() != null) {
       gridBagConstraints = getCustomGridBagConstraints(layout.getGroup(), defaultConstraint);
     } else if (layout != null && layout.getConstraints() != null) {
-      if (index < layout.getConstraints().getGridBagConstraints().size()) {
-        gridBagConstraints = getCustomGridBagConstraints(layout.getConstraints().getGridBagConstraints().get(index), defaultConstraint);
+      final List<GridBagConstraints> constraints = new ArrayList<GridBagConstraints>(layout.getConstraints().getGridBagConstraints());
+      int pos = Integer.MIN_VALUE;
+      
+      for (int i = 0; i < constraints.size(); i++) {
+        if (constraints.get(i).isLabel()) {
+          pos = i;
+          break;
+        }
+      }
+      
+      if (label) {
+        gridBagConstraints = pos>Integer.MIN_VALUE?getCustomGridBagConstraints(constraints.get(pos), defaultConstraint):defaultConstraint;
       } else {
-        gridBagConstraints = defaultConstraint;
+        if (index>=pos) {
+          index++;
+        }
+        if (index < constraints.size()) {
+          gridBagConstraints = getCustomGridBagConstraints(constraints.get(index), defaultConstraint);
+        } else {
+          gridBagConstraints = defaultConstraint;
+        }
       }
     } else {
       gridBagConstraints = defaultConstraint;
