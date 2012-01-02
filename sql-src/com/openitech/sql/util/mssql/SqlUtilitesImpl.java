@@ -2866,12 +2866,12 @@ public class SqlUtilitesImpl extends SqlUtilities {
               if (view.getFileGroup() != null) {
                 createEventsView.setString(param++, view.getFileGroup());
               } else {
-                createEventsView.setNull(param++, java.sql.Types.NVARCHAR);
+                createEventsView.setNull(param++, java.sql.Types.VARCHAR);
               }
               if (view.getSQLColumns() != null) {
                 createEventsView.setString(param++, view.getSQLColumns());
               } else {
-                createEventsView.setNull(param++, java.sql.Types.NVARCHAR);
+                createEventsView.setNull(param++, java.sql.Types.VARCHAR);
               }
               createEventsView.execute();
 
