@@ -34,6 +34,7 @@ import com.openitech.swing.framework.context.AssociatedFilter;
 import com.openitech.swing.framework.context.AssociatedTasks;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -218,6 +219,24 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               seekType.setName(parameter.getName());
               seekType.setLayout(parameter.getLayout());
+              
+              if (parameter.getDefaultValue()!=null) {
+                Object value = null;
+                if (parameter.getDefaultValue().getDefaultValueFactory()!=null) {
+                  try {
+                    value = ClassInstanceFactory.getInstance(parameter.getDefaultValue().getDefaultValueFactory(), new Class[] {}).newInstance(new Object[] {});
+                  } catch (Exception ex) {
+                    Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                    value = null;
+                  }
+                } else {
+                  value = parameter.getDefaultValue().getDefaultValue();
+                }
+                
+                if (value != null) {
+                  seekType.setValue(value.toString());
+                }
+              }
 
               if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
                 filter.addRequired(seekType);
@@ -247,6 +266,24 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               integerSeekType.setName(parameter.getName());
               integerSeekType.setLayout(parameter.getLayout());
+              
+              if (parameter.getDefaultValue()!=null) {
+                Object value = null;
+                if (parameter.getDefaultValue().getDefaultValueFactory()!=null) {
+                  try {
+                    value = ClassInstanceFactory.getInstance(parameter.getDefaultValue().getDefaultValueFactory(), new Class[] {}).newInstance(new Object[] {});
+                  } catch (Exception ex) {
+                    Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                    value = null;
+                  }
+                } else {
+                  value = parameter.getDefaultValue().getDefaultValue();
+                }
+                
+                if (value != null) {
+                  integerSeekType.setValue(Integer.valueOf(value.toString()));
+                }
+              }
 
               if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
                 filter.addRequired(integerSeekType);
@@ -302,6 +339,24 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               seekType.setName(parameter.getName());
               seekType.setLayout(parameter.getLayout());
+              
+              if (parameter.getDefaultValue()!=null) {
+                Object value = null;
+                if (parameter.getDefaultValue().getDefaultValueFactory()!=null) {
+                  try {
+                    value = ClassInstanceFactory.getInstance(parameter.getDefaultValue().getDefaultValueFactory(), new Class[] {}).newInstance(new Object[] {});
+                  } catch (Exception ex) {
+                    Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                    value = null;
+                  }
+                } else {
+                  value = parameter.getDefaultValue().getDefaultValue();
+                }
+                
+                if (value != null) {
+                  seekType.setValue(value.toString());
+                }
+              }
 
               if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
                 filter.addRequired(seekType);
@@ -331,6 +386,24 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               integerSeekType.setName(parameter.getName());
               integerSeekType.setLayout(parameter.getLayout());
+              
+              if (parameter.getDefaultValue()!=null) {
+                Object value = null;
+                if (parameter.getDefaultValue().getDefaultValueFactory()!=null) {
+                  try {
+                    value = ClassInstanceFactory.getInstance(parameter.getDefaultValue().getDefaultValueFactory(), new Class[] {}).newInstance(new Object[] {});
+                  } catch (Exception ex) {
+                    Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                    value = null;
+                  }
+                } else {
+                  value = parameter.getDefaultValue().getDefaultValue();
+                }
+                
+                if (value != null) {
+                  integerSeekType.setValue(Integer.valueOf(value.toString()));
+                }
+              }
 
               if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
                 filter.addRequired(integerSeekType);
@@ -354,6 +427,58 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
               }
               betweenDateSeekType.setName(parameter.getName());
               betweenDateSeekType.setLayout(parameter.getLayout());
+              if (parameter.getDefaultValueFrom()!=null || 
+                  parameter.getDefaultValueTo()!=null) {
+              java.util.Date[] values = new java.util.Date[] {new java.util.Date(0L),new java.util.Date()};
+              
+              if (parameter.getDefaultValueFrom() != null) {
+                  Object value = null;
+                  if (parameter.getDefaultValueFrom().getDefaultValueFactory() != null) {
+                    try {
+                      value = ClassInstanceFactory.getInstance(parameter.getDefaultValueFrom().getDefaultValueFactory(), new Class[]{}).newInstance(new Object[]{});
+                    } catch (Exception ex) {
+                      Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                      value = null;
+                    }
+                  } else {
+                    value = parameter.getDefaultValueFrom().getDefaultValue();
+                  }
+                  
+                  if (value != null) {
+                    try {
+                      value = com.openitech.text.FormatFactory.DATETIME_FORMAT.parse(value.toString());
+                      values[0] = (java.util.Date) value;
+                    } catch (ParseException ex) {
+                      Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                  }
+                }
+              
+              if (parameter.getDefaultValueTo() != null) {
+                  Object value = null;
+                  if (parameter.getDefaultValueTo().getDefaultValueFactory() != null) {
+                    try {
+                      value = ClassInstanceFactory.getInstance(parameter.getDefaultValueTo().getDefaultValueFactory(), new Class[]{}).newInstance(new Object[]{});
+                    } catch (Exception ex) {
+                      Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                      value = null;
+                    }
+                  } else {
+                    value = parameter.getDefaultValueTo().getDefaultValue();
+                  }
+                  
+                  if (value != null) {
+                    try {
+                      value = com.openitech.text.FormatFactory.DATETIME_FORMAT.parse(value.toString());
+                      values[1] = (java.util.Date) value;
+                    } catch (ParseException ex) {
+                      Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                  }
+                }
+              
+                betweenDateSeekType.setValue(Arrays.asList(values));
+              }
 
               if (seekParameter.isRequired() != null && seekParameter.isRequired()) {
                 filter.addRequired(betweenDateSeekType);
@@ -443,6 +568,23 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 }
 
                 if (sifrantSeekType != null) {
+                  if (parameter.getDefaultValue() != null) {
+                    Object value = null;
+                    if (parameter.getDefaultValue().getDefaultValueFactory() != null) {
+                      try {
+                        value = ClassInstanceFactory.getInstance(parameter.getDefaultValue().getDefaultValueFactory(), new Class[]{}).newInstance(new Object[]{});
+                      } catch (Exception ex) {
+                        Logger.getLogger(AbstractDataSourceParametersFactory.class.getName()).log(Level.SEVERE, null, ex);
+                        value = null;
+                      }
+                    } else {
+                      value = parameter.getDefaultValue().getDefaultValue();
+                    }
+
+                    if (value != null) {
+                      sifrantSeekType.setValue(value.toString());
+                    }
+                  }
                   if (convertToVarchar != null) {
                     sifrantSeekType.setConvertToVarchar(convertToVarchar);
                   }

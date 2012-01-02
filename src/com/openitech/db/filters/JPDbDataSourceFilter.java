@@ -329,7 +329,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             javax.swing.text.Document to = docs.size() > 1 ? docs.get(1) : new com.openitech.db.components.JDbDateTextField().getDocument();
 
             item.setDocuments(filter, new javax.swing.text.Document[]{from, to});
-
+            
             documents.put(item, new javax.swing.text.Document[]{from, to});
           } else if (item instanceof DataSourceFilters.SifrantSeekType) {
             javax.swing.text.Document document = docs.get(0);
@@ -362,6 +362,25 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             document.addDocumentListener(new FilterDocumentListener(filter, listenerItem));
             documents.put(item, new javax.swing.text.Document[]{document});
           }
+          
+          if (!addToPanel && item.hasValue()) {
+            try {
+              if (item instanceof DataSourceFilters.BetweenDateSeekType) {
+                DataSourceFilters.BetweenDateSeekType seek = (DataSourceFilters.BetweenDateSeekType) item;
+                if (seek.getValue().get(0).after(new java.util.Date(0L))) {
+                  com.openitech.text.Document.setText(documents.get(item)[0], jtfDateValueOd.getFormatter().valueToString(seek.getValue().get(0)));
+                }
+                if (seek.getValue().size() > 1
+                        && seek.getValue().get(1).before(new java.util.Date())) {
+                  com.openitech.text.Document.setText(documents.get(item)[1], jtfDateValueDo.getFormatter().valueToString(seek.getValue().get(1)));
+                }
+              } else {
+                com.openitech.text.Document.setText(documents.get(item)[0], item.getValue().toString());
+              }
+            } catch (Exception ex) {
+              Logger.getLogger(JPDbDataSourceFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+          }
         }
 
         if (addToPanel) {
@@ -384,11 +403,23 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
             jtfDateValueOd1.setDocument(documents.get(item)[0]);
             jtfDateValueDo1.setDocument(documents.get(item)[1]);
-
+            
             JXDatePicker jXDatePicker = new org.jdesktop.swingx.JXDatePicker();
             JXDatePicker jXDatePicker3 = new org.jdesktop.swingx.JXDatePicker();
             jXDatePicker.setEditor(jtfDateValueOd1);
             jXDatePicker3.setEditor(jtfDateValueDo1);
+            
+            DataSourceFilters.BetweenDateSeekType seek = (DataSourceFilters.BetweenDateSeekType) item;
+            
+            if (seek.hasValue()) {
+              if (seek.getValue().get(0).after(new java.util.Date(0L))) {
+                jXDatePicker.setDate(seek.getValue().get(0));
+              }
+              if (seek.getValue().size()>1 &&
+                  seek.getValue().get(1).before(new java.util.Date())) {
+                jXDatePicker3.setDate(seek.getValue().get(1));
+              }
+            }
 
             int index = 0;
 
@@ -471,6 +502,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
                 updateSifrant(e.getDocument(), jcbSifrantOnPanel);
               }
             });
+            
+            if (((DataSourceFilters.SifrantSeekType) item).hasValue()) {
+              jtfSifraOnPanel.setText(((DataSourceFilters.SifrantSeekType) item).getValue());
+            }
           } else if (item instanceof DataSourceFilters.IntegerSeekType) {
             final JLabel jlOpis = new javax.swing.JLabel();
             final JComboBox jDbComboBox1 = new JComboBox();
@@ -519,8 +554,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
             jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
-
-
+            
+            if (((DataSourceFilters.IntegerSeekType) item).hasValue()) {
+              jDbTextField1.setText(((DataSourceFilters.IntegerSeekType) item).getValue().toString());
+            }
           } else if (item instanceof DataSourceFilters.BooleanSeekType) {
             final JCheckBox jCheckBox = new JCheckBox();
 
@@ -787,8 +824,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.weightx = 1.0;
             jpHoldingPanel.add(jDbTextField1, group ? gridBagConstraints : getCustomGridBagConstraints(layout.getLayout(), index++, gridBagConstraints));
-
-
+            
+            if (item.hasValue()) {
+              jDbTextField1.setText(item.getValue().toString());
+            }
           }
 
           if (group) {
