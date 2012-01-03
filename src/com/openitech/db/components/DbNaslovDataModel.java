@@ -3,8 +3,10 @@ package com.openitech.db.components;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.maps.Maps.Location;
 import com.openitech.value.fields.FieldValue;
 import com.openitech.io.ReadInputStream;
+import com.openitech.maps.Maps;
 import com.sun.rowset.CachedRowSetImpl;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -438,6 +440,7 @@ public class DbNaslovDataModel {
     protected FieldValue ulicaMID;
     protected FieldValue postnaStevilkaMID;
     protected FieldValue naseljeMID;
+    protected Maps.Location location;
     protected int izvor;
 
     /**
@@ -573,6 +576,25 @@ public class DbNaslovDataModel {
     public FieldValue getHisnaStevilkaDodatek() {
       return hisnaStevilkaDodatek;
     }
+
+    public Location getLocation() {
+      if (location==null) {
+        Maps instance = Maps.getInstance();
+        
+        location = instance.getLocation(toString(getUlica()), 
+                                        toString(getHisnaStevilka()),
+                                        toString(getHisnaStevilkaDodatek()), 
+                                        toString(getPostnaStevilka()), 
+                                        toString(getPosta()));
+      }
+      return location;
+    }
+    
+    private String toString(FieldValue fv) {
+      return fv==null||fv.getValue()==null?null:fv.getValue().toString();
+    }
+    
+    
 
     public void setDataSource(DbDataSource dataSource) {
       this.dataSource = dataSource;
