@@ -49,7 +49,7 @@ public class GoogleMaps extends Maps {
   private XPathExpression xpLongitude = xpath.compile("//GeocodeResponse/result[1]/*/location/lng");
 
   private XPathExpression xpDirectionsStatus = xpath.compile("DirectionsResponse/status");
-  private XPathExpression xpDistances = xpath.compile("//DirectionsResponse/route/leg/step/distance/value");
+  private XPathExpression xpDistances = xpath.compile("//DirectionsResponse/route[1]/leg/step/distance/value");
   
   public GoogleMaps() throws javax.xml.xpath.XPathExpressionException {
   }
