@@ -29,6 +29,8 @@ import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters;
 
 import com.openitech.db.model.xml.config.Workarea.EventImporters;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
+import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options;
+import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options.IdentityGroupBy;
 import com.openitech.db.model.xml.config.Workarea.ExtendWorkarea;
 import com.openitech.db.model.xml.config.Workarea.IncludeWorkarea;
 import com.openitech.db.model.xml.config.Workarea.WorkSpaceInformation;
@@ -765,7 +767,13 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           String title = eventImporter.getTitle();
           Set<Field> eventColumnsList = new HashSet<Field>();
           Boolean hideUI = eventImporter.isHideUI();
-
+          Options options = eventImporter.getOptions();
+          if(options != null){
+            for (IdentityGroupBy identityGroupBy : options.getIdentityGroupBy()) {
+              eventColumns.add(identityGroupBy.getColumnName());
+              eventColumns.add(identityGroupBy.getIdentityColumnName());
+            }
+          }
           for (String imePolja : eventColumns) {
             try {
               Field field = Field.getField(imePolja);
