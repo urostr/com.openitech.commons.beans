@@ -30,7 +30,7 @@ public class testAddMissingID_PP extends TestCase {
   final java.sql.Connection connection;
   final SqlUtilities sqlUtilites;
   final Map<CaseInsensitiveString, Field> preparedFields;
-  final Map<String, TemporaryTable> cachedTemporaryTables;
+  final TemporaryTable ttE_85_FMD01;
 
   public testAddMissingID_PP(String testName) throws ParseException, SQLException {
     super(testName);
@@ -42,7 +42,7 @@ public class testAddMissingID_PP extends TestCase {
     connection = dbConnection.getConnection();
     sqlUtilites = SqlUtilities.getInstance();
     preparedFields = sqlUtilites.getPreparedFields();
-    cachedTemporaryTables = sqlUtilites.getCachedTemporaryTables();
+    ttE_85_FMD01 = sqlUtilites.getCachedTemporaryTable("[MViewCache].[dbo].[CACHE:E_85_FMD01]");
   }
 
   @Override
@@ -70,7 +70,6 @@ public class testAddMissingID_PP extends TestCase {
       sqlUtilites.updateEvent(event);
     }
     
-    TemporaryTable ttE_85_FMD01 = cachedTemporaryTables.get("[MViewCache].[dbo].[CACHE:E_85_FMD01]");
     assertNotNull(ttE_85_FMD01);
 
     TemporaryParametersFactory ttFactory = new TemporaryParametersFactory();
