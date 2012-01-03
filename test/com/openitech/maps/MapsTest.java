@@ -50,10 +50,10 @@ public class MapsTest extends TestCase {
     String postnaStevilka = "1000";
     String posta = "Ljubljana";
     Maps instance = Maps.getInstance();
-    Location location = instance.getLocation(ulica, hisnaStevilka, hisnaStevilkaDodatek, postnaStevilka, posta);
+    Location location = instance.getLocation(ulica, hisnaStevilka, hisnaStevilkaDodatek, postnaStevilka, posta, null);
     assertNotNull(location);
     
-    location = instance.getLocation(ulica, hisnaStevilka, hisnaStevilkaDodatek, null, null);
+    location = instance.getLocation(ulica, hisnaStevilka, hisnaStevilkaDodatek, null, null, null);
     assertNull(location);
   }
   
@@ -71,7 +71,9 @@ public class MapsTest extends TestCase {
     
     destination.setUlica(new FieldValue("ULICA", java.sql.Types.VARCHAR, "Brnèièeva"));
     destination.setHisnaStevilka(new FieldValue("HS", java.sql.Types.VARCHAR, "13"));
-    destination.setPosta(new FieldValue("POSTA", java.sql.Types.VARCHAR, "Ljubljana"));
+    destination.setPostnaStevilka(new FieldValue("ID_POSTA", java.sql.Types.VARCHAR, "1231"));
+    destination.setPosta(new FieldValue("POSTA", java.sql.Types.VARCHAR, "Ljubljana - Èrnuèe"));
+    destination.setNaselje(new FieldValue("NASELJE", java.sql.Types.VARCHAR, "Ljubljana"));
     
     Maps instance = Maps.getInstance();
     Double distance = instance.getDistance(origin, destination);
