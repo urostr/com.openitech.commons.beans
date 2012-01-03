@@ -59,7 +59,8 @@ public class GoogleMaps extends Maps {
           String hisnaStevilka,
           String hisnaStevilkaDodatek,
           String postnaStevilka,
-          String posta) {
+          String posta,
+          String naselje) {
 
     Location result = null;
 
@@ -79,6 +80,18 @@ public class GoogleMaps extends Maps {
 
       String status = xpGeocodeStatus.evaluate(doc);
       Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+      
+      if (naselje != null) {
+        if (ZERO_RESULTS.equals(status)) {
+          address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, naselje, postnaStevilka);
+
+          load = new URL(address.toString());
+          doc = builder.parse(load.openConnection().getInputStream());
+
+          status = xpGeocodeStatus.evaluate(doc);
+          Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+        }
+      }
 
       if (posta != null) {
         if (ZERO_RESULTS.equals(status)) {
@@ -93,6 +106,16 @@ public class GoogleMaps extends Maps {
 
         if (ZERO_RESULTS.equals(status)) {
           address = encodePosta(posta);
+
+          load = new URL(address.toString());
+          doc = builder.parse(load.openConnection().getInputStream());
+
+          status = xpGeocodeStatus.evaluate(doc);
+          Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+        }
+
+        if (ZERO_RESULTS.equals(status)) {
+          address = encodePosta(naselje);
 
           load = new URL(address.toString());
           doc = builder.parse(load.openConnection().getInputStream());

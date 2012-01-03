@@ -585,7 +585,8 @@ public class DbNaslovDataModel {
                                         toString(getHisnaStevilka()),
                                         toString(getHisnaStevilkaDodatek()), 
                                         toString(getPostnaStevilka()), 
-                                        toString(getPosta()));
+                                        toString(getPosta()),
+                                        toString(getNaselje()));
       }
       return location;
     }

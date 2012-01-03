@@ -46,7 +46,8 @@ public abstract class Maps {
                                        String hisnaStevilka, 
                                        String hisnaStevilkaDodatek, 
                                        String postnaStevilka,
-                                       String posta);
+                                       String posta,
+                                       String naselje);
   
   public abstract Double getDistance(Naslov origin, Naslov destination, Naslov... waypoints);
   
