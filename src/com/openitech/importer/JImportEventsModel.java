@@ -7,10 +7,12 @@ package com.openitech.importer;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options;
+import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options.IdentityGroupBy;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,5 +83,13 @@ public class JImportEventsModel {
 
   public boolean isHideUI() {
     return hideUI == null ? false : hideUI;
+  }
+
+  public List<IdentityGroupBy> getIdentityGroupBys() {
+    Options options = eventImporter.getOptions();
+    if (options != null) {
+      return options.getIdentityGroupBy();
+    }
+    return null;
   }
 }
