@@ -92,4 +92,20 @@ public class JImportEventsModel {
     }
     return null;
   }
+
+  public List<Options.ReloadWorkSpace> getReloadWorkSpaces() {
+    Options options = eventImporter.getOptions();
+    if (options != null) {
+      return options.getReloadWorkSpace();
+    }
+    return null;
+  }
+
+  public boolean isReloadAllWorkSpaces(){
+    Options options = eventImporter.getOptions();
+    if (options != null) {
+      return options.isReloadAllWorkSpaces() == null ? false : options.isReloadAllWorkSpaces();
+    }
+    return false;
+  }
 }
