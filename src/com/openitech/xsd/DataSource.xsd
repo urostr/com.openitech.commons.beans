@@ -243,21 +243,22 @@
                     <xsd:element name="Options" minOccurs="0" maxOccurs="1">
                       <xsd:complexType>
                         <xsd:sequence>
-                          <xsd:element name="IncludeEvent" minOccurs="0" maxOccurs="unbounded">
-                            <xsd:complexType>
-                              <xsd:sequence>
-                                <xsd:element name="IdSifranta" maxOccurs="1" type="xsd:int" minOccurs="1"></xsd:element>
-                                <xsd:element name="IdSifre" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
-                                <xsd:element name="GroupyByColumn" maxOccurs="1" type="xsd:string" minOccurs="0"></xsd:element>
-                              </xsd:sequence>
-                  
-                            </xsd:complexType>
-                          </xsd:element>
+                          
                           <xsd:element name="IdentityGroupBy" minOccurs="0" maxOccurs="unbounded">
                             <xsd:complexType>
                               <xsd:sequence>
                                 <xsd:element name="ColumnName" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
                                 <xsd:element name="IdentityColumnName" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
+                              </xsd:sequence>
+
+                            </xsd:complexType>
+                          </xsd:element>
+                          <xsd:element name="ReloadAllWorkSpaces" type="xsd:boolean" minOccurs="0" maxOccurs="1"/>
+                          <xsd:element name="ReloadWorkSpace" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:complexType>
+                              <xsd:sequence>
+                                <xsd:element name="WorkSpaceID" maxOccurs="1" type="xsd:int" minOccurs="0"></xsd:element>
+                                <xsd:element name="WorkAreaID" maxOccurs="1" type="xsd:int" minOccurs="0"></xsd:element>
                               </xsd:sequence>
 
                             </xsd:complexType>
