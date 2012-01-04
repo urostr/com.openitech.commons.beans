@@ -32,12 +32,15 @@ import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDe
 import com.openitech.db.model.xml.config.SeekParameters.SifrantSeekType.LookupDefinition.Lookup;
 import com.openitech.swing.framework.context.AssociatedFilter;
 import com.openitech.swing.framework.context.AssociatedTasks;
+import com.openitech.value.fields.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -152,6 +155,11 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
     return autoInsertValues;
   }
 
+  private Set<Field> dataEntryValues = new HashSet<Field>();
+
+  public Set<Field> getDataEntryValues() {
+    return dataEntryValues;
+  }
   /**
    * Set the value of dataSourceParametersFactory
    *
@@ -193,7 +201,14 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
           FilterParameter filterParameter = dataSourceFilter.getFilterParameter();
           for (FilterParameter.WorkAreaParameter workAreaParameter : filterParameter.getWorkAreaParameter()) {
             Integer workAreaId = workAreaParameter.getWorkAreaId();
-            Integer workSpaceId = workAreaParameter.getWorkSpaceId();
+            String workSpaceId = workAreaParameter.getWorkSpaceId();
+            List<Integer> workSpaceIds = new ArrayList<Integer>();
+            if(workSpaceId != null){
+              String[] split = workSpaceId.split(",");
+              for (String string : split) {
+                workSpaceIds.add(Integer.parseInt(string.trim()));
+              }
+            }
 
             String otherColumName = workAreaParameter.getOtherColumName();
             SeekParameters seekParameter = workAreaParameter.getSeekParameter();
@@ -250,7 +265,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 filter.addRequired(seekType);
               }
 
-              workAreaFilters.add(new JWorkAreaFilter(workAreaId, workSpaceId, filter, seekType, otherColumName));
+              workAreaFilters.add(new JWorkAreaFilter(workAreaId, workSpaceIds.toArray(new Integer[workSpaceIds.size()]), filter, seekType, otherColumName));
             } else if (seekParameter.getIntegerSeekType() != null) {
               final SeekParameters.IntegerSeekType parameter = seekParameter.getIntegerSeekType();
 
@@ -297,7 +312,7 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
                 filter.addRequired(integerSeekType);
               }
 
-              workAreaFilters.add(new JWorkAreaFilter(workAreaId, workSpaceId, filter, integerSeekType, otherColumName));
+              workAreaFilters.add(new JWorkAreaFilter(workAreaId, workSpaceIds.toArray(new Integer[workSpaceIds.size()]), filter, integerSeekType, otherColumName));
             }
           }
 
@@ -307,10 +322,17 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
           AutoInsertColumns autoInsertColumns = dataSourceFilter.getAutoInsertColumns();
           for (AutoInsertColumns.Column column : autoInsertColumns.getColumn()) {
             Integer workAreaId = column.getWorkAreaId();
-            Integer workSpaceId = column.getWorkSpaceId();
+            String workSpaceId = column.getWorkSpaceId();
+            List<Integer> workSpaceIds = new ArrayList<Integer>();
+            if(workSpaceId != null){
+              String[] split = workSpaceId.split(",");
+              for (String string : split) {
+                workSpaceIds.add(Integer.parseInt(string.trim()));
+              }
+            }
             String columName = column.getColumName();
             String otherColumName = column.getOtherColumName();
-            autoInsertValues.add(new AutoInsertValue(workAreaId, workSpaceId, dataSource, columName, otherColumName));
+            autoInsertValues.add(new AutoInsertValue(workAreaId, workSpaceIds.toArray(new Integer[workSpaceIds.size()]), dataSource, columName, otherColumName));
           }
         }
 
