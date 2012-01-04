@@ -260,9 +260,11 @@
                                 <xsd:element name="WorkSpaceID" maxOccurs="1" type="xsd:int" minOccurs="0"></xsd:element>
                                 <xsd:element name="WorkAreaID" maxOccurs="1" type="xsd:int" minOccurs="0"></xsd:element>
                               </xsd:sequence>
-
                             </xsd:complexType>
                           </xsd:element>
+                          <xsd:element name="DefaultSelection" type="tns:ImportSelection" minOccurs="0" maxOccurs="1"/>
+                          <xsd:element name="AutoPreview" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="false"/>
+
                         </xsd:sequence>
                   
                       </xsd:complexType>
@@ -1009,6 +1011,13 @@
       <xsd:enumeration value="QUERY"/>
       <xsd:enumeration value="UPDATE"/>
       <xsd:enumeration value="CALL"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ImportSelection">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="TOP"/>
+      <xsd:enumeration value="SELECTED"/>
+      <xsd:enumeration value="ALL"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:complexType name="RezultatKlicaValues">
