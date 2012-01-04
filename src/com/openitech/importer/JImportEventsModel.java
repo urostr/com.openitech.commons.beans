@@ -5,6 +5,7 @@
 package com.openitech.importer;
 
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.xml.config.ImportSelection;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options.IdentityGroupBy;
@@ -107,5 +108,22 @@ public class JImportEventsModel {
       return options.isReloadAllWorkSpaces() == null ? false : options.isReloadAllWorkSpaces();
     }
     return false;
+  }
+
+  public boolean isAutoPreview(){
+    Options options = eventImporter.getOptions();
+    if (options != null) {
+      return options.isAutoPreview() == null ? false : options.isAutoPreview();
+    }
+    return false;
+  }
+
+  public ImportSelection getDefaultSelection(){
+    Options options = eventImporter.getOptions();
+    if (options != null) {
+      return options.getDefaultSelection();
+
+    }
+    return null;
   }
 }
