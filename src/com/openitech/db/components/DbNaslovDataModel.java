@@ -578,30 +578,37 @@ public class DbNaslovDataModel {
     }
 
     public Location getLocation() {
-      if (location==null) {
+      if (location == null) {
         Maps instance = Maps.getInstance();
         
-        location = instance.getLocation(toString(getUlica(), null), 
-                                        toString(getHisnaStevilka(), null),
-                                        toString(getHisnaStevilkaDodatek(), null), 
-                                        toString(getPostnaStevilka(), null), 
-                                        toString(getPosta(), null),
-                                        toString(getNaselje(), null));
+        location = instance.getLocation(toString(getUlica()), 
+                                        toString(getHisnaStevilka()),
+                                        toString(getHisnaStevilkaDodatek()), 
+                                        toString(getPostnaStevilka()), 
+                                        toString(getPosta()),
+                                        toString(getNaselje()));
       }
       return location;
     }
+
+    private String toString(FieldValue fv) {
+      return toString(fv, null);
+    }
     
-    private String toString(FieldValue fv, String dv) {
-      return fv==null||fv.getValue()==null?dv:fv.getValue().toString();
+
+    private String toString(FieldValue fv, String defaultValue) {
+      return fv == null || fv.getValue() == null ? defaultValue : fv.getValue().toString();
     }
 
     @Override
     public String toString() {
-      return "Naslov{" + toString(ulica,"") + " " + toString(hisnaStevilka,"") + toString(hisnaStevilkaDodatek,"") + ", " + toString(postnaStevilka,"") + " " + toString(posta,"") + ", " + toString(naselje,"") + '}';
+      return toString(getUlica(), " ULICA=null ")
+              + toString(getHisnaStevilka(), " HS=null ")
+              + toString(getHisnaStevilkaDodatek(), "")
+              + toString(getPostnaStevilka(), " PTS=null ")
+              + toString(getPosta(), " PT=null ")
+              + toString(getNaselje(), "");
     }
-    
-    
-    
 
     public void setDataSource(DbDataSource dataSource) {
       this.dataSource = dataSource;
