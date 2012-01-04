@@ -81,6 +81,18 @@ public class GoogleMaps extends Maps {
       String status = xpGeocodeStatus.evaluate(doc);
       Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
       
+      if (postnaStevilka != null) {
+        if (ZERO_RESULTS.equals(status)) {
+          address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, postnaStevilka);
+
+          load = new URL(address.toString());
+          doc = builder.parse(load.openConnection().getInputStream());
+
+          status = xpGeocodeStatus.evaluate(doc);
+          Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+        }
+      }
+      
       if (naselje != null) {
         if (ZERO_RESULTS.equals(status)) {
           address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, naselje, postnaStevilka);
@@ -189,23 +201,37 @@ public class GoogleMaps extends Maps {
       if (hisnaStevilka != null) {
         address.append("%20").append(hisnaStevilka).append(hisnaStevilkaDodatek == null ? "" : hisnaStevilkaDodatek);
       }
-
-      if (posta != null) {
-        address.append(address.length() > 0 ? "," : "").append("+").append(posta);
-      }
-    } else {
-      if (postnaStevilka != null) {
-        address.append(address.length() > 0 ? "," : "").append("+").append(postnaStevilka).append("+").append(posta);
-      } else {
-        address.append(address.length() > 0 ? "," : "").append("+").append(posta);
-
-      }
     }
+    
+    if (postnaStevilka != null) {
+      address.append(address.length() > 0 ? "," : "").append("+").append(postnaStevilka).append("+").append(posta);
+    } else {
+      address.append(address.length() > 0 ? "," : "").append("+").append(posta);
+    }
+    
     address.insert(0, GEOCODE_API_URL);
     address.append(",+SI&sensor=false");
     return address;
   }
 
+
+  private StringBuilder encodeUlica(String ulica, String hisnaStevilka, String hisnaStevilkaDodatek, String postnaStevilka) {
+    StringBuilder address = new StringBuilder();
+    if (ulica != null) {
+      address.append(ulica);
+      if (hisnaStevilka != null) {
+        address.append("%20").append(hisnaStevilka).append(hisnaStevilkaDodatek == null ? "" : hisnaStevilkaDodatek);
+      }
+    }
+    
+    if (postnaStevilka != null) {
+      address.append(address.length() > 0 ? "," : "").append("+").append(postnaStevilka).append("+");
+    }
+    address.insert(0, GEOCODE_API_URL);
+    address.append(",+SI&sensor=false");
+    return address;
+  }
+  
   @Override
   public Double getDistance(Naslov origin, Naslov destination, Naslov... waypoints) {
     List<Naslov> route = new ArrayList<Naslov>();
