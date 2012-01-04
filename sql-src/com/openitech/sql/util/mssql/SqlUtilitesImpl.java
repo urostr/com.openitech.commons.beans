@@ -3484,7 +3484,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       evVersionedParameters.clear();
       evVersionedParameters.add(sqlEventAlias);
       evVersionedParameters.add(sqlFindEventVersion);
-      if (!usesView) {
+      if (!usesView && !lookup) {
         evVersionedParameters.add(sqlEventTable);
       } else {
         evVersionedParameters.add(sqlEventTableVersioned);
@@ -3499,6 +3499,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       evNonVersionedParameters.clear();
       evNonVersionedParameters.add(sqlEventAlias);
+      if (!usesView && !lookup) {
+        evNonVersionedParameters.add(sqlEventTable);
+      } else {
+        evNonVersionedParameters.add(sqlEventTableVersioned);
+      }
       evNonVersionedParameters.add(sqlEventTable);
       evNonVersionedParameters.add(sqlFindEventType);
       evNonVersionedParameters.add(sqlFindEventEventId);
