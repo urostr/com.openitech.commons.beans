@@ -581,19 +581,25 @@ public class DbNaslovDataModel {
       if (location==null) {
         Maps instance = Maps.getInstance();
         
-        location = instance.getLocation(toString(getUlica()), 
-                                        toString(getHisnaStevilka()),
-                                        toString(getHisnaStevilkaDodatek()), 
-                                        toString(getPostnaStevilka()), 
-                                        toString(getPosta()),
-                                        toString(getNaselje()));
+        location = instance.getLocation(toString(getUlica(), null), 
+                                        toString(getHisnaStevilka(), null),
+                                        toString(getHisnaStevilkaDodatek(), null), 
+                                        toString(getPostnaStevilka(), null), 
+                                        toString(getPosta(), null),
+                                        toString(getNaselje(), null));
       }
       return location;
     }
     
-    private String toString(FieldValue fv) {
-      return fv==null||fv.getValue()==null?null:fv.getValue().toString();
+    private String toString(FieldValue fv, String dv) {
+      return fv==null||fv.getValue()==null?dv:fv.getValue().toString();
     }
+
+    @Override
+    public String toString() {
+      return "Naslov{" + toString(ulica,"") + " " + toString(hisnaStevilka,"") + toString(hisnaStevilkaDodatek,"") + ", " + toString(postnaStevilka,"") + " " + toString(posta,"") + ", " + toString(naselje,"") + '}';
+    }
+    
     
     
 
