@@ -20,12 +20,12 @@ public class JWorkAreaFilter implements ActiveRowChangeListener {
 
   private Integer workAreaId;
   private DbDataSource dsWorkArea;
-  private final Integer workSpaceId;
+  private final Integer[] workSpaceId;
   private DataSourceFilters dataSourceFilters;
   private DataSourceFilters.AbstractSeekType seekType;
   private final String otherColumName;
 
-  public JWorkAreaFilter(Integer workAreaId, Integer workSpaceId, DataSourceFilters dataSourceFilters, AbstractSeekType seekType, String otherColumName) {
+  public JWorkAreaFilter(Integer workAreaId, Integer[] workSpaceId, DataSourceFilters dataSourceFilters, AbstractSeekType seekType, String otherColumName) {
     this.workAreaId = workAreaId;
     this.workSpaceId = workSpaceId;
     this.dataSourceFilters = dataSourceFilters;
@@ -62,7 +62,7 @@ public class JWorkAreaFilter implements ActiveRowChangeListener {
   public void fieldValueChanged(ActiveRowChangeEvent event) {
   }
 
-  public Integer getWorkSpaceId() {
+  public Integer[] getWorkSpaceId() {
     return workSpaceId;
   }
 }
