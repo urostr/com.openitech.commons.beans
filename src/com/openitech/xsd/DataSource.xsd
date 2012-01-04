@@ -383,7 +383,7 @@
                   <xsd:element name="SeekParameter" type="tns:SeekParameters" maxOccurs="1"></xsd:element>
                 </xsd:all>
                 <xsd:attribute name="WorkAreaId" type="xsd:int"/>
-                <xsd:attribute name="WorkSpaceId" type="xsd:int"/>
+                <xsd:attribute name="WorkSpaceId" type="xsd:string"/>
               </xsd:complexType>
 
             </xsd:element>
@@ -401,7 +401,7 @@
                   <xsd:element name="OtherColumName" type="xsd:string" maxOccurs="1"></xsd:element>
                 </xsd:all>
                 <xsd:attribute name="WorkAreaId" type="xsd:int"/>
-                <xsd:attribute name="WorkSpaceId" type="xsd:int"/>
+                <xsd:attribute name="WorkSpaceId" type="xsd:string"/>
               </xsd:complexType>
             </xsd:element>
           </xsd:sequence>
