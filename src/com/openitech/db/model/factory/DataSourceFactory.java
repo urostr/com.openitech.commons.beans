@@ -109,7 +109,6 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     return editable;
   }
 
-
   @Override
   public void configure() throws SQLException, ClassNotFoundException {
     if (root == null) {
@@ -267,6 +266,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       }
     }
   }
+  private AbstractDataSourceParametersFactory dataSourceParametersFactory;
+
+  public AbstractDataSourceParametersFactory getDataSourceParametersFactory() {
+    return dataSourceParametersFactory;
+  }
 
   protected List createDataSourceParameters() {
     java.util.List parameters = new java.util.ArrayList();
@@ -301,6 +305,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             if (newInstance != null) {
               if (newInstance instanceof AbstractDataSourceParametersFactory) {
                 AbstractDataSourceParametersFactory instance = (AbstractDataSourceParametersFactory) newInstance;
+                dataSourceParametersFactory = instance;
                 instance.setDataSourceParametersFactory(dsf);
                 instance.configure();
                 this.filtersMap = instance.getFiltersMap();
@@ -308,6 +313,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
                 this.viewMenuItems.addAll(instance.getViewMenuItems());
                 this.workAreaFilters = instance.getWorkAreaFilters();
                 this.autoInsertValues = instance.getAutoInsertValue();
+                this.dataEntryValues = instance.getDataEntryValues();
                 parameters.addAll(instance.getParameters());
               }
             }
@@ -768,7 +774,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
           Set<Field> eventColumnsList = new HashSet<Field>();
           Boolean hideUI = eventImporter.isHideUI();
           Options options = eventImporter.getOptions();
-          if(options != null){
+          if (options != null) {
             for (IdentityGroupBy identityGroupBy : options.getIdentityGroupBy()) {
               eventColumns.add(identityGroupBy.getColumnName());
               eventColumns.add(identityGroupBy.getIdentityColumnName());
