@@ -21,9 +21,9 @@ public class AutoInsertValue implements ActionListener {
   private final DbDataSource dsWorkAreaTo;
   private final String columName;
   private final String otherColumName;
-  private final Integer workSpaceId;
+  private final Integer[] workSpaceId;
 
-  public AutoInsertValue(Integer workAreaId, Integer workSpaceId, DbDataSource dataSource, String columName, String otherColumName) {
+  public AutoInsertValue(Integer workAreaId, Integer[] workSpaceId, DbDataSource dataSource, String columName, String otherColumName) {
     this.workAreaId = workAreaId;
     this.workSpaceId = workSpaceId;
     this.dsWorkAreaTo = dataSource;
@@ -37,7 +37,7 @@ public class AutoInsertValue implements ActionListener {
     return workAreaId;
   }
 
-  public Integer getWorkSpaceId() {
+  public Integer[] getWorkSpaceId() {
     return workSpaceId;
   }
 
