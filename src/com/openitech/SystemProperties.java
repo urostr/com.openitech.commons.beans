@@ -10,6 +10,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
@@ -155,7 +161,7 @@ public class SystemProperties {
         //ignore it
       }
     }
-    if (!System.getProperties().containsKey("swing.defaultlaf")&&!isLinux()) {
+    if (!System.getProperties().containsKey("swing.defaultlaf") && !isLinux()) {
       try {
         Class.forName("ch.randelshofer.quaqua.leopard.Quaqua15LeopardCrossPlatformLookAndFeel");
         System.setProperty("swing.defaultlaf", "ch.randelshofer.quaqua.leopard.Quaqua15LeopardCrossPlatformLookAndFeel");
@@ -173,6 +179,8 @@ public class SystemProperties {
     if (System.getProperty("view.pdfs", "").length() == 0) {
       System.setProperty("view.pdfs", "true");
     }
+
+    ProxyConfig.init();
   }
 
   public static boolean loadLibrary(String libraryName, String suffix) {
@@ -228,6 +236,55 @@ public class SystemProperties {
     int read;
     while ((read = in.read(b)) != -1) {
       out.write(b, 0, read);
+    }
+  }
+
+  public static class ProxyConfig {
+
+    private static String host;
+    private static int port;
+
+    public static void init() {
+      System.setProperty("java.net.useSystemProxies", "true");
+      Proxy proxy = getProxy();
+      if (proxy != null) {
+        InetSocketAddress addr = (InetSocketAddress) proxy.address();
+        host = addr.getHostName();
+        port = addr.getPort();
+
+        System.setProperty("java.net.useSystemProxies", "false");
+        System.setProperty("http.proxyHost", host);
+        System.setProperty("http.proxyPort", "" + port);
+
+      }
+      System.setProperty("java.net.useSystemProxies", "false");
+    }
+
+    public static String getHost() {
+      return host;
+    }
+
+    public static int getPort() {
+      return port;
+    }
+
+    private static Proxy getProxy() {
+      List<Proxy> l = null;
+      try {
+        ProxySelector def = ProxySelector.getDefault();
+
+        l = def.select(new URI("http://foo/bar"));
+//        ProxySelector.setDefault(null);
+      } catch (Exception e) {
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
+      }
+      if (l != null) {
+        for (Iterator<Proxy> iter = l.iterator(); iter.hasNext();) {
+          java.net.Proxy proxy = iter.next();
+          return proxy;
+        }
+      }
+      return null;
     }
   }
 }
