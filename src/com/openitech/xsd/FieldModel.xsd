@@ -4,7 +4,6 @@
             targetNamespace="http://xml.openitech.com/schema/fieldmodel"
             xmlns:tns="http://xml.openitech.com/schema/fieldmodel"
             elementFormDefault="qualified" xmlns:ds="http://xml.openitech.com/schema/datasource">
-  <xsd:import schemaLocation="../../../com/openitech/xsd/DataSource.xsd" namespace="http://xml.openitech.com/schema/datasource"/>
   <xsd:element name="FieldModel">
     <xsd:complexType>
       <xsd:all>

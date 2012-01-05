@@ -243,7 +243,7 @@
                     <xsd:element name="Options" minOccurs="0" maxOccurs="1">
                       <xsd:complexType>
                         <xsd:sequence>
-                          
+
                           <xsd:element name="IdentityGroupBy" minOccurs="0" maxOccurs="unbounded">
                             <xsd:complexType>
                               <xsd:sequence>
@@ -266,7 +266,7 @@
                           <xsd:element name="AutoPreview" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="false"/>
 
                         </xsd:sequence>
-                  
+
                       </xsd:complexType>
                     </xsd:element>
                   </xsd:sequence>
@@ -280,7 +280,7 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
-        
+
         <xsd:element name="TableActionListeners">
           <xsd:complexType>
             <xsd:sequence>
@@ -302,7 +302,7 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
-    
+
         <xsd:element name="DataEntryPanel" minOccurs="0">
           <xsd:complexType>
             <xsd:choice>
@@ -330,6 +330,13 @@
           </xsd:complexType>
         </xsd:element>
         <xsd:element name="DisableTab" minOccurs="0" type="xsd:boolean"/>
+        <xsd:element name="Importers" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="Importer" type="tns:Importer" maxOccurs="unbounded"></xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
       </xsd:all>
       <xsd:attribute name="readOnly" type="xsd:boolean" default="false"/>
       <xsd:attribute name="CanExportData" type="xsd:boolean" default="true"/>
@@ -388,7 +395,7 @@
 
             </xsd:element>
           </xsd:sequence>
-          
+
         </xsd:complexType>
       </xsd:element>
       <xsd:element name="AutoInsertColumns" minOccurs="0">
@@ -417,7 +424,7 @@
             <xsd:element name="HideClear" type="xsd:boolean"/>
             <xsd:element name="HideSeek" type="xsd:boolean"/>
             <xsd:element name="HidePanel" type="xsd:boolean"/>
-            
+
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
@@ -634,7 +641,7 @@
             <xsd:element name="MinumumLength" type="xsd:int" minOccurs="0"></xsd:element>
             <xsd:element name="ParameterCount" type="xsd:int" minOccurs="0"></xsd:element>
             <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
-              <xsd:element name="DefaultValue" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
+            <xsd:element name="DefaultValue" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -708,7 +715,7 @@
             <xsd:element name="ParameterCount" type="xsd:int" minOccurs="0"></xsd:element>
             <xsd:element name="MinumumLength" type="xsd:int" minOccurs="0"></xsd:element>
             <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
-              <xsd:element name="DefaultValue" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
+            <xsd:element name="DefaultValue" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -719,8 +726,8 @@
             <xsd:element name="Field" type="xsd:string"></xsd:element>
             <xsd:element name="Preformated" type="xsd:boolean" minOccurs="0"/>
             <xsd:element name="Layout" type="tns:SeekLayout" minOccurs="0"></xsd:element>
-              <xsd:element name="DefaultValueFrom" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
-              <xsd:element name="DefaultValueTo" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
+            <xsd:element name="DefaultValueFrom" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
+            <xsd:element name="DefaultValueTo" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -769,7 +776,7 @@
                 </xsd:choice>
               </xsd:complexType>
             </xsd:element>
-              <xsd:element name="DefaultValue" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
+            <xsd:element name="DefaultValue" type="tns:SeekParameterValue" minOccurs="0"></xsd:element>
           </xsd:all>
         </xsd:complexType>
       </xsd:element>
@@ -1028,13 +1035,66 @@
       <xsd:element name="AsString" type="xsd:boolean" default="false"/>
     </xsd:sequence>
   </xsd:complexType>
-    <xsd:complexType name="SeekParameterValue">
-        <xsd:choice>
-            <xsd:element name="DefaultValueFactory" type="tns:Factory"></xsd:element>
-            <xsd:element name="DefaultValue" type="xsd:string"></xsd:element>
-        </xsd:choice>
-    </xsd:complexType>
+  <xsd:complexType name="SeekParameterValue">
+    <xsd:choice>
+      <xsd:element name="DefaultValueFactory" type="tns:Factory"></xsd:element>
+      <xsd:element name="DefaultValue" type="xsd:string"></xsd:element>
+    </xsd:choice>
+  </xsd:complexType>
+  <xsd:complexType name="Importer">
+    <xsd:sequence>
+      <xsd:element name="Source">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="WORKAREA"/>
+            <xsd:enumeration value="CSV"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="Destination">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Column" minOccurs="0" maxOccurs="unbounded">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="ColumnName" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
+                  <xsd:element name="IdentityGroupBy" minOccurs="0" type="xsd:string" maxOccurs="1"></xsd:element>
+                  <xsd:element name="TableModel" minOccurs="0" type="tns:DataModel"></xsd:element>
+                </xsd:sequence>
+                <xsd:attribute name="EventColumn" type="xsd:boolean" default="true"/>
+                <xsd:attribute name="Lookup" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="ShowInTable" type="xsd:boolean" />
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+          <xsd:attribute name="IdSifranta" type="xsd:int"/>
+          <xsd:attribute name="IdSifre" type="xsd:string"/>
+          <xsd:attribute name="ActivityId" type="xsd:int"/>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="Options" minOccurs="0" maxOccurs="1">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="ReloadAllWorkSpaces" type="xsd:boolean" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="ReloadWorkSpace" minOccurs="0" maxOccurs="unbounded">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="WorkSpaceID" maxOccurs="1" type="xsd:int" minOccurs="0"></xsd:element>
+                  <xsd:element name="WorkAreaID" maxOccurs="1" type="xsd:int" minOccurs="0"></xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="DefaultSelection" type="tns:ImportSelection" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="AutoPreview" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="false"/>
+            <xsd:element name="HideUI" type="xsd:boolean" minOccurs="0"></xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attribute name="Title" type="xsd:string"/>
+  </xsd:complexType>
 </xsd:schema>
+
 
 
 
