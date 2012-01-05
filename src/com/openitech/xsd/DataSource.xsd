@@ -1043,7 +1043,7 @@
   </xsd:complexType>
   <xsd:complexType name="Importer">
     <xsd:sequence>
-      <xsd:element name="Source">
+      <xsd:element name="Source" minOccurs="0">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string">
             <xsd:enumeration value="WORKAREA"/>
