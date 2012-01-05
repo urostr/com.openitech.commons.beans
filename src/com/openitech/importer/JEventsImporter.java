@@ -6,12 +6,13 @@ package com.openitech.importer;
 
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.xml.config.ImportSelection;
-import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
-import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options;
-import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options.IdentityGroupBy;
+import com.openitech.db.model.xml.config.Importer;
+import com.openitech.db.model.xml.config.Importer.Destination;
+import com.openitech.db.model.xml.config.Importer.Options;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
+import java.awt.Window;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
@@ -22,45 +23,36 @@ import java.util.logging.Logger;
  *
  * @author domenbasic
  */
-public class JImportEventsModel implements JImporter{
+public class JEventsImporter implements JImporter{
 
-  private final String title;
   private DbDataSource dataSource;
   private Integer idSifranta;
   private String idSifre;
   private Integer activityId;
   Set<Field> defultFields;
-  private Boolean hideUI;
-  private EventImporter eventImporter;
+  private Importer eventImporter;
 
-  /**
-   *
-   * @param eventImporter
-   * @param dataSource
-   * @param eventColumnsList
-   * @deprecated Use JEventsImporter class instead
-   */
-  @Deprecated
-  public JImportEventsModel(EventImporter eventImporter, DbDataSource dataSource, Set<Field> eventColumnsList) {
+  public JEventsImporter(Importer eventImporter, DbDataSource dataSource, Set<Field> eventColumnsList) {
     this.eventImporter = eventImporter;
-    this.title = eventImporter.getTitle();
     this.dataSource = dataSource;
-    this.idSifranta = eventImporter.getIdSifranta();
-    this.idSifre = eventImporter.getIdSifre();
-    this.activityId = eventImporter.getActivityId();
+    Destination destination = eventImporter.getDestination();
+    if(destination != null){
+    this.idSifranta = eventImporter.getDestination().getIdSifranta();
+    this.idSifre = destination.getIdSifre();
+    this.activityId = destination.getActivityId();
+    }
     this.defultFields = eventColumnsList;
-    this.hideUI = eventImporter.isHideUI();
-
+    
 
 
     if (activityId != null) {
-      if (idSifranta == null || idSifre == null) {
+      if (idSifranta == null) {
         try {
           ActivityEvent activityEvent = SqlUtilities.getInstance().getActivityEvent(activityId);
           this.idSifranta = activityEvent.getIdSifranta();
           this.idSifre = activityEvent.getIdSifre();
         } catch (SQLException ex) {
-          Logger.getLogger(JImportEventsModel.class.getName()).log(Level.SEVERE, null, ex);
+          Logger.getLogger(JEventsImporter.class.getName()).log(Level.SEVERE, null, ex);
         }
       }
     }
@@ -68,7 +60,7 @@ public class JImportEventsModel implements JImporter{
 
   @Override
   public String getTitle() {
-    return title;
+    return eventImporter.getTitle();
   }
 
   public DbDataSource getDataSource() {
@@ -92,16 +84,22 @@ public class JImportEventsModel implements JImporter{
   }
 
   public boolean isHideUI() {
-    return hideUI == null ? false : hideUI;
+    boolean result = false;
+    Importer.Options options = eventImporter.getOptions();
+    if(options != null){
+    Boolean hideUI = options.isHideUI();
+    result = hideUI == null ? false : hideUI;
+    }
+    return result;
   }
 
-  public List<IdentityGroupBy> getIdentityGroupBys() {
-    Options options = eventImporter.getOptions();
-    if (options != null) {
-      return options.getIdentityGroupBy();
-    }
-    return null;
-  }
+//  public List<IdentityGroupBy> getIdentityGroupBys() {
+//    Options options = eventImporter.getOptions();
+//    if (options != null) {
+//      return options.getIdentityGroupBy();
+//    }
+//    return null;
+//  }
 
   public List<Options.ReloadWorkSpace> getReloadWorkSpaces() {
     Options options = eventImporter.getOptions();
@@ -134,5 +132,9 @@ public class JImportEventsModel implements JImporter{
 
     }
     return null;
+  }
+
+  public Window getImportWindow() {
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 }
