@@ -1060,9 +1060,27 @@
                   <xsd:element name="ColumnName" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
                   <xsd:element name="IdentityGroupBy" minOccurs="0" type="xsd:string" maxOccurs="1"></xsd:element>
                   <xsd:element name="TableModel" minOccurs="0" type="tns:DataModel"></xsd:element>
+                  <xsd:element name="SourceColumn" minOccurs="0">
+                    <xsd:complexType>
+                      <xsd:choice>
+                        <xsd:element name="Index" type="xsd:int"></xsd:element>
+                        <xsd:element name="Header" type="xsd:string"></xsd:element>
+                      </xsd:choice>
+                    </xsd:complexType>
+                  </xsd:element>
                 </xsd:sequence>
                 <xsd:attribute name="EventColumn" type="xsd:boolean" default="true"/>
                 <xsd:attribute name="Lookup" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="Nullable" type="xsd:boolean" default="true">
+                  <xsd:annotation>
+                    <xsd:documentation>Tells if the specified column can be null</xsd:documentation>
+                  </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="Optional" type="xsd:boolean" default="false">
+                  <xsd:annotation>
+                    <xsd:documentation>Tells if the specified column can be missing in the source file/workarea</xsd:documentation>
+                  </xsd:annotation>
+                </xsd:attribute>
                 <xsd:attribute name="ShowInTable" type="xsd:boolean" />
               </xsd:complexType>
             </xsd:element>
@@ -1094,6 +1112,10 @@
     <xsd:attribute name="Title" type="xsd:string"/>
   </xsd:complexType>
 </xsd:schema>
+
+
+
+
 
 
 
