@@ -6,6 +6,7 @@ package com.openitech.maps.google;
 
 import com.openitech.db.components.DbNaslovDataModel.Naslov;
 import com.openitech.maps.Maps;
+import com.openitech.maps.Maps.Location.Quality;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.net.URL;
@@ -63,6 +64,7 @@ public class GoogleMaps extends Maps {
           String naselje) {
 
     Location result = null;
+    Location.Quality quality = null;
 
     try {
       ulica = ulica == null ? null : URLEncoder.encode(ulica, "UTF-8");
@@ -81,6 +83,10 @@ public class GoogleMaps extends Maps {
       String status = xpGeocodeStatus.evaluate(doc);
       Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
       
+      if (OK.equals(status)) {
+        quality = Quality.EXACT;
+      }
+      
       if (postnaStevilka != null) {
         if (ZERO_RESULTS.equals(status)) {
           address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, postnaStevilka);
@@ -90,6 +96,10 @@ public class GoogleMaps extends Maps {
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+          
+          if (OK.equals(status)) {
+            quality = Quality.EXACT;
+          }
         }
       }
       
@@ -102,6 +112,10 @@ public class GoogleMaps extends Maps {
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+          
+          if (OK.equals(status)) {
+            quality = Quality.GOOD_GUESS;
+          }
         }
       }
 
@@ -114,6 +128,10 @@ public class GoogleMaps extends Maps {
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+          
+          if (OK.equals(status)) {
+            quality = Quality.TOWN;
+          }
         }
 
         if (ZERO_RESULTS.equals(status)) {
@@ -124,6 +142,10 @@ public class GoogleMaps extends Maps {
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+          
+          if (OK.equals(status)) {
+            quality = Quality.TOWN;
+          }
         }
 
         if (ZERO_RESULTS.equals(status)) {
@@ -134,6 +156,10 @@ public class GoogleMaps extends Maps {
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+          
+          if (OK.equals(status)) {
+            quality = Quality.TOWN;
+          }
         }
       }
 
@@ -150,6 +176,10 @@ public class GoogleMaps extends Maps {
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+          
+          if (OK.equals(status)) {
+            quality = Quality.TOWN;
+          }
 
           nodes = (NodeList) xpResults.evaluate(doc, XPathConstants.NODESET);
         }
@@ -159,6 +189,14 @@ public class GoogleMaps extends Maps {
           Double longitude = (Double) xpLongitude.evaluate(doc, XPathConstants.NUMBER);
 
           result = new Location(lattitude, longitude);
+          
+          if (quality.equals(Quality.EXACT) && 
+              (ulica == null ||
+               hisnaStevilka == null)) {
+            quality = Quality.TOWN;
+          }
+          
+          result.setQuality(quality);
         }
       }
     } catch (Exception ex) {
