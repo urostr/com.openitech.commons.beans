@@ -840,12 +840,20 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
                   int tipPolja = dataSource.getType(imePolja);
                   field = new Field(imePolja, tipPolja);
                 }
-                DbFieldObserver fieldObserver = new DbFieldObserver();
-                fieldObserver.setColumnName(imePolja);
-                fieldObserver.setDataSource(dataSource);
-                final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
-                if (!eventColumnsList.contains(fieldValueProxy)) {
-                  eventColumnsList.add(fieldValueProxy);
+
+                if (column.isEventColumn()) {
+                  DbFieldObserver fieldObserver = new DbFieldObserver();
+                  fieldObserver.setColumnName(imePolja);
+                  fieldObserver.setDataSource(dataSource);
+                  final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
+                  field = fieldValueProxy;
+                  if (!eventColumnsList.contains(fieldValueProxy)) {
+                    eventColumnsList.add(fieldValueProxy);
+                  }
+                } else {
+                  if (!eventColumnsList.contains(field)) {
+                    eventColumnsList.add(field);
+                  }
                 }
 
                 if (field != null) {
@@ -876,8 +884,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
                 if (lookup && field != null) {
                   for (Field.LookupType lookupType : Field.LookupType.values()) {
                     DbFieldObserver fo = new DbFieldObserver();
-                    fieldObserver.setColumnName(field.getName() + lookupType.getColumnPrefix());
-                    fieldObserver.setDataSource(dataSource);
+                    fo.setColumnName(field.getName() + lookupType.getColumnPrefix());
+                    fo.setDataSource(dataSource);
                     final FieldValueProxy fvLookupProxy = new FieldValueProxy(field, fo);
                     eventColumnsList.add(fvLookupProxy);
                   }
