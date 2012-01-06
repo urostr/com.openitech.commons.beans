@@ -11,6 +11,7 @@ import com.openitech.db.model.AutoInsertValue;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.Workarea.TableDoubleClick;
+import com.openitech.importer.JEventsImporter;
 import com.openitech.importer.JImportEventsModel;
 import com.openitech.swing.framework.context.AssociatedTasks;
 import com.openitech.value.fields.Field;
@@ -153,8 +154,18 @@ public abstract class AbstractDataSourceFactory extends com.openitech.db.model.f
   }
   protected List<JImportEventsModel> imporEventsModels = new ArrayList<JImportEventsModel>();
 
+  /**
+   *
+   * @deprecated Use getEventImportersModels instead
+   **/
+  @Deprecated
   public List<JImportEventsModel> getImporEventsModels() {
     return imporEventsModels;
+  }
+  protected List<JEventsImporter> eventImportersModels = new ArrayList<JEventsImporter>();
+
+  public List<JEventsImporter> getEventImportersModels() {
+    return eventImportersModels;
   }
   protected boolean taskList;
 
