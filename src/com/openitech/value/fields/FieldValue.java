@@ -22,6 +22,7 @@ public class FieldValue extends Field implements Cloneable {
 
   public FieldValue(Field field, Object value) {
     this(field.idPolja, field.name, field.type, field.fieldIndex, field.lookupType, value);
+    setModel(field.getModel());
   }
 
   public FieldValue(String name) {
