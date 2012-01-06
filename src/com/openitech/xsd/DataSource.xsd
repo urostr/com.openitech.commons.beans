@@ -1027,6 +1027,12 @@
       <xsd:enumeration value="ALL"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="ImportSource">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="WORKAREA"/>
+      <xsd:enumeration value="CSV"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:complexType name="RezultatKlicaValues">
     <xsd:sequence>
       <xsd:element name="Opis" type="xsd:string"/>
@@ -1043,14 +1049,7 @@
   </xsd:complexType>
   <xsd:complexType name="Importer">
     <xsd:sequence>
-      <xsd:element name="Source" minOccurs="0">
-        <xsd:simpleType>
-          <xsd:restriction base="xsd:string">
-            <xsd:enumeration value="WORKAREA"/>
-            <xsd:enumeration value="CSV"/>
-          </xsd:restriction>
-        </xsd:simpleType>
-      </xsd:element>
+      <xsd:element name="Source" type="tns:ImportSource" minOccurs="0"/>
       <xsd:element name="Destination">
         <xsd:complexType>
           <xsd:sequence>
@@ -1064,7 +1063,7 @@
                     <xsd:complexType>
                       <xsd:choice>
                         <xsd:element name="Index" type="xsd:int"></xsd:element>
-                        <xsd:element name="Header" type="xsd:string"></xsd:element>
+                        <xsd:element name="Name" type="xsd:string"></xsd:element>
                       </xsd:choice>
                     </xsd:complexType>
                   </xsd:element>
@@ -1105,6 +1104,7 @@
             <xsd:element name="DefaultSelection" type="tns:ImportSelection" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="AutoPreview" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="false"/>
             <xsd:element name="HideUI" type="xsd:boolean" minOccurs="0"></xsd:element>
+            <xsd:element name="StartRow" type="xsd:int" minOccurs="0" maxOccurs="1" default="1"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
