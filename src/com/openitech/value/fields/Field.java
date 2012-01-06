@@ -77,6 +77,10 @@ public class Field implements Cloneable {
     return result;
   }
 
+  public void setModel(FieldModel model) {
+    this.model = model;
+  }
+
   /**
    * Get the value of model
    *
@@ -339,7 +343,7 @@ public class Field implements Cloneable {
       return result;
     } else {
       if (field != null) {
-        Field result =  new Field(field.getIdPolja(), field.getName() + (fieldValueIndex > 1 ? fieldValueIndex : ""), field.getType(), fieldValueIndex);
+        Field result = new Field(field.getIdPolja(), field.getName() + (fieldValueIndex > 1 ? fieldValueIndex : ""), field.getType(), fieldValueIndex);
         return result;
       } else {
         return null;
