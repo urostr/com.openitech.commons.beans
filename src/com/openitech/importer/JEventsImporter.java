@@ -14,6 +14,7 @@ import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
 import java.awt.Window;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -23,7 +24,7 @@ import java.util.logging.Logger;
  *
  * @author domenbasic
  */
-public class JEventsImporter implements JImporter{
+public class JEventsImporter implements JImporter {
 
   private DbDataSource dataSource;
   private Integer idSifranta;
@@ -36,13 +37,13 @@ public class JEventsImporter implements JImporter{
     this.eventImporter = eventImporter;
     this.dataSource = dataSource;
     Destination destination = eventImporter.getDestination();
-    if(destination != null){
-    this.idSifranta = eventImporter.getDestination().getIdSifranta();
-    this.idSifre = destination.getIdSifre();
-    this.activityId = destination.getActivityId();
+    if (destination != null) {
+      this.idSifranta = eventImporter.getDestination().getIdSifranta();
+      this.idSifre = destination.getIdSifre();
+      this.activityId = destination.getActivityId();
     }
     this.defultFields = eventColumnsList;
-    
+
 
 
     if (activityId != null) {
@@ -86,20 +87,27 @@ public class JEventsImporter implements JImporter{
   public boolean isHideUI() {
     boolean result = false;
     Importer.Options options = eventImporter.getOptions();
-    if(options != null){
-    Boolean hideUI = options.isHideUI();
-    result = hideUI == null ? false : hideUI;
+    if (options != null) {
+      Boolean hideUI = options.isHideUI();
+      result = hideUI == null ? false : hideUI;
     }
     return result;
   }
 
-//  public List<IdentityGroupBy> getIdentityGroupBys() {
-//    Options options = eventImporter.getOptions();
-//    if (options != null) {
-//      return options.getIdentityGroupBy();
-//    }
-//    return null;
-//  }
+  public List<IdentityGroupBy> getIdentityGroupBys() {
+    List<IdentityGroupBy> result = new ArrayList<IdentityGroupBy>();
+    final Destination destination = eventImporter.getDestination();
+    if (destination != null) {
+      for (Destination.Column column : destination.getColumn()) {
+        String identityGroupBy = column.getIdentityGroupBy();
+        if (identityGroupBy != null && !identityGroupBy.equals("")) {
+          result.add(new IdentityGroupBy(column.getColumnName(), identityGroupBy));
+        }
+      }
+    }
+
+    return result;
+  }
 
   public List<Options.ReloadWorkSpace> getReloadWorkSpaces() {
     Options options = eventImporter.getOptions();
@@ -109,7 +117,7 @@ public class JEventsImporter implements JImporter{
     return null;
   }
 
-  public boolean isReloadAllWorkSpaces(){
+  public boolean isReloadAllWorkSpaces() {
     Options options = eventImporter.getOptions();
     if (options != null) {
       return options.isReloadAllWorkSpaces() == null ? false : options.isReloadAllWorkSpaces();
@@ -117,7 +125,7 @@ public class JEventsImporter implements JImporter{
     return false;
   }
 
-  public boolean isAutoPreview(){
+  public boolean isAutoPreview() {
     Options options = eventImporter.getOptions();
     if (options != null) {
       return options.isAutoPreview() == null ? false : options.isAutoPreview();
@@ -125,16 +133,12 @@ public class JEventsImporter implements JImporter{
     return false;
   }
 
-  public ImportSelection getDefaultSelection(){
+  public ImportSelection getDefaultSelection() {
     Options options = eventImporter.getOptions();
     if (options != null) {
       return options.getDefaultSelection();
 
     }
     return null;
-  }
-
-  public Window getImportWindow() {
-    throw new UnsupportedOperationException("Not yet implemented");
   }
 }
