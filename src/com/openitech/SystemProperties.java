@@ -249,12 +249,15 @@ public class SystemProperties {
       Proxy proxy = getProxy();
       if (proxy != null) {
         InetSocketAddress addr = (InetSocketAddress) proxy.address();
-        host = addr.getHostName();
-        port = addr.getPort();
+        
+        if (addr != null) {
+          host = addr.getHostName();
+          port = addr.getPort();
 
-        System.setProperty("java.net.useSystemProxies", "false");
-        System.setProperty("http.proxyHost", host);
-        System.setProperty("http.proxyPort", "" + port);
+          System.setProperty("java.net.useSystemProxies", "false");
+          System.setProperty("http.proxyHost", host);
+          System.setProperty("http.proxyPort", "" + port);
+        }
 
       }
       System.setProperty("java.net.useSystemProxies", "false");
