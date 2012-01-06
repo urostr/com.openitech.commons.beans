@@ -126,6 +126,27 @@ public abstract class Maps {
     public double getLongitude() {
       return longitude;
     }
+    
+    protected Quality quality;
+
+    /**
+     * Get the value of quality
+     *
+     * @return the value of quality
+     */
+    public Quality getQuality() {
+      return quality;
+    }
+
+    /**
+     * Set the value of quality
+     *
+     * @param quality new value of quality
+     */
+    public void setQuality(Quality quality) {
+      this.quality = quality;
+    }
+
 
     /**
      * Returns true the specified Location and this Location represent
@@ -161,6 +182,12 @@ public abstract class Maps {
       } catch (ParseException ex) {
         return latitude + "," +longitude;
       }
+    }
+    
+    public static enum Quality {
+      EXACT,
+      GOOD_GUESS,
+      TOWN;
     }
   }
   
