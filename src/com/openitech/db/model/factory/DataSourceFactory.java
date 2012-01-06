@@ -19,6 +19,9 @@ import com.openitech.db.model.DbTableModel;
 import com.openitech.db.model.xml.config.DataModel;
 import com.openitech.db.model.xml.config.DataModel.TableColumns;
 import com.openitech.db.model.xml.config.Factory;
+import com.openitech.db.model.xml.config.Importer;
+import com.openitech.db.model.xml.config.Importer.Destination;
+import com.openitech.db.model.xml.config.Importer.Destination.Column;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
@@ -32,6 +35,7 @@ import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options;
 import com.openitech.db.model.xml.config.Workarea.EventImporters.EventImporter.Options.IdentityGroupBy;
 import com.openitech.db.model.xml.config.Workarea.ExtendWorkarea;
+import com.openitech.db.model.xml.config.Workarea.Importers;
 import com.openitech.db.model.xml.config.Workarea.IncludeWorkarea;
 import com.openitech.db.model.xml.config.Workarea.WorkSpaceInformation;
 import com.openitech.events.concurrent.DataSourceEvent;
@@ -48,11 +52,13 @@ import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks.TaskPanes.DefaultTask;
 import com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views;
+import com.openitech.importer.JEventsImporter;
 import com.openitech.importer.JImportEventsModel;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.events.Activity;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
+import com.openitech.value.fields.Field.FieldModel;
 import com.openitech.value.fields.FieldValueProxy;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
@@ -196,6 +202,8 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         createInformationPanels();
 
         getTaskPanes().addAll(createTaskPanes(dataSourceXML));
+
+        createImporters(dataSourceXML);
 
         createDataEntryPanel();
 
@@ -761,18 +769,18 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     } catch (InvocationTargetException ex) {
       Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
     }
+
+    return result;
+  }
+
+  private void createImporters(Workarea dataSourceXML) {
     EventImporters eventImporters = dataSourceXML.getEventImporters();
     if (eventImporters != null) {
       List<EventImporter> eventImporterList = eventImporters.getEventImporter();
       if (eventImporterList != null) {
         for (EventImporter eventImporter : eventImporterList) {
-          Integer idSifranta = eventImporter.getIdSifranta();
-          String idSifre = eventImporter.getIdSifre();
-          Integer activityId = eventImporter.getActivityId();
           List<String> eventColumns = eventImporter.getEventColumns();
-          String title = eventImporter.getTitle();
           Set<Field> eventColumnsList = new HashSet<Field>();
-          Boolean hideUI = eventImporter.isHideUI();
           Options options = eventImporter.getOptions();
           if (options != null) {
             for (IdentityGroupBy identityGroupBy : options.getIdentityGroupBy()) {
@@ -803,13 +811,87 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
               Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
             }
           }
-
           imporEventsModels.add(new JImportEventsModel(eventImporter, dataSource, eventColumnsList));
         }
       }
     }
+    ///////////
+    Importers importers = dataSourceXML.getImporters();
+    if (importers != null) {
+      List<Importer> eventImporterList = importers.getImporter();
+      if (eventImporterList != null) {
+        for (Importer eventImporter : eventImporterList) {
+          Destination destination = eventImporter.getDestination();
+          if (destination != null) {
+            List<Column> eventColumns = destination.getColumn();
+            Set<Field> eventColumnsList = new HashSet<Field>();
 
-    return result;
+            for (Column column : eventColumns) {
+              String imePolja = column.getColumnName();
+              boolean lookup = column.isLookup();
+              try {
+                Field field = Field.getField(imePolja);
+                if (field == null) {
+                  dataSource.setSafeMode(false);
+                  dataSource.setQueuedDelay(0);
+                  dataSource.filterChanged();
+                  dataSource.loadData();
+                  dataSource.setSafeMode(true);
+                  int tipPolja = dataSource.getType(imePolja);
+                  field = new Field(imePolja, tipPolja);
+                }
+                DbFieldObserver fieldObserver = new DbFieldObserver();
+                fieldObserver.setColumnName(imePolja);
+                fieldObserver.setDataSource(dataSource);
+                final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
+                if (!eventColumnsList.contains(fieldValueProxy)) {
+                  eventColumnsList.add(fieldValueProxy);
+                }
+
+                if (field != null) {
+                  Boolean showInTable = column.isShowInTable();
+                  if (showInTable != null) {
+                    field.setShowInTable(showInTable);
+                  }
+                  FieldModel model = field.getModel();
+
+                  DataModel tableModel1 = column.getTableModel();
+                  if (tableModel1 != null) {
+                    TableColumns tableColumns = tableModel1.getTableColumns();
+                    if (tableColumns != null) {
+                      FieldModel.TableColumns tcCopy = new FieldModel.TableColumns();
+                      model.setTableColumns(tcCopy);
+                      for (TableColumnDefinition tableColumnDefinition : tableColumns.getTableColumnDefinition()) {
+                        FieldModel.TableColumns.TableColumnDefinition tcd = new FieldModel.TableColumns.TableColumnDefinition();
+                        tcCopy.getTableColumnDefinition().add(tcd);
+                        for (String string : tableColumnDefinition.getTableColumnEntry()) {
+                          tcd.getTableColumnEntry().add(string);
+                        }
+                      }
+                    }
+
+                  }
+                }
+
+                if (lookup && field != null) {
+                  for (Field.LookupType lookupType : Field.LookupType.values()) {
+                    DbFieldObserver fo = new DbFieldObserver();
+                    fieldObserver.setColumnName(field.getName() + lookupType.getColumnPrefix());
+                    fieldObserver.setDataSource(dataSource);
+                    final FieldValueProxy fvLookupProxy = new FieldValueProxy(field, fo);
+                    eventColumnsList.add(fvLookupProxy);
+                  }
+                }
+              } catch (SQLException ex) {
+                Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+              }
+            }
+
+            eventImportersModels.add(new JEventsImporter(eventImporter, dataSource, eventColumnsList));
+          }
+        }
+      }
+    }
   }
 
   private void createDataEntryPanel() throws ClassNotFoundException {
