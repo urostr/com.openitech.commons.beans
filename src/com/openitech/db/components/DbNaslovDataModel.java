@@ -577,6 +577,10 @@ public class DbNaslovDataModel {
       return hisnaStevilkaDodatek;
     }
 
+    public void setLocation(Location location) {
+      this.location = location;
+    }      
+
     public Location getLocation() {
       if (location == null) {
         Maps instance = Maps.getInstance();
