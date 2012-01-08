@@ -26,6 +26,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 
@@ -65,7 +66,7 @@ public class GoogleMaps extends Maps {
 
     Location result = null;
     Location.Quality quality = null;
-
+    
     try {
       ulica = ulica == null ? null : URLEncoder.encode(ulica, "UTF-8");
       hisnaStevilka = hisnaStevilka == null ? null : URLEncoder.encode(hisnaStevilka, "UTF-8");
@@ -88,7 +89,7 @@ public class GoogleMaps extends Maps {
       }
       
       if (postnaStevilka != null) {
-        if (ZERO_RESULTS.equals(status)) {
+        if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, postnaStevilka);
 
           load = new URL(address.toString());
@@ -104,7 +105,7 @@ public class GoogleMaps extends Maps {
       }
       
       if (naselje != null) {
-        if (ZERO_RESULTS.equals(status)) {
+        if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, naselje, postnaStevilka);
 
           load = new URL(address.toString());
@@ -119,8 +120,8 @@ public class GoogleMaps extends Maps {
         }
       }
 
-      if (posta != null) {
-        if (ZERO_RESULTS.equals(status)) {
+      if (posta != null && postnaStevilka != null) {
+        if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodePostnaStevilka(postnaStevilka, posta);
 
           load = new URL(address.toString());
@@ -133,8 +134,26 @@ public class GoogleMaps extends Maps {
             quality = Quality.TOWN;
           }
         }
+      }
+      
+      if (postnaStevilka != null) {
+        if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
+          address = encodePosta(postnaStevilka);
 
-        if (ZERO_RESULTS.equals(status)) {
+          load = new URL(address.toString());
+          doc = builder.parse(load.openConnection().getInputStream());
+
+          status = xpGeocodeStatus.evaluate(doc);
+          Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
+          
+          if (OK.equals(status)) {
+            quality = Quality.TOWN;
+          }
+        }
+      }           
+
+      if (posta != null) {
+        if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodePosta(posta);
 
           load = new URL(address.toString());
@@ -148,7 +167,7 @@ public class GoogleMaps extends Maps {
           }
         }
 
-        if (ZERO_RESULTS.equals(status)) {
+        if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodePosta(naselje);
 
           load = new URL(address.toString());
@@ -167,22 +186,6 @@ public class GoogleMaps extends Maps {
 
       if (OK.equals(status)) {
         NodeList nodes = (NodeList) xpResults.evaluate(doc, XPathConstants.NODESET);
-
-        if (nodes.getLength() > 1 && posta != null) {
-          address = encodePostnaStevilka(postnaStevilka, posta);
-
-          load = new URL(address.toString());
-          doc = builder.parse(load.openConnection().getInputStream());
-
-          status = xpGeocodeStatus.evaluate(doc);
-          Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
-          
-          if (OK.equals(status)) {
-            quality = Quality.TOWN;
-          }
-
-          nodes = (NodeList) xpResults.evaluate(doc, XPathConstants.NODESET);
-        }
 
         if (nodes.getLength() == 1) {
           Double lattitude = (Double) xpLattitude.evaluate(doc, XPathConstants.NUMBER);
@@ -204,6 +207,12 @@ public class GoogleMaps extends Maps {
     }
 
     return result;
+  }
+  
+  private boolean isResultValid(Document doc) throws XPathExpressionException {
+    NodeList nodes = (NodeList) xpResults.evaluate(doc, XPathConstants.NODESET);
+    
+    return nodes.getLength() == 1;
   }
 
   private void dumpXML(Document doc) throws TransformerException, TransformerFactoryConfigurationError, TransformerConfigurationException {
