@@ -5,12 +5,11 @@
 package com.openitech.db.model.factory;
 
 import com.openitech.importer.DataColumn;
-import com.openitech.value.fields.FieldValue;
 
 /**
  *
  * @author uros
  */
 public interface SourceColumnFactory {
-  public FieldValue getFieldValue(DataColumn... columns);  
+  public DataColumn getColumnValue(DataColumn... columns);  
 }
