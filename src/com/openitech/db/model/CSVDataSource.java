@@ -14,6 +14,7 @@ import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
 import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.awt.OwnerFrame;
+import com.openitech.importer.DataColumn;
 import com.openitech.io.LogWriter;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -59,7 +60,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   private int count = 0;
   private int fetchSize = 54;
   private Map<Integer, Map<String, Object>> storedUpdates = new HashMap<Integer, Map<String, Object>>();
-  private Map<Integer, Map<String, CSVValue>> rowValues = new HashMap<Integer, Map<String, CSVValue>>();
+  private Map<Integer, Map<String, DataColumn>> rowValues = new HashMap<Integer, Map<String, DataColumn>>();
   private boolean inserting = false;
   private DbDataSourceHashMap<String, Integer> columnMapping = new DbDataSourceHashMap<String, Integer>();
   private DbDataSourceHashMap<Integer, String> columnMappingIndex = new DbDataSourceHashMap<Integer, String>();
@@ -3797,17 +3798,17 @@ public class CSVDataSource extends AbstractDataSourceImpl {
             populateHeaders(columns);
             continue;
           }
-          Map<String, CSVValue> values;
+          Map<String, DataColumn> values;
           if (rowValues.containsKey(i)) {
             values = rowValues.get(i);
           } else {
-            values = new HashMap<String, CSVValue>();
+            values = new HashMap<String, DataColumn>();
             rowValues.put(i, values);
           }
 
           for (int j = 0; j < columns.length; j++) {
             String value = columns[j];
-            values.put(getColumnName(j + 1).toUpperCase(), new CSVValue(value));
+            values.put(getColumnName(j + 1).toUpperCase(), new DataColumn(value));
           }
         }
         isDataLoaded = true;
@@ -4127,9 +4128,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     Object result = nullValue;
     Integer r = new Integer(row);
 
-    Map<String, CSVValue> values = rowValues.get(r);
+    Map<String, DataColumn> values = rowValues.get(r);
     if (values != null) {
-      CSVValue csvValue = values.get(columnName);
+      DataColumn csvValue = values.get(columnName);
       if (csvValue == null) {
         result = nullValue;
         wasNull = true;
@@ -4422,88 +4423,5 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public void destroy() {
-  }
-
-  private class CSVValue {
-
-    private final java.text.DecimalFormatSymbols sl_SI_DECIMAL_FORMAT_SYMBOLS = new java.text.DecimalFormatSymbols(new java.util.Locale("sl", "SI"));
-    private final java.text.DecimalFormat nf = new java.text.DecimalFormat("#,###.######", sl_SI_DECIMAL_FORMAT_SYMBOLS);
-    private final java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("d.M.yyyy");
-    private final java.text.SimpleDateFormat dfsql = new java.text.SimpleDateFormat("yyyy-MM-dd");
-    private final java.text.SimpleDateFormat dfplain = new java.text.SimpleDateFormat("yyyyMMdd");
-    private String stringValue;
-    private Object value;
-    private boolean isValueSet = false;
-    private java.lang.Class type;
-    private boolean nullable = true;
-    private boolean optional = false;
-    private boolean wasNull = false;
-
-    public CSVValue(String stringValue) {
-      this.stringValue = stringValue;
-    }
-
-    public Object getValue(Class type) throws ParseException {
-      if (!isValueSet) {
-        this.type = type;
-        setValue(stringValue);
-        isValueSet = true;
-      }
-      return value;
-    }
-
-    public boolean wasNull() {
-      return wasNull;
-    }
-
-    private void setValue(String value) throws ParseException {
-      if (type.equals(java.lang.Double.class)) {
-        if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
-          this.value = nullable ? null : 0;
-          wasNull = true;
-        } else {
-          this.value = java.lang.Double.valueOf(nf.parse(value, new java.text.ParsePosition(0)).doubleValue());
-        }
-      } else if (type.equals(java.math.BigInteger.class)) {
-        if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
-          this.value = nullable ? null : 0;
-          wasNull = true;
-        } else {
-          this.value = new java.math.BigInteger(value);
-        }
-      } else if (type.equals(java.lang.Integer.class)) {
-        if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
-          this.value = nullable ? null : 0;
-          wasNull = true;
-        } else {
-          this.value = java.lang.Integer.valueOf(value);
-        }
-      } else if (type.equals(java.util.Date.class) || type.equals(java.sql.Date.class)) {
-        if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
-          this.value = null;
-        } else if (value.contains(".")) {
-          this.value = new java.sql.Date(df.parse(value).getTime());
-        } else if (value.contains("-")) {
-          this.value = new java.sql.Date(dfsql.parse(value).getTime());
-        } else {
-          this.value = new java.sql.Date(dfplain.parse(value).getTime());
-        }
-      } else if (type.equals(java.lang.String.class)) {
-        if (value.equalsIgnoreCase("(null)")) {
-          this.value = nullable ? null : "";
-          wasNull = true;
-        } else {
-          this.value = value;
-        }
-      } else if (type.isInstance(value)) {
-        this.value = value;
-      } else {
-        throw new IllegalArgumentException();
-      }
-
-      if (value == null) {
-        wasNull = true;
-      }
-    }
   }
 }
