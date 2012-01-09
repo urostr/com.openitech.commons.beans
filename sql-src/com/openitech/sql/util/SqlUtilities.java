@@ -753,6 +753,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract TemporaryTable getCachedTemporaryTable(String value);
 
+  public abstract String[] getSifre(int idSifranta);
+
   public static enum Operation {
 
     INSERT,
