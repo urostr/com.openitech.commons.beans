@@ -7,6 +7,7 @@
  */
 package com.openitech.db.model.sql;
 
+import au.com.bytecode.opencsv.CSVReader;
 import com.openitech.db.model.*;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.events.ActiveRowChangeEvent;
@@ -15,6 +16,9 @@ import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.awt.OwnerFrame;
 import com.openitech.io.LogWriter;
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -33,6 +37,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,9 +59,10 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   private int count = 0;
   private int fetchSize = 54;
   private Map<Integer, Map<String, Object>> storedUpdates = new HashMap<Integer, Map<String, Object>>();
-  private Map<Integer, Map<String, Object>> rowValues = new HashMap<Integer, Map<String, Object>>();
+  private Map<Integer, Map<String, CSVValue>> rowValues = new HashMap<Integer, Map<String, CSVValue>>();
   private boolean inserting = false;
   private DbDataSourceHashMap<String, Integer> columnMapping = new DbDataSourceHashMap<String, Integer>();
+  private DbDataSourceHashMap<Integer, String> columnMappingIndex = new DbDataSourceHashMap<Integer, String>();
   private boolean[] storedResult = new boolean[]{false, false};
   private final Semaphore semaphore = new Semaphore(1);
   private final Runnable events = new RunnableEvents(this);
@@ -72,12 +78,21 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   private int currentRow = -1;
   private boolean isDataLoaded = false;
   private int columnCount;
-  
+  private File sourceFile;
+
   /** Creates a new instance of DbDataSource */
   public CSVDataSource(DbDataSource owner) {
     this.owner = owner;
   }
-  
+
+  @Override
+  public void setSource(Object source) {
+    if (source != null && source instanceof File) {
+      this.sourceFile = (File) source;
+    } else {
+      throw new IllegalArgumentException("Source must be a file!");
+    }
+  }
 
   /**
    * Getter for property updateFieldNames.
@@ -134,7 +149,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   @Override
   public DbDataSourceImpl copy(DbDataSource owner) {
     throw new UnsupportedOperationException();
-   /* CSVDataSource result = new CSVDataSource(owner);
+    /* CSVDataSource result = new CSVDataSource(owner);
 
     result.selectSql = this.selectSql;
     result.countSql = this.countSql;
@@ -142,8 +157,8 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     result.preparedCountSql = this.preparedCountSql;
     result.updateTableName = this.updateTableName;
     if (this.primaryKeys != null) {
-      result.primaryKeys = new ArrayList<PrimaryKey>();
-      result.primaryKeys.addAll(this.primaryKeys);
+    result.primaryKeys = new ArrayList<PrimaryKey>();
+    result.primaryKeys.addAll(this.primaryKeys);
     }
     result.count = this.count;
     result.fetchSize = this.fetchSize;
@@ -153,7 +168,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     result.countStatementReady = this.countStatementReady;
     result.selectStatement = this.selectStatement;
     result.countStatement = this.countStatement;
-//    result.cachedStatements.putAll(this.cachedStatements);
+    //    result.cachedStatements.putAll(this.cachedStatements);
     result.sqlCache = this.sqlCache;
     result.fireEvents = this.fireEvents;
     result.uniqueID = this.uniqueID;
@@ -163,7 +178,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     result.updateColumnNamesCS.addAll(this.updateColumnNamesCS);
 
     return result;
-    */
+     */
   }
 
   /**
@@ -1276,11 +1291,11 @@ public class CSVDataSource extends AbstractDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      
+
       int oldRow = currentRow;
       currentRow = row;
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
-      
+      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
+
       return true;
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1549,11 +1564,11 @@ public class CSVDataSource extends AbstractDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      
+
       int oldRow = currentRow;
       currentRow = currentRow + rows;
       owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
-      
+
       return true;
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -1584,9 +1599,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (isDataLoaded()) {
-      openSelectResultSet().setFetchDirection(direction);
+    openSelectResultSet().setFetchDirection(direction);
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      * 
      */
@@ -2176,7 +2191,6 @@ public class CSVDataSource extends AbstractDataSourceImpl {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
   }
-
   /**
    * Reports whether
    * the last column read had a value of SQL <code>NULL</code>.
@@ -2190,10 +2204,11 @@ public class CSVDataSource extends AbstractDataSourceImpl {
    * @exception SQLException if a database access error occurs
    */
   private boolean wasNull = false;
+
   @Override
   public boolean wasNull() throws SQLException {
     if (isDataLoaded()) {
-      return storedResult[0] ? storedResult[1] : wasNull;
+      return wasNull;
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2242,35 +2257,35 @@ public class CSVDataSource extends AbstractDataSourceImpl {
    */
   @Override
   public void updateRow() throws SQLException {
-   throw new UnsupportedOperationException();
-   /*
+    throw new UnsupportedOperationException();
+    /*
     boolean storeUpdates = true;
     try {
-      owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.UPDATE_ROW));
+    owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.UPDATE_ROW));
     } catch (Exception err) {
-      if ((err instanceof SQLNotificationException)
-              || (err.getCause() instanceof SQLNotificationException)) {
-        if (err instanceof SQLNotificationException) {
-          throw (SQLNotificationException) err;
-        } else {
-          throw (SQLNotificationException) err.getCause();
-        }
-      } else {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
-      }
-      storeUpdates = false;
+    if ((err instanceof SQLNotificationException)
+    || (err.getCause() instanceof SQLNotificationException)) {
+    if (err instanceof SQLNotificationException) {
+    throw (SQLNotificationException) err;
+    } else {
+    throw (SQLNotificationException) err.getCause();
+    }
+    } else {
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, err.getMessage(), err);
+    }
+    storeUpdates = false;
     }
     if (storeUpdates) {
-      storeUpdates(rowInserted());
-      removeSharedResult();
+    storeUpdates(rowInserted());
+    removeSharedResult();
     }
     try {
-      owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.ROW_UPDATED));
+    owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.ROW_UPDATED));
     } catch (Exception err) {
-      //
+    //
     }
-    * 
-    */
+     *
+     */
   }
 
   /**
@@ -2376,15 +2391,15 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (this.metaData != null) {
-      return this.metaData;
+    return this.metaData;
     } else if ((this.metaData = openSelectResultSet().getMetaData()) != null) {
-      int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
-      for (int c = 1; c <= columnCount; c++) {
-        this.columnMapping.put(this.metaData.getColumnName(c), c);
-      }
-      return this.metaData;
+    int columnCount = this.metaData != null ? this.metaData.getColumnCount() : 0;
+    for (int c = 1; c <= columnCount; c++) {
+    this.columnMapping.put(this.metaData.getColumnName(c), c);
+    }
+    return this.metaData;
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      * 
      */
@@ -2418,9 +2433,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (checkedLoadData()) {
-      return openSelectResultSet().getFetchDirection();
+    return openSelectResultSet().getFetchDirection();
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      *
      */
@@ -2454,9 +2469,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (checkedLoadData()) {
-      return openSelectResultSet().getCursorName();
+    return openSelectResultSet().getCursorName();
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      *
      */
@@ -2478,9 +2493,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (checkedLoadData()) {
-      return openSelectResultSet().getConcurrency();
+    return openSelectResultSet().getConcurrency();
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      *
      */
@@ -2506,11 +2521,11 @@ public class CSVDataSource extends AbstractDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      
+
       int oldRow = currentRow;
       currentRow = 1;
-        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
-      
+      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
+
       return true;
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -2519,21 +2534,20 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   /*
   protected SQLCache getSqlCache() {
-    if ((owner.getSharing() & DbDataSource.SHARING_GLOBAL) == DbDataSource.SHARING_GLOBAL) {
-      return SQLCache.getInstance();
-    } else if (sqlCache == null) {
-      sqlCache = new SQLCache();
-    }
-    return sqlCache;
+  if ((owner.getSharing() & DbDataSource.SHARING_GLOBAL) == DbDataSource.SHARING_GLOBAL) {
+  return SQLCache.getInstance();
+  } else if (sqlCache == null) {
+  sqlCache = new SQLCache();
+  }
+  return sqlCache;
   }
    *
    */
-
   @Override
   public void clearSharedResults() {
     /*
     if ((owner.getSharing() & DbDataSource.SHARING_LOCAL) == DbDataSource.SHARING_LOCAL) {
-      getSqlCache().clearSharedResults();
+    getSqlCache().clearSharedResults();
     }
      *
      */
@@ -2544,9 +2558,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     PreparedStatement delete;
     PrimaryKey key;
     for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
-      key = pk.next();
-      delete = key.getDeleteStatement(resultSet, getTxConnection());
-      delete.execute();
+    key = pk.next();
+    delete = key.getDeleteStatement(resultSet, getTxConnection());
+    delete.execute();
     }
      *
      */
@@ -2571,37 +2585,37 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (owner.isCanDeleteRows()) {
-      if (isDataLoaded()) {
-        boolean wasinserting = inserting;
-        if (rowUpdated()) {
-          cancelRowUpdates();
-        }
-        if (!wasinserting) {
-          boolean deleteRow = true;
-          try {
-            owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.DELETE_ROW));
-          } catch (Exception err) {
-            deleteRow = false;
-          }
-          if (deleteRow) {
-            ResultSet resultSet = openSelectResultSet();
-            int oldRow = resultSet.getRow();
-            if (owner.isUpdateRowFireOnly()) {
-              owner.fireDeleteRow(new StoreUpdatesEvent(owner, getRow(), false, null, null));
-            } else {
-              doDeleteRow(resultSet);
-            }
-            try {
-              owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.ROW_DELETED));
-            } catch (Exception err) {
-              //
-            }
-            reload(oldRow);
-          }
-        }
-      } else {
-        throw new SQLException("Ni pripravljenih podatkov.");
-      }
+    if (isDataLoaded()) {
+    boolean wasinserting = inserting;
+    if (rowUpdated()) {
+    cancelRowUpdates();
+    }
+    if (!wasinserting) {
+    boolean deleteRow = true;
+    try {
+    owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.DELETE_ROW));
+    } catch (Exception err) {
+    deleteRow = false;
+    }
+    if (deleteRow) {
+    ResultSet resultSet = openSelectResultSet();
+    int oldRow = resultSet.getRow();
+    if (owner.isUpdateRowFireOnly()) {
+    owner.fireDeleteRow(new StoreUpdatesEvent(owner, getRow(), false, null, null));
+    } else {
+    doDeleteRow(resultSet);
+    }
+    try {
+    owner.fireActionPerformed(new ActionEvent(owner, 1, DbDataSource.ROW_DELETED));
+    } catch (Exception err) {
+    //
+    }
+    reload(oldRow);
+    }
+    }
+    } else {
+    throw new SQLException("Ni pripravljenih podatkov.");
+    }
     }
      *
      */
@@ -2624,19 +2638,19 @@ public class CSVDataSource extends AbstractDataSourceImpl {
    */
   @Override
   public void close() throws SQLException {
-   /*
+    /*
     if (isDataLoaded()) {
-      if (!owner.isShareResults()) {
-        currentResultSet.close();
-      }
-      currentResultSet = null;
-      owner.fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
-      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, -1, -1));
-    } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    if (!owner.isShareResults()) {
+    currentResultSet.close();
     }
-    *
-    */
+    currentResultSet = null;
+    owner.fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, -1, -1));
+    owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, -1, -1));
+    } else {
+    throw new SQLException("Ni pripravljenih podatkov.");
+    }
+     *
+     */
   }
 
   /**
@@ -2651,9 +2665,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   public void clearWarnings() throws SQLException {
     /*
     if (isDataLoaded()) {
-      openSelectResultSet().clearWarnings();
+    openSelectResultSet().clearWarnings();
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      *
      */
@@ -2718,10 +2732,10 @@ public class CSVDataSource extends AbstractDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      
+
       int oldRow = currentRow;
       currentRow = -1;
-      
+
       owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -2790,8 +2804,8 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   public int getRow() throws SQLException {
     //TODO tukaj pa?e motoda isDataLodaded() in ?e ni mogo?e load data oz. napaka
     if (checkedLoadData()) {
-        return inserting ? getRowCount() : currentRow;
-      
+      return inserting ? getRowCount() : currentRow;
+
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
     }
@@ -2835,9 +2849,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (checkedLoadData()) {
-      return openSelectResultSet().getType();
+    return openSelectResultSet().getType();
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      * 
      */
@@ -2848,9 +2862,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (getMetaData() != null) {
-      return getMetaData().getColumnType(columnIndex);
+    return getMetaData().getColumnType(columnIndex);
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      *
      */
@@ -2858,12 +2872,13 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public int getType(String columnName) throws SQLException {
-    throw new UnsupportedOperationException();
+    //TODO
+    return java.sql.Types.VARCHAR;
     /*
     if (getMetaData() != null) {
-      return getMetaData().getColumnType(columnMapping.checkedGet(columnName));
+    return getMetaData().getColumnType(columnMapping.checkedGet(columnName));
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      * 
      */
@@ -2897,9 +2912,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (isDataLoaded()) {
-      return openSelectResultSet().getWarnings();
+    return openSelectResultSet().getWarnings();
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      * 
      */
@@ -3019,11 +3034,11 @@ public class CSVDataSource extends AbstractDataSourceImpl {
           cancelRowUpdates();
         }
       }
-      
+
       int oldRow = currentRow;
       currentRow = count;
       owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
-      
+
       return true;
     } else {
       throw new SQLException("Ni pripravljenih podatkov.");
@@ -3043,18 +3058,18 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   public void moveToCurrentRow() throws SQLException {
     /*
     if (loadData()) {
-      if (owner.isSaveChangesOnMove() && rowUpdated()) {
-        if (shouldSaveChanges()) {
-          updateRow();
-        } else {
-          cancelRowUpdates();
-        }
-      }
-      
-       owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
-      
+    if (owner.isSaveChangesOnMove() && rowUpdated()) {
+    if (shouldSaveChanges()) {
+    updateRow();
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    cancelRowUpdates();
+    }
+    }
+
+    owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, openSelectResultSet.getRow(), oldRow));
+
+    } else {
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      *
      */
@@ -3151,8 +3166,8 @@ public class CSVDataSource extends AbstractDataSourceImpl {
       if (!isLast()) {
         int oldRow = currentRow;
         currentRow++;
-          owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
-        
+        owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
+
         return true;
       } else {
         return false;
@@ -3185,9 +3200,9 @@ public class CSVDataSource extends AbstractDataSourceImpl {
       //TODO ali je to prav da ne gre na before first?
       if (!isFirst()) {
         int oldRow = currentRow;
-       currentRow--;
+        currentRow--;
         owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, currentRow, oldRow));
-        
+
         return true;
       } else {
         return false;
@@ -3227,16 +3242,16 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (isDataLoaded()) {
-      if (rowUpdated()) {
-        cancelRowUpdates();
-      }
-      final ResultSet openSelectResultSet = openSelectResultSet();
-      openSelectResultSet.refreshRow();
-      int row = openSelectResultSet.getRow();
-      owner.fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, row - 1, row - 1));
-      owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, row, row));
+    if (rowUpdated()) {
+    cancelRowUpdates();
+    }
+    final ResultSet openSelectResultSet = openSelectResultSet();
+    openSelectResultSet.refreshRow();
+    int row = openSelectResultSet.getRow();
+    owner.fireContentsChanged(new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, row - 1, row - 1));
+    owner.fireActiveRowChange(new ActiveRowChangeEvent(owner, row, row));
     } else {
-      throw new SQLException("Ni pripravljenih podatkov.");
+    throw new SQLException("Ni pripravljenih podatkov.");
     }
      * 
      */
@@ -3355,252 +3370,248 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     String delimiterRight = getDelimiterRight();
 
     if (insert) {
-      String catalogName = getCatalogName();
-      String schemaName = getSchemaName();
-      String tableName = getUpdateTableName();
+    String catalogName = getCatalogName();
+    String schemaName = getSchemaName();
+    String tableName = getUpdateTableName();
 
-      StringBuilder columns = new StringBuilder();
-      StringBuilder values = new StringBuilder();
+    StringBuilder columns = new StringBuilder();
+    StringBuilder values = new StringBuilder();
 
-      ResultSetMetaData metaData = getMetaData();
-      List<String> skipValues = new ArrayList<String>();
+    ResultSetMetaData metaData = getMetaData();
+    List<String> skipValues = new ArrayList<String>();
 
-      int columnIndex;
+    int columnIndex;
 
-      for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-        entry = i.next();
-        columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
+    for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+    entry = i.next();
+    columnIndex = columnMapping.checkedGet(entry.getKey()).intValue();
 
-        if (updateColumnNames.size() > 0) {
-          if (!updateColumnNames.contains(entry.getKey())) {
-            skipValues.add(entry.getKey());
-            continue;
-          }
-        }
-
-        if (!owner.isSingleTableSelect()) {
-          if (catalogName == null) {
-            catalogName = metaData.getCatalogName(columnIndex);
-          } else if ((updateTableName == null) && (!catalogName.equalsIgnoreCase(metaData.getCatalogName(columnIndex)))) {
-            throw new SQLException("Insert on different catalogs not supported. Shema: " + catalogName + " != " + metaData.getCatalogName(columnIndex));
-          }
-          if (schemaName == null) {
-            schemaName = metaData.getSchemaName(columnIndex);
-          } else if ((updateTableName == null) && (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex)))) {
-            throw new SQLException("Insert on different schemas not supported. Shema: " + schemaName + " != " + metaData.getSchemaName(columnIndex));
-          }
-          if (tableName == null) {
-            //TODO ne dela. vedno vra?a null
-            tableName = metaData.getTableName(columnIndex);
-          } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
-            if (updateTableName == null) {
-              throw new SQLException("Insert on different tables not supported.");
-            }
-          }
-        }
-        if (entry.getValue() != null || metaData.isNullable(columnIndex) != ResultSetMetaData.columnNoNulls) {
-          columns.append(columns.length() > 0 ? "," : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight);
-          values.append(values.length() > 0 ? "," : "").append("?");
-        } else {
-          skipValues.add(entry.getKey());
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Skipping null value: '" + entry.getKey() + "'");
-        }
-      }
-
-      catalogName = catalogName == null ? "" : catalogName;
-      schemaName = schemaName == null ? "" : schemaName;
-
-      StringBuilder sql = new StringBuilder();
-
-      sql.append("INSERT INTO ");
-      if (catalogName.length() > 0 && schemaName.length() > 0) {
-        sql.append(delimiterLeft).append(catalogName).append(delimiterRight).append(".");
-      }
-      if (schemaName.length() > 0) {
-        sql.append(delimiterLeft).append(schemaName).append(delimiterRight).append(".");
-      }
-      sql.append(delimiterLeft).append(tableName).append(delimiterRight).append(" (").append(columns).append(") ");
-      sql.append("VALUES (").append(values).append(")");
-
-      PreparedStatement insertStatement = getTxConnection().prepareStatement(sql.toString());
-      try {
-        ParameterMetaData parameterMetaData = insertStatement.getParameterMetaData();
-
-        int p = 1;
-
-        for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-          entry = i.next();
-          if (skipValues.indexOf(entry.getKey()) == -1) {
-            /*if (entry.getValue()==null)
-            insertStatement.setNull(p, parameterMetaData.getParameterType(p++));
-            else//
-            if (entry.getValue() instanceof Scale) {
-              Scale scale = (Scale) entry.getValue();
-              if (scale.method.equals("updateCharacterStream")) {
-                insertStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
-              } else if (scale.method.equals("updateBinaryStream")) {
-                insertStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
-              } else if (scale.method.equals("updateAsciiStream")) {
-                insertStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
-              } else {
-                insertStatement.setObject(p++, scale.x, scale.scale);
-              }
-            } else {
-              //TODO preveriti ?e je timestamp in dati setTimestamp
-              insertStatement.setObject(p++, entry.getValue(), getType(entry.getKey()));
-
-            }
-            oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-          }
-        }
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Executing insert : '" + sql + "'");
-        insertStatement.setQueryTimeout(15);
-        insertStatement.executeUpdate();
-      } finally {
-        insertStatement.close();
-      }
-    } else {
-      final ResultSet openSelectResultSet = openSelectResultSet();
-      ResultSetMetaData metaData = openSelectResultSet.getMetaData();
-      List<String> skipColumns = new ArrayList<String>();
-      for (int c = 1; c <= columnCount; c++) {
-        String columnName = metaData.getColumnName(c).toUpperCase();
-        if ((updateTableName == null || (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) && (updateColumnNames.size() == 0 || updateColumnNames.contains(columnName))) {
-          try {
-            Object value = openSelectResultSet.getObject(c);
-            oldValues.put(c, value);
-          } catch (Exception err) {
-            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Skipping illegal value for: '" + columnName + "'");
-            skipColumns.add(columnName);
-          }
-        } else {
-          skipColumns.add(columnName);
-        }
-      }
-      PrimaryKey key;
-      for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
-        key = pk.next();
-        ResultSet updateResultSet = key.getUpdateResultSet(openSelectResultSet, connection);
-
-        if (updateResultSet != null) {
-          try {
-            for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-              entry = i.next();
-              if (skipColumns.indexOf(entry.getKey()) == -1) {
-                if (key.isUpdateColumn(entry.getKey())) {
-                  if (entry.getValue() instanceof Scale) {
-                    scaledValue = (Scale) entry.getValue();
-                    if (scaledValue.method.equals("updateAsciiStream")) {
-                      updateResultSet.updateAsciiStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                    } else if (scaledValue.method.equals("updateBinaryStream")) {
-                      updateResultSet.updateBinaryStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
-                    } else if (scaledValue.method.equals("updateCharacterStream")) {
-                      updateResultSet.updateCharacterStream(entry.getKey(), (Reader) scaledValue.x, scaledValue.scale);
-                    } else {
-                      updateResultSet.updateObject(entry.getKey(), scaledValue.x, scaledValue.scale);
-                    }
-                  } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
-                    if (entry.getValue() instanceof java.util.Date) {
-                      updateResultSet.updateTimestamp(entry.getKey(), new java.sql.Timestamp(((java.util.Date) entry.getValue()).getTime()));
-                    } else if (entry.getValue() == null) {
-                      updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                    } else {
-                      try {
-                        updateResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
-                      } catch (ParseException ex) {
-                        updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                      }
-                    }
-                  } else {
-                    //TODO timestamp
-                    updateResultSet.updateObject(entry.getKey(), entry.getValue());
-                  }
-                  cache.remove(new CacheKey(row.intValue(), entry.getKey()));
-                  oldValues.put(columnMapping.checkedGet(entry.getKey()), updateResultSet.getObject(entry.getKey()));
-                }
-              }
-            }
-            updateResultSet.updateRow();
-          } finally {
-            updateResultSet.close();
-          }
-        } else {
-          int updateCount = 0;
-          StringBuilder set = new StringBuilder(540);
-          for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-            entry = i.next();
-            if ((skipColumns.indexOf(entry.getKey()) == -1) && (metaData.getTableName(columnMapping.checkedGet(entry.getKey()).intValue()).equalsIgnoreCase(key.table))) {
-              set.append(set.length() > 0 ? ", " : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight).append(" = ?");
-              updateCount++;
-            }
-          }
-
-          if (updateCount > 0) {
-            StringBuilder where = new StringBuilder();
-
-            for (String c : key.getColumnNames(connection)) {
-              where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
-            }
-            String sql = "UPDATE " + (key.catalogName != null && key.schemaName != null ? delimiterLeft + key.catalogName + delimiterRight + "." : "") + (key.schemaName != null ? delimiterLeft + key.schemaName + delimiterRight + "." : "") + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
-
-            PreparedStatement updateStatement = getTxConnection().prepareStatement(sql.toString());
-            try {
-              ParameterMetaData parameterMetaData = updateStatement.getParameterMetaData();
-
-              int p = 1;
-
-              for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
-                entry = i.next();
-                if (skipColumns.indexOf(entry.getKey()) == -1) {
-                  if (entry.getValue() == null) {
-                    updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                  } else if (entry.getValue() instanceof Scale) {
-                    Scale scale = (Scale) entry.getValue();
-                    if (scale.method.equals("updateCharacterStream")) {
-                      updateStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
-                    } else if (scale.method.equals("updateBinaryStream")) {
-                      updateStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
-                    } else if (scale.method.equals("updateAsciiStream")) {
-                      updateStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
-                    } else {
-                      updateStatement.setObject(p++, scale.x, scale.scale);
-                    }
-                  } else {
-                    //TODO timestamp
-                    updateStatement.setObject(p++, entry.getValue());
-                  }
-                  oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
-                }
-              }
-              for (String c : key.getColumnNames(connection)) {
-                Object value = openSelectResultSet.getObject(c);
-                if (value == null) {
-                  updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
-                } else {
-                  updateStatement.setObject(p++, value);
-                }
-                oldValues.put(columnMapping.checkedGet(c).intValue(), value);
-              }
-              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Executing update : '" + sql + "'");
-              updateStatement.setQueryTimeout(15);
-              updateStatement.executeUpdate();
-            } finally {
-              updateStatement.close();
-            }
-          }
-        }
-      }
+    if (updateColumnNames.size() > 0) {
+    if (!updateColumnNames.contains(entry.getKey())) {
+    skipValues.add(entry.getKey());
+    continue;
     }
-    */
-  }
+    }
 
+    if (!owner.isSingleTableSelect()) {
+    if (catalogName == null) {
+    catalogName = metaData.getCatalogName(columnIndex);
+    } else if ((updateTableName == null) && (!catalogName.equalsIgnoreCase(metaData.getCatalogName(columnIndex)))) {
+    throw new SQLException("Insert on different catalogs not supported. Shema: " + catalogName + " != " + metaData.getCatalogName(columnIndex));
+    }
+    if (schemaName == null) {
+    schemaName = metaData.getSchemaName(columnIndex);
+    } else if ((updateTableName == null) && (!schemaName.equalsIgnoreCase(metaData.getSchemaName(columnIndex)))) {
+    throw new SQLException("Insert on different schemas not supported. Shema: " + schemaName + " != " + metaData.getSchemaName(columnIndex));
+    }
+    if (tableName == null) {
+    //TODO ne dela. vedno vra?a null
+    tableName = metaData.getTableName(columnIndex);
+    } else if (!tableName.equalsIgnoreCase(metaData.getTableName(columnIndex))) {
+    if (updateTableName == null) {
+    throw new SQLException("Insert on different tables not supported.");
+    }
+    }
+    }
+    if (entry.getValue() != null || metaData.isNullable(columnIndex) != ResultSetMetaData.columnNoNulls) {
+    columns.append(columns.length() > 0 ? "," : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight);
+    values.append(values.length() > 0 ? "," : "").append("?");
+    } else {
+    skipValues.add(entry.getKey());
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Skipping null value: '" + entry.getKey() + "'");
+    }
+    }
+
+    catalogName = catalogName == null ? "" : catalogName;
+    schemaName = schemaName == null ? "" : schemaName;
+
+    StringBuilder sql = new StringBuilder();
+
+    sql.append("INSERT INTO ");
+    if (catalogName.length() > 0 && schemaName.length() > 0) {
+    sql.append(delimiterLeft).append(catalogName).append(delimiterRight).append(".");
+    }
+    if (schemaName.length() > 0) {
+    sql.append(delimiterLeft).append(schemaName).append(delimiterRight).append(".");
+    }
+    sql.append(delimiterLeft).append(tableName).append(delimiterRight).append(" (").append(columns).append(") ");
+    sql.append("VALUES (").append(values).append(")");
+
+    PreparedStatement insertStatement = getTxConnection().prepareStatement(sql.toString());
+    try {
+    ParameterMetaData parameterMetaData = insertStatement.getParameterMetaData();
+
+    int p = 1;
+
+    for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+    entry = i.next();
+    if (skipValues.indexOf(entry.getKey()) == -1) {
+    /*if (entry.getValue()==null)
+    insertStatement.setNull(p, parameterMetaData.getParameterType(p++));
+    else//
+    if (entry.getValue() instanceof Scale) {
+    Scale scale = (Scale) entry.getValue();
+    if (scale.method.equals("updateCharacterStream")) {
+    insertStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
+    } else if (scale.method.equals("updateBinaryStream")) {
+    insertStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
+    } else if (scale.method.equals("updateAsciiStream")) {
+    insertStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
+    } else {
+    insertStatement.setObject(p++, scale.x, scale.scale);
+    }
+    } else {
+    //TODO preveriti ?e je timestamp in dati setTimestamp
+    insertStatement.setObject(p++, entry.getValue(), getType(entry.getKey()));
+
+    }
+    oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
+    }
+    }
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Executing insert : '" + sql + "'");
+    insertStatement.setQueryTimeout(15);
+    insertStatement.executeUpdate();
+    } finally {
+    insertStatement.close();
+    }
+    } else {
+    final ResultSet openSelectResultSet = openSelectResultSet();
+    ResultSetMetaData metaData = openSelectResultSet.getMetaData();
+    List<String> skipColumns = new ArrayList<String>();
+    for (int c = 1; c <= columnCount; c++) {
+    String columnName = metaData.getColumnName(c).toUpperCase();
+    if ((updateTableName == null || (updateTableName != null && updateTableName.equalsIgnoreCase(metaData.getTableName(c)))) && (updateColumnNames.size() == 0 || updateColumnNames.contains(columnName))) {
+    try {
+    Object value = openSelectResultSet.getObject(c);
+    oldValues.put(c, value);
+    } catch (Exception err) {
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Skipping illegal value for: '" + columnName + "'");
+    skipColumns.add(columnName);
+    }
+    } else {
+    skipColumns.add(columnName);
+    }
+    }
+    PrimaryKey key;
+    for (Iterator<PrimaryKey> pk = primaryKeys.iterator(); pk.hasNext();) {
+    key = pk.next();
+    ResultSet updateResultSet = key.getUpdateResultSet(openSelectResultSet, connection);
+
+    if (updateResultSet != null) {
+    try {
+    for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+    entry = i.next();
+    if (skipColumns.indexOf(entry.getKey()) == -1) {
+    if (key.isUpdateColumn(entry.getKey())) {
+    if (entry.getValue() instanceof Scale) {
+    scaledValue = (Scale) entry.getValue();
+    if (scaledValue.method.equals("updateAsciiStream")) {
+    updateResultSet.updateAsciiStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
+    } else if (scaledValue.method.equals("updateBinaryStream")) {
+    updateResultSet.updateBinaryStream(entry.getKey(), (InputStream) scaledValue.x, scaledValue.scale);
+    } else if (scaledValue.method.equals("updateCharacterStream")) {
+    updateResultSet.updateCharacterStream(entry.getKey(), (Reader) scaledValue.x, scaledValue.scale);
+    } else {
+    updateResultSet.updateObject(entry.getKey(), scaledValue.x, scaledValue.scale);
+    }
+    } else if (metaData.getColumnType(columnMapping.checkedGet(entry.getKey()).intValue()) == java.sql.Types.DATE) {
+    if (entry.getValue() instanceof java.util.Date) {
+    updateResultSet.updateTimestamp(entry.getKey(), new java.sql.Timestamp(((java.util.Date) entry.getValue()).getTime()));
+    } else if (entry.getValue() == null) {
+    updateResultSet.updateObject(entry.getKey(), entry.getValue());
+    } else {
+    try {
+    updateResultSet.updateDate(entry.getKey(), new java.sql.Date((FormatFactory.DATE_FORMAT.parse(entry.getValue().toString())).getTime()));
+    } catch (ParseException ex) {
+    updateResultSet.updateObject(entry.getKey(), entry.getValue());
+    }
+    }
+    } else {
+    //TODO timestamp
+    updateResultSet.updateObject(entry.getKey(), entry.getValue());
+    }
+    cache.remove(new CacheKey(row.intValue(), entry.getKey()));
+    oldValues.put(columnMapping.checkedGet(entry.getKey()), updateResultSet.getObject(entry.getKey()));
+    }
+    }
+    }
+    updateResultSet.updateRow();
+    } finally {
+    updateResultSet.close();
+    }
+    } else {
+    int updateCount = 0;
+    StringBuilder set = new StringBuilder(540);
+    for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+    entry = i.next();
+    if ((skipColumns.indexOf(entry.getKey()) == -1) && (metaData.getTableName(columnMapping.checkedGet(entry.getKey()).intValue()).equalsIgnoreCase(key.table))) {
+    set.append(set.length() > 0 ? ", " : "").append(delimiterLeft).append(entry.getKey()).append(delimiterRight).append(" = ?");
+    updateCount++;
+    }
+    }
+
+    if (updateCount > 0) {
+    StringBuilder where = new StringBuilder();
+
+    for (String c : key.getColumnNames(connection)) {
+    where.append(where.length() > 0 ? " AND " : "").append(delimiterLeft).append(c).append(delimiterRight).append(" = ? ");
+    }
+    String sql = "UPDATE " + (key.catalogName != null && key.schemaName != null ? delimiterLeft + key.catalogName + delimiterRight + "." : "") + (key.schemaName != null ? delimiterLeft + key.schemaName + delimiterRight + "." : "") + delimiterLeft + key.table + delimiterRight + " SET " + set.toString() + " WHERE " + where.toString();
+
+    PreparedStatement updateStatement = getTxConnection().prepareStatement(sql.toString());
+    try {
+    ParameterMetaData parameterMetaData = updateStatement.getParameterMetaData();
+
+    int p = 1;
+
+    for (Iterator<Map.Entry<String, Object>> i = columnValues.entrySet().iterator(); i.hasNext();) {
+    entry = i.next();
+    if (skipColumns.indexOf(entry.getKey()) == -1) {
+    if (entry.getValue() == null) {
+    updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
+    } else if (entry.getValue() instanceof Scale) {
+    Scale scale = (Scale) entry.getValue();
+    if (scale.method.equals("updateCharacterStream")) {
+    updateStatement.setCharacterStream(p++, (Reader) scale.x, scale.scale);
+    } else if (scale.method.equals("updateBinaryStream")) {
+    updateStatement.setBinaryStream(p++, (InputStream) scale.x, scale.scale);
+    } else if (scale.method.equals("updateAsciiStream")) {
+    updateStatement.setAsciiStream(p++, (InputStream) scale.x, scale.scale);
+    } else {
+    updateStatement.setObject(p++, scale.x, scale.scale);
+    }
+    } else {
+    //TODO timestamp
+    updateStatement.setObject(p++, entry.getValue());
+    }
+    oldValues.put(columnMapping.checkedGet(entry.getKey()).intValue(), entry.getValue());
+    }
+    }
+    for (String c : key.getColumnNames(connection)) {
+    Object value = openSelectResultSet.getObject(c);
+    if (value == null) {
+    updateStatement.setNull(p, parameterMetaData.getParameterType(p++));
+    } else {
+    updateStatement.setObject(p++, value);
+    }
+    oldValues.put(columnMapping.checkedGet(c).intValue(), value);
+    }
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info("Executing update : '" + sql + "'");
+    updateStatement.setQueryTimeout(15);
+    updateStatement.executeUpdate();
+    } finally {
+    updateStatement.close();
+    }
+    }
+    }
+    }
+    }
+     */
+  }
 
   @Override
   public void setUpdateTableName(String updateTableName) {
-    
   }
-
-  
 
   @Override
   public String getUpdateTableName() {
@@ -3616,7 +3627,6 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     //setSelectSql(selectSql, false);
   }
 
- 
   @Override
   public int getColumnIndex(String columnName) throws SQLException {
     if ((columnName != null) && (columnName instanceof String)) {
@@ -3627,18 +3637,18 @@ public class CSVDataSource extends AbstractDataSourceImpl {
       return columnMapping.checkedGet(columnName).intValue();
     } else {
       return -1;
-     /* int ci = -1;
+      /* int ci = -1;
       try {
-        ci = openSelectResultSet().findColumn(columnName);
+      ci = openSelectResultSet().findColumn(columnName);
       } finally {
-        if (ci == -1) {
-          Logger.getLogger(CSVDataSource.class.getName()).log(Level.WARNING, "Invalid column name [" + columnName + "]");
-        }
+      if (ci == -1) {
+      Logger.getLogger(CSVDataSource.class.getName()).log(Level.WARNING, "Invalid column name [" + columnName + "]");
+      }
       }
       columnMapping.put(columnName, ci);
       return ci;
-      * 
-      */
+       *
+       */
     }
   }
 
@@ -3646,26 +3656,26 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   public void setCountSql(String countSql) throws SQLException {
     /*String oldvalue = this.countSql;
     try {
-      semaphore.acquire();
-      this.countSql = countSql;
-      String sql = substParameters(countSql, getCountParameters(owner.getParameters()));
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finest(
-              "\n################# COUNT SQL #################\n" + sql + "\n################# ######### #################");
-      preparedCountSql = null;
-      final Connection connection = getConnection();
-      try {
-        if (getCountStatement(sql, connection) != null) {
-          preparedCountSql = sql;
-        }
-      } finally {
-        if (owner.isConnectOnDemand()) {
-          connection.close();
-        }
-      }
-    } catch (InterruptedException ex) {
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Interrupted while preparing ''{0}''", countSql);
+    semaphore.acquire();
+    this.countSql = countSql;
+    String sql = substParameters(countSql, getCountParameters(owner.getParameters()));
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finest(
+    "\n################# COUNT SQL #################\n" + sql + "\n################# ######### #################");
+    preparedCountSql = null;
+    final Connection connection = getConnection();
+    try {
+    if (getCountStatement(sql, connection) != null) {
+    preparedCountSql = sql;
+    }
     } finally {
-      semaphore.release();
+    if (owner.isConnectOnDemand()) {
+    connection.close();
+    }
+    }
+    } catch (InterruptedException ex) {
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "Interrupted while preparing ''{0}''", countSql);
+    } finally {
+    semaphore.release();
     }
     owner.firePropertyChange("countSql", oldvalue, this.countSql);
      *
@@ -3674,7 +3684,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public String getSelectSql() {
-    throw new UnsupportedOperationException();
+    return null;
     /*
     return selectSql;
      *
@@ -3683,7 +3693,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public String getCountSql() {
-    throw new UnsupportedOperationException();
+    return null;
     /*
     return countSql;
      * 
@@ -3695,22 +3705,22 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (this.connection == null) {
-      if (ConnectionManager.getInstance() != null) {
-        if (owner.isConnectOnDemand()) {
-          try {
-            return ConnectionManager.getInstance().getTemporaryConnection();
-          } catch (SQLException ex) {
-            Logger.getLogger(CSVDataSource.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-          }
-        } else {
-          return ConnectionManager.getInstance().getConnection();
-        }
-      } else {
-        return null;
-      }
+    if (ConnectionManager.getInstance() != null) {
+    if (owner.isConnectOnDemand()) {
+    try {
+    return ConnectionManager.getInstance().getTemporaryConnection();
+    } catch (SQLException ex) {
+    Logger.getLogger(CSVDataSource.class.getName()).log(Level.SEVERE, null, ex);
+    return null;
+    }
     } else {
-      return this.connection;
+    return ConnectionManager.getInstance().getConnection();
+    }
+    } else {
+    return null;
+    }
+    } else {
+    return this.connection;
 
     }
      *
@@ -3722,17 +3732,17 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (this.connection != connection) {
-      for (PreparedStatement statement : cachedStatements.values()) {
-        statement.close();
-      }
-      cachedStatements.clear();
+    for (PreparedStatement statement : cachedStatements.values()) {
+    statement.close();
+    }
+    cachedStatements.clear();
 
-      this.connection = connection;
+    this.connection = connection;
 
-      setSelectSql(this.selectSql);
-      if (countSql != null) {
-        setCountSql(countSql);
-      }
+    setSelectSql(this.selectSql);
+    if (countSql != null) {
+    setCountSql(countSql);
+    }
     }
      *
      */
@@ -3741,16 +3751,14 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   @Override
   public int getRowCount() {
 
-      return this.count + (inserting ? 1 : 0);
-    
+    return this.count + (inserting ? 1 : 0);
+
   }
 
   @Override
   public boolean fireEvents() {
     return fireEvents;
   }
-
-  
 
   @Override
   public boolean isDataLoaded() {
@@ -3768,8 +3776,58 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public boolean loadData(boolean reload, int oldRow) {
+    boolean result = false;
 
-    return isDataLoaded();
+    if (isDataLoaded && !reload) {
+      return true;
+    }
+    if (sourceFile != null) {
+      try {
+        CSVReader reader = new CSVReader(new FileReader(sourceFile));
+        List<String[]> readAll = reader.readAll();
+
+        boolean isFirstLineHeader = true;
+
+        count = readAll.size() - (isFirstLineHeader ? 1 : 0);
+
+        for (int i = 0; i < readAll.size(); i++) {
+          String[] columns = readAll.get(i);
+
+          if (isFirstLineHeader && i == 0) {
+            populateHeaders(columns);
+            continue;
+          }
+          Map<String, CSVValue> values;
+          if (rowValues.containsKey(i)) {
+            values = rowValues.get(i);
+          } else {
+            values = new HashMap<String, CSVValue>();
+            rowValues.put(i, values);
+          }
+
+          for (int j = 0; j < columns.length; j++) {
+            String value = columns[j];
+            values.put(getColumnName(j + 1).toUpperCase(), new CSVValue(value));
+          }
+        }
+        isDataLoaded = true;
+        result = true;
+      } catch (Exception ex) {
+        Logger.getLogger(CSVDataSource.class.getName()).log(Level.SEVERE, null, ex);
+        result = false;
+      }
+    }
+
+
+    return result;
+  }
+
+  private void populateHeaders(String[] headers) {
+    for (int i = 0; i < headers.length; i++) {
+      String header = headers[i];
+      columnMapping.put(header, i + 1);
+      columnMappingIndex.put(i + 1, header);
+    }
   }
 
   public boolean loadData() {
@@ -3785,75 +3843,75 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
     owner.lock();
     try {
-      owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
-      this.selectSql = sqlDataSource.selectSql;
-      this.countSql = sqlDataSource.countSql;
-      this.preparedSelectSql = sqlDataSource.preparedSelectSql;
-      this.preparedCountSql = sqlDataSource.preparedCountSql;
-      this.updateTableName = sqlDataSource.updateTableName;
-      if (sqlDataSource.primaryKeys != null) {
-        this.primaryKeys = new ArrayList<PrimaryKey>();
-        this.primaryKeys.addAll(sqlDataSource.primaryKeys);
-      }
-      this.count = sqlDataSource.count;
-      this.fetchSize = sqlDataSource.fetchSize;
+    owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.LOAD_DATA));
+    this.selectSql = sqlDataSource.selectSql;
+    this.countSql = sqlDataSource.countSql;
+    this.preparedSelectSql = sqlDataSource.preparedSelectSql;
+    this.preparedCountSql = sqlDataSource.preparedCountSql;
+    this.updateTableName = sqlDataSource.updateTableName;
+    if (sqlDataSource.primaryKeys != null) {
+    this.primaryKeys = new ArrayList<PrimaryKey>();
+    this.primaryKeys.addAll(sqlDataSource.primaryKeys);
+    }
+    this.count = sqlDataSource.count;
+    this.fetchSize = sqlDataSource.fetchSize;
 
-      this.columnMapping.clear();
-      this.columnMapping.putAll(sqlDataSource.columnMapping);
+    this.columnMapping.clear();
+    this.columnMapping.putAll(sqlDataSource.columnMapping);
 
-      this.connection = sqlDataSource.connection;
-      this.selectStatementReady = sqlDataSource.selectStatementReady;
-      this.countStatementReady = sqlDataSource.countStatementReady;
-      this.selectStatement = sqlDataSource.selectStatement;
-      this.countStatement = sqlDataSource.countStatement;
+    this.connection = sqlDataSource.connection;
+    this.selectStatementReady = sqlDataSource.selectStatementReady;
+    this.countStatementReady = sqlDataSource.countStatementReady;
+    this.selectStatement = sqlDataSource.selectStatement;
+    this.countStatement = sqlDataSource.countStatement;
 
-//      this.cachedStatements.clear();
-//      this.cachedStatements.putAll(sqlDataSource.cachedStatements);
-      this.sqlCache = sqlDataSource.sqlCache;
-      this.fireEvents = sqlDataSource.fireEvents;
-      this.uniqueID = sqlDataSource.uniqueID;
-      this.refreshPending = false;
+    //      this.cachedStatements.clear();
+    //      this.cachedStatements.putAll(sqlDataSource.cachedStatements);
+    this.sqlCache = sqlDataSource.sqlCache;
+    this.fireEvents = sqlDataSource.fireEvents;
+    this.uniqueID = sqlDataSource.uniqueID;
+    this.refreshPending = false;
 
-      this.updateColumnNames.clear();
-      this.updateColumnNames.addAll(sqlDataSource.updateColumnNames);
+    this.updateColumnNames.clear();
+    this.updateColumnNames.addAll(sqlDataSource.updateColumnNames);
 
-      this.updateColumnNamesCS.clear();
-      this.updateColumnNamesCS.addAll(sqlDataSource.updateColumnNamesCS);
-      this.currentResultSet = sqlDataSource.currentResultSet;
+    this.updateColumnNamesCS.clear();
+    this.updateColumnNamesCS.addAll(sqlDataSource.updateColumnNamesCS);
+    this.currentResultSet = sqlDataSource.currentResultSet;
     } finally {
-      inserting = false;
-      count = -1;
-      storedUpdates.clear();
-      cache.clear();
-      pendingValuesCache.clear();
-      for (Object parameter : owner.getParameters()) {
-        if (parameter instanceof PendingSqlParameter) {
-          ((PendingSqlParameter) parameter).emptyPendingValuesCache();
-        }
-      }
-      reloaded = true;
-      owner.unlock();
-      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finer("Permit unlockd '" + selectSql + "'");
+    inserting = false;
+    count = -1;
+    storedUpdates.clear();
+    cache.clear();
+    pendingValuesCache.clear();
+    for (Object parameter : owner.getParameters()) {
+    if (parameter instanceof PendingSqlParameter) {
+    ((PendingSqlParameter) parameter).emptyPendingValuesCache();
+    }
+    }
+    reloaded = true;
+    owner.unlock();
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).finer("Permit unlockd '" + selectSql + "'");
     }
     if (oldRow > 0 && getRowCount() > 0) {
-      try {
-        currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
-      } catch (SQLException ex) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't change rowset position", ex);
-      }
+    try {
+    currentResultSet.currentResultSet.absolute(Math.min(oldRow, getRowCount()));
+    } catch (SQLException ex) {
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't change rowset position", ex);
+    }
     }
     owner.fireActionPerformed(new ActionEvent(this, 1, DbDataSource.DATA_LOADED));
 
     if (reloaded && currentResultSet != null) {
-      if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
-        events.run();
-      } else {
-        try {
-          EventQueue.invokeAndWait(events);
-        } catch (Exception ex) {
-          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
-        }
-      }
+    if (EventQueue.isDispatchThread() || !owner.isSafeMode()) {
+    events.run();
+    } else {
+    try {
+    EventQueue.invokeAndWait(events);
+    } catch (Exception ex) {
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't notify loaddata results from '" + selectSql + "'", ex);
+    }
+    }
     }
      * 
      */
@@ -3867,7 +3925,6 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     return loadData(true, oldRow);
   }
 
- 
   @Override
   public int getColumnCount() throws SQLException {
     return columnCount;
@@ -3896,13 +3953,13 @@ public class CSVDataSource extends AbstractDataSourceImpl {
       if (wasUpdated(rowIndex, columnName)) {
         result = getStoredValue(rowIndex, columnName, null, Object.class);
       } else {
-         if (rowIndex > getRowCount()) {
+        if (rowIndex > getRowCount()) {
           throw new SQLException("Invalid row number " + rowIndex + " for " + toString() + "[" + rowIndex + ">" + getRowCount() + "] ");
         } else {
           owner.lock();
           try {
-           
             //TODO
+            result = getStoredValue(rowIndex, columnName, null, Object.class);
           } finally {
             owner.unlock();
           }
@@ -3914,11 +3971,10 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     }
   }
 
-  
   @Override
   public String getColumnName(int columnIndex) throws SQLException {
-    return null;
-    
+    return columnMappingIndex.checkedGet(columnIndex);
+
   }
 
   @Override
@@ -3933,7 +3989,6 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public void updateRefreshPending() {
-   
   }
 
   @Override
@@ -3957,37 +4012,37 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     throw new UnsupportedOperationException();
     /*
     if (!inserting) {
-      //TODO zakaj rowCount==0?
-      if (getRowCount() == 0 && !isReadOnly() && owner.isAutoInsert()) {
-        moveToInsertRow();
-      }
+    //TODO zakaj rowCount==0?
+    if (getRowCount() == 0 && !isReadOnly() && owner.isAutoInsert()) {
+    moveToInsertRow();
+    }
     }
     //TODO obvestilo o napaki?
     if (getRow() > 0 && !isReadOnly()) {
-      columnName = columnName.toUpperCase();
-      Integer row = new Integer(getRow());
-      boolean isUpdating = inserting || storedUpdates.containsKey(row);
+    columnName = columnName.toUpperCase();
+    Integer row = new Integer(getRow());
+    boolean isUpdating = inserting || storedUpdates.containsKey(row);
 
-      final ResultSet openSelectResultSet = openSelectResultSet();
-      final Object resultSetValue = (openSelectResultSet.getRow() == 0) || inserting ? null : openSelectResultSet.getObject(columnName);
+    final ResultSet openSelectResultSet = openSelectResultSet();
+    final Object resultSetValue = (openSelectResultSet.getRow() == 0) || inserting ? null : openSelectResultSet.getObject(columnName);
 
-      if (isUpdating || !Equals.equals(value, resultSetValue)) {
-        Map<String, Object> columnValues;
-        if (storedUpdates.containsKey(row)) {
-          columnValues = storedUpdates.get(row);
-        } else {
-          columnValues = new HashMap<String, Object>();
-        }
+    if (isUpdating || !Equals.equals(value, resultSetValue)) {
+    Map<String, Object> columnValues;
+    if (storedUpdates.containsKey(row)) {
+    columnValues = storedUpdates.get(row);
+    } else {
+    columnValues = new HashMap<String, Object>();
+    }
 
-        //if (!Equals.equals(value, columnValues.get(columnName))) {//ta pogoj ne vraca null-e, ce prej ni neke vrednosti, zato ga ne rabimo
-        columnValues.put(columnName, value);
-        storedUpdates.put(row, columnValues);
+    //if (!Equals.equals(value, columnValues.get(columnName))) {//ta pogoj ne vraca null-e, ce prej ni neke vrednosti, zato ga ne rabimo
+    columnValues.put(columnName, value);
+    storedUpdates.put(row, columnValues);
 
-        if (notify) {
-          owner.fireFieldValueChanged(new ActiveRowChangeEvent(owner, columnName, -1));
-        }
-        // }
-      }
+    if (notify) {
+    owner.fireFieldValueChanged(new ActiveRowChangeEvent(owner, columnName, -1));
+    }
+    // }
+    }
     }
      * 
      */
@@ -3995,17 +4050,17 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public boolean hasChanged(int columnIndex) throws SQLException {
-   return false;
-   /*
+    return false;
+    /*
     if (inserting) {
-      return true;
+    return true;
     } else if (wasUpdated(columnIndex)) {
-      return !com.openitech.util.Equals.equals(openSelectResultSet().getObject(columnIndex), getObject(columnIndex));
+    return !com.openitech.util.Equals.equals(openSelectResultSet().getObject(columnIndex), getObject(columnIndex));
     } else {
-      return false;
+    return false;
     }
-    * 
-    */
+     *
+     */
   }
 
   @Override
@@ -4013,13 +4068,13 @@ public class CSVDataSource extends AbstractDataSourceImpl {
     return false;
     /*
     if (inserting) {
-      return true;
+    return true;
     } else if (wasUpdated(columnName)) {
-      return !com.openitech.util.Equals.equals(openSelectResultSet().getObject(columnName), getObject(columnName));
+    return !com.openitech.util.Equals.equals(openSelectResultSet().getObject(columnName), getObject(columnName));
     } else {
-      return false;
+    return false;
     }
-    */
+     */
   }
 
   @Override
@@ -4067,118 +4122,30 @@ public class CSVDataSource extends AbstractDataSourceImpl {
   }
 
   private <T> T getStoredValue(int row, String columnName, T nullValue, Class<? extends T> type) throws SQLException {
-    return null;
-    /*
+
     columnName = columnName.toUpperCase();
     Object result = nullValue;
     Integer r = new Integer(row);
-    if (storedUpdates.containsKey(r)) {
-      if (storedUpdates.get(r).containsKey(columnName)) {
-        result = storedUpdates.get(r).get(columnName);
-        if (result instanceof java.util.Date) {
-          java.util.Date value = ((java.util.Date) result);
-          if (value != null) {
-            if (Time.class.isAssignableFrom(type)) {
-              result = new java.sql.Time(value.getTime());
-            } else if (Timestamp.class.isAssignableFrom(type)) {
-              result = new java.sql.Timestamp(value.getTime());
-            } else if (java.sql.Date.class.isAssignableFrom(type)) {
-              result = new java.sql.Date(value.getTime());
-            } else if (!Object.class.isAssignableFrom(type)) {
-              result = new java.sql.Date(value.getTime());
-            }
-          }
-        }
-        storedResult[0] = true;
-        if (storedResult[1] = (result == null)) {
-          result = nullValue;
-        } else if (type.equals(String.class)) {
-          if (result instanceof java.sql.Clob) {
-            if (((java.sql.Clob) result).length() > 0) {
-              result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
-            } else {
-              result = "";
-            }
-          } else {
-            result = result.toString();
-          }
-        } else if (result instanceof java.sql.Clob) {
-          if (((java.sql.Clob) result).length() > 0) {
-            result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
-          } else {
-            result = "";
-          }
-        } else if (result instanceof Scale) {
-          result = ((Scale) result).x;
-        }
 
-        return (T) result;
-      }
-    }
-    //TODO ne vem ?e je to uredu. mogo?e bi bilo potrebno dati napako
-    if (row == 0) {
-      storedResult[0] = true;
-    } else if (isPending(columnName, row)) {
-      result = getValueAt(row, columnName, getPendingColumnsFor(columnName));
-      storedResult[0] = true;
-      if (storedResult[1] = (result == null)) {
+    Map<String, CSVValue> values = rowValues.get(r);
+    if (values != null) {
+      CSVValue csvValue = values.get(columnName);
+      if (csvValue == null) {
         result = nullValue;
-      } else if (type.equals(String.class)) {
-        if (result instanceof java.sql.Clob) {
-          if (((java.sql.Clob) result).length() > 0) {
-            result = ((java.sql.Clob) result).getSubString(1L, (int) ((java.sql.Clob) result).length());
-          } else {
-            result = "";
-          }
-        } else {
-          result = result.toString();
+        wasNull = true;
+      } else {
+        try {
+          result = csvValue.getValue(type);
+          wasNull = csvValue.wasNull();
+        } catch (ParseException ex) {
+          Logger.getLogger(CSVDataSource.class.getName()).log(Level.SEVERE, null, ex);
+          result = nullValue;
+          wasNull = true;
         }
-      } else if (result instanceof Scale) {
-        result = ((Scale) result).x;
       }
 
-      return (T) result;
-    } else {
-      storedResult[0] = false;
-      final ResultSet openSelectResultSet = openSelectResultSet();
-
-      if ((openSelectResultSet.getRow() == 0) && SELECT_1.equalsIgnoreCase(preparedCountSql)) {
-        storedResult[0] = true;
-        return nullValue;
-      }
-
-      int oldrow = openSelectResultSet.getRow();
-
-      if (oldrow != row) {
-        openSelectResultSet.absolute(row);
-      }
-
-      int columnIndex = getColumnIndex(columnName);
-
-      if (String.class.isAssignableFrom(type)) {
-        result = openSelectResultSet.getString(columnIndex);
-      } else if (Number.class.isAssignableFrom(type)) {
-        if (Integer.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getInt(columnIndex);
-        } else if (Short.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getShort(columnIndex);
-        } else if (Double.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getDouble(columnIndex);
-        } else if (Byte.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getByte(columnIndex);
-        } else if (Float.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getFloat(columnIndex);
-        } else if (Long.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getLong(columnIndex);
-        } else if (BigDecimal.class.isAssignableFrom(type)) {
-          result = openSelectResultSet.getBigDecimal(columnIndex);
-        } else {
-          result = openSelectResultSet.getBigDecimal(columnIndex);
-        }
-      } else if (Boolean.class.isAssignableFrom(type)) {
-        result = openSelectResultSet.getBoolean(columnIndex);
-      } else if (java.util.Date.class.isAssignableFrom(type)) {
-        java.util.Date value = ((java.util.Date) openSelectResultSet.getObject(columnIndex));
+      if (result instanceof java.util.Date) {
+        java.util.Date value = ((java.util.Date) result);
         if (value != null) {
           if (Time.class.isAssignableFrom(type)) {
             result = new java.sql.Time(value.getTime());
@@ -4190,20 +4157,12 @@ public class CSVDataSource extends AbstractDataSourceImpl {
             result = new java.sql.Date(value.getTime());
           }
         }
-      } else if (nullValue instanceof byte[]) {
-        result = openSelectResultSet.getBytes(columnIndex);
-      } else {
-        result = openSelectResultSet.getObject(columnIndex);
-      }
-
-      if (oldrow != row) {
-        openSelectResultSet.absolute(oldrow);
       }
     }
 
+
     return result == null ? nullValue : (T) result;
-     *
-     */
+
   }
 
   public boolean isPending(String columnName) throws SQLException {
@@ -4228,7 +4187,6 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public void setDataSourceName(String name) throws SQLException {
-   
   }
 
   @Override
@@ -4253,11 +4211,6 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public void filterChanged() throws SQLException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setSource(Object source) {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
@@ -4298,7 +4251,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
       if (containsKey(key)) {
         return get(key);
       } else {
-        throw new SQLException("DbDataSource for 'CSV"+ "' does not contain '" + key.toString() + "'.");
+        throw new SQLException("DbDataSource for 'CSV" + "' does not contain '" + key.toString() + "'.");
       }
     }
 
@@ -4330,7 +4283,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
         } catch (SQLException ex) {
           Logger.getLogger(CSVDataSource.class.getName()).log(Level.SEVERE, null, ex);
         }
-         
+
       }
       owner.owner.fireActiveRowChange(new ActiveRowChangeEvent(owner.owner, pos, -1));
     }
@@ -4363,7 +4316,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
       }
     }
     this.catalogName = catalogName;
-    
+
   }
   private String schemaName;
 
@@ -4393,7 +4346,7 @@ public class CSVDataSource extends AbstractDataSourceImpl {
       }
     }
     this.schemaName = schemaName;
-    
+
   }
 
   /**
@@ -4411,7 +4364,6 @@ public class CSVDataSource extends AbstractDataSourceImpl {
    */
   @Override
   public void setUniqueID(String[] uniqueID) {
-   
   }
   /**
    * Holds value of property delimiterLeft.
@@ -4470,6 +4422,88 @@ public class CSVDataSource extends AbstractDataSourceImpl {
 
   @Override
   public void destroy() {
-     
+  }
+
+  private class CSVValue {
+
+    private final java.text.DecimalFormatSymbols sl_SI_DECIMAL_FORMAT_SYMBOLS = new java.text.DecimalFormatSymbols(new java.util.Locale("sl", "SI"));
+    private final java.text.DecimalFormat nf = new java.text.DecimalFormat("#,###.######", sl_SI_DECIMAL_FORMAT_SYMBOLS);
+    private final java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("d.M.yyyy");
+    private final java.text.SimpleDateFormat dfsql = new java.text.SimpleDateFormat("yyyy-MM-dd");
+    private final java.text.SimpleDateFormat dfplain = new java.text.SimpleDateFormat("yyyyMMdd");
+    private String stringValue;
+    private Object value;
+    private boolean isValueSet = false;
+    private java.lang.Class type;
+    private boolean nullable = true;
+    private boolean optional = false;
+    private boolean wasNull = false;
+
+    public CSVValue(String stringValue) {
+      this.stringValue = stringValue;
+    }
+
+    public Object getValue(Class type) throws ParseException {
+      if (!isValueSet) {
+        this.type = type;
+        setValue(stringValue);
+        isValueSet = true;
+      }
+      return value;
+    }
+
+    public boolean wasNull() {
+      return wasNull;
+    }
+
+    private void setValue(String value) throws ParseException {
+      if (type.equals(java.lang.Double.class)) {
+        if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
+          this.value = nullable ? null : 0;
+          wasNull = true;
+        } else {
+          this.value = java.lang.Double.valueOf(nf.parse(value, new java.text.ParsePosition(0)).doubleValue());
+        }
+      } else if (type.equals(java.math.BigInteger.class)) {
+        if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
+          this.value = nullable ? null : 0;
+          wasNull = true;
+        } else {
+          this.value = new java.math.BigInteger(value);
+        }
+      } else if (type.equals(java.lang.Integer.class)) {
+        if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
+          this.value = nullable ? null : 0;
+          wasNull = true;
+        } else {
+          this.value = java.lang.Integer.valueOf(value);
+        }
+      } else if (type.equals(java.util.Date.class) || type.equals(java.sql.Date.class)) {
+        if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
+          this.value = null;
+        } else if (value.contains(".")) {
+          this.value = new java.sql.Date(df.parse(value).getTime());
+        } else if (value.contains("-")) {
+          this.value = new java.sql.Date(dfsql.parse(value).getTime());
+        } else {
+          this.value = new java.sql.Date(dfplain.parse(value).getTime());
+        }
+      } else if (type.equals(java.lang.String.class)) {
+        if (value.equalsIgnoreCase("(null)")) {
+          this.value = nullable ? null : "";
+          wasNull = true;
+        } else {
+          this.value = value;
+        }
+      } else if (type.isInstance(value)) {
+        this.value = value;
+      } else {
+        throw new IllegalArgumentException();
+      }
+
+      if (value == null) {
+        wasNull = true;
+      }
+    }
   }
 }
