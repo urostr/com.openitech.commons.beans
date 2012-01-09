@@ -330,6 +330,7 @@
           </xsd:complexType>
         </xsd:element>
         <xsd:element name="DisableTab" minOccurs="0" type="xsd:boolean"/>
+        <xsd:element name="DisableDataEntry" minOccurs="0" type="xsd:boolean"/>
         <xsd:element name="Importers" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
