@@ -164,6 +164,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
   private final String callStoreValueSql = ReadInputStream.getResourceAsString(getClass(), "callStoreValue.sql", "cp1250");
   PreparedStatement getActivity;
   PreparedStatement getActivityEvent;
+  PreparedStatement findIdSifre;
+
 
   @Override
   public boolean getRunParameterBoolean(String parameter, boolean defaultValue) {
@@ -2196,6 +2198,33 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     return temporaryTable;
   }
+
+  private final String EV_FIND_IDSIFRE = ReadInputStream.getResourceAsString(getClass(), "findIdSifre.sql", "cp1250");
+
+
+  @Override
+  public String[] getSifre(int idSifranta) {
+      List<String> result = new ArrayList<String>();
+      try {
+        Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
+        try {
+          PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
+
+          findIdSifre.setInt(1, idSifranta);
+          ResultSet rsIdSifre = findIdSifre.executeQuery();
+
+          while (rsIdSifre.next()) {
+            result.add(rsIdSifre.getString(1));
+          }
+        } finally {
+          temporaryConnection.close();
+        }
+      } catch (SQLException ex) {
+        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+      return result.toArray(new String[result.size()]);
+    }
   
   @Override
   public boolean isViewReady(int idSifranta, String idSifre) {
@@ -3068,7 +3097,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
     private static final String EV_SEARCH_BY_PK_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_PK.sql", "cp1250");
     private static final String EV_SEARCH_BY_VERSION_PK_SUBQUERY = ReadInputStream.getResourceAsString(EventFilterSearch.class, "find_event_by_version_PK.sql", "cp1250");
     private static final String EV_CREATE_EVENTS_VIEW = ReadInputStream.getResourceAsString(EventFilterSearch.class, "callCreateEventsView.sql", "cp1250");
-    private static final String EV_FIND_IDSIFRE = ReadInputStream.getResourceAsString(EventFilterSearch.class, "findIdSifre.sql", "cp1250");
     DbDataSource.SubstSqlParameter sqlFindEventEventId = new DbDataSource.SubstSqlParameter("<%ev_eventid_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventVersion = new DbDataSource.SubstSqlParameter("<%ev_version_filter%>");
     DbDataSource.SubstSqlParameter sqlFindEventType = new DbDataSource.SubstSqlParameter("<%ev_type_filter%>");
@@ -3161,7 +3189,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
        */
       if (canUseView && sifranti.size() == 1) {
         for (Integer s : sifranti) {
-          final String[] sifrant_sifre = getSifre(s);
+          final String[] sifrant_sifre = SqlUtilities.getInstance().getSifre(s);
           String qSifra;
           if (sifrant_sifre.length == 1) {
             sifra = sifrant_sifre;
@@ -3271,28 +3299,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
       refreshParameters();
     }
 
-    private String[] getSifre(int idSifranta) {
-      List<String> result = new ArrayList<String>();
-      try {
-        Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
-        try {
-          PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
-
-          findIdSifre.setInt(1, idSifranta);
-          ResultSet rsIdSifre = findIdSifre.executeQuery();
-
-          while (rsIdSifre.next()) {
-            result.add(rsIdSifre.getString(1));
-          }
-        } finally {
-          temporaryConnection.close();
-        }
-      } catch (SQLException ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
-      }
-
-      return result.toArray(new String[result.size()]);
-    }
+    
 
     private void createEventViews(int idSifranta) {
       final String eventsDb = SqlUtilities.getEventsDB();
@@ -3308,7 +3315,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
           eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + "]";
           eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + "_valid]";
 
-          final String[] sifre = getSifre(idSifranta);
+          final String[] sifre = SqlUtilities.getInstance().getSifre(idSifranta);
 
           if (sifre.length > 1) {
             if (!(isViewReady(eventsDb, eventsViewVersioned)
@@ -3499,7 +3506,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       evNonVersionedParameters.clear();
       evNonVersionedParameters.add(sqlEventAlias);
-      if (!usesView && !lookup) {
+      if (!lookup) {
         evNonVersionedParameters.add(sqlEventTable);
       } else {
         evNonVersionedParameters.add(sqlEventTableVersioned);
