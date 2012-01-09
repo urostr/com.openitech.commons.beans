@@ -6,6 +6,7 @@ package com.openitech.importer;
 
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.xml.config.ImportSelection;
+import com.openitech.db.model.xml.config.ImportSource;
 import com.openitech.db.model.xml.config.Importer;
 import com.openitech.db.model.xml.config.Importer.Destination;
 import com.openitech.db.model.xml.config.Importer.Options;
@@ -140,5 +141,13 @@ public class JEventsImporter implements JImporter {
 
     }
     return null;
+  }
+
+  public boolean isCSV() {
+    ImportSource source = eventImporter.getSource();
+    if(source != null && source.equals(ImportSource.CSV)){
+      return true;
+    }
+    return false;
   }
 }
