@@ -22,6 +22,7 @@ import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.Importer;
 import com.openitech.db.model.xml.config.Importer.Destination;
 import com.openitech.db.model.xml.config.Importer.Destination.Column;
+import com.openitech.db.model.xml.config.Importer.Destination.Column.SourceColumn;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
@@ -140,15 +141,15 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       }
 
       this.dataSource = createDataSource();
-      
-      if(dataSourceXML.isDisableDataEntry() != null){
+
+      if (dataSourceXML.isDisableDataEntry() != null) {
         this.editable = !dataSourceXML.isDisableDataEntry().booleanValue();
       }
-      
+
       final DataSource dataSourceElement = dataSourceXML.getDataSource();
 
       if (dataSourceElement != null) {
-        
+
         suspendDataSource();
 
         dataSource.lock();
@@ -203,11 +204,11 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       try {
         this.tableModel = createTableModel();
 
-        if(dataSourceElement == null){
+        if (dataSourceElement == null) {
           StringBuilder sbSelect = new StringBuilder(100);
           int columnCount = tableModel.getColumnCount();
           for (int i = 0; i < columnCount; i++) {
-            sbSelect.append(sbSelect.length() > 0 ? ",": "SELECT TOP 0 \n").append("(NULL) AS [").append(tableModel.getColumnName(i)).append("]");
+            sbSelect.append(sbSelect.length() > 0 ? "," : "SELECT TOP 0 \n").append("(NULL) AS [").append(tableModel.getColumnName(i)).append("]");
           }
         }
         createInformationPanels();
@@ -800,26 +801,16 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             }
           }
           for (String imePolja : eventColumns) {
-            try {
-              Field field = Field.getField(imePolja);
-              if (field == null) {
-                dataSource.setSafeMode(false);
-                dataSource.setQueuedDelay(0);
-                dataSource.filterChanged();
-                dataSource.loadData();
-                dataSource.setSafeMode(true);
-                int tipPolja = dataSource.getType(imePolja);
-                field = new Field(imePolja, tipPolja);
-              }
-              DbFieldObserver fieldObserver = new DbFieldObserver();
-              fieldObserver.setColumnName(imePolja);
-              fieldObserver.setDataSource(dataSource);
-              final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
-              if (!eventColumnsList.contains(fieldValueProxy)) {
-                eventColumnsList.add(fieldValueProxy);
-              }
-            } catch (SQLException ex) {
-              Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+            Field field = Field.getField(imePolja);
+            if (field == null) {
+              throw new IllegalArgumentException("Napaèno ime polja [" + imePolja + "]!");
+            }
+            DbFieldObserver fieldObserver = new DbFieldObserver();
+            fieldObserver.setColumnName(imePolja);
+            fieldObserver.setDataSource(dataSource);
+            final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
+            if (!eventColumnsList.contains(fieldValueProxy)) {
+              eventColumnsList.add(fieldValueProxy);
             }
           }
           imporEventsModels.add(new JImportEventsModel(eventImporter, dataSource, eventColumnsList));
@@ -840,70 +831,64 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             for (Column column : eventColumns) {
               String imePolja = column.getColumnName();
               boolean lookup = column.isLookup();
-              try {
-                Field field = Field.getField(imePolja);
-                if (field == null) {
-                  dataSource.setSafeMode(false);
-                  dataSource.setQueuedDelay(0);
-                  dataSource.filterChanged();
-                  dataSource.loadData();
-                  dataSource.setSafeMode(true);
-                  int tipPolja = dataSource.getType(imePolja);
-                  field = new Field(imePolja, tipPolja);
+
+              Field field = Field.getField(imePolja);
+              if (field == null) {
+                throw new IllegalArgumentException("Napaèno ime polja [" + imePolja + "]!");
+              }
+              
+              if (column.isEventColumn()) {
+                DbFieldObserver fieldObserver = new DbFieldObserver();
+                fieldObserver.setColumnName(imePolja);
+                fieldObserver.setDataSource(dataSource);
+                final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
+                field = fieldValueProxy;
+                if (!eventColumnsList.contains(fieldValueProxy)) {
+                  eventColumnsList.add(fieldValueProxy);
                 }
-
-                if (column.isEventColumn()) {
-                  DbFieldObserver fieldObserver = new DbFieldObserver();
-                  fieldObserver.setColumnName(imePolja);
-                  fieldObserver.setDataSource(dataSource);
-                  final FieldValueProxy fieldValueProxy = new FieldValueProxy(field, fieldObserver);
-                  field = fieldValueProxy;
-                  if (!eventColumnsList.contains(fieldValueProxy)) {
-                    eventColumnsList.add(fieldValueProxy);
-                  }
-                } else {
-                  if (!eventColumnsList.contains(field)) {
-                    eventColumnsList.add(field);
-                  }
+              } else {
+                if (!eventColumnsList.contains(field)) {
+                  eventColumnsList.add(field);
                 }
+              }
 
-                if (field != null) {
-                  Boolean showInTable = column.isShowInTable();
-                  if (showInTable != null) {
-                    field.setShowInTable(showInTable);
-                  }
-                  FieldModel model = field.getModel();
+              if (field != null) {
+                Boolean showInTable = column.isShowInTable();
+                if (showInTable != null) {
+                  field.setShowInTable(showInTable);
+                }
+                FieldModel model = field.getModel();
 
-                  DataModel tableModel1 = column.getTableModel();
-                  if (tableModel1 != null) {
-                    TableColumns tableColumns = tableModel1.getTableColumns();
-                    if (tableColumns != null) {
-                      FieldModel.TableColumns tcCopy = new FieldModel.TableColumns();
-                      model.setTableColumns(tcCopy);
-                      for (TableColumnDefinition tableColumnDefinition : tableColumns.getTableColumnDefinition()) {
-                        FieldModel.TableColumns.TableColumnDefinition tcd = new FieldModel.TableColumns.TableColumnDefinition();
-                        tcCopy.getTableColumnDefinition().add(tcd);
-                        for (String string : tableColumnDefinition.getTableColumnEntry()) {
-                          tcd.getTableColumnEntry().add(string);
-                        }
+                DataModel tableModel1 = column.getTableModel();
+                if (tableModel1 != null) {
+                  TableColumns tableColumns = tableModel1.getTableColumns();
+                  if (tableColumns != null) {
+                    FieldModel.TableColumns tcCopy = new FieldModel.TableColumns();
+                    model.setTableColumns(tcCopy);
+                    for (TableColumnDefinition tableColumnDefinition : tableColumns.getTableColumnDefinition()) {
+                      FieldModel.TableColumns.TableColumnDefinition tcd = new FieldModel.TableColumns.TableColumnDefinition();
+                      tcCopy.getTableColumnDefinition().add(tcd);
+                      for (String string : tableColumnDefinition.getTableColumnEntry()) {
+                        tcd.getTableColumnEntry().add(string);
                       }
                     }
-
                   }
-                }
 
-                if (lookup && field != null) {
-                  for (Field.LookupType lookupType : Field.LookupType.values()) {
-                    DbFieldObserver fo = new DbFieldObserver();
-                    fo.setColumnName(field.getName() + lookupType.getColumnPrefix());
-                    fo.setDataSource(dataSource);
-                    final FieldValueProxy fvLookupProxy = new FieldValueProxy(field, fo);
-                    eventColumnsList.add(fvLookupProxy);
-                  }
                 }
-              } catch (SQLException ex) {
-                Logger.getLogger(DataSourceFactory.class.getName()).log(Level.SEVERE, null, ex);
               }
+
+              if (lookup && field != null) {
+                for (Field.LookupType lookupType : Field.LookupType.values()) {
+                  DbFieldObserver fo = new DbFieldObserver();
+                  fo.setColumnName(lookupType.getColumnPrefix() + field.getName());
+                  fo.setDataSource(dataSource);
+                  final FieldValueProxy fvLookupProxy = new FieldValueProxy(field, fo);
+                  fvLookupProxy.setLookup(true);
+                  fvLookupProxy.setLookupType(lookupType);
+                  eventColumnsList.add(fvLookupProxy);
+                }
+              }
+
             }
 
             eventImportersModels.add(new JEventsImporter(eventImporter, dataSource, eventColumnsList));
