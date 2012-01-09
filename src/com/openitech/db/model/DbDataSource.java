@@ -14,7 +14,6 @@ import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.events.StoreUpdatesListener;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
-import com.openitech.db.model.sql.CSVDataSource;
 import com.openitech.events.concurrent.ConcurrentEvent;
 import com.openitech.events.concurrent.DataSourceActiveRowChangeEvent;
 import com.openitech.events.concurrent.DataSourceEvent;
