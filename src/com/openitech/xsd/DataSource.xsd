@@ -1066,6 +1066,7 @@
                       <xsd:choice>
                         <xsd:element name="Index" type="xsd:int"></xsd:element>
                         <xsd:element name="Name" type="xsd:string"></xsd:element>
+                        <xsd:element name="Factory" type="tns:Factory"></xsd:element>
                       </xsd:choice>
                     </xsd:complexType>
                   </xsd:element>
