@@ -57,8 +57,7 @@ public class DataColumn {
     this(ValueType.getType(field.getType()).getSqlClass());
     
     this.field = field;
-  }
-  
+  }  
  
   public void setValue(String value) throws ParseException {
     if (type.equals(java.lang.Double.class)) {
