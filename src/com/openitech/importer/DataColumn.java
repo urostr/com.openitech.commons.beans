@@ -26,6 +26,7 @@ public class DataColumn {
   private Object value;
   private boolean nullable = true;
   private boolean optional = false;
+  protected String columnName;
 
   protected DataColumn(java.lang.Class type) {
     this.type = type;
@@ -90,6 +91,24 @@ public class DataColumn {
     } else {
       throw new IllegalArgumentException();
     }
+  }
+
+  /**
+   * Get the value of columnName
+   *
+   * @return the value of columnName
+   */
+  public String getColumnName() {
+    return columnName;
+  }
+
+  /**
+   * Set the value of columnName
+   *
+   * @param columnName new value of columnName
+   */
+  public void setColumnName(String columnName) {
+    this.columnName = columnName;
   }
 
   public void reset() {
