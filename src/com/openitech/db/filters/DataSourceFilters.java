@@ -1041,10 +1041,16 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     private List<CheckBoxValue> rezultati = new ArrayList<CheckBoxValue>();
     private final DataSourceFilters filters;
     private boolean grouped = false;
+    private String comparator;
 
     public CheckBoxSeekType(DataSourceFilters filters) {
-      super("", PREFORMATTED, 0);
+      this("", "AND", filters);
+    }
+
+    public CheckBoxSeekType(String field, String operator, DataSourceFilters filters) {
+      super(field, PREFORMATTED, 0);
       this.filters = filters;
+      this.comparator = operator==null?"AND":operator;
       addRezultat(vsi);
     }
 
@@ -1057,13 +1063,29 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
           if (rezultatKlica.isChecked()) {
             final String rezultatValue = rezultatKlica.getValue();
 
-            sbValues.append(sbValues.length() > 0 ? " AND " : " ").append(rezultatValue).append("\n");
+            if (compareAsList()) {
+              sbValues.append(sbValues.length() > 0 ? ", " : " ").append(rezultatValue);
+            } else {
+              sbValues.append(sbValues.length() > 0 ? " "+comparator+" " : " ").append("(").append(rezultatValue).append(")").append("\n");
+            }
 
           }
         }
       }
+      
+      if (sbValues.length()>0) {
+        sbValues.insert(0, "(").append(")");
+      }
+      
+      if (compareAsList()) {
+        sbValues.insert(0, field+" IN ").append("\n");
+      }
       return sbValues;
 
+    }
+
+    private boolean compareAsList() {
+      return comparator.equalsIgnoreCase("IN");
     }
 
     @Override

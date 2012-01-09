@@ -50,6 +50,8 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -728,10 +730,10 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
             jpBoxes.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
 
-            List<JCheckBox> checkBoxes = new ArrayList<JCheckBox>();
+            List<JToggleButton> checkBoxes = new ArrayList<JToggleButton>();
             List<CheckBoxValue> rezultati = existsSeekType.getRezultati();
             for (final CheckBoxValue rezultatKlica : rezultati) {
-              final JCheckBox checkBox = new JCheckBox(rezultatKlica.getOpis());
+              final JToggleButton checkBox = existsSeekType.isGrouped()?new JRadioButton(rezultatKlica.getOpis()):new JCheckBox(rezultatKlica.getOpis());
 
               checkBoxes.add(checkBox);
 
@@ -763,7 +765,7 @@ public class JPDbDataSourceFilter extends javax.swing.JPanel implements ActiveFi
 
             int cb = 0;
             for (final CheckBoxValue rezultatKlica : rezultati) {
-              final JCheckBox checkBox = checkBoxes.get(cb++);
+              final JToggleButton checkBox = checkBoxes.get(cb++);
 
               checkBox.setSelected(rezultatKlica.isChecked());
 

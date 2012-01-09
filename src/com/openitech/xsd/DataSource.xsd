@@ -687,6 +687,8 @@
         <xsd:complexType>
           <xsd:all>
             <xsd:element name="Name" type="xsd:string"></xsd:element>
+            <xsd:element name="Field" type="xsd:string" minOccurs="0"></xsd:element>
+            <xsd:element name="Operator" type="tns:SeekOperator" minOccurs="0"></xsd:element>
             <xsd:element name="Rezultati">
               <xsd:complexType>
                 <xsd:sequence>
@@ -785,6 +787,13 @@
     <xsd:attribute name="ConvertToVarchar" type="xsd:string"/>
     <xsd:attribute name="Required" type="xsd:boolean"/>
   </xsd:complexType>
+  <xsd:simpleType name="SeekOperator">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="IN"/>
+      <xsd:enumeration value="AND"/>
+      <xsd:enumeration value="OR"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="SeekType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="UPPER_EQUALS"/>

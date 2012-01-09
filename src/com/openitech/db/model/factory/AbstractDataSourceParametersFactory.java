@@ -693,7 +693,14 @@ public abstract class AbstractDataSourceParametersFactory implements DataSourceO
 
               DataSourceFilters.CheckBoxSeekType checkBoxSeekType;
 
-              checkBoxSeekType = new DataSourceFilters.CheckBoxSeekType(filter);
+              if (parameter.getField()!=null) {
+                checkBoxSeekType = new DataSourceFilters.CheckBoxSeekType(parameter.getField(), parameter.getOperator().value(), filter);
+              } else if (parameter.getField()==null && 
+                         parameter.getOperator()!=null) {
+                checkBoxSeekType = new DataSourceFilters.CheckBoxSeekType("", parameter.getOperator().value(), filter);
+              } else {
+                checkBoxSeekType = new DataSourceFilters.CheckBoxSeekType(filter);
+              }
 
               if (convertToVarchar != null) {
                 checkBoxSeekType.setConvertToVarchar(convertToVarchar);
