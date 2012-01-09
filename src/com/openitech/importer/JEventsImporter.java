@@ -9,14 +9,16 @@ import com.openitech.db.model.xml.config.ImportSelection;
 import com.openitech.db.model.xml.config.ImportSource;
 import com.openitech.db.model.xml.config.Importer;
 import com.openitech.db.model.xml.config.Importer.Destination;
+import com.openitech.db.model.xml.config.Importer.Destination.Column;
 import com.openitech.db.model.xml.config.Importer.Options;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
-import java.awt.Window;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,6 +35,7 @@ public class JEventsImporter implements JImporter {
   private Integer activityId;
   Set<Field> defultFields;
   private Importer eventImporter;
+  private Map<Field, SourceColumn> sourceColumnsMap = new HashMap<Field, SourceColumn>();
 
   public JEventsImporter(Importer eventImporter, DbDataSource dataSource, Set<Field> eventColumnsList) {
     this.eventImporter = eventImporter;
@@ -55,6 +58,21 @@ public class JEventsImporter implements JImporter {
           this.idSifre = activityEvent.getIdSifre();
         } catch (SQLException ex) {
           Logger.getLogger(JEventsImporter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      }
+    }
+    if (destination != null) {
+
+      List<Column> eventColumns = destination.getColumn();
+
+      for (Column column : eventColumns) {
+        String imePolja = column.getColumnName();
+       
+        Field field = Field.getField(imePolja);
+        Column.SourceColumn sourceColumn = column.getSourceColumn();
+        if (sourceColumn != null) {
+
+          sourceColumnsMap.put(field, new com.openitech.importer.SourceColumn(sourceColumn));
         }
       }
     }
@@ -145,9 +163,13 @@ public class JEventsImporter implements JImporter {
 
   public boolean isCSV() {
     ImportSource source = eventImporter.getSource();
-    if(source != null && source.equals(ImportSource.CSV)){
+    if (source != null && source.equals(ImportSource.CSV)) {
       return true;
     }
     return false;
+  }
+
+  public Map<Field, SourceColumn> getSourceColumnsMap() {
+    return sourceColumnsMap;
   }
 }
