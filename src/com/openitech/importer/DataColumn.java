@@ -93,7 +93,7 @@ public class DataColumn {
         result = 0;
       } else if (type.equals(java.math.BigInteger.class)) {
         result = 0;
-      } else if (type.equals(java.lang.Integer.class)) {
+      } else if (type.equals(java.lang.Integer.class) || type.equals(java.lang.Number.class)) {
         result = 0;
       } else if (type.equals(java.util.Date.class) || type.equals(java.sql.Date.class)) {
         result = Calendar.getInstance().getTime();
@@ -126,7 +126,7 @@ public class DataColumn {
       } else {
         result.value = new java.math.BigInteger(value);
       }
-    } else if (type.equals(java.lang.Integer.class)) {
+    } else if (type.equals(java.lang.Integer.class) || type.equals(java.lang.Number.class)) {
       if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
         result.value = nullable ? null : getDefualtValue(nullable, type);
         result.wasNull = true;
