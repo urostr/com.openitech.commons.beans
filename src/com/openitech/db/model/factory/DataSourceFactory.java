@@ -882,7 +882,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
                   DbFieldObserver fo = new DbFieldObserver();
                   fo.setColumnName(lookupType.getColumnPrefix() + field.getName());
                   fo.setDataSource(dataSource);
-                  final FieldValueProxy fvLookupProxy = new FieldValueProxy(field, fo);
+                  final FieldValueProxy fvLookupProxy = new FieldValueProxy(new Field(lookupType.getColumnPrefix() + field.getName(), field.getType()), fo);
                   fvLookupProxy.setLookup(true);
                   fvLookupProxy.setLookupType(lookupType);
                   eventColumnsList.add(fvLookupProxy);
