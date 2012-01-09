@@ -8,6 +8,8 @@
  */
 package com.openitech.importer;
 
+import com.openitech.value.fields.Field;
+import com.openitech.value.fields.FieldValue;
 import java.text.ParseException;
 
 /**
@@ -26,7 +28,6 @@ public class DataColumn {
   private Object value;
   private boolean nullable = true;
   private boolean optional = false;
-  protected String columnName;
 
   protected DataColumn(java.lang.Class type) {
     this.type = type;
@@ -93,22 +94,31 @@ public class DataColumn {
     }
   }
 
+  private Field field = null;
+
   /**
-   * Get the value of columnName
+   * Get the value of field
    *
-   * @return the value of columnName
+   * @return the value of field
    */
-  public String getColumnName() {
-    return columnName;
+  public Field getField() {
+    return field;
   }
 
   /**
-   * Set the value of columnName
+   * Set the value of field
    *
-   * @param columnName new value of columnName
+   * @param field new value of field
    */
-  public void setColumnName(String columnName) {
-    this.columnName = columnName;
+  public void setField(Field field) {
+    this.field = field;
+  }
+  
+  public FieldValue getFieldValue() {
+    if (field != null) {
+      return new FieldValue(field, getValue());
+    } else
+      throw new IllegalStateException("Field is not set");    
   }
 
   public void reset() {
