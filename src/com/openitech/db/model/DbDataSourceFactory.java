@@ -203,5 +203,7 @@ public class DbDataSourceFactory {
     public void loadData(DbDataSourceImpl dataSource, int oldRow);
 
     public void destroy();
+
+    public void setSource(Object source);
   }
 }

@@ -38,6 +38,11 @@ import javax.sql.rowset.CachedRowSet;
 public abstract class AbstractDataSourceImpl implements DbDataSourceFactory.DbDataSourceImpl {
 
   @Override
+  public void setSource(Object source){
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public abstract void clearSharedResults();
 
   @Override
