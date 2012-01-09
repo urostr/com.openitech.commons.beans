@@ -14,6 +14,7 @@ import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.events.StoreUpdatesListener;
 import com.openitech.db.model.DbDataSourceFactory.DbDataSourceImpl;
+import com.openitech.db.model.sql.CSVDataSource;
 import com.openitech.events.concurrent.ConcurrentEvent;
 import com.openitech.events.concurrent.DataSourceActiveRowChangeEvent;
 import com.openitech.events.concurrent.DataSourceEvent;
@@ -28,6 +29,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -143,7 +145,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
 
   /** Creates a new instance of DbDataSource */
   public DbDataSource() {
-    this(null, null);
+    this((String) null, (String) null);
   }
 
   public DbDataSource(String selectSql) {
@@ -160,6 +162,18 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
 
   public DbDataSource(String selectSql, String countSql, Class<? extends DbDataSourceFactory.DbDataSourceImpl> dbDataSourceClass) {
     init(DbDataSourceFactory.getInstance().createDbDataSource(this, dbDataSourceClass), countSql, selectSql);
+  }
+
+  public DbDataSource(File sourceFile, SourceType type) throws Exception {
+    switch (type) {
+      case CSV:
+        init(DbDataSourceFactory.getInstance().createDbDataSource(this, CSVDataSource.class), null, null);
+        break;
+    }
+    if (implementation != null) {
+      setSource(sourceFile);
+    }
+
   }
 
   private DbDataSource(final String selectSql, final String countSql, final DbDataSourceFactory.DbDataSourceImpl implementation) {
@@ -3124,6 +3138,10 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     implementation.setSelectSql(selectSql);
   }
 
+  public void setSource(Object source) throws Exception {
+    implementation.setSource(source);
+  }
+
   public int getColumnIndex(String columnName) throws SQLException {
     return implementation.getColumnIndex(columnName);
   }
@@ -4771,7 +4789,6 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   public void setCanFireEvents(boolean canFireEvents) {
     this.canFireEvents = canFireEvents;
   }
-
   private boolean autoReload = true;
 
   /**
@@ -5265,7 +5282,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     }
 
     public DbDataSource getFirstDataSource() {
-      return dataSources.size()>0?dataSources.get(0):null;
+      return dataSources.size() > 0 ? dataSources.get(0) : null;
     }
 
     public List<DbDataSource> getDataSources() {
@@ -5710,5 +5727,10 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
   @Override
   public DbDataSource getDataSource() {
     return this;
+  }
+
+  public static enum SourceType {
+
+    CSV;
   }
 }
