@@ -139,11 +139,16 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
         dataSourceXML = original;
       }
 
+      this.dataSource = createDataSource();
+      
+      if(dataSourceXML.isDisableDataEntry() != null){
+        this.editable = !dataSourceXML.isDisableDataEntry().booleanValue();
+      }
+      
       final DataSource dataSourceElement = dataSourceXML.getDataSource();
 
       if (dataSourceElement != null) {
-        this.dataSource = createDataSource();
-
+        
         suspendDataSource();
 
         dataSource.lock();
@@ -198,12 +203,18 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       try {
         this.tableModel = createTableModel();
 
-
+        if(dataSourceElement == null){
+          StringBuilder sbSelect = new StringBuilder(100);
+          int columnCount = tableModel.getColumnCount();
+          for (int i = 0; i < columnCount; i++) {
+            sbSelect.append(sbSelect.length() > 0 ? ",": "SELECT TOP 0 \n").append("(NULL) AS [").append(tableModel.getColumnName(i)).append("]");
+          }
+        }
         createInformationPanels();
 
         getTaskPanes().addAll(createTaskPanes(dataSourceXML));
 
-        createImporters(dataSourceXML);
+        createImporters();
 
         createDataEntryPanel();
 
@@ -448,7 +459,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
 
       return dataSource;
     } else {
-      return this.dataSource;
+      return this.dataSource != null ? this.dataSource : new DbDataSource();
     }
   }
 
@@ -744,7 +755,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             newInstance = new OpenWorkAreaTask(taskPane.getTitle(), openWorkArea.getWorkSpaceId(), openWorkArea.getWorkAreaId(), openWorkArea.isOpenDataEntry(), openWorkArea.isDontMerge());
           } else if (taskPane.getDefaultTask() != null) {
             DefaultTask defaultTask = taskPane.getDefaultTask();
-            this.editable = !defaultTask.isHide();
+            //this.editable = !defaultTask.isHide();
             newInstance = (new com.openitech.db.components.dogodki.DefaultTask(defaultTask.getTitle(), defaultTask.getTaskTitle(), defaultTask.isHide() == null ? false : defaultTask.isHide()));
           }
           if (newInstance != null) {
@@ -773,7 +784,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     return result;
   }
 
-  private void createImporters(Workarea dataSourceXML) {
+  private void createImporters() {
     EventImporters eventImporters = dataSourceXML.getEventImporters();
     if (eventImporters != null) {
       List<EventImporter> eventImporterList = eventImporters.getEventImporter();
