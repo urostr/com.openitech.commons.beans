@@ -12,6 +12,7 @@ import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,33 +85,57 @@ public class DataColumn {
     this.values.putAll(parsedValue.values);
   }
 
+  private static Object getDefualtValue(boolean nullable, Class type) {
+
+    if (nullable) {
+      Object result;
+      if (type.equals(java.lang.Double.class)) {
+        result = 0;
+      } else if (type.equals(java.math.BigInteger.class)) {
+        result = 0;
+      } else if (type.equals(java.lang.Integer.class)) {
+        result = 0;
+      } else if (type.equals(java.util.Date.class) || type.equals(java.sql.Date.class)) {
+        result = Calendar.getInstance().getTime();
+      } else if (type.equals(java.lang.String.class)) {
+        result = "";
+      } else {
+        throw new IllegalArgumentException("Unknown default value for "+type.getName());
+      }
+
+      return result;
+    } else {
+      throw new IllegalArgumentException("Value cannot be null");
+    }
+  }
+
   public static DataColumn parseValue(String value, boolean nullable, Class type) throws ParseException {
     DataColumn result = new DataColumn(type, nullable);
 
     if (type.equals(java.lang.Double.class)) {
       if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
-        result.value = nullable ? null : 0;
+        result.value = nullable ? null : getDefualtValue(nullable, type);
         result.wasNull = true;
       } else {
         result.value = java.lang.Double.valueOf(nf.parse(value, new java.text.ParsePosition(0)).doubleValue());
       }
     } else if (type.equals(java.math.BigInteger.class)) {
       if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
-        result.value = nullable ? null : 0;
+        result.value = nullable ? null : getDefualtValue(nullable, type);
         result.wasNull = true;
       } else {
         result.value = new java.math.BigInteger(value);
       }
     } else if (type.equals(java.lang.Integer.class)) {
       if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
-        result.value = nullable ? null : 0;
+        result.value = nullable ? null : getDefualtValue(nullable, type);
         result.wasNull = true;
       } else {
         result.value = java.lang.Integer.valueOf(value);
       }
     } else if (type.equals(java.util.Date.class) || type.equals(java.sql.Date.class)) {
       if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
-        result.value = null;
+        result.value = nullable ? null : getDefualtValue(nullable, type);
       } else if (value.contains(".")) {
         result.value = new java.sql.Date(df.parse(value).getTime());
       } else if (value.contains("-")) {
@@ -120,7 +145,7 @@ public class DataColumn {
       }
     } else if (type.equals(java.lang.String.class)) {
       if (value.equalsIgnoreCase("(null)")) {
-        result.value = nullable ? null : "";
+        result.value = nullable ? null : getDefualtValue(nullable, type);
         result.wasNull = true;
       } else {
         result.value = value;
