@@ -24,6 +24,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "IntValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return Integer.class;
+    }       
   }, RealValue {
 
     @Override
@@ -40,6 +45,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "RealValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return Double.class;
+    } 
   }, StringValue {
 
     @Override
@@ -56,6 +66,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "StringValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return String.class;
+    } 
   }, DateValue {
 
     @Override
@@ -72,6 +87,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "DateValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return java.util.Date.class;
+    } 
   }, ObjectValue {
 
     @Override
@@ -88,6 +108,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "BlobValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return String.class;
+    } 
   }, ClobValue {
 
     @Override
@@ -104,6 +129,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "ClobValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return String.class;
+    } 
   }, BitValue {
 
     @Override
@@ -120,6 +150,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "IntValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return Boolean.class;
+    } 
   }, DateTimeValue {
 
     @Override
@@ -135,6 +170,11 @@ public enum ValueType {
     @Override
     public String getValueColumn() {
       return "DateValue";
+    }
+
+    @Override
+    public Class getSqlClass() {
+      return java.util.Date.class;
     }
   }, TimeValue {
 
@@ -152,6 +192,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "DateValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return java.util.Date.class;
+    }
   }, MonthValue {
 
     @Override
@@ -167,6 +212,11 @@ public enum ValueType {
     @Override
     public String getValueColumn() {
       return "DateValue";
+    }
+
+    @Override
+    public Class getSqlClass() {
+      return java.util.Date.class;
     }
   }, LongValue {
 
@@ -184,6 +234,11 @@ public enum ValueType {
     public String getValueColumn() {
       return "IntValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return Long.class;
+    }
   }, BlobValue {
 
     @Override
@@ -199,6 +254,11 @@ public enum ValueType {
     @Override
     public String getValueColumn() {
       return "BlobValue";
+    }
+
+    @Override
+    public Class getSqlClass() {
+      return Object.class;
     }
   }, FileValue {
 
@@ -216,11 +276,18 @@ public enum ValueType {
     public String getValueColumn() {
       return "BlobValue";
     }
+
+    @Override
+    public Class getSqlClass() {
+      return Object.class;
+    }
   };
 
   public abstract int getTypeIndex();
 
   public abstract int getSqlType();
+  
+  public abstract Class getSqlClass();
 
   public abstract String getValueColumn();
 

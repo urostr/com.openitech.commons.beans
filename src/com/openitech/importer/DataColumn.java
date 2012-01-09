@@ -10,6 +10,7 @@ package com.openitech.importer;
 
 import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValue;
+import com.openitech.value.fields.ValueType;
 import java.text.ParseException;
 
 /**
@@ -52,6 +53,13 @@ public class DataColumn {
     }
   }
 
+  public DataColumn(Field field) {
+    this(ValueType.getType(field.getType()).getSqlClass());
+    
+    this.field = field;
+  }
+  
+ 
   public void setValue(String value) throws ParseException {
     if (type.equals(java.lang.Double.class)) {
       if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
