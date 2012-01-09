@@ -1058,6 +1058,7 @@
               <xsd:complexType>
                 <xsd:sequence>
                   <xsd:element name="ColumnName" maxOccurs="1" type="xsd:string" minOccurs="1"></xsd:element>
+                  <xsd:element name="DefaultValue" minOccurs="0" type="xsd:string" maxOccurs="1"></xsd:element>
                   <xsd:element name="IdentityGroupBy" minOccurs="0" type="xsd:string" maxOccurs="1"></xsd:element>
                   <xsd:element name="TableModel" minOccurs="0" type="tns:DataModel"></xsd:element>
                   <xsd:element name="SourceColumn" minOccurs="0">
