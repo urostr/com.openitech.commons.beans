@@ -4,43 +4,61 @@
  */
 package com.openitech.db.model.factory;
 
-import com.openitech.importer.DataColumn;
-import java.util.List;
+import com.openitech.db.model.DbDataSource;
+import java.sql.SQLException;
 
 /**
  *
  * @author uros
  */
 public interface SourceColumnFactory {
-  public DataColumn getColumnValue(DataColumn column, DataColumn... row);
-  public DataColumn getColumnValue(SourceColumnFactoryParameter parameter);
+  public void setDataSource(DbDataSource dataSource);
+  public Object getColumnValue(Object value) throws SQLException;
+  public Object getColumnValue(SourceColumnFactoryParameter parameter) throws SQLException;
 
   public static class SourceColumnFactoryParameter {
 
-    private DataColumn column;
 
-    public SourceColumnFactoryParameter(DataColumn column, List<DataColumn> row) {
-      this.column = column;
+    public SourceColumnFactoryParameter(DbDataSource dataSource, String columnName, int row) {
+      this.columnName = columnName;
       this.row = row;
     }
+    
+    private DbDataSource dataSource;
 
     /**
-     * Get the value of column
+     * Get the value of dataSource
      *
-     * @return the value of column
+     * @return the value of dataSource
      */
-    public DataColumn getColumn() {
-      return column;
+    public DbDataSource getDataSource() {
+      return dataSource;
     }
-    protected List<DataColumn> row;
+
+    private String columnName;
+
+    /**
+     * Get the value of columnName
+     *
+     * @return the value of columnName
+     */
+    public String getColumnName() {
+      return columnName;
+    }
+
+    private int row;
 
     /**
      * Get the value of row
      *
      * @return the value of row
      */
-    public List<DataColumn> getRow() {
+    public int getRow() {
       return row;
+    }
+    
+    public Object getValue() throws SQLException {
+      return dataSource.getValueAt(row, columnName);
     }
 
   }
