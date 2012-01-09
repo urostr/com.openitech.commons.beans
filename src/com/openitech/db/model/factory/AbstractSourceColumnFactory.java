@@ -37,6 +37,6 @@ public abstract class AbstractSourceColumnFactory implements SourceColumnFactory
 
   @Override
   public Object getColumnValue(SourceColumnFactoryParameter parameter) throws SQLException {
-    return this.getColumnValue(parameter.getValue());
+    return this.getColumnValue(parameter.getValue(), parameter);
   }
 }

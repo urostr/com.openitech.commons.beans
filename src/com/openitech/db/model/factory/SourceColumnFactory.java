@@ -13,7 +13,7 @@ import java.sql.SQLException;
  */
 public interface SourceColumnFactory {
   public void setDataSource(DbDataSource dataSource);
-  public Object getColumnValue(Object value) throws SQLException;
+  public Object getColumnValue(Object value, SourceColumnFactoryParameter parameter) throws SQLException;
   public Object getColumnValue(SourceColumnFactoryParameter parameter) throws SQLException;
 
   public static class SourceColumnFactoryParameter {
