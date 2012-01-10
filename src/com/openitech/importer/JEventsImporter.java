@@ -4,6 +4,7 @@
  */
 package com.openitech.importer;
 
+import com.openitech.db.model.ColumnNameReader;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.xml.config.ImportSelection;
 import com.openitech.db.model.xml.config.ImportSource;
@@ -36,6 +37,7 @@ public class JEventsImporter implements JImporter {
   Set<Field> defultFields;
   private Importer eventImporter;
   private Map<Field, SourceColumn> sourceColumnsMap = new HashMap<Field, SourceColumn>();
+  private ColumnNameReader reader = new SourceColumnNameReader();
 
   public JEventsImporter(Importer eventImporter, DbDataSource dataSource, Set<Field> eventColumnsList) {
     this.eventImporter = eventImporter;
@@ -67,7 +69,7 @@ public class JEventsImporter implements JImporter {
 
       for (Column column : eventColumns) {
         String imePolja = column.getColumnName();
-       
+
         Field field = Field.getField(imePolja);
         Column.SourceColumn sourceColumn = column.getSourceColumn();
         if (sourceColumn != null) {
@@ -171,5 +173,23 @@ public class JEventsImporter implements JImporter {
 
   public Map<Field, SourceColumn> getSourceColumnsMap() {
     return sourceColumnsMap;
+  }
+
+  public ColumnNameReader getReader() {
+    return reader;
+  }
+
+  private class SourceColumnNameReader implements ColumnNameReader {
+
+    @Override
+    public String getColumnName(String columnName) {
+      final SourceColumn sourceColumn = sourceColumnsMap.get(Field.getField(columnName));
+      return sourceColumn == null ? null : sourceColumn.getColumnName();
+    }
+
+    @Override
+    public String getColumnName(int columnIndex) {
+      return null;
+    }
   }
 }

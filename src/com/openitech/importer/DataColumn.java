@@ -61,6 +61,10 @@ public class DataColumn {
     }
   }
 
+  public DataColumn() throws ParseException {
+    this(java.lang.String.class);
+  }
+  
   public DataColumn(String value) throws ParseException {
     this(java.lang.String.class);
     setValue(value);
@@ -74,6 +78,14 @@ public class DataColumn {
 
   public boolean wasNull() {
     return wasNull;
+  }
+
+  public final void setValue(Object value, Class type) throws ParseException {
+
+    this.values.clear();
+    this.value = value;
+    this.wasNull = value == null;
+    this.values.put(type, value);
   }
 
   public final void setValue(String value) throws ParseException {
@@ -100,7 +112,7 @@ public class DataColumn {
       } else if (type.equals(java.lang.String.class)) {
         result = "";
       } else {
-        throw new IllegalArgumentException("Unknown default value for "+type.getName());
+        throw new IllegalArgumentException("Unknown default value for " + type.getName());
       }
 
       return result;
