@@ -90,7 +90,7 @@ public enum ValueType {
 
     @Override
     public Class getSqlClass() {
-      return java.util.Date.class;
+      return java.sql.Timestamp.class;
     } 
   }, ObjectValue {
 
@@ -174,7 +174,7 @@ public enum ValueType {
 
     @Override
     public Class getSqlClass() {
-      return java.util.Date.class;
+      return java.sql.Timestamp.class;
     }
   }, TimeValue {
 
@@ -195,7 +195,7 @@ public enum ValueType {
 
     @Override
     public Class getSqlClass() {
-      return java.util.Date.class;
+      return java.sql.Timestamp.class;
     }
   }, MonthValue {
 
@@ -216,7 +216,7 @@ public enum ValueType {
 
     @Override
     public Class getSqlClass() {
-      return java.util.Date.class;
+      return java.sql.Timestamp.class;
     }
   }, LongValue {
 

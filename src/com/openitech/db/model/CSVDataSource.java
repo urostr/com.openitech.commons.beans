@@ -31,6 +31,26 @@ public class CSVDataSource extends FileDataSource {
     super(owner);
   }
 
+  protected char separator = ';';
+
+  /**
+   * Get the value of separator
+   *
+   * @return the value of separator
+   */
+  public char getSeparator() {
+    return separator;
+  }
+
+  /**
+   * Set the value of separator
+   *
+   * @param separator new value of separator
+   */
+  public void setSeparator(char separator) {
+    this.separator = separator;
+  }
+
   @Override
   public boolean loadData(boolean reload, int oldRow) {
     boolean result = false;
@@ -40,7 +60,7 @@ public class CSVDataSource extends FileDataSource {
     }
     if (sourceFile != null) {
       try {
-        CSVReader reader = new CSVReader(new FileReader(sourceFile));
+        CSVReader reader = new CSVReader(new FileReader(sourceFile), separator);
         List<String[]> readAll = reader.readAll();
 
         boolean isFirstLineHeader = true;
@@ -102,9 +122,14 @@ public class CSVDataSource extends FileDataSource {
 
     columnName = columnName.toUpperCase();
     if(columnReader != null){
-      String sourceColumnName = columnReader.getColumnName(columnName);
+      String sourceColumnName = columnReader.getColumnName(columnName, columnMapping, columnMappingIndex);
+      Class<? extends T> sourceType = columnReader.getColumnType(columnName);
       if(sourceColumnName != null){
         columnName = sourceColumnName.toUpperCase();
+      }
+      
+      if (sourceType != null) {
+        type = sourceType;
       }
     }
     Object result = nullValue;

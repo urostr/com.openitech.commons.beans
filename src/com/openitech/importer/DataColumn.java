@@ -11,10 +11,13 @@ package com.openitech.importer;
 import com.openitech.value.fields.Field;
 import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.ValueType;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -26,7 +29,14 @@ public class DataColumn {
   private static final java.text.DecimalFormatSymbols sl_SI_DECIMAL_FORMAT_SYMBOLS = new java.text.DecimalFormatSymbols(new java.util.Locale("sl", "SI"));
   private static final java.text.DecimalFormat nf = new java.text.DecimalFormat("#,###.######", sl_SI_DECIMAL_FORMAT_SYMBOLS);
   private static final java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("d.M.yyyy");
+  private static final java.text.SimpleDateFormat dfts = new java.text.SimpleDateFormat("d.M.yyyy hh:mm");
+  private static final java.text.SimpleDateFormat dftss = new java.text.SimpleDateFormat("d.M.yyyy hh:mm:ss");
   private static final java.text.SimpleDateFormat dfsql = new java.text.SimpleDateFormat("yyyy-MM-dd");
+  private static final java.text.SimpleDateFormat dfsqlts = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm");
+  private static final java.text.SimpleDateFormat dfsqltss = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+  private static final java.text.SimpleDateFormat dfsqltsss = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.S");
+  private static final java.text.SimpleDateFormat dfplaints = new java.text.SimpleDateFormat("yyyyMMddhhmm");
+  private static final java.text.SimpleDateFormat dfplaintss = new java.text.SimpleDateFormat("yyyyMMddhhmmdd");
   private static final java.text.SimpleDateFormat dfplain = new java.text.SimpleDateFormat("yyyyMMdd");
   private java.lang.Class type;
   private Object value;
@@ -107,7 +117,7 @@ public class DataColumn {
         result = 0;
       } else if (type.equals(java.lang.Integer.class) || type.equals(java.lang.Number.class)) {
         result = 0;
-      } else if (type.equals(java.util.Date.class) || type.equals(java.sql.Date.class)) {
+      } else if (type.equals(java.util.Date.class) || type.equals(java.sql.Date.class) || type.equals(java.sql.Timestamp.class)) {
         result = Calendar.getInstance().getTime();
       } else if (type.equals(java.lang.String.class)) {
         result = "";
@@ -145,6 +155,16 @@ public class DataColumn {
       } else {
         result.value = java.lang.Integer.valueOf(value);
       }
+    } else if (type.equals(java.sql.Timestamp.class)) {
+      if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
+        result.value = nullable ? null : getDefualtValue(nullable, type);
+      } else if (value.contains(".")) {
+        result.value = new java.sql.Timestamp(parseDate(value, dftss, dfts, df).getTime());
+      } else if (value.contains("-")) {
+        result.value = new java.sql.Timestamp(parseDate(value, dfsqltsss, dfsqltss, dfsqlts, dfsql).getTime());
+      } else {
+        result.value = new java.sql.Timestamp(parseDate(value, dfplaintss, dfplaints, dfplain).getTime());
+      }
     } else if (type.equals(java.util.Date.class) || type.equals(java.sql.Date.class)) {
       if ((value.length() == 0) || value.equalsIgnoreCase("NaN") || value.equalsIgnoreCase("(null)")) {
         result.value = nullable ? null : getDefualtValue(nullable, type);
@@ -176,6 +196,22 @@ public class DataColumn {
 
     return result;
   }
+  
+  private static java.util.Date parseDate(String value, DateFormat... validFormats) {
+    java.util.Date result = null;
+    
+    for (DateFormat dateFormat : validFormats) {
+      try {
+        result = dateFormat.parse(value);
+        break;
+      } catch (ParseException ex) {
+        result = null;
+      }
+    }
+    
+    return result;
+  }
+  
   private Field field = null;
 
   /**

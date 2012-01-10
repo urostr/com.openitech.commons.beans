@@ -5,7 +5,10 @@
 package com.openitech.db.model.factory;
 
 import com.openitech.db.model.DbDataSource;
+import com.openitech.value.fields.Field;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -13,13 +16,16 @@ import java.sql.SQLException;
  */
 public interface SourceColumnFactory {
   public void setDataSource(DbDataSource dataSource);
+  public String getSourceColumnName();
+  public Field[] getResultFields(String columnName);
   public Object getColumnValue(Object value, SourceColumnFactoryParameter parameter) throws SQLException;
-  public Object getColumnValue(SourceColumnFactoryParameter parameter) throws SQLException;
+  public List<Object> getColumnValue(SourceColumnFactoryParameter parameter) throws SQLException;
 
   public static class SourceColumnFactoryParameter {
 
 
     public SourceColumnFactoryParameter(DbDataSource dataSource, String columnName, int row) {
+      this.dataSource = dataSource;
       this.columnName = columnName;
       this.row = row;
     }
@@ -57,9 +63,27 @@ public interface SourceColumnFactory {
       return row;
     }
     
-    public Object getValue() throws SQLException {
-      return dataSource.getValueAt(row, columnName);
-    }
+    public List<Object> getValues(String... columnNames) throws SQLException {
+      Object result = null;
+      boolean hasColumn = false;
 
+      if (columnNames != null) {
+        for (String columnNameVariation : columnNames) {
+          if (hasColumn = (dataSource.findColumn(columnNameVariation) > 0)) {
+            result = dataSource.getValueAt(row, columnNameVariation);
+            break;
+          }
+        }
+      }
+
+      if (!hasColumn) {
+        result = dataSource.getValueAt(row, columnName);
+      }
+
+      List<Object> values = new ArrayList<Object>();
+      values.add(result);
+      
+      return values;
+    }
   }
 }

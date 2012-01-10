@@ -4,13 +4,14 @@
  */
 package com.openitech.db.model;
 
+import java.util.Map;
+
 /**
  *
  * @author domenbasic
  */
 public interface ColumnNameReader {
 
-  public abstract String getColumnName(String columnName);
-
-  public abstract String getColumnName(int columnIndex);
+  public abstract String getColumnName(String columnName, Map<String, Integer> columnMapping, Map<Integer, String> columnMappingIndex);
+  public abstract <T> Class<? extends T> getColumnType(String columnName);
 }

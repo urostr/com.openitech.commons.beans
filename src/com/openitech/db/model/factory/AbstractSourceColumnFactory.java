@@ -5,8 +5,10 @@
 package com.openitech.db.model.factory;
 
 import com.openitech.db.model.DbDataSource;
-import com.openitech.importer.DataColumn;
+import com.openitech.value.fields.Field;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -15,6 +17,36 @@ import java.sql.SQLException;
 public abstract class AbstractSourceColumnFactory implements SourceColumnFactory {
 
   protected DbDataSource dataSource;
+  protected String[] sourceColumnNames = null;
+  protected Field[] resultFields = null;
+
+  /**
+   * Get the value of sourceColumnNames
+   *
+   * @return the value of sourceColumnNames
+   */
+  public String[] getSourceColumnNames() {
+    return sourceColumnNames;
+  }
+
+  /**
+   * Set the value of sourceColumnNames
+   *
+   * @param sourceColumnNames new value of sourceColumnNames
+   */
+  public void setSourceColumnNames(String... sourceColumnNames) {
+    this.sourceColumnNames = sourceColumnNames;
+  }
+
+  @Override
+  public String getSourceColumnName() {
+    if (getSourceColumnNames() != null
+            && getSourceColumnNames().length > 0) {
+      return getSourceColumnNames()[0];
+    } else {
+      return null;
+    }
+  }
 
   /**
    * Get the value of dataSource
@@ -23,6 +55,15 @@ public abstract class AbstractSourceColumnFactory implements SourceColumnFactory
    */
   public DbDataSource getDataSource() {
     return dataSource;
+  }
+
+  @Override
+  public Field[] getResultFields(String columnName) {
+    if (resultFields == null) {
+      resultFields = new Field[]{Field.getField(columnName)};
+    }
+
+    return resultFields;
   }
 
   /**
@@ -36,7 +77,14 @@ public abstract class AbstractSourceColumnFactory implements SourceColumnFactory
   }
 
   @Override
-  public Object getColumnValue(SourceColumnFactoryParameter parameter) throws SQLException {
-    return this.getColumnValue(parameter.getValue(), parameter);
+  public List<Object> getColumnValue(SourceColumnFactoryParameter parameter) throws SQLException {
+    List<Object> result = new ArrayList<Object>();
+    List<Object> values = parameter.getValues(getSourceColumnNames());
+
+    for (Object value : values) {
+      result.add(this.getColumnValue(value, parameter));
+    }
+
+    return result;
   }
 }

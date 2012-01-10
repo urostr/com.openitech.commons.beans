@@ -15,6 +15,7 @@ import com.openitech.db.model.xml.config.Importer.Options;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
+import com.openitech.value.fields.ValueType;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -182,14 +183,31 @@ public class JEventsImporter implements JImporter {
   private class SourceColumnNameReader implements ColumnNameReader {
 
     @Override
-    public String getColumnName(String columnName) {
+    public String getColumnName(String columnName, Map<String, Integer> columnMapping, Map<Integer, String> columnMappingIndex) {
       final SourceColumn sourceColumn = sourceColumnsMap.get(Field.getField(columnName));
-      return sourceColumn == null ? null : sourceColumn.getColumnName();
+
+      if (sourceColumn == null) {
+        return null;
+      } else if (sourceColumn.getColumnName() != null) {
+        return sourceColumn.getColumnName();
+      } else if (sourceColumn.getColumnIndex() != null) {
+        return columnMappingIndex.get(sourceColumn.getColumnIndex());
+      } else if (sourceColumn.getFactory() != null) {
+        return sourceColumn.getFactory().getSourceColumnName();
+      } else {
+        return null;
+      }
     }
 
     @Override
-    public String getColumnName(int columnIndex) {
-      return null;
+    public <T> Class<? extends T> getColumnType(String columnName) {
+      final Field field = Field.getField(columnName);
+
+      if (field != null) {
+        return (Class<? extends T>) ValueType.getType(field.getType()).getSqlClass();
+      } else {
+        return null;
+      }
     }
   }
 }
