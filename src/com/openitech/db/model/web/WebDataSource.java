@@ -71,7 +71,7 @@ import javax.swing.event.ListDataEvent;
  *
  * @author uros
  */
-public class WebDataSource implements DbDataSourceImpl {
+public class WebDataSource extends AbstractDataSourceImpl {
 
   public static final String SELECT_1 = "SELECT 1";
   private String selectSql;
