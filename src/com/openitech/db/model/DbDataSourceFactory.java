@@ -205,5 +205,7 @@ public class DbDataSourceFactory {
     public void destroy();
 
     public void setSource(Object source);
+
+    public void setColumnReader(ColumnNameReader columnReader);
   }
 }

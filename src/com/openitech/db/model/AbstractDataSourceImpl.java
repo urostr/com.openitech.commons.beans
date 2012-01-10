@@ -43,6 +43,11 @@ public abstract class AbstractDataSourceImpl implements DbDataSourceFactory.DbDa
   }
 
   @Override
+  public void setColumnReader(ColumnNameReader columnReader) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public abstract void clearSharedResults();
 
   @Override

@@ -3141,6 +3141,10 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
     implementation.setSource(source);
   }
 
+  public void setColumnReader(ColumnNameReader columnReader) {
+    implementation.setColumnReader(columnReader);
+  }
+
   public int getColumnIndex(String columnName) throws SQLException {
     return implementation.getColumnIndex(columnName);
   }
@@ -5730,6 +5734,7 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
 
   public static enum SourceType {
 
-    CSV;
+    CSV,
+    EXCEL;
   }
 }
