@@ -55,7 +55,7 @@ import javax.swing.event.ListDataEvent;
  *
  * @author domenbasic
  */
-public class SpringDataSource implements DbDataSourceImpl {
+public class SpringDataSource extends AbstractDataSourceImpl {
 
   public static final String SELECT_1 = "SELECT 1";
   private String selectSql;
