@@ -231,7 +231,7 @@ public class StatementProxy implements java.sql.Statement, Interruptable {
 
       return getActiveStatement().execute(sql);
     } catch (SQLException ex) {
-      Logger.getAnonymousLogger().log(Level.INFO, null, ex);
+      Logger.getAnonymousLogger().log(Level.INFO, null, ex.getMessage());
       throw ex;
     } finally {
       long endTime = System.currentTimeMillis();
