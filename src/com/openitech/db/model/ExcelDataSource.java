@@ -15,17 +15,12 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-/*
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-*/
+
+import org.apache.poi.ss.usermodel.*;
 
 /**
  *
@@ -41,29 +36,38 @@ public class ExcelDataSource extends FileDataSource {
   public boolean loadData(boolean reload, int oldRow) {
     boolean result = false;
 
-   /* if (isDataLoaded && !reload) {
+    if (isDataLoaded && !reload) {
       return false;
     }
     if (sourceFile != null) {
       try {
-        Workbook workBook = org.apache.poi.ss.usermodel.WorkbookFactory.create(new FileInputStream(sourceFile));
+        Workbook workBook = WorkbookFactory.create(new FileInputStream(sourceFile));
         //        HSSFWorkbook workBook = new HSSFWorkbook(new FileInputStream(sourceFile));
         Sheet sheet = workBook.getSheetAt(0);
-        Iterator<Row> rows = sheet.rowIterator();
+        DataFormatter dataFormatter = new DataFormatter(Locale.GERMANY);
+        FormulaEvaluator formulaEvaluator = workBook.getCreationHelper().createFormulaEvaluator();
+
+        int lastRowNum = sheet.getLastRowNum();
 
         boolean isFirstLineHeader = true;
 
         //count = sheet. - (isFirstLineHeader ? 1 : 0);
         int tempCount = 0;
-        while (rows.hasNext()) {
-          tempCount++;
-          Row row = rows.next();
+        for (int j = 0; j <= lastRowNum; j++) {
+          //zaène se z 0
+          Row row = row = sheet.getRow(j);
+          if (row == null) {
+            continue;
+          }
+
           // display row number in the console.
           System.out.println("Row No.: " + row.getRowNum());
-          if (isFirstLineHeader && tempCount == 1) {
+          if (isFirstLineHeader && row.getRowNum() == 0) {
             populateHeaders(row);
             continue;
           }
+          tempCount++;
+
 
           Map<String, DataColumn> values;
           if (rowValues.containsKey(row.getRowNum())) {
@@ -74,41 +78,56 @@ public class ExcelDataSource extends FileDataSource {
           }
 
           // once get a row its time to iterate through cells.
-          Iterator<Cell> cells = row.cellIterator();
-          int j = 0;
-          while (cells.hasNext()) {
+          int lastCellNum = row.getLastCellNum();
+          for (int i = 0; i <= lastCellNum; i++) {
             DataColumn dataColumn = new DataColumn();
-            Cell cell = cells.next();
+            Cell cell = row.getCell(i);
+            if (cell == null) {
+              continue;
+            }
             System.out.println("Cell No.: " + cell.getColumnIndex());
+            System.out.println("Value: " + dataFormatter.formatCellValue(cell));
+            if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
+              dataColumn = new DataColumn(dataFormatter.formatCellValue(cell, formulaEvaluator));
+            } else {
+              dataColumn = new DataColumn(dataFormatter.formatCellValue(cell));
+            }
 
             switch (cell.getCellType()) {
-              case HSSFCell.CELL_TYPE_NUMERIC: {
+              case Cell.CELL_TYPE_NUMERIC: {
                 // cell type numeric.
                 System.out.println("Numeric value: " + cell.getNumericCellValue());
-                dataColumn.setValue(cell.getNumericCellValue(), Double.class);
+                dataColumn = new DataColumn(dataFormatter.formatCellValue(cell));
                 break;
               }
-              case HSSFCell.CELL_TYPE_STRING:
+              case Cell.CELL_TYPE_STRING:
                 // cell type string.
                 System.out.println("String value: " + cell.getStringCellValue());
-                dataColumn.setValue(cell.getStringCellValue(), String.class);
+                dataColumn = new DataColumn(dataFormatter.formatCellValue(cell));
                 break;
-              case HSSFCell.CELL_TYPE_BOOLEAN:
+              case Cell.CELL_TYPE_BOOLEAN:
                 // cell type string.
                 System.out.println("String value: " + cell.getBooleanCellValue());
                 dataColumn.setValue(cell.getBooleanCellValue(), Boolean.class);
+                break;
+                case Cell.CELL_TYPE_FORMULA:
+                // cell type string.
+                System.out.println("Formula value: " + dataFormatter.formatCellValue(cell, formulaEvaluator));
+                dataColumn = new DataColumn(dataFormatter.formatCellValue(cell, formulaEvaluator));
                 break;
               default:
                 dataColumn.setValue(cell.getStringCellValue(), String.class);
                 break;
             }
 
+
             values.put(getColumnName(cell.getColumnIndex()).toUpperCase(), dataColumn);
 
           }
         }
+
         count = tempCount;
-        
+
         isDataLoaded = true;
         //se postavim na staro vrstico ali 1
         if (oldRow > 0) {
@@ -123,28 +142,45 @@ public class ExcelDataSource extends FileDataSource {
         result = false;
       }
     }
-*/
+
 
     return result;
   }
-/*
+
   private void populateHeaders(Row row) {
-    Iterator<Cell> cells = row.cellIterator();
-    while (cells.hasNext()) {
-      Cell cell = cells.next();
+    columnCount = 0;
+    int lastCellNum = row.getLastCellNum();
+    for (int i = 0; i <= lastCellNum; i++) {
+      Cell cell = row.getCell(i);
+      if (cell == null) {
+        continue;
+      }
 
       System.out.println("String value: " + cell.getStringCellValue());
 
       String header = cell.getStringCellValue();
       columnMapping.put(header, cell.getColumnIndex());
       columnMappingIndex.put(cell.getColumnIndex(), header);
+      columnCount++;
     }
   }
-*/
+
   @Override
   protected <T> T getStoredValue(int row, String columnName, T nullValue, Class<? extends T> type) throws SQLException {
 
     columnName = columnName.toUpperCase();
+    if (columnReader != null) {
+      String sourceColumnName = columnReader.getColumnName(columnName, columnMapping, columnMappingIndex);
+      Class sourceType = columnReader.getColumnType(columnName);
+      if (sourceColumnName != null) {
+        columnName = sourceColumnName.toUpperCase();
+      }
+
+      if (sourceType != null) {
+        type = sourceType;
+      }
+    }
+
     Object result = nullValue;
     Integer r = new Integer(row);
 
