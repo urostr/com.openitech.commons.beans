@@ -16,8 +16,6 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -31,6 +29,9 @@ public class DataColumn {
   private static final java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("d.M.yyyy");
   private static final java.text.SimpleDateFormat dfts = new java.text.SimpleDateFormat("d.M.yyyy hh:mm");
   private static final java.text.SimpleDateFormat dftss = new java.text.SimpleDateFormat("d.M.yyyy hh:mm:ss");
+  private static final java.text.SimpleDateFormat dfEN = new java.text.SimpleDateFormat("M/d/y");
+  private static final java.text.SimpleDateFormat dfENts = new java.text.SimpleDateFormat("M/d/y hh:mm");
+  private static final java.text.SimpleDateFormat dfENtss = new java.text.SimpleDateFormat("M/d/y hh:mm:ss");
   private static final java.text.SimpleDateFormat dfsql = new java.text.SimpleDateFormat("yyyy-MM-dd");
   private static final java.text.SimpleDateFormat dfsqlts = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm");
   private static final java.text.SimpleDateFormat dfsqltss = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -162,6 +163,8 @@ public class DataColumn {
         result.value = new java.sql.Timestamp(parseDate(value, dftss, dfts, df).getTime());
       } else if (value.contains("-")) {
         result.value = new java.sql.Timestamp(parseDate(value, dfsqltsss, dfsqltss, dfsqlts, dfsql).getTime());
+      } else if (value.contains("/")) {
+        result.value = new java.sql.Timestamp(parseDate(value, dfENtss, dfENts, dfEN).getTime());
       } else {
         result.value = new java.sql.Timestamp(parseDate(value, dfplaintss, dfplaints, dfplain).getTime());
       }
