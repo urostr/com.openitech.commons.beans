@@ -168,6 +168,11 @@ public class DbDataSource implements DbNavigatorDataSource, Locking, RowSet {
       case CSV:
         init(DbDataSourceFactory.getInstance().createDbDataSource(this, CSVDataSource.class), null, null);
         break;
+      case EXCEL:
+        init(DbDataSourceFactory.getInstance().createDbDataSource(this, ExcelDataSource.class), null, null);
+        break;
+      default:
+        throw new IllegalArgumentException("Unrecognised Source Type!");
     }
     if (implementation != null) {
       setSource(sourceFile);
