@@ -115,6 +115,7 @@ public class CSVDataSource extends FileDataSource {
       columnMapping.put(header, i + 1);
       columnMappingIndex.put(i + 1, header);
     }
+    columnCount = headers.length;
   }
 
   @Override
@@ -123,7 +124,7 @@ public class CSVDataSource extends FileDataSource {
     columnName = columnName.toUpperCase();
     if(columnReader != null){
       String sourceColumnName = columnReader.getColumnName(columnName, columnMapping, columnMappingIndex);
-      Class<? extends T> sourceType = columnReader.getColumnType(columnName);
+      Class sourceType = columnReader.getColumnType(columnName);
       if(sourceColumnName != null){
         columnName = sourceColumnName.toUpperCase();
       }
