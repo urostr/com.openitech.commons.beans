@@ -4174,7 +4174,7 @@ public abstract class FileDataSource extends AbstractDataSourceImpl {
       if (containsKey(key)) {
         return get(key);
       } else {
-        throw new SQLException("DbDataSource for 'CSV" + "' does not contain '" + key.toString() + "'.");
+        throw new SQLException("DbDataSource for 'File"+ (sourceFile == null ? "null" : sourceFile.getName()) + "' does not contain '" + key.toString() + "'.");
       }
     }
 
