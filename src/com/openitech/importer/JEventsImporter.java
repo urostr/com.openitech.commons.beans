@@ -164,9 +164,9 @@ public class JEventsImporter implements JImporter {
     return null;
   }
 
-  public boolean isCSV() {
+  public boolean isFileImport() {
     ImportSource source = eventImporter.getSource();
-    if (source != null && source.equals(ImportSource.CSV)) {
+    if (source != null && !source.equals(ImportSource.WORKAREA)) {
       return true;
     }
     return false;
