@@ -13,6 +13,7 @@ import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
+import com.openitech.db.components.dogodki.DbReport;
 import com.openitech.db.connection.DbConnection;
 import com.openitech.db.filters.DataSourceFilters;
 import com.openitech.db.model.DbDataSource;
@@ -48,8 +49,10 @@ import com.openitech.value.events.EventPK;
 import com.openitech.value.events.EventQueryParameter;
 import com.openitech.value.events.SqlEventPK;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -85,6 +88,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
+import net.sf.jasperreports.engine.JasperReport;
 
 /**
  *
@@ -165,7 +169,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement getActivity;
   PreparedStatement getActivityEvent;
   PreparedStatement findIdSifre;
-
 
   @Override
   public boolean getRunParameterBoolean(String parameter, boolean defaultValue) {
@@ -701,6 +704,33 @@ public class SqlUtilitesImpl extends SqlUtilities {
       }
       return result > 0;
     }
+  }
+
+  @Override
+  public DbReport getReport(String reportName) throws SQLException {
+    DbReport result = null;
+    try {
+      SqlUtilities sqlUtilities = SqlUtilities.getInstance();
+      Event evReport = new Event(0, "REP01");
+      final FieldValue fvReportName = new FieldValue("REPORT_NAME", java.sql.Types.VARCHAR, reportName);
+      evReport.addValue(fvReportName);
+      evReport.setPrimaryKey(fvReportName);
+
+      Event storedReport = sqlUtilities.findEvent(evReport);
+      if (storedReport != null) {
+
+//        result.setFileBytes();
+        Blob serializedBlob = (Blob) Event.getValue(storedReport, "REPORT_SERIALIZED");
+        Blob fileArray = (Blob) Event.getValue(storedReport, ("REPORT_FILE"));
+        String xmlParameters = (String) Event.getValue(storedReport, "REPORT_PARAMETERS");
+
+        result = new DbReport(reportName, fileArray.getBytes(1, (int) fileArray.length()), serializedBlob, xmlParameters);
+      }
+    } catch (Exception ex) {
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, null, ex);
+      throw new SQLException(ex);
+    }
+    return result;
   }
 
   @Override
@@ -2198,40 +2228,38 @@ public class SqlUtilitesImpl extends SqlUtilities {
     }
     return temporaryTable;
   }
-
   private final String EV_FIND_IDSIFRE = ReadInputStream.getResourceAsString(getClass(), "findIdSifre.sql", "cp1250");
-
 
   @Override
   public String[] getSifre(int idSifranta) {
-      List<String> result = new ArrayList<String>();
+    List<String> result = new ArrayList<String>();
+    try {
+      Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
       try {
-        Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
-        try {
-          PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
+        PreparedStatement findIdSifre = temporaryConnection.prepareStatement(EV_FIND_IDSIFRE);
 
-          findIdSifre.setInt(1, idSifranta);
-          ResultSet rsIdSifre = findIdSifre.executeQuery();
+        findIdSifre.setInt(1, idSifranta);
+        ResultSet rsIdSifre = findIdSifre.executeQuery();
 
-          while (rsIdSifre.next()) {
-            result.add(rsIdSifre.getString(1));
-          }
-        } finally {
-          temporaryConnection.close();
+        while (rsIdSifre.next()) {
+          result.add(rsIdSifre.getString(1));
         }
-      } catch (SQLException ex) {
-        Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
+      } finally {
+        temporaryConnection.close();
       }
-
-      return result.toArray(new String[result.size()]);
+    } catch (SQLException ex) {
+      Logger.getLogger(SqlUtilitesImpl.class.getName()).log(Level.SEVERE, null, ex);
     }
-  
+
+    return result.toArray(new String[result.size()]);
+  }
+
   @Override
   public boolean isViewReady(int idSifranta, String idSifre) {
     final String eventsDb = SqlUtilities.getEventsDB();
-    
-    String  eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "]";
-    String  eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "_valid]";
+
+    String eventsViewVersioned = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "]";
+    String eventsViewValid = eventsDb + ".[dbo].[E_" + idSifranta + (idSifre == null ? "" : "_" + idSifre) + "_valid]";
 
     return isViewReady(eventsDb, eventsViewVersioned) && isViewReady(eventsDb, eventsViewValid);
   }
@@ -3298,8 +3326,6 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
       refreshParameters();
     }
-
-    
 
     private void createEventViews(int idSifranta) {
       final String eventsDb = SqlUtilities.getEventsDB();
@@ -4585,7 +4611,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   private void prepareFieldModel(Field f, String value, StringBuilder sbresult, StringBuilder sbSearch) {
     final FieldModel model = f.getModel();
-    
+
     if (model != null && model.getQuery() != null) {
       if (model.getQuery().getSelect() != null) {
         for (String sql : model.getQuery().getSelect().getSQL()) {
