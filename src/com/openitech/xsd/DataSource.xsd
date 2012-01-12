@@ -198,6 +198,14 @@
                         </xsd:sequence>
                       </xsd:complexType>
                     </xsd:element>
+                    <xsd:element name="ReportPrint">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="Name" maxOccurs="1" type="xsd:string"/>
+                        </xsd:sequence>
+                        <xsd:attribute name="DontMerge" type="xsd:boolean"/>
+                      </xsd:complexType>
+                    </xsd:element>
                   </xsd:choice>
                   <xsd:attribute name="Title" type="xsd:string"/>
                 </xsd:complexType>
