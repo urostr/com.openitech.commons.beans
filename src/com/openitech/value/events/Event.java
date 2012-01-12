@@ -536,6 +536,7 @@ public class Event extends EventType implements Cloneable {
       for (FieldValue fieldValue : event.getValues()) {
         if (fieldValue.equals(field)) {
           value = fieldValue.getValue();
+          result = value;
           break;
         }
       }
