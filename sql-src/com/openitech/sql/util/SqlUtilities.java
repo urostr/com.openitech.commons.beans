@@ -10,6 +10,7 @@ import com.openitech.value.fields.FieldValue;
 import com.openitech.value.fields.Field;
 import com.openitech.db.connection.ConnectionManager;
 import com.openitech.db.components.DbNaslovDataModel;
+import com.openitech.db.components.dogodki.DbReport;
 import com.openitech.db.connection.DbConnection;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
@@ -41,6 +42,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.serial.SerialClob;
+import net.sf.jasperreports.engine.JasperReport;
 
 /**
  *
@@ -754,6 +756,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract TemporaryTable getCachedTemporaryTable(String value);
 
   public abstract String[] getSifre(int idSifranta);
+
+  public abstract DbReport getReport(String reportName) throws SQLException;
 
   public static enum Operation {
 
