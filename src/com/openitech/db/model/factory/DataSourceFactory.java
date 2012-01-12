@@ -4,9 +4,7 @@
  */
 package com.openitech.db.model.factory;
 
-import com.openitech.db.components.dogodki.BackTask;
-import com.openitech.db.components.dogodki.InsertTask;
-import com.openitech.db.components.dogodki.OpenWorkAreaTask;
+import com.openitech.db.components.dogodki.EventTask;
 import com.openitech.db.events.ActiveRowChangeListener;
 import com.openitech.db.model.DataSourceObserver;
 import com.openitech.db.filters.DataSourceLimit;
@@ -22,7 +20,6 @@ import com.openitech.db.model.xml.config.Factory;
 import com.openitech.db.model.xml.config.Importer;
 import com.openitech.db.model.xml.config.Importer.Destination;
 import com.openitech.db.model.xml.config.Importer.Destination.Column;
-import com.openitech.db.model.xml.config.Importer.Destination.Column.SourceColumn;
 import com.openitech.db.model.xml.config.Workarea.AssociatedTasks;
 import com.openitech.db.model.xml.config.Workarea.DataSource;
 import com.openitech.db.model.xml.config.Workarea.DataSource.CreationParameters;
@@ -748,16 +745,24 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             ((JXDataSourceTaskPane) newInstance).setTitle(taskPane.getTitle());
             ((JXDataSourceTaskPane) newInstance).addTasks(taskPane.getTaskList().getTasks());
           } else if (taskPane.getAutoInsert() != null && taskPane.getAutoInsert().isAutoInsert()) {
-            newInstance = new InsertTask(taskPane.getTitle(), taskPane.getAutoInsert().isDontMerge());
+            newInstance = new EventTask(taskPane.getTitle(), taskPane.getAutoInsert().isDontMerge());
+            ((EventTask) newInstance).setType(EventTask.TaskType.INSERT);
           } else if (taskPane.getBack() != null && taskPane.getBack().isBack()) {
-            newInstance = new BackTask(taskPane.getTitle(), taskPane.getBack().isDontMerge());
+            newInstance = new EventTask(taskPane.getTitle(), taskPane.getBack().isDontMerge());
+            ((EventTask) newInstance).setType(EventTask.TaskType.BACK);
           } else if (taskPane.getOpenWorkArea() != null) {
             TaskPanes.OpenWorkArea openWorkArea = taskPane.getOpenWorkArea();
-            newInstance = new OpenWorkAreaTask(taskPane.getTitle(), openWorkArea.getWorkSpaceId(), openWorkArea.getWorkAreaId(), openWorkArea.isOpenDataEntry(), openWorkArea.isDontMerge());
+            newInstance = new EventTask(taskPane.getTitle(), openWorkArea.getWorkSpaceId(), openWorkArea.getWorkAreaId(), openWorkArea.isOpenDataEntry(), openWorkArea.isDontMerge());
+            ((EventTask) newInstance).setType(EventTask.TaskType.OPEN_WORK_AREA);
+          }else if (taskPane.getReportPrint() != null) {
+            newInstance = new EventTask(taskPane.getTitle(), taskPane.getReportPrint().isDontMerge());
+            ((EventTask) newInstance).setReportName(taskPane.getReportPrint().getName());
+            ((EventTask) newInstance).setType(EventTask.TaskType.REPORT);
           } else if (taskPane.getDefaultTask() != null) {
             DefaultTask defaultTask = taskPane.getDefaultTask();
             //this.editable = !defaultTask.isHide();
-            newInstance = (new com.openitech.db.components.dogodki.DefaultTask(defaultTask.getTitle(), defaultTask.getTaskTitle(), defaultTask.isHide() == null ? false : defaultTask.isHide()));
+            newInstance = (new EventTask(defaultTask.getTitle(), defaultTask.getTaskTitle(), defaultTask.isHide() == null ? false : defaultTask.isHide()));
+            ((EventTask) newInstance).setType(EventTask.TaskType.DEFAULT);
           }
           if (newInstance != null) {
             if (newInstance instanceof DataSourceObserver) {
