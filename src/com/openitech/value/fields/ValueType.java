@@ -279,7 +279,7 @@ public enum ValueType {
 
     @Override
     public Class getSqlClass() {
-      return Object.class;
+      return java.io.File.class;
     }
   };
 
