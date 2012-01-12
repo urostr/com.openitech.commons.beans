@@ -4,9 +4,7 @@
  */
 package com.openitech.db.components.dogodki;
 
-import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.xml.config.Workarea.WorkSpaceInformation.Panels;
-import com.openitech.db.model.xml.config.Workarea.WorkSpaceInformation.Panels.Model;
 import java.awt.Component;
 import javax.swing.JPanel;
 
