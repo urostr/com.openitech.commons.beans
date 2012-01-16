@@ -5,6 +5,7 @@
 package com.openitech.db.components.dogodki;
 
 import com.openitech.db.filters.DataSourceFiltersMap;
+import com.openitech.db.filters.DataSourceLimit;
 import com.openitech.db.model.DbDataModel;
 import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.factory.DataSourceConfig;
@@ -12,6 +13,7 @@ import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.factory.JaxbUnmarshaller;
 import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.DataSource;
+import com.openitech.events.concurrent.DataSourceEvent;
 import com.openitech.sql.SQLWorker;
 import java.io.ObjectInputStream;
 import java.sql.Blob;
@@ -53,16 +55,16 @@ public class DbReport {
 
 
     workArea = (Workarea) JaxbUnmarshaller.getInstance().unmarshall(Workarea.class, xmlParameters);
-    if(workArea != null){
-     final DbDataModel dbDataModel = new DbDataModel() {
+    if (workArea != null) {
+      final DbDataModel dbDataModel = new DbDataModel() {
 
         @Override
         public Map<String, Document> getDocuments() {
           return new HashMap<String, Document>();
         }
       };
-    factory = new DataSourceFactory(dbDataModel);
-    factory.configure("Report", workArea, new DataSourceConfig(dbDataModel));
+      factory = new DataSourceFactory(dbDataModel);
+      factory.configure("Report", workArea, new DataSourceConfig(dbDataModel));
     }
   }
 
@@ -92,7 +94,19 @@ public class DbReport {
       }
     }
     if (result == null) {
-      sourceDataSource.reload(false);
+      for (Object param : sourceDataSource.getParameters()) {
+        if (param instanceof DataSourceLimit) {
+          final DataSourceLimit limitParam = (DataSourceLimit) param;
+          if (!limitParam.getValue().equals(DataSourceLimit.Limit.LALL)) {
+            DataSourceEvent.suspend(sourceDataSource);
+            limitParam.setValue(DataSourceLimit.Limit.LALL);
+            DataSourceEvent.cancel(sourceDataSource);
+            sourceDataSource.reload(false);
+            DataSourceEvent.resume(sourceDataSource);
+          }
+        }
+      }
+
       result = sourceDataSource.getResultSet();
     }
 
@@ -100,9 +114,9 @@ public class DbReport {
   }
 
   public boolean hasParameters() {
-    if(factory != null){
+    if (factory != null) {
       DataSourceFiltersMap filtersMap = factory.getFiltersMap();
-      if(filtersMap != null){
+      if (filtersMap != null) {
         return filtersMap.size() > 0;
       }
     }
