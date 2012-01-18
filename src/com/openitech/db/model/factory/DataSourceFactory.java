@@ -836,6 +836,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             for (Column column : eventColumns) {
               String imePolja = column.getColumnName();
               boolean lookup = column.isLookup();
+              String identityGroupBy = column.getIdentityGroupBy();
 
               Field field = Field.getField(imePolja);
               if (field == null) {
@@ -855,6 +856,10 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
                 if (!eventColumnsList.contains(field)) {
                   eventColumnsList.add(field);
                 }
+              }
+
+              if(identityGroupBy != null){
+                eventColumnsList.add(new FieldValueProxy(identityGroupBy, java.sql.Types.INTEGER));
               }
 
               if (field != null) {
