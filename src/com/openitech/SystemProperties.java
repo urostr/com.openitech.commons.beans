@@ -241,27 +241,34 @@ public class SystemProperties {
 
   public static class ProxyConfig {
 
+    private static boolean useSystemProxies;
     private static String host;
     private static int port;
 
     public static void init() {
-      String useSystemProxies = System.getProperty("java.net.useSystemProxies", "true");
-      System.setProperty("java.net.useSystemProxies", "true");
-      Proxy proxy = getProxy();
-      if (proxy != null) {
-        InetSocketAddress addr = (InetSocketAddress) proxy.address();
-        
-        if (addr != null) {
-          host = addr.getHostName();
-          port = addr.getPort();
+      useSystemProxies = Boolean.valueOf(System.getProperty("java.net.useSystemProxies", "true"));
+      if (useSystemProxies) {
+        System.setProperty("java.net.useSystemProxies", "true");
+        Proxy proxy = getSystemProxy();
+        if (proxy != null) {
+          InetSocketAddress addr = (InetSocketAddress) proxy.address();
+
+          if (addr != null) {
+            host = addr.getHostName();
+            port = addr.getPort();
 
 //          System.setProperty("java.net.useSystemProxies", "false");
-          System.setProperty("ws.http.proxyHost", host);
-          System.setProperty("ws.http.proxyPort", "" + port);
-        }
+            System.setProperty("ws.http.proxyHost", host);
+            System.setProperty("ws.http.proxyPort", "" + port);
+          }
 
+        }
+        System.setProperty("java.net.useSystemProxies", Boolean.toString(useSystemProxies));
       }
-      System.setProperty("java.net.useSystemProxies", useSystemProxies);
+    }
+
+    public static boolean isUseProxy() {
+      return useSystemProxies && host != null;
     }
 
     public static String getHost() {
@@ -271,8 +278,12 @@ public class SystemProperties {
     public static int getPort() {
       return port;
     }
+    
+    public static Proxy getProxy() {
+      return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, port));
+    }
 
-    private static Proxy getProxy() {
+    private static Proxy getSystemProxy() {
       List<Proxy> l = null;
       try {
         ProxySelector def = ProxySelector.getDefault();

@@ -4,6 +4,7 @@
  */
 package com.openitech.maps.google;
 
+import com.openitech.SystemProperties;
 import com.openitech.db.components.DbNaslovDataModel.Naslov;
 import com.openitech.maps.Maps;
 import com.openitech.maps.Maps.Location.Quality;
@@ -217,13 +218,10 @@ public class GoogleMaps extends Maps {
   private URLConnection getHTTPConnection(StringBuilder address) throws MalformedURLException, IOException {
     URL url = new URL(address.toString());
     
-    String proxyHost = System.getProperty("ws.http.proxyHost", null);
-    String proxyPort = System.getProperty("ws.http.proxyPort", "80");
     URLConnection load;
 
-    if (proxyHost != null) {
-      Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.parseInt(proxyPort)));
-      load = url.openConnection(proxy);
+    if (SystemProperties.ProxyConfig.isUseProxy()) {
+      load = url.openConnection(SystemProperties.ProxyConfig.getProxy());
     } else {
       load = url.openConnection();
     }
