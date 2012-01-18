@@ -23,10 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.text.Document;
-import javax.xml.bind.JAXBException;
 import net.sf.jasperreports.engine.JasperReport;
 
 /**
@@ -53,8 +50,9 @@ public class DbReport {
     ObjectInputStream oin = new ObjectInputStream((serializedBlob).getBinaryStream());
     jasperReport = (JasperReport) oin.readObject();
 
-
-    workArea = (Workarea) JaxbUnmarshaller.getInstance().unmarshall(Workarea.class, xmlParameters);
+    if(xmlParameters != null && xmlParameters.length() > 0){
+      workArea = (Workarea) JaxbUnmarshaller.getInstance().unmarshall(Workarea.class, xmlParameters);
+    }
     if (workArea != null) {
       final DbDataModel dbDataModel = new DbDataModel() {
 
