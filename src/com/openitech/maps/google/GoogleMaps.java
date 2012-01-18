@@ -7,10 +7,16 @@ package com.openitech.maps.google;
 import com.openitech.db.components.DbNaslovDataModel.Naslov;
 import com.openitech.maps.Maps;
 import com.openitech.maps.Maps.Location.Quality;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.net.URL;
 
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,11 +80,10 @@ public class GoogleMaps extends Maps {
       postnaStevilka = postnaStevilka == null ? null : URLEncoder.encode(postnaStevilka, "UTF-8");
       posta = posta == null ? null : URLEncoder.encode(posta, "UTF-8");
       StringBuilder address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, posta, postnaStevilka);
-
-      URL load = new URL(address.toString());
+      URLConnection load = getHTTPConnection(address);     
 
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-      Document doc = builder.parse(load.openConnection().getInputStream());
+      Document doc = builder.parse(load.getInputStream());
 
 
       String status = xpGeocodeStatus.evaluate(doc);
@@ -92,8 +97,8 @@ public class GoogleMaps extends Maps {
         if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, postnaStevilka);
 
-          load = new URL(address.toString());
-          doc = builder.parse(load.openConnection().getInputStream());
+          load = getHTTPConnection(address);
+          doc = builder.parse(load.getInputStream());
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
@@ -108,8 +113,8 @@ public class GoogleMaps extends Maps {
         if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodeUlica(ulica, hisnaStevilka, hisnaStevilkaDodatek, naselje, postnaStevilka);
 
-          load = new URL(address.toString());
-          doc = builder.parse(load.openConnection().getInputStream());
+          load = getHTTPConnection(address);
+          doc = builder.parse(load.getInputStream());
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
@@ -124,8 +129,8 @@ public class GoogleMaps extends Maps {
         if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodePostnaStevilka(postnaStevilka, posta);
 
-          load = new URL(address.toString());
-          doc = builder.parse(load.openConnection().getInputStream());
+          load = getHTTPConnection(address);
+          doc = builder.parse(load.getInputStream());
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
@@ -140,8 +145,8 @@ public class GoogleMaps extends Maps {
         if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodePosta(postnaStevilka);
 
-          load = new URL(address.toString());
-          doc = builder.parse(load.openConnection().getInputStream());
+          load = getHTTPConnection(address);
+          doc = builder.parse(load.getInputStream());
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
@@ -156,8 +161,8 @@ public class GoogleMaps extends Maps {
         if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodePosta(posta);
 
-          load = new URL(address.toString());
-          doc = builder.parse(load.openConnection().getInputStream());
+          load = getHTTPConnection(address);
+          doc = builder.parse(load.getInputStream());
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
@@ -170,8 +175,8 @@ public class GoogleMaps extends Maps {
         if (ZERO_RESULTS.equals(status)||!isResultValid(doc)) {
           address = encodePosta(naselje);
 
-          load = new URL(address.toString());
-          doc = builder.parse(load.openConnection().getInputStream());
+          load = getHTTPConnection(address);
+          doc = builder.parse(load.getInputStream());
 
           status = xpGeocodeStatus.evaluate(doc);
           Logger.getLogger(GoogleMaps.class.getName()).log(Level.INFO, "{0}:{1}", new Object[]{address, status});
@@ -208,7 +213,23 @@ public class GoogleMaps extends Maps {
 
     return result;
   }
-  
+
+  private URLConnection getHTTPConnection(StringBuilder address) throws MalformedURLException, IOException {
+    URL url = new URL(address.toString());
+    
+    String proxyHost = System.getProperty("ws.http.proxyHost", null);
+    String proxyPort = System.getProperty("ws.http.proxyPort", "80");
+    URLConnection load;
+
+    if (proxyHost != null) {
+      Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.parseInt(proxyPort)));
+      load = url.openConnection(proxy);
+    } else {
+      load = url.openConnection();
+    }
+    return load;
+  }
+
   private boolean isResultValid(Document doc) throws XPathExpressionException {
     NodeList nodes = (NodeList) xpResults.evaluate(doc, XPathConstants.NODESET);
     
@@ -353,10 +374,10 @@ public class GoogleMaps extends Maps {
 
       address.append("&sensor=false");
 
-      URL load = new URL(address.toString());
+      URLConnection load = getHTTPConnection(address);
 
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-      Document doc = builder.parse(load.openConnection().getInputStream());
+      Document doc = builder.parse(load.getInputStream());
       
 //      dumpXML(doc);
       

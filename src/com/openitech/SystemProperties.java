@@ -245,6 +245,7 @@ public class SystemProperties {
     private static int port;
 
     public static void init() {
+      String useSystemProxies = System.getProperty("java.net.useSystemProxies", "true");
       System.setProperty("java.net.useSystemProxies", "true");
       Proxy proxy = getProxy();
       if (proxy != null) {
@@ -254,13 +255,13 @@ public class SystemProperties {
           host = addr.getHostName();
           port = addr.getPort();
 
-          System.setProperty("java.net.useSystemProxies", "false");
-          System.setProperty("http.proxyHost", host);
-          System.setProperty("http.proxyPort", "" + port);
+//          System.setProperty("java.net.useSystemProxies", "false");
+          System.setProperty("ws.http.proxyHost", host);
+          System.setProperty("ws.http.proxyPort", "" + port);
         }
 
       }
-      System.setProperty("java.net.useSystemProxies", "false");
+      System.setProperty("java.net.useSystemProxies", useSystemProxies);
     }
 
     public static String getHost() {
