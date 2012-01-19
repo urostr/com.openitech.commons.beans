@@ -41,8 +41,6 @@ public class JdSupport extends javax.swing.JDialog {
   private void initComponents() {
     java.awt.GridBagConstraints gridBagConstraints;
 
-    jLabel1 = new javax.swing.JLabel();
-    jtfTitle = new com.openitech.db.components.JDbTextField();
     jLabel2 = new javax.swing.JLabel();
     jScrollPane1 = new javax.swing.JScrollPane();
     jtfOpis = new com.openitech.db.components.JDbTextArea();
@@ -53,16 +51,11 @@ public class JdSupport extends javax.swing.JDialog {
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
     getContentPane().setLayout(new java.awt.GridBagLayout());
 
-    jLabel1.setText("Naslov");
-    getContentPane().add(jLabel1, new java.awt.GridBagConstraints());
+    jLabel2.setText("Opis napake");
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.weightx = 1.0;
-    getContentPane().add(jtfTitle, gridBagConstraints);
-
-    jLabel2.setText("Opis");
-    getContentPane().add(jLabel2, new java.awt.GridBagConstraints());
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+    getContentPane().add(jLabel2, gridBagConstraints);
 
     jtfOpis.setColumns(20);
     jtfOpis.setRows(15);
@@ -78,7 +71,7 @@ public class JdSupport extends javax.swing.JDialog {
     jPanel1.setLayout(new java.awt.GridBagLayout());
 
     jbPotrdi.setOperation(com.openitech.db.components.JDbControlButton.Operation.CONFIRM);
-    jbPotrdi.setText("Potrdi");
+    jbPotrdi.setText("Pošlji");
     jbPotrdi.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         jbPotrdiActionPerformed(evt);
@@ -105,7 +98,7 @@ public class JdSupport extends javax.swing.JDialog {
     private void jbPotrdiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPotrdiActionPerformed
       //
       if(resultProcessor != null){
-        resultProcessor.process(new Result(jtfTitle.getText(), jtfOpis.getText(), Result.OK));
+        resultProcessor.process(new Result("Napaka", jtfOpis.getText(), Result.OK));
       }
       setVisible(false);
       //
@@ -123,14 +116,12 @@ public class JdSupport extends javax.swing.JDialog {
    
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
-  private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JScrollPane jScrollPane1;
   private com.openitech.db.components.JDbControlButton jbPotrdi;
   private com.openitech.db.components.JDbControlButton jbPreklici;
   private com.openitech.db.components.JDbTextArea jtfOpis;
-  private com.openitech.db.components.JDbTextField jtfTitle;
   // End of variables declaration//GEN-END:variables
 
 }
