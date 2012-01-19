@@ -246,8 +246,8 @@ public class SystemProperties {
     private static int port;
 
     public static void init() {
-      useSystemProxies = Boolean.valueOf(System.getProperty("java.net.useSystemProxies", "true"));
-      if (useSystemProxies) {
+      useSystemProxies = Boolean.valueOf(System.getProperty("java.net.useSystemProxies", "false"));
+      if (host == null) {
         System.setProperty("java.net.useSystemProxies", "true");
         Proxy proxy = getSystemProxy();
         if (proxy != null) {
@@ -267,8 +267,8 @@ public class SystemProperties {
       }
     }
 
-    public static boolean isUseProxy() {
-      return useSystemProxies && host != null;
+    public static boolean isUseWSProxy() {
+      return host != null;
     }
 
     public static String getHost() {
