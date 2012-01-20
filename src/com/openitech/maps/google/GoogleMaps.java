@@ -220,8 +220,8 @@ public class GoogleMaps extends Maps {
     
     URLConnection load;
 
-    if (SystemProperties.ProxyConfig.isUseWSProxy()) {
-      load = url.openConnection(SystemProperties.ProxyConfig.getProxy());
+    if (SystemProperties.HttpProxyConfig.isUseHttpProxy()) {
+      load = url.openConnection(SystemProperties.HttpProxyConfig.getProxy());
     } else {
       load = url.openConnection();
     }

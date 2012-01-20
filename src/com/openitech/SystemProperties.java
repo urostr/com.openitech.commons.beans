@@ -179,8 +179,6 @@ public class SystemProperties {
     if (System.getProperty("view.pdfs", "").length() == 0) {
       System.setProperty("view.pdfs", "true");
     }
-
-    ProxyConfig.init();
   }
 
   public static boolean loadLibrary(String libraryName, String suffix) {
@@ -239,47 +237,48 @@ public class SystemProperties {
     }
   }
 
-  public static class ProxyConfig {
+  public static class HttpProxyConfig {
 
     private static boolean useSystemProxies;
     private static String host;
     private static int port;
+    private static boolean init = false;
+    private static final Object lock = new Object();
 
     public static void init() {
-      useSystemProxies = Boolean.valueOf(System.getProperty("java.net.useSystemProxies", "false"));
-      if (host == null) {
-        System.setProperty("java.net.useSystemProxies", "true");
-        Proxy proxy = getSystemProxy();
-        if (proxy != null) {
-          InetSocketAddress addr = (InetSocketAddress) proxy.address();
+      synchronized (lock) {
+        if (!init) {
+          useSystemProxies = Boolean.valueOf(System.getProperty("java.net.useSystemProxies", "false"));
+          if (host == null) {
+            System.setProperty("java.net.useSystemProxies", "true");
+            Proxy proxy = getSystemProxy();
+            if (proxy != null) {
+              InetSocketAddress addr = (InetSocketAddress) proxy.address();
 
-          if (addr != null) {
-            host = addr.getHostName();
-            port = addr.getPort();
+              if (addr != null) {
+                host = addr.getHostName();
+                port = addr.getPort();
 
 //          System.setProperty("java.net.useSystemProxies", "false");
-            System.setProperty("ws.http.proxyHost", host);
-            System.setProperty("ws.http.proxyPort", "" + port);
-          }
+                System.setProperty("ws.http.proxyHost", host);
+                System.setProperty("ws.http.proxyPort", "" + port);
+              }
 
+              init = true;
+            }
+            System.setProperty("java.net.useSystemProxies", Boolean.toString(useSystemProxies));
+          }
         }
-        System.setProperty("java.net.useSystemProxies", Boolean.toString(useSystemProxies));
       }
     }
 
-    public static boolean isUseWSProxy() {
+    public static boolean isUseHttpProxy() {
+      init();
       return host != null;
-    }
-
-    public static String getHost() {
-      return host;
-    }
-
-    public static int getPort() {
-      return port;
     }
     
     public static Proxy getProxy() {
+      init();
       return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, port));
     }
 
