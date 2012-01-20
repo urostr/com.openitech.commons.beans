@@ -266,13 +266,13 @@ public class SystemProperties {
                 System.setProperty("http.proxyHost", host);
                 System.setProperty("http.proxyPort", "" + port);
               }
-
-              init = true;
             }
             System.setProperty("java.net.useSystemProxies", Boolean.toString(useSystemProxies));
           } else {
             port = Integer.valueOf(System.getProperty("http.proxyPort", "80"));
           }
+          
+          init = true;
         }
       }
     }
