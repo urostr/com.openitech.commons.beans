@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 /**
@@ -24,10 +25,20 @@ public abstract class AbstractSQLConnection implements DbConnection {
   private transient WeakListenerList actionListeners;
   private final DbConnection implementation;
   protected final Properties settings = new Properties();
+  private final static String SYSTEM_PREFIX = "system.";
 
   public AbstractSQLConnection() {
     settings.putAll(loadProperites("connection.properties"));
     settings.putAll(System.getProperties());
+
+    for (Entry<Object, Object> entry : settings.entrySet()) {
+      String key = entry.getKey().toString();
+
+      if (key.startsWith(SYSTEM_PREFIX)) {
+        System.getProperties().put(key.substring(SYSTEM_PREFIX.length()), entry.getValue());
+      }
+    }
+
     if (Boolean.parseBoolean(settings.getProperty(DB_USE_RECONNECT, "false"))) {
       implementation = new ReconnectableSQLConnection(this);
     } else {
