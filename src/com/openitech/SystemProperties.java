@@ -249,6 +249,9 @@ public class SystemProperties {
       synchronized (lock) {
         if (!init) {
           useSystemProxies = Boolean.valueOf(System.getProperty("java.net.useSystemProxies", "false"));
+          
+          host = System.getProperty("http.proxyHost", null);
+          
           if (host == null) {
             System.setProperty("java.net.useSystemProxies", "true");
             Proxy proxy = getSystemProxy();
@@ -260,13 +263,15 @@ public class SystemProperties {
                 port = addr.getPort();
 
 //          System.setProperty("java.net.useSystemProxies", "false");
-                System.setProperty("ws.http.proxyHost", host);
-                System.setProperty("ws.http.proxyPort", "" + port);
+                System.setProperty("http.proxyHost", host);
+                System.setProperty("http.proxyPort", "" + port);
               }
 
               init = true;
             }
             System.setProperty("java.net.useSystemProxies", Boolean.toString(useSystemProxies));
+          } else {
+            port = Integer.valueOf(System.getProperty("http.proxyPort", "80"));
           }
         }
       }
