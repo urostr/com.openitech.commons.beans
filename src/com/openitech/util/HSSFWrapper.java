@@ -9,6 +9,7 @@ import com.openitech.swing.JWProgressMonitor;
 import com.openitech.db.model.DbTableModel;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -39,6 +40,7 @@ public class HSSFWrapper {
 
   private HSSFWrapper() {
   }
+
   public static final HSSFWorkbook getWorkbook(JTable source) {
     return getWorkbook(source, false);
   }
@@ -62,11 +64,11 @@ public class HSSFWrapper {
 
     xls_header_cell_style.setFont(xls_header_font);
     xls_header_cell_style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
-    xls_header_cell_style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND );
+    xls_header_cell_style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
     xls_header_cell_style.setFillForegroundColor(new HSSFColor.GREY_25_PERCENT().getIndex());
     //xls_header_cell_style.setBorderBottom(HSSFCellStyle.BORDER_DOUBLE);
 
-    java.util.Map<String,HSSFCellStyle> cellStyles = new java.util.HashMap<String,HSSFCellStyle>();
+    java.util.Map<String, HSSFCellStyle> cellStyles = new java.util.HashMap<String, HSSFCellStyle>();
 
     HSSFDataFormat xls_data_format = xls_workbook.createDataFormat();
 
@@ -87,6 +89,18 @@ public class HSSFWrapper {
     }
 
     TableModel tableModel = source.getModel();
+    DbTableModel dbTableModel = (tableModel instanceof DbTableModel) ? (DbTableModel) tableModel : null;
+    Integer fetchSize = null;
+
+    if (dbTableModel != null) {
+      try {
+        fetchSize = dbTableModel.getDataSource().getFetchSize();
+        dbTableModel.getDataSource().setFetchSize(2000);
+      } catch (SQLException ex) {
+        Logger.getLogger(HSSFWrapper.class.getName()).log(Level.WARNING, null, ex);
+        fetchSize = null;
+      }
+    }
 
     short row = 1;
 
@@ -118,7 +132,7 @@ public class HSSFWrapper {
                 java.util.List<String> cellFormats = vm.getCellFormats();
 
                 for (String cellFormat : cellFormats) {
-                  if (cellFormat!=null) {
+                  if (cellFormat != null) {
                     if (!cellStyles.containsKey(cellFormat)) {
                       HSSFCellStyle xls_cell_style = xls_workbook.createCellStyle();
                       xls_cell_style.setDataFormat(xls_data_format.getFormat(cellFormat));
@@ -128,20 +142,20 @@ public class HSSFWrapper {
                 }
 
                 Object vm_value = values.get(0);
-                HSSFCellStyle xls_cell_style = cellFormats.get(0)==null?null:cellStyles.get(cellFormats.get(0));
+                HSSFCellStyle xls_cell_style = cellFormats.get(0) == null ? null : cellStyles.get(cellFormats.get(0));
 
                 if (vm_value != null) {
                   xls_cell = xls_row.createCell(cell);
 
                   if (vm_value instanceof java.util.Date) {
                     xls_cell.setCellValue((java.util.Date) vm_value);
-                    xls_cell.setCellStyle(xls_cell_style==null?xls_date_cell_style:xls_cell_style);
+                    xls_cell.setCellStyle(xls_cell_style == null ? xls_date_cell_style : xls_cell_style);
                   } else if (vm_value instanceof java.lang.Number) {
                     xls_cell.setCellValue(((java.lang.Number) vm_value).doubleValue());
-                    if ((vm_value instanceof java.math.BigDecimal) ||
-                            (vm_value instanceof java.lang.Double) ||
-                            (vm_value instanceof java.lang.Float)) {
-                      xls_cell.setCellStyle(xls_cell_style==null?xls_double_cell_style:xls_cell_style);
+                    if ((vm_value instanceof java.math.BigDecimal)
+                            || (vm_value instanceof java.lang.Double)
+                            || (vm_value instanceof java.lang.Float)) {
+                      xls_cell.setCellStyle(xls_cell_style == null ? xls_double_cell_style : xls_cell_style);
                     }
                   } else if (vm_value instanceof java.lang.Boolean) {
                     xls_cell.setCellValue(((java.lang.Boolean) vm_value).booleanValue());
@@ -165,12 +179,21 @@ public class HSSFWrapper {
         progress.next();
       }
 
-      for (cell=0; cell<=columnModel.getColumnCount(); cell++)
+      for (cell = 0; cell <= columnModel.getColumnCount(); cell++) {
         xls_sheet.autoSizeColumn(cell);
+      }
 
       xls_sheet.createFreezePane(1, 1);
     } finally {
       progress.setVisible(false);
+
+      if (fetchSize != null) {
+        try {
+          dbTableModel.getDataSource().setFetchSize(fetchSize);
+        } catch (SQLException ex) {
+          Logger.getLogger(HSSFWrapper.class.getName()).log(Level.WARNING, null, ex);
+        }
+      }
     }
 
 
