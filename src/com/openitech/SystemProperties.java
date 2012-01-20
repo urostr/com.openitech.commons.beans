@@ -292,7 +292,7 @@ public class SystemProperties {
       try {
         ProxySelector def = ProxySelector.getDefault();
 
-        l = def.select(new URI("http://foo/bar"));
+        l = def.select(new URI("http://www.google.si"));
 //        ProxySelector.setDefault(null);
       } catch (Exception e) {
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, e.getMessage(), e);
