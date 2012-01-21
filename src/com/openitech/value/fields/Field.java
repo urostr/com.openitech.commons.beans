@@ -378,6 +378,11 @@ public class Field implements Cloneable {
       public String toString() {
         return "L_PK";
       }
+
+      @Override
+      public Field getField(String name) {
+        return new Field(getColumnPrefix() + name, getSqlType());
+      }
     },
     VERSION_ID {
 
@@ -434,6 +439,10 @@ public class Field implements Cloneable {
     public abstract String getColumnPrefix();
 
     public abstract int getSqlType();
+
+    public Field getField(String name) {
+      return new Field(getColumnPrefix() + name, getSqlType());
+    }
   }
 
   public static class FieldModel {
@@ -445,8 +454,7 @@ public class Field implements Cloneable {
     /**
      * Gets the value of the replace property.
      *
-     * @return
-     *     possible object is
+     * @return possible object is
      *     {@link String }
      *
      */
@@ -457,8 +465,7 @@ public class Field implements Cloneable {
     /**
      * Sets the value of the replace property.
      *
-     * @param value
-     *     allowed object is
+     * @param value allowed object is
      *     {@link String }
      *
      */
@@ -469,8 +476,7 @@ public class Field implements Cloneable {
     /**
      * Gets the value of the query property.
      *
-     * @return
-     *     possible object is
+     * @return possible object is
      *     {@link FieldModel.Query }
      *
      */
@@ -481,8 +487,7 @@ public class Field implements Cloneable {
     /**
      * Sets the value of the query property.
      *
-     * @param value
-     *     allowed object is
+     * @param value allowed object is
      *     {@link FieldModel.Query }
      *
      */
@@ -493,8 +498,7 @@ public class Field implements Cloneable {
     /**
      * Gets the value of the tableColumns property.
      *
-     * @return
-     *     possible object is
+     * @return possible object is
      *     {@link FieldModel.TableColumns }
      *
      */
@@ -505,8 +509,7 @@ public class Field implements Cloneable {
     /**
      * Sets the value of the tableColumns property.
      *
-     * @param value
-     *     allowed object is
+     * @param value allowed object is
      *     {@link FieldModel.TableColumns }
      *
      */
@@ -517,7 +520,8 @@ public class Field implements Cloneable {
     /**
      * <p>Java class for anonymous complex type.
      *
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <p>The following schema fragment specifies the expected content contained
+     * within this class.
      *
      * <pre>
      * &lt;complexType>
@@ -541,8 +545,7 @@ public class Field implements Cloneable {
       /**
        * Gets the value of the select property.
        *
-       * @return
-       *     possible object is
+       * @return possible object is
        *     {@link FieldModel.Query.Select }
        *
        */
@@ -553,8 +556,7 @@ public class Field implements Cloneable {
       /**
        * Sets the value of the select property.
        *
-       * @param value
-       *     allowed object is
+       * @param value allowed object is
        *     {@link FieldModel.Query.Select }
        *
        */
@@ -565,8 +567,7 @@ public class Field implements Cloneable {
       /**
        * Gets the value of the join property.
        *
-       * @return
-       *     possible object is
+       * @return possible object is
        *     {@link FieldModel.Query.Join }
        *
        */
@@ -577,8 +578,7 @@ public class Field implements Cloneable {
       /**
        * Sets the value of the join property.
        *
-       * @param value
-       *     allowed object is
+       * @param value allowed object is
        *     {@link FieldModel.Query.Join }
        *
        */
@@ -589,7 +589,8 @@ public class Field implements Cloneable {
       /**
        * <p>Java class for anonymous complex type.
        *
-       * <p>The following schema fragment specifies the expected content contained within this class.
+       * <p>The following schema fragment specifies the expected content
+       * contained within this class.
        *
        * <pre>
        * &lt;complexType>
@@ -612,21 +613,18 @@ public class Field implements Cloneable {
         /**
          * Gets the value of the sql property.
          *
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the sql property.
+         * <p> This accessor method returns a reference to the live list, not a
+         * snapshot. Therefore any modification you make to the returned list
+         * will be present inside the JAXB object. This is why there is not a
+         * <CODE>set</CODE> method for the sql property.
          *
-         * <p>
-         * For example, to add a new item, do as follows:
+         * <p> For example, to add a new item, do as follows:
          * <pre>
          *    getSQL().add(newItem);
          * </pre>
          *
          *
-         * <p>
-         * Objects of the following type(s) are allowed in the list
+         * <p> Objects of the following type(s) are allowed in the list
          * {@link String }
          *
          *
@@ -642,7 +640,8 @@ public class Field implements Cloneable {
       /**
        * <p>Java class for anonymous complex type.
        *
-       * <p>The following schema fragment specifies the expected content contained within this class.
+       * <p>The following schema fragment specifies the expected content
+       * contained within this class.
        *
        * <pre>
        * &lt;complexType>
@@ -665,21 +664,18 @@ public class Field implements Cloneable {
         /**
          * Gets the value of the sql property.
          *
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the sql property.
+         * <p> This accessor method returns a reference to the live list, not a
+         * snapshot. Therefore any modification you make to the returned list
+         * will be present inside the JAXB object. This is why there is not a
+         * <CODE>set</CODE> method for the sql property.
          *
-         * <p>
-         * For example, to add a new item, do as follows:
+         * <p> For example, to add a new item, do as follows:
          * <pre>
          *    getSQL().add(newItem);
          * </pre>
          *
          *
-         * <p>
-         * Objects of the following type(s) are allowed in the list
+         * <p> Objects of the following type(s) are allowed in the list
          * {@link String }
          *
          *
@@ -696,7 +692,8 @@ public class Field implements Cloneable {
     /**
      * <p>Java class for anonymous complex type.
      *
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <p>The following schema fragment specifies the expected content contained
+     * within this class.
      *
      * <pre>
      * &lt;complexType>
@@ -729,21 +726,18 @@ public class Field implements Cloneable {
       /**
        * Gets the value of the tableColumnDefinition property.
        *
-       * <p>
-       * This accessor method returns a reference to the live list,
-       * not a snapshot. Therefore any modification you make to the
-       * returned list will be present inside the JAXB object.
-       * This is why there is not a <CODE>set</CODE> method for the tableColumnDefinition property.
+       * <p> This accessor method returns a reference to the live list, not a
+       * snapshot. Therefore any modification you make to the returned list will
+       * be present inside the JAXB object. This is why there is not a
+       * <CODE>set</CODE> method for the tableColumnDefinition property.
        *
-       * <p>
-       * For example, to add a new item, do as follows:
+       * <p> For example, to add a new item, do as follows:
        * <pre>
        *    getTableColumnDefinition().add(newItem);
        * </pre>
        *
        *
-       * <p>
-       * Objects of the following type(s) are allowed in the list
+       * <p> Objects of the following type(s) are allowed in the list
        * {@link FieldModel.TableColumns.TableColumnDefinition }
        *
        *
@@ -758,7 +752,8 @@ public class Field implements Cloneable {
       /**
        * <p>Java class for anonymous complex type.
        *
-       * <p>The following schema fragment specifies the expected content contained within this class.
+       * <p>The following schema fragment specifies the expected content
+       * contained within this class.
        *
        * <pre>
        * &lt;complexType>
@@ -781,21 +776,18 @@ public class Field implements Cloneable {
         /**
          * Gets the value of the tableColumnEntry property.
          *
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the tableColumnEntry property.
+         * <p> This accessor method returns a reference to the live list, not a
+         * snapshot. Therefore any modification you make to the returned list
+         * will be present inside the JAXB object. This is why there is not a
+         * <CODE>set</CODE> method for the tableColumnEntry property.
          *
-         * <p>
-         * For example, to add a new item, do as follows:
+         * <p> For example, to add a new item, do as follows:
          * <pre>
          *    getTableColumnEntry().add(newItem);
          * </pre>
          *
          *
-         * <p>
-         * Objects of the following type(s) are allowed in the list
+         * <p> Objects of the following type(s) are allowed in the list
          * {@link String }
          *
          *
