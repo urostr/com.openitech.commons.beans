@@ -235,23 +235,23 @@ public class Event extends EventType implements Cloneable {
   }
 
   /**
-   * Removes the first occurrence of the specified element from this list,
-   * if it is present (optional operation).  If this list does not contain
-   * the element, it is unchanged.  More formally, removes the element with
-   * the lowest index <tt>i</tt> such that
+   * Removes the first occurrence of the specified element from this list, if it
+   * is present (optional operation). If this list does not contain the element,
+   * it is unchanged. More formally, removes the element with the lowest index
+   * <tt>i</tt> such that
    * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>
-   * (if such an element exists).  Returns <tt>true</tt> if this list
-   * contained the specified element (or equivalently, if this list changed
-   * as a result of the call).
+   * (if such an element exists). Returns <tt>true</tt> if this list contained
+   * the specified element (or equivalently, if this list changed as a result of
+   * the call).
    *
    * @param o element to be removed from this list, if present
    * @return <tt>true</tt> if this list contained the specified element
-   * @throws ClassCastException if the type of the specified element
-   *         is incompatible with this list (optional)
-   * @throws NullPointerException if the specified element is null and this
-   *         list does not permit null elements (optional)
-   * @throws UnsupportedOperationException if the <tt>remove</tt> operation
-   *         is not supported by this list
+   * @throws ClassCastException if the type of the specified element is
+   * incompatible with this list (optional)
+   * @throws NullPointerException if the specified element is null and this list
+   * does not permit null elements (optional)
+   * @throws UnsupportedOperationException if the <tt>remove</tt> operation is
+   * not supported by this list
    */
   public boolean removeValue(FieldValue fieldValue) {
     getFieldValues(fieldValue).remove(fieldValue);
@@ -267,7 +267,8 @@ public class Event extends EventType implements Cloneable {
   /**
    * @deprecated use getValues instead.
    *
-   **/
+   *
+   */
   @Deprecated
   public Map<Field, List<FieldValue>> getEventValues() {
     return eventValues;
@@ -286,7 +287,8 @@ public class Event extends EventType implements Cloneable {
   /**
    * @deprecated use getValues instead.
    *
-   **/
+   *
+   */
   @Deprecated
   public List<FieldValue> getFieldValues() {
     List<FieldValue> result = new java.util.ArrayList<FieldValue>();
@@ -360,7 +362,7 @@ public class Event extends EventType implements Cloneable {
   /**
    * Get the value of children
    *
-   * 
+   *
    * @return the value of children
    */
   public List<Event> getChildren() {
@@ -563,6 +565,7 @@ public class Event extends EventType implements Cloneable {
             }
             break;
           case java.sql.Types.BIT:
+          case java.sql.Types.BOOLEAN:
             if (value != null) {
               if (value instanceof Integer) {
                 result = ((Integer) value) > 0;
