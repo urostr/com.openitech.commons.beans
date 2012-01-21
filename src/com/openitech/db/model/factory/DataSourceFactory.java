@@ -201,7 +201,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
       try {
         this.tableModel = createTableModel();
 
-        if (dataSourceElement == null) {
+        if (dataSourceElement == null && dataSourceXML.getIncludeWorkarea() == null) {
           StringBuilder sbSelect = new StringBuilder(100);
           int columnCount = tableModel.getColumnCount();
           for (int i = 0; i < columnCount; i++) {
@@ -606,6 +606,9 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     com.openitech.db.model.DbTableModel tableModel = this.tableModel != null ? this.tableModel : new com.openitech.db.model.DbTableModel();
     final DataModel dataModel = dataSourceXML.getDataModel();
     List<String[]> tableColumns = new ArrayList<String[]>();
+    for (String[] entries : tableModel.getColumns()) {
+      tableColumns.add(entries);
+    }
     boolean addDefaultColumns = false;
     if (dataModel != null) {
       final TableColumns tableColumnsElement = dataModel.getTableColumns();
@@ -627,7 +630,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
     } else {
       addDefaultColumns = true;
     }
-    if (addDefaultColumns) {
+    if (addDefaultColumns && tableModel.getColumnCount() == 0 && dataSourceXML.getIncludeWorkarea() == null) {
       List<String> ignoredColumns = new ArrayList<String>();
       ignoredColumns.add("Id");
       ignoredColumns.add("EventId");
@@ -754,7 +757,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
             TaskPanes.OpenWorkArea openWorkArea = taskPane.getOpenWorkArea();
             newInstance = new EventTask(taskPane.getTitle(), openWorkArea.getWorkSpaceId(), openWorkArea.getWorkAreaId(), openWorkArea.isOpenDataEntry(), openWorkArea.isDontMerge());
             ((EventTask) newInstance).setType(EventTask.TaskType.OPEN_WORK_AREA);
-          }else if (taskPane.getReportPrint() != null) {
+          } else if (taskPane.getReportPrint() != null) {
             newInstance = new EventTask(taskPane.getTitle(), taskPane.getReportPrint().isDontMerge());
             ((EventTask) newInstance).setReportName(taskPane.getReportPrint().getName());
             ((EventTask) newInstance).setType(EventTask.TaskType.REPORT);
@@ -842,7 +845,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
               if (field == null) {
                 throw new IllegalArgumentException("Napaèno ime polja [" + imePolja + "]!");
               }
-              
+
               if (column.isEventColumn()) {
                 DbFieldObserver fieldObserver = new DbFieldObserver();
                 fieldObserver.setColumnName(imePolja);
@@ -858,7 +861,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
                 }
               }
 
-              if(identityGroupBy != null){
+              if (identityGroupBy != null) {
                 eventColumnsList.add(new FieldValueProxy(identityGroupBy, java.sql.Types.INTEGER));
               }
 
@@ -892,7 +895,7 @@ public class DataSourceFactory extends AbstractDataSourceFactory {
                   DbFieldObserver fo = new DbFieldObserver();
                   fo.setColumnName(lookupType.getColumnPrefix() + field.getName());
                   fo.setDataSource(dataSource);
-                  final FieldValueProxy fvLookupProxy = new FieldValueProxy(new Field(lookupType.getColumnPrefix() + field.getName(), field.getType()), fo);
+                  final FieldValueProxy fvLookupProxy = new FieldValueProxy(new Field(lookupType.getColumnPrefix() + field.getName(), lookupType.getSqlType()), fo);
                   fvLookupProxy.setLookup(true);
                   fvLookupProxy.setLookupType(lookupType);
                   eventColumnsList.add(fvLookupProxy);
