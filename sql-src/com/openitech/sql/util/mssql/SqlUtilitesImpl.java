@@ -294,11 +294,11 @@ public class SqlUtilitesImpl extends SqlUtilities {
       Long oldValueId = storeValue(fieldType, oldValue.getValue());
 
       fieldValues = new FieldValue[]{
-                new FieldValue("ChangeId", Types.BIGINT, changeId),
-                new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
-                new FieldValue("NewValueId", Types.BIGINT, newValueId),
-                new FieldValue("OldValueId", Types.BIGINT, oldValueId)
-              };
+        new FieldValue("ChangeId", Types.BIGINT, changeId),
+        new FieldValue("FieldName", Types.VARCHAR, newValue.getName()),
+        new FieldValue("NewValueId", Types.BIGINT, newValueId),
+        new FieldValue("OldValueId", Types.BIGINT, oldValueId)
+      };
 
       executeUpdate(logChangedValues, fieldValues);
     }
@@ -967,7 +967,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
           marshaller.setProperty("com.sun.xml.bind.namespacePrefixMapper", new NamespacePrefixMapper());
           marshaller.marshal(of.createEvent(ev), sw);
 
-          System.out.println(sw.toString());
+//          System.out.println(sw.toString());
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, sw.toString());
 
           callStoreEvent.setString(1, sw.toString());
 
@@ -1391,7 +1392,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
             }
 
             long end = System.currentTimeMillis();
-            System.out.println("CAS:EventValues=" + (end - start));
+//            System.out.println("CAS:EventValues=" + (end - start));
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "CAS:EventValues={0}", (end - start));
             start = System.currentTimeMillis();
             if (eventPrimaryKey != null && eventPrimaryKey.length > 0 && Boolean.valueOf(ConnectionManager.getInstance().getProperty(DbConnection.DB_SAVE_PK, Boolean.toString(true)))) {
               eventPK.setEventId(events_ID);
@@ -1401,7 +1403,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
               success = success && storePrimaryKey(eventPK);
             }
             end = System.currentTimeMillis();
-            System.out.println("CAS:storePrimaryKey=" + (end - start));
+//            System.out.println("CAS:storePrimaryKey=" + (end - start));
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "CAS:storePrimaryKey={0}", (end - start));
+
 
             success = success && storeEventLookUpKeys(events_ID, fieldValuesList);
           }
@@ -1661,12 +1665,16 @@ public class SqlUtilitesImpl extends SqlUtilities {
     long start2 = System.currentTimeMillis();
     final Connection temporaryConnection = ConnectionManager.getInstance().getTemporaryConnection();
     long end2 = System.currentTimeMillis();
-    System.out.println("CAS:getTemporaryConnection=" + (end2 - start2));
+//    System.out.println("CAS:getTemporaryConnection=" + (end2 - start2));
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "CAS:getTemporaryConnection={0}", (end2 - start2));
+
     try {
       long start1 = System.currentTimeMillis();
       CallableStatement callStoredValue = temporaryConnection.prepareCall(callStoreValueSql);
       long end1 = System.currentTimeMillis();
-      System.out.println("CAS:prepareCall=" + (end1 - start1));
+//      System.out.println("CAS:prepareCall=" + (end1 - start1));
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "CAS:prepareCall=" + (end1 - start1));
+
       try {
         callStoredValue.setQueryTimeout(15);
 
@@ -1753,7 +1761,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
               long start4 = System.currentTimeMillis();
               execute(callStoredValue, fieldValues);
               long end4 = System.currentTimeMillis();
-              System.out.println("CAS:execute=" + (end4 - start4));
+//              System.out.println("CAS:execute=" + (end4 - start4));
+              Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "CAS:execute={0}", (end4 - start4));
 
               ResultSet resultSet = callStoredValue.getResultSet();
               if (resultSet != null) {
@@ -1775,7 +1784,9 @@ public class SqlUtilitesImpl extends SqlUtilities {
       temporaryConnection.close();
     }
     long end = System.currentTimeMillis();
-    System.out.println("CAS:storeValue=" + (end - start));
+//    System.out.println("CAS:storeValue=" + (end - start));
+    Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.INFO, "CAS:storeValue={0}", (end - start));
+
     return newValueId;
   }
 
@@ -2749,8 +2760,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
 
   /**
    *
-   * @return
-   * @deprecated <p>Uporabi getPPSelectFields namesto tega!</p>
+   * @return @deprecated <p>Uporabi getPPSelectFields namesto tega!</p>
    *
    */
   @Deprecated
@@ -3243,8 +3253,8 @@ public class SqlUtilitesImpl extends SqlUtilities {
       ev_table = eventsDb + ".[dbo].[Events]";
 
       /**
-       * sifra se narobe uporablja, ker je vezana na >>canuseView<<
-       * zato je v custom secondarijih samo idSifranta
+       * sifra se narobe uporablja, ker je vezana na >>canuseView<< zato je v
+       * custom secondarijih samo idSifranta
        */
       if (canUseView && sifranti.size() == 1) {
         for (Integer s : sifranti) {
