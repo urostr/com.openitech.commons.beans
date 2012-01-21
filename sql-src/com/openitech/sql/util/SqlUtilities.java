@@ -684,6 +684,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract EventPK findEventPK(long eventId) throws SQLException;
 
+  public abstract EventPK findEventPK(Integer idSifranta, String idSifre, String primaryKey) throws SQLException;
+
   public abstract EventPK findEventPKVersions(long eventId, Integer versionId) throws SQLException;
 
   public abstract boolean deleteEvent(long eventId) throws SQLException;
