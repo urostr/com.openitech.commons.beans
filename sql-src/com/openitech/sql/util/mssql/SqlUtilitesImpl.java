@@ -141,6 +141,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   PreparedStatement delete_eventPK;
   PreparedStatement insert_eventPK;
   PreparedStatement find_eventPK;
+  PreparedStatement find_eventPK_by_values;
   PreparedStatement update_eventPK;
   PreparedStatement insert_eventPK_versions;
   PreparedStatement find_eventPK_versions;
@@ -2577,6 +2578,36 @@ public class SqlUtilitesImpl extends SqlUtilities {
       } finally {
         rs_findEventPK.close();
       }
+    }
+    return result;
+  }
+
+  @Override
+  public EventPK findEventPK(Integer idSifranta, String idSifre, String primaryKey) throws SQLException {
+    EventPK result = null;
+    final Connection connection = ConnectionManager.getInstance().getTxConnection();
+
+    if (find_eventPK_by_values == null) {
+      find_eventPK_by_values = connection.prepareStatement(ReadInputStream.getResourceAsString(getClass(), "find_eventPK_by_values.sql", "cp1250"));
+    }
+    find_eventPK_by_values.clearParameters();
+    int param = 1;
+    find_eventPK_by_values.setInt(param++, idSifranta);
+    find_eventPK_by_values.setString(param++, idSifre);
+    find_eventPK_by_values.setString(param++, primaryKey);
+
+    ResultSet rs_findEventPK = find_eventPK_by_values.executeQuery();
+    try {
+      if (rs_findEventPK.next()) {
+        Integer eventsPK_eventId = rs_findEventPK.getInt("EventId");
+        if (rs_findEventPK.wasNull()) {
+          eventsPK_eventId = null;
+        }
+
+        result = new SqlEventPK(eventsPK_eventId, idSifranta, idSifre, primaryKey);
+      }
+    } finally {
+      rs_findEventPK.close();
     }
     return result;
   }
