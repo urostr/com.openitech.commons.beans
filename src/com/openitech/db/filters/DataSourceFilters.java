@@ -1505,7 +1505,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
   public static class SifrantSeekType extends AbstractSeekType<String> implements ValuesList {
 
-    private static final ExecutorService executorService = Executors.newCachedThreadPool();
+    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();//newCachedThreadPool();
     private FutureTask<DbComboBoxModel> model;
     private AbstractSeekType<String> seekType;
     private String dataBase;
