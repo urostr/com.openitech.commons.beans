@@ -656,7 +656,6 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract DbDataSource joinSecondaryDataSources(List<DbDataSource> dataSources) throws SQLException;
 
 //  public abstract Map<String, com.openitech.db.model.xml.config.TemporaryTable> getCachedTemporaryTables();
-
   public abstract boolean getSearchByEventPK(int idSifranta, String... idSifre);
 
   public void storeCachedTemporaryTable(TemporarySubselectSqlParameter ttsql) {
@@ -671,7 +670,8 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract com.openitech.db.model.xml.config.MaterializedView getCacheDefinition(String table, int idSifranta, String idSifre);
   /*
-   * Sestavi SQL s katerim lahko pripravimo tabelo za shranjevanje rezultatov v podanem result set.
+   * Sestavi SQL s katerim lahko pripravimo tabelo za shranjevanje rezultatov v
+   * podanem result set.
    */
 
   public abstract String getCreateTableSQL(String tableName, java.sql.ResultSet rs) throws SQLException;
@@ -698,10 +698,14 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract String getPPJoinFields();
 
+  public Clob getWorkArea(Integer workSpaceId) throws SQLException {
+    return getWorkArea(workSpaceId, null);
+  }
+
   public abstract Clob getWorkArea(Integer workSpaceId, Integer workAreaId) throws SQLException;
 
   public abstract Set<String> getEventViewColumns(String viewName);
-  
+
   public void createEventViews(com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views view) {
     createEventViews(view, getRunParameterBoolean(ConnectionManager.DB_OVERRIDE_VIEWS), true);
   }
@@ -723,7 +727,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
   public abstract void createEventViews(com.openitech.db.model.xml.config.Workarea.DataSource.ViewsParameters.Views view, boolean overrideIfExists, boolean createIndexPK);
 
   public abstract boolean isViewReady(int idSifranta, String idSifre);
-  
+
   public abstract String getViewName(int idSifranta, String idSifre, boolean valid);
 
   public boolean getRunParameterBoolean(String parameter) {
@@ -744,7 +748,7 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract Activity getActivity(int workAreaId) throws SQLException;
 
-  public String getDataSourceSQL(int workAreaId) throws SQLException{
+  public String getDataSourceSQL(int workAreaId) throws SQLException {
     ActivityEvent activityEvent = getActivityEvent((int) getActivity(workAreaId).getActivityId());
     return getDataSourceSQL(activityEvent.getIdSifranta(), activityEvent.getIdSifre());
   }

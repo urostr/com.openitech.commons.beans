@@ -174,20 +174,17 @@ public class UtilRPP {
       ResultSet rs_findRPPGsm = ps_findRPPGsm.executeQuery();
       try {
         if (rs_findRPPGsm.next()) {
-          Integer ppKontaktID = rs_findRPPGsm.getInt("PPKontaktID");
-          if (rs_findRPPGsm.wasNull()) {
-            ppKontaktID = null;
-          }
-          Integer os = rs_findRPPGsm.getInt("PPOmreznaGSM");
+
+          Integer os = rs_findRPPGsm.getInt("TELEFON_OS");
           if (rs_findRPPGsm.wasNull()) {
             os = null;
           }
-          Integer stevilka = rs_findRPPGsm.getInt("PPStevilkaGSM");
+          Integer stevilka = rs_findRPPGsm.getInt("TELEFON_STEVILKA");
           if (rs_findRPPGsm.wasNull()) {
             stevilka = null;
           }
 
-          result = new GSMKontakt(ppID, ppKontaktID, os, stevilka);
+          result = new GSMKontakt(ppID, os, stevilka);
 
         }
       } finally {
@@ -223,20 +220,16 @@ public class UtilRPP {
       ResultSet rs_findRPPTelefon = ps_findRPPTelefon.executeQuery();
       try {
         if (rs_findRPPTelefon.next()) {
-          Integer ppKontaktID = rs_findRPPTelefon.getInt("PPKontaktID");
-          if (rs_findRPPTelefon.wasNull()) {
-            ppKontaktID = null;
-          }
-          Integer os = rs_findRPPTelefon.getInt("PPOmreznaTelefon");
+          Integer os = rs_findRPPTelefon.getInt("TELEFON_OS");
           if (rs_findRPPTelefon.wasNull()) {
             os = null;
           }
-          Integer stevilka = rs_findRPPTelefon.getInt("PPStevilkaTelefon");
+          Integer stevilka = rs_findRPPTelefon.getInt("TELEFON_STEVILKA");
           if (rs_findRPPTelefon.wasNull()) {
             stevilka = null;
           }
 
-          result = new TelefonKontakt(ppID, ppKontaktID, os, stevilka);
+          result = new TelefonKontakt(ppID, os, stevilka);
 
         }
       } finally {
@@ -272,13 +265,9 @@ public class UtilRPP {
       ResultSet rs_findRPPEmail = ps_findRPPEmail.executeQuery();
       try {
         if (rs_findRPPEmail.next()) {
-          Integer ppKontaktID = rs_findRPPEmail.getInt("PPKontaktID");
-          if (rs_findRPPEmail.wasNull()) {
-            ppKontaktID = null;
-          }
-          String email = rs_findRPPEmail.getString("PPEMAIL");
+          String email = rs_findRPPEmail.getString("ELEKTRONSKA_POSTA");
 
-          result = new EmailKontakt(ppID, ppKontaktID, email);
+          result = new EmailKontakt(ppID, email);
 
         }
       } finally {
@@ -296,8 +285,8 @@ public class UtilRPP {
 
     private final int ppTipontaktaID = 2;
 
-    public GSMKontakt(int ppID, Integer ppKontaktID, Integer os, Integer stevilka) {
-      super(ppID, ppKontaktID, os, stevilka);
+    public GSMKontakt(int ppID, Integer os, Integer stevilka) {
+      super(ppID, os, stevilka);
     }
   }
 
@@ -305,8 +294,8 @@ public class UtilRPP {
 
     private final int ppTipontaktaID = 1;
 
-    public TelefonKontakt(int ppID, Integer ppKontaktID, Integer os, Integer stevilka) {
-      super(ppID, ppKontaktID, os, stevilka);
+    public TelefonKontakt(int ppID, Integer os, Integer stevilka) {
+      super(ppID, os, stevilka);
     }
   }
 
@@ -314,8 +303,8 @@ public class UtilRPP {
 
     private final int ppTipontaktaID = 3;
 
-    public EmailKontakt(int ppID, Integer ppKontaktID, String email) {
-      super(ppID, ppKontaktID, email);
+    public EmailKontakt(int ppID, String email) {
+      super(ppID, email);
     }
 
     @Override
@@ -327,30 +316,23 @@ public class UtilRPP {
   private static class Kontakt {
 
     private int ppID;
-    private Integer ppKontaktID = null;
     private Integer os = null;
     private Integer stevilka = null;
     private String email = null;
 
-    protected Kontakt(int ppID, Integer ppKontaktID, Integer os, Integer stevilka) {
+    protected Kontakt(int ppID, Integer os, Integer stevilka) {
       this.ppID = ppID;
-      this.ppKontaktID = ppKontaktID;
       this.os = os;
       this.stevilka = stevilka;
     }
 
-    protected Kontakt(int ppID, Integer ppKontaktID, String email) {
+    protected Kontakt(int ppID, String email) {
       this.ppID = ppID;
-      this.ppKontaktID = ppKontaktID;
       this.email = email;
     }
 
     public int getPPID() {
       return ppID;
-    }
-
-    public Integer getPPKontaktID() {
-      return ppKontaktID;
     }
 
     public Integer getOs() {
