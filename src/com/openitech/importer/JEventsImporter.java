@@ -12,6 +12,7 @@ import com.openitech.db.model.xml.config.Importer;
 import com.openitech.db.model.xml.config.Importer.Destination;
 import com.openitech.db.model.xml.config.Importer.Destination.Column;
 import com.openitech.db.model.xml.config.Importer.Options;
+import com.openitech.db.model.xml.config.Importer.Options.TransactionType;
 import com.openitech.sql.util.SqlUtilities;
 import com.openitech.value.events.ActivityEvent;
 import com.openitech.value.fields.Field;
@@ -112,6 +113,38 @@ public class JEventsImporter implements JImporter {
     if (options != null) {
       Boolean hideUI = options.isHideUI();
       result = hideUI == null ? false : hideUI;
+    }
+    return result;
+  }
+
+  public String getTransactionTypeGroupByColumnName() {
+    String result = null;
+    Importer.Options options = eventImporter.getOptions();
+    if (options != null) {
+      TransactionType transactionType = options.getTransactionType();
+      if (transactionType != null) {
+        result = transactionType.getGroupByColumnName();
+      }
+    }
+    return result;
+  }
+
+  public boolean isSingleTransaction() {
+    boolean result = false;
+    Importer.Options options = eventImporter.getOptions();
+    if (options != null) {
+      TransactionType transactionType = options.getTransactionType();
+      if (transactionType != null) {
+        Boolean isSingle = transactionType.isSingle();
+        if (isSingle == null) {
+          if ((transactionType.isEvent() == null || !transactionType.isEvent().booleanValue())
+                  && transactionType.getGroupByColumnName() == null) {
+            result = true;
+          } else {
+            result = false;
+          }
+        }
+      }
     }
     return result;
   }
