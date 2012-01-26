@@ -29,9 +29,9 @@ public class DataColumn {
   private static final java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("d.M.yyyy");
   private static final java.text.SimpleDateFormat dfts = new java.text.SimpleDateFormat("d.M.yyyy hh:mm");
   private static final java.text.SimpleDateFormat dftss = new java.text.SimpleDateFormat("d.M.yyyy hh:mm:ss");
-  private static final java.text.SimpleDateFormat dfEN = new java.text.SimpleDateFormat("M/d/y");
-  private static final java.text.SimpleDateFormat dfENts = new java.text.SimpleDateFormat("M/d/y hh:mm");
-  private static final java.text.SimpleDateFormat dfENtss = new java.text.SimpleDateFormat("M/d/y hh:mm:ss");
+  private static final java.text.SimpleDateFormat dfEN = new java.text.SimpleDateFormat("d/M/y");
+  private static final java.text.SimpleDateFormat dfENts = new java.text.SimpleDateFormat("d/M/y hh:mm");
+  private static final java.text.SimpleDateFormat dfENtss = new java.text.SimpleDateFormat("d/M/y hh:mm:ss");
   private static final java.text.SimpleDateFormat dfsql = new java.text.SimpleDateFormat("yyyy-MM-dd");
   private static final java.text.SimpleDateFormat dfsqlts = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm");
   private static final java.text.SimpleDateFormat dfsqltss = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
