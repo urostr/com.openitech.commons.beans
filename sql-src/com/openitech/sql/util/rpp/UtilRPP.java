@@ -33,6 +33,7 @@ public class UtilRPP {
   private final String findRPPGsm = ReadInputStream.getResourceAsString(UtilRPP.class, "findRPPGsm.sql", "cp1250");
   private final String findRPPTelefon = ReadInputStream.getResourceAsString(UtilRPP.class, "findRPPTelefon.sql", "cp1250");
   private final String findRPPEmail = ReadInputStream.getResourceAsString(UtilRPP.class, "findRPPEmail.sql", "cp1250");
+  private final String findImePriimek = ReadInputStream.getResourceAsString(UtilRPP.class, "findImePriimek.sql", "cp1250");
   public static final boolean cachePreparedStatments = true;
   private Map<String, PreparedStatement> psCache = new HashMap<String, PreparedStatement>();
   private static UtilRPP instance;
@@ -279,6 +280,72 @@ public class UtilRPP {
       }
     }
     return result;
+  }
+
+  public synchronized PoslovniPartner getPoslovniPartner(int ppID) throws SQLException {
+    PoslovniPartner result = null;
+
+    PreparedStatement ps_findPPIme_Priimek = null;
+
+    if (cachePreparedStatments) {
+      if (psCache.containsKey(findImePriimek)) {
+        ps_findPPIme_Priimek = psCache.get(findImePriimek);
+      } else {
+        ps_findPPIme_Priimek = ConnectionManager.getInstance().getTxConnection().prepareStatement(findImePriimek);
+        psCache.put(findImePriimek, ps_findPPIme_Priimek);
+      }
+    } else {
+      ps_findPPIme_Priimek = ConnectionManager.getInstance().getTxConnection().prepareStatement(findImePriimek);
+    }
+
+    try {
+      int param = 1;
+      ps_findPPIme_Priimek.clearParameters();
+      ps_findPPIme_Priimek.setInt(param++, ppID);
+      ResultSet rs_findRPPEmail = ps_findPPIme_Priimek.executeQuery();
+      try {
+        if (rs_findRPPEmail.next()) {
+          String ime = rs_findRPPEmail.getString("Ime");
+          String priimek = rs_findRPPEmail.getString("Priimek");
+
+          result = new PoslovniPartner(ppID, ime, priimek);
+
+        }
+      } finally {
+        rs_findRPPEmail.close();
+      }
+    } finally {
+      if (!cachePreparedStatments) {
+        ps_findPPIme_Priimek.close();
+      }
+    }
+    return result;
+  }
+
+  public static class PoslovniPartner {
+
+    private int idPP;
+    private String ime;
+    private String priimek;
+
+    public PoslovniPartner(int idPP, String ime, String priimek) {
+      this.idPP = idPP;
+      this.ime = ime;
+      this.priimek = priimek;
+    }
+
+    public int getIdPP() {
+      return idPP;
+    }
+    
+
+    public String getIme() {
+      return ime;
+    }
+
+    public String getPriimek() {
+      return priimek;
+    }
   }
 
   public static class GSMKontakt extends Kontakt {
