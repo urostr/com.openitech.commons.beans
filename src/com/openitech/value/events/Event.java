@@ -519,6 +519,18 @@ public class Event extends EventType implements Cloneable {
 
   }
 
+  public FieldValue getFieldValue(String imePolja) {
+    Field field = Field.getField(imePolja);
+    FieldValue result = null;
+    for (FieldValue fieldValue : getValues()) {
+      if (fieldValue.equals(field)) {
+        result = fieldValue;
+        break;
+      }
+    }
+    return result;
+  }
+
   public Object getValue(String imePolja) {
     return getValue(this, Field.getField(imePolja));
   }
@@ -555,7 +567,11 @@ public class Event extends EventType implements Cloneable {
             }
             break;
           case java.sql.Types.VARCHAR:
-            result = (String) value;
+            if (value instanceof String) {
+              result = (String) value;
+            } else {
+              result = value.toString();
+            }
             break;
           case java.sql.Types.DATE:
             if (value != null) {
