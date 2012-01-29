@@ -201,7 +201,7 @@
                     <xsd:element name="ReportPrint">
                       <xsd:complexType>
                         <xsd:sequence>
-                          <xsd:element name="Name" maxOccurs="1" type="xsd:string"/>
+                          <xsd:element name="Name" maxOccurs="unbounded" type="xsd:string"/>
                         </xsd:sequence>
                         <xsd:attribute name="DontMerge" type="xsd:boolean"/>
                       </xsd:complexType>
@@ -1125,6 +1125,15 @@
             <xsd:element name="AutoPreview" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="false"/>
             <xsd:element name="HideUI" type="xsd:boolean" minOccurs="0"></xsd:element>
             <xsd:element name="StartRow" type="xsd:int" minOccurs="0" maxOccurs="1" default="1"/>
+            <xsd:element name="TransactionType">
+              <xsd:complexType>
+                <xsd:choice>
+                  <xsd:element name="Single" maxOccurs="1" type="xsd:boolean" minOccurs="0"></xsd:element>
+                  <xsd:element name="Event" maxOccurs="1" type="xsd:boolean" minOccurs="0"></xsd:element>
+                  <xsd:element name="GroupByColumnName" maxOccurs="1" type="xsd:string" minOccurs="0"></xsd:element>
+                </xsd:choice>
+              </xsd:complexType>
+            </xsd:element>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>

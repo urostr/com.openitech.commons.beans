@@ -14,6 +14,7 @@ import com.openitech.db.components.dogodki.DbReport;
 import com.openitech.db.connection.DbConnection;
 import com.openitech.db.events.StoreUpdatesEvent;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.factory.DataSourceConfig;
 import com.openitech.db.model.sql.TemporarySubselectSqlParameter;
 import com.openitech.db.model.xml.config.TemporaryTable;
 import com.openitech.text.CaseInsensitiveString;
@@ -763,7 +764,11 @@ public abstract class SqlUtilities extends TransactionManager implements UpdateE
 
   public abstract String[] getSifre(int idSifranta);
 
-  public abstract DbReport getReport(String reportName) throws SQLException;
+  public DbReport getReport(String reportName) throws SQLException{
+    return getReport(reportName, null);
+  }
+
+  public abstract DbReport getReport(String reportName, DataSourceConfig config) throws SQLException;
 
   public static enum Operation {
 

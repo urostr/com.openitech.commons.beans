@@ -36,30 +36,28 @@ public class CSVDataSourceTest extends TestCase {
     dataSource.loadData();
 
     dataSource.first();
-    System.out.println(dataSource.getString("Ime"));
-    System.out.println(dataSource.getString("Priimek"));
+    System.out.println(dataSource.getString("Nekaj1"));
+    System.out.println(dataSource.getString("Nekaj2"));
     dataSource.next();
-    System.out.println(dataSource.getString("Priimek"));
-    System.out.println(dataSource.getString("Ime"));
-    System.out.println(dataSource.getString("Naslov"));
-    System.out.println(dataSource.getString("KrNeki"));
-    dataSource.next();
-    System.out.println(dataSource.getString("Priimek"));
-    System.out.println(dataSource.getString("Ime"));
-    System.out.println(dataSource.getString("Naslov"));
-    System.out.println(dataSource.getString("KrNeki"));
+    System.out.println(dataSource.getString("Nekaj1"));
+    System.out.println(dataSource.getString("Nekaj2"));
+
   }
 
   public void testHello2() throws Exception {
-    File file = new File("test/myfile.csv");
+    File file = new File("test/Kopijadodatne poti FM.xls-DECEMBER.csv");
     System.out.println(file.getAbsolutePath());
     DbDataSource dataSource = new DbDataSource(file, DbDataSource.SourceType.CSV);
     dataSource.loadData();
 
     dataSource.first();
-    System.out.println(dataSource.getDate("Datum"));
+    System.out.println(dataSource.getInt("ID svetovalca"));
+    System.out.println(dataSource.getString("Svetovalec"));
     dataSource.next();
-    System.out.println(dataSource.getDate("Datum"));
+    System.out.println(dataSource.getString("Prihod"));
+    System.out.println(dataSource.getString("Odhod"));
 
   }
+
+  
 }

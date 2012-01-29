@@ -80,4 +80,64 @@
 		</bindings>
 		<catalog/>
 	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.sifrant' name='SIFRANT_MODEL'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/SIFRANT_MODEL/SifrantModel.xsd' origLocation='src/com/openitech/xsd/SifrantModel.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.fieldactions' name='FIELD_ACTIONS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/FIELD_ACTIONS/FieldActions.xsd' origLocation='src/com/openitech/xsd/FieldActions.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.fieldlayout' name='FIELD_LAYOUT'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/FIELD_LAYOUT/FieldLayout.xsd' origLocation='src/com/openitech/xsd/FieldLayout.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.fieldmodel' name='FIELD_MODEL'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/FIELD_MODEL/FieldModel.xsd' origLocation='src/com/openitech/xsd/FieldModel.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.fieldoptions' name='FIELD_OPTIONS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/FIELD_OPTIONS/FieldOptions.xsd' origLocation='src/com/openitech/xsd/FieldOptions.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.binarymodel' name='BINARY_MODEL'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/BINARY_MODEL/BinaryModel.xsd' origLocation='src/com/openitech/xsd/BinaryModel.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
 </schemas>

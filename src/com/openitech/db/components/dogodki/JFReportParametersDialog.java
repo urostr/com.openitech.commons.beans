@@ -10,23 +10,31 @@
  */
 package com.openitech.db.components.dogodki;
 
+import com.openitech.db.filters.JWorkAreaFilter;
 import com.openitech.db.model.DbDataSource;
+import com.openitech.db.model.factory.AbstractDataSourceParametersFactory;
 import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.support.Result;
 import com.openitech.support.ResultProcessor;
+import java.awt.Frame;
+import java.util.Map;
+import javax.swing.JDialog;
 
 /**
  *
  * @author domenbasic
  */
-public class JFReportParametersDialog extends javax.swing.JFrame {
+public class JFReportParametersDialog extends JDialog {
+  private final Frame owner;
 
   private final DataSourceFactory factory;
   private ResultProcessor resultProcessor;
   private DbDataSource dataSource;
 
   /** Creates new form JFReportParametersDialog */
-  public JFReportParametersDialog(DataSourceFactory factory) {
+  public JFReportParametersDialog(Frame owner, DataSourceFactory factory) {
+    super(owner, true);
+    this.owner = owner;
     this.factory = factory;
     this.dataSource = factory.getDataSource();
     this.dataSource.setAutoReload(false);
@@ -35,8 +43,12 @@ public class JFReportParametersDialog extends javax.swing.JFrame {
 
     this.jpFilterPanel.add(factory.getFilterPanel());
 
+    setLocationRelativeTo(owner);
+
+    pack();
 
   }
+
 
   /** This method is called from within the constructor to
    * initialize the form.
@@ -53,7 +65,7 @@ public class JFReportParametersDialog extends javax.swing.JFrame {
     jbPotrdi = new com.openitech.db.components.JDbControlButton();
     jbPreklici = new com.openitech.db.components.JDbControlButton();
 
-    setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+    setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);
     getContentPane().setLayout(new java.awt.GridBagLayout());
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
@@ -92,19 +104,21 @@ public class JFReportParametersDialog extends javax.swing.JFrame {
 
   private void jbPotrdiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPotrdiActionPerformed
     //
-    dataSource.reload(false);
-    if(resultProcessor != null){
-      resultProcessor.process(new Result("OK", "Proccess parameters...", Result.OK));
-    }
+//    dataSource.reload(false);
+//    if(resultProcessor != null){
+//      resultProcessor.process(new Result("OK", "Proccess parameters...", Result.OK));
+//    }
+    result = Result.OK;
     setVisible(false);
     //
   }//GEN-LAST:event_jbPotrdiActionPerformed
 
   private void jbPrekliciActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPrekliciActionPerformed
     //
-    if(resultProcessor != null){
-      resultProcessor.process(new Result("Cancel", "Cancel", Result.CANCEL));
-    }
+//    if(resultProcessor != null){
+//      resultProcessor.process(new Result("Cancel", "Cancel", Result.CANCEL));
+//    }
+    result = Result.CANCEL;
     setVisible(false);
     //
   }//GEN-LAST:event_jbPrekliciActionPerformed
@@ -118,6 +132,13 @@ public class JFReportParametersDialog extends javax.swing.JFrame {
 
   public void setResultProcessor(ResultProcessor resultProcessor) {
     this.resultProcessor = resultProcessor;
+  }
+
+  private int result;
+
+
+  public int getResult() {
+    return result;
   }
 
 

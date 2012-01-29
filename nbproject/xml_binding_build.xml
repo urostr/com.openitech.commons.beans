@@ -125,5 +125,89 @@
         <copy todir="${build.generated.sources.dir}/jaxb">
             <fileset dir="build/generated/jaxbCache/ENTRY_PARAMETERS"/>
         </copy>
+        <mkdir dir="build/generated/jaxbCache/SIFRANT_MODEL"/>
+        <xjc package="com.openitech.xml.sifrant" destdir="build/generated/jaxbCache/SIFRANT_MODEL" catalog="catalog.xml">
+            <classpath>
+                <pathelement location="${src.dir}"/>
+                <pathelement path="${jaxbwiz.xjcrun.classpath}"/>
+            </classpath>
+            <arg value="-xmlschema"/>
+            <schema file="xml-resources/jaxb/SIFRANT_MODEL/SifrantModel.xsd"/>
+            <depends file="xml-resources/jaxb/SIFRANT_MODEL/SifrantModel.xsd"/>
+            <produces dir="build/generated/jaxbCache/SIFRANT_MODEL"/>
+        </xjc>
+        <copy todir="${build.generated.sources.dir}/jaxb">
+            <fileset dir="build/generated/jaxbCache/SIFRANT_MODEL"/>
+        </copy>
+        <mkdir dir="build/generated/jaxbCache/FIELD_ACTIONS"/>
+        <xjc package="com.openitech.xml.fieldactions" destdir="build/generated/jaxbCache/FIELD_ACTIONS" catalog="catalog.xml">
+            <classpath>
+                <pathelement location="${src.dir}"/>
+                <pathelement path="${jaxbwiz.xjcrun.classpath}"/>
+            </classpath>
+            <arg value="-xmlschema"/>
+            <schema file="xml-resources/jaxb/FIELD_ACTIONS/FieldActions.xsd"/>
+            <depends file="xml-resources/jaxb/FIELD_ACTIONS/FieldActions.xsd"/>
+            <produces dir="build/generated/jaxbCache/FIELD_ACTIONS"/>
+        </xjc>
+        <copy todir="${build.generated.sources.dir}/jaxb">
+            <fileset dir="build/generated/jaxbCache/FIELD_ACTIONS"/>
+        </copy>
+        <mkdir dir="build/generated/jaxbCache/FIELD_LAYOUT"/>
+        <xjc package="com.openitech.xml.fieldlayout" destdir="build/generated/jaxbCache/FIELD_LAYOUT" catalog="catalog.xml">
+            <classpath>
+                <pathelement location="${src.dir}"/>
+                <pathelement path="${jaxbwiz.xjcrun.classpath}"/>
+            </classpath>
+            <arg value="-xmlschema"/>
+            <schema file="xml-resources/jaxb/FIELD_LAYOUT/FieldLayout.xsd"/>
+            <depends file="xml-resources/jaxb/FIELD_LAYOUT/FieldLayout.xsd"/>
+            <produces dir="build/generated/jaxbCache/FIELD_LAYOUT"/>
+        </xjc>
+        <copy todir="${build.generated.sources.dir}/jaxb">
+            <fileset dir="build/generated/jaxbCache/FIELD_LAYOUT"/>
+        </copy>
+        <mkdir dir="build/generated/jaxbCache/FIELD_MODEL"/>
+        <xjc package="com.openitech.xml.fieldmodel" destdir="build/generated/jaxbCache/FIELD_MODEL" catalog="catalog.xml">
+            <classpath>
+                <pathelement location="${src.dir}"/>
+                <pathelement path="${jaxbwiz.xjcrun.classpath}"/>
+            </classpath>
+            <arg value="-xmlschema"/>
+            <schema file="xml-resources/jaxb/FIELD_MODEL/FieldModel.xsd"/>
+            <depends file="xml-resources/jaxb/FIELD_MODEL/FieldModel.xsd"/>
+            <produces dir="build/generated/jaxbCache/FIELD_MODEL"/>
+        </xjc>
+        <copy todir="${build.generated.sources.dir}/jaxb">
+            <fileset dir="build/generated/jaxbCache/FIELD_MODEL"/>
+        </copy>
+        <mkdir dir="build/generated/jaxbCache/FIELD_OPTIONS"/>
+        <xjc package="com.openitech.xml.fieldoptions" destdir="build/generated/jaxbCache/FIELD_OPTIONS" catalog="catalog.xml">
+            <classpath>
+                <pathelement location="${src.dir}"/>
+                <pathelement path="${jaxbwiz.xjcrun.classpath}"/>
+            </classpath>
+            <arg value="-xmlschema"/>
+            <schema file="xml-resources/jaxb/FIELD_OPTIONS/FieldOptions.xsd"/>
+            <depends file="xml-resources/jaxb/FIELD_OPTIONS/FieldOptions.xsd"/>
+            <produces dir="build/generated/jaxbCache/FIELD_OPTIONS"/>
+        </xjc>
+        <copy todir="${build.generated.sources.dir}/jaxb">
+            <fileset dir="build/generated/jaxbCache/FIELD_OPTIONS"/>
+        </copy>
+        <mkdir dir="build/generated/jaxbCache/BINARY_MODEL"/>
+        <xjc package="com.openitech.xml.binarymodel" destdir="build/generated/jaxbCache/BINARY_MODEL" catalog="catalog.xml">
+            <classpath>
+                <pathelement location="${src.dir}"/>
+                <pathelement path="${jaxbwiz.xjcrun.classpath}"/>
+            </classpath>
+            <arg value="-xmlschema"/>
+            <schema file="xml-resources/jaxb/BINARY_MODEL/BinaryModel.xsd"/>
+            <depends file="xml-resources/jaxb/BINARY_MODEL/BinaryModel.xsd"/>
+            <produces dir="build/generated/jaxbCache/BINARY_MODEL"/>
+        </xjc>
+        <copy todir="${build.generated.sources.dir}/jaxb">
+            <fileset dir="build/generated/jaxbCache/BINARY_MODEL"/>
+        </copy>
     </target>
 </project>

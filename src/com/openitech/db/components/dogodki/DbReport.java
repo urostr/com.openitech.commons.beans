@@ -11,6 +11,7 @@ import com.openitech.db.model.DbDataSource;
 import com.openitech.db.model.factory.DataSourceConfig;
 import com.openitech.db.model.factory.DataSourceFactory;
 import com.openitech.db.model.factory.JaxbUnmarshaller;
+import com.openitech.db.model.xml.config.QueryParameter;
 import com.openitech.db.model.xml.config.Workarea;
 import com.openitech.db.model.xml.config.Workarea.DataSource;
 import com.openitech.events.concurrent.DataSourceEvent;
@@ -40,8 +41,9 @@ public class DbReport {
   protected Workarea workArea;
   protected SQLWorker sqlWorker = new SQLWorker();
   private DataSourceFactory factory;
+  DataSourceConfig config;
 
-  public DbReport(String name, byte[] fileBytes, Blob serializedBlob, String xmlParameters) throws Exception {
+  public DbReport(DataSourceConfig config, String name, byte[] fileBytes, Blob serializedBlob, String xmlParameters) throws Exception {
     this.name = name;
     this.fileBytes = fileBytes;
     this.serializedBlob = serializedBlob;
@@ -54,7 +56,7 @@ public class DbReport {
       workArea = (Workarea) JaxbUnmarshaller.getInstance().unmarshall(Workarea.class, xmlParameters);
     }
     if (workArea != null) {
-      final DbDataModel dbDataModel = new DbDataModel() {
+      final DbDataModel dbDataModel = config != null ? config.getDataModel() : new DbDataModel() {
 
         @Override
         public Map<String, Document> getDocuments() {
@@ -62,7 +64,7 @@ public class DbReport {
         }
       };
       factory = new DataSourceFactory(dbDataModel);
-      factory.configure("Report", workArea, new DataSourceConfig(dbDataModel));
+      factory.configure("Report", workArea, config != null ? config : new DataSourceConfig(dbDataModel));
     }
   }
 
@@ -83,8 +85,14 @@ public class DbReport {
         if (sql != null) {
           List parameters = new ArrayList();
           List<String> eventColumns = waDataSource.getEventColumns();
-          for (String eventCoulmn : eventColumns) {
-            parameters.add(sourceDataSource.getObject(eventCoulmn));
+          for (String eventColumn : eventColumns) {
+            parameters.add(sourceDataSource.getObject(eventColumn));
+          }
+          List<QueryParameter> queryParameters = waDataSource.getParameters();
+          if(queryParameters != null){
+            for (QueryParameter queryParameter : queryParameters) {
+              parameters.add(sourceDataSource.getObject(queryParameter.getNamedParameter()));
+            }
           }
 
           result = sqlWorker.executeQuery(sql, parameters);

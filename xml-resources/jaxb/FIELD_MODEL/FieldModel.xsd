@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="windows-1250"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xml.openitech.com/schema/fieldmodel"
+            xmlns:tns="http://xml.openitech.com/schema/fieldmodel"
+            elementFormDefault="qualified" xmlns:ds="http://xml.openitech.com/schema/datasource">
+  <xsd:import schemaLocation="../../../com/openitech/xsd/DataSource.xsd" namespace="http://xml.openitech.com/schema/datasource"/>
+  <xsd:element name="FieldModel">
+    <xsd:complexType>
+      <xsd:all>
+        <xsd:element name="Field" type="xsd:string"/>
+        <xsd:element name="Replace" type="xsd:string"/>
+        <xsd:element name="Query">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="Select">
+                <xsd:complexType>
+                  <xsd:sequence maxOccurs="unbounded">
+                    <xsd:element name="SQL"  maxOccurs="unbounded" type="xsd:string"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="Join">
+                <xsd:complexType>
+                  <xsd:sequence maxOccurs="unbounded">
+                    <xsd:element name="SQL"  maxOccurs="unbounded" type="xsd:string"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="ViewsParameters">
+          <xsd:complexType>
+            <xsd:sequence maxOccurs="unbounded">
+              <xsd:element name="View">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="IdSifranta" maxOccurs="1" type="xsd:int"/>
+                    <xsd:element name="IdSifre" maxOccurs="1" type="xsd:string"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="Separator" minOccurs="0"  type="xsd:string" />
+        <xsd:element name="TableColumns">
+          <xsd:complexType>
+            <xsd:sequence maxOccurs="unbounded">
+              <xsd:element name="TableColumnDefinition">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="TableColumnEntry" maxOccurs="unbounded" type="xsd:string"/>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:all>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
+

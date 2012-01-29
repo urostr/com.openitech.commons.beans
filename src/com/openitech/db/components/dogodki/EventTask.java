@@ -4,6 +4,7 @@
  */
 package com.openitech.db.components.dogodki;
 
+import java.util.List;
 import org.jdesktop.swingx.JXTaskPane;
 
 /**
@@ -20,7 +21,7 @@ public class EventTask extends JXTaskPane {
   protected Integer workAreaId;
   protected Boolean openDataEntry;
   protected TaskType type;
-  protected String reportName;
+  protected List<String> reportName;
 
   public EventTask(String taskTitle, Boolean dontMerge) {
     this(null, taskTitle, dontMerge, false, null, null, null);
@@ -80,11 +81,11 @@ public class EventTask extends JXTaskPane {
     return workSpaceId;
   }
 
-  public void setReportName(String name) {
+  public void setReportName(List<String> name) {
     this.reportName = name;
   }
 
-  public String getReportName() {
+  public List<String> getReportName() {
     return reportName;
   }
 

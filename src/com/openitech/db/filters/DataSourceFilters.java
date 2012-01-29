@@ -593,7 +593,11 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
 
     @Override
     public String getDescription() {
-      return this.toString() + " je" + (value.get(0).getTime() > 0 ? " od " + FormatFactory.DATE_FORMAT.format(value.get(0)) : "") + " do " + FormatFactory.DATE_FORMAT.format(value.get(1));
+      try {
+        return this.toString() + " je" + (value.get(0).getTime() > 0 ? " od " + FormatFactory.DATE_FORMAT.format(value.get(0)) : "") + " do " + FormatFactory.DATE_FORMAT.format(value.get(1));
+      } catch (Exception ex) {
+        return toString();
+      }
     }
 
     @Override
@@ -1050,7 +1054,7 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
     public CheckBoxSeekType(String field, String operator, DataSourceFilters filters) {
       super(field, PREFORMATTED, 0);
       this.filters = filters;
-      this.comparator = operator==null?"AND":operator;
+      this.comparator = operator == null ? "AND" : operator;
       addRezultat(vsi);
     }
 
@@ -1066,19 +1070,19 @@ public class DataSourceFilters extends DbDataSource.SubstSqlParameter {
             if (compareAsList()) {
               sbValues.append(sbValues.length() > 0 ? ", " : " ").append(rezultatValue);
             } else {
-              sbValues.append(sbValues.length() > 0 ? " "+comparator+" " : " ").append("(").append(rezultatValue).append(")").append("\n");
+              sbValues.append(sbValues.length() > 0 ? " " + comparator + " " : " ").append("(").append(rezultatValue).append(")").append("\n");
             }
 
           }
         }
       }
-      
-      if (sbValues.length()>0) {
+
+      if (sbValues.length() > 0) {
         sbValues.insert(0, "(").append(")");
       }
-      
+
       if (compareAsList()) {
-        sbValues.insert(0, field+" IN ").append("\n");
+        sbValues.insert(0, field + " IN ").append("\n");
       }
       return sbValues;
 

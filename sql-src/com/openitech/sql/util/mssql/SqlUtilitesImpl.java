@@ -708,7 +708,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
   }
 
   @Override
-  public DbReport getReport(String reportName) throws SQLException {
+  public DbReport getReport(String reportName, DataSourceConfig config) throws SQLException {
     DbReport result = null;
     try {
       SqlUtilities sqlUtilities = SqlUtilities.getInstance();
@@ -725,7 +725,7 @@ public class SqlUtilitesImpl extends SqlUtilities {
         Blob fileArray = (Blob) Event.getValue(storedReport, ("REPORT_FILE"));
         String xmlParameters = (String) Event.getValue(storedReport, "REPORT_PARAMETERS");
 
-        result = new DbReport(reportName, fileArray.getBytes(1, (int) fileArray.length()), serializedBlob, xmlParameters);
+        result = new DbReport(config, reportName, fileArray.getBytes(1, (int) fileArray.length()), serializedBlob, xmlParameters);
       }
     } catch (Exception ex) {
       Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, null, ex);

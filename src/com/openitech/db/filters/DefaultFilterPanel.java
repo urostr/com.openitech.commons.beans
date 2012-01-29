@@ -354,7 +354,7 @@ public class DefaultFilterPanel extends javax.swing.JPanel implements Cloneable 
   }
 
   public void hidePanel() {
-    jpOptions.remove(jpOptions);
+    remove(jpOptions);
   }
 
   public void hideReloadButton() {
