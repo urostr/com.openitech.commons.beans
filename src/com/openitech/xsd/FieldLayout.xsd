@@ -3,8 +3,10 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             targetNamespace="http://xml.openitech.com/schema/fieldlayout"
             xmlns:tns="http://xml.openitech.com/schema/fieldlayout"
-            elementFormDefault="qualified" xmlns:ds="http://xml.openitech.com/schema/datasource">
-  <xsd:import schemaLocation="../../../com/openitech/xsd/DataSource.xsd" namespace="http://xml.openitech.com/schema/datasource"/>
+            elementFormDefault="qualified" 
+            xmlns:ds="http://xml.openitech.com/schema/datasource">
+  <xsd:import schemaLocation="DataSource.xsd" 
+  namespace="http://xml.openitech.com/schema/datasource"/>
   <xsd:element name="Field">
     <xsd:complexType>
       <xsd:sequence>

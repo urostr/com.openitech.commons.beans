@@ -30,6 +30,8 @@
     <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
     <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
     <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/Common_beans/src/com/openitech/xsd/FieldLayout.xsd" uri="xml-resources/jaxb/FIELD_LAYOUT/FieldLayout.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/Common_beans/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/FIELD_LAYOUT/DataSource.xsd"/>
 </catalog>
 
 
