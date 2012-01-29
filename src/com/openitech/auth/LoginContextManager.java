@@ -47,6 +47,7 @@ public class LoginContextManager extends PropertyChanges {
   private LoginContext context;
   private String server = "other";
   private String name = null;
+  private boolean domain = false;
   private char[] password = null;
   private Set<String> userRoles = new HashSet<String>();
   private JAASCallbackHandler jaasCallbackHandler = new JAASCallbackHandler();
@@ -90,7 +91,11 @@ public class LoginContextManager extends PropertyChanges {
   }
 
   public boolean isLoggedOn() {
-    return ((getSubject() != null) && (getSubject().getPrincipals(com.openitech.auth.jaas.LocalPrincipal.class).size() > 0));
+    if (domain) {
+      return true;
+    } else {
+      return ((getSubject() != null) && (getSubject().getPrincipals(com.openitech.auth.jaas.LocalPrincipal.class).size() > 0));
+    }
   }
 
   public Subject getSubject() {
@@ -107,18 +112,23 @@ public class LoginContextManager extends PropertyChanges {
 
       name = name == null ? dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_USER, null) : name;
       String pwd = dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_PASS, null);
+      
+      domain = Boolean.valueOf(dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_NT_DOMAIN, "false"));
+      
       if ((password == null) && (pwd != null)) {
         password = pwd.toCharArray();
       }
     } catch (Exception ex) {
       //ignore it
     }
-    if (name == null ||
-            password == null) {
-      java.awt.Component parrent = (source instanceof java.awt.Component) ? ((java.awt.Component) source) : null;
-      JXLoginPane.showLoginDialog(parrent, new LocalLoginService());
-    } else {
-      contextLogin();
+    if (!domain) {
+      if (name == null
+              || password == null) {
+        java.awt.Component parrent = (source instanceof java.awt.Component) ? ((java.awt.Component) source) : null;
+        JXLoginPane.showLoginDialog(parrent, new LocalLoginService());
+      } else {
+        contextLogin();
+      }
     }
     final boolean newValue = isLoggedOn();
     EventQueue.invokeLater(new Runnable() {
@@ -137,6 +147,9 @@ public class LoginContextManager extends PropertyChanges {
 
         name = name == null ? dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_USER, null) : name;
         String pwd = dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_PASS, null);
+      
+        domain = Boolean.valueOf(dbConnection.getProperty(com.openitech.db.connection.DbConnection.DB_NT_DOMAIN, "false"));
+      
         if ((password == null) && (pwd != null)) {
           password = pwd.toCharArray();
         }
@@ -144,11 +157,13 @@ public class LoginContextManager extends PropertyChanges {
         //ignore it
       }
     }
-    if (name == null ||
-            password == null) {
-      JXLoginPane.showLoginDialog(source, new LocalLoginService());
-    } else {
-      contextLogin();
+    if (!domain) {
+      if (name == null ||
+              password == null) {
+        JXLoginPane.showLoginDialog(source, new LocalLoginService());
+      } else {
+        contextLogin();
+      }
     }
     final boolean newValue = isLoggedOn();
     EventQueue.invokeLater(new Runnable() {
