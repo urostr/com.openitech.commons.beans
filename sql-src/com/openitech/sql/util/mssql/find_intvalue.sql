@@ -1,0 +1,1 @@
+SELECT Id FROM <%ChangeLog%>.[dbo].[VariousValues] WHERE [IntValue]=?

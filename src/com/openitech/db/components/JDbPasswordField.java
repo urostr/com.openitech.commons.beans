@@ -1,4 +1,22 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/*
  * JDbPasswordField.java
  *
  * Created on Nedelja, 16 julij 2006, 13:31
@@ -11,6 +29,7 @@ package com.openitech.db.components;
 
 import com.openitech.Settings;
 import com.openitech.crypto.Encoder;
+import com.openitech.db.model.FieldObserver;
 import com.openitech.db.events.ActiveRowChangeEvent;
 import com.openitech.db.events.ActiveRowChangeWeakListener;
 import com.openitech.db.model.DbDataSource;
@@ -27,9 +46,10 @@ import javax.swing.event.DocumentListener;
  *
  * @author uros
  */
-public class JDbPasswordField extends JPasswordField implements DocumentListener {
+public class JDbPasswordField extends JPasswordField implements DocumentListener, FieldObserver {
   private DbFieldObserver dbFieldObserver = new DbFieldObserver();
   private DbFieldObserver dbFieldObserverToolTip = new DbFieldObserver();
+  private Validator validator = null;
   
   private transient ActiveRowChangeWeakListener activeRowChangeWeakListener;
   private transient ActiveRowChangeWeakListener tooltipRowChangeWeakListener;
@@ -81,6 +101,15 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
   public String getToolTipColumnName() {
     return dbFieldObserverToolTip.getColumnName();
   }
+
+  public void setValidator(Validator validator) {
+    this.validator = validator;
+  }
+
+  public Validator getValidator() {
+    return validator;
+  }
+
   public void dataSource_fieldValueChanged(ActiveRowChangeEvent event) {
     if (isSavePassword()) {
       documentWeakListener.setEnabled(false);
@@ -98,7 +127,7 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
   public void dataSource_toolTipFieldValueChanged(ActiveRowChangeEvent event) {
     String tip  = dbFieldObserverToolTip.getValueAsText();
     if (!dbFieldObserverToolTip.wasNull()&&tip.length()>0) {
-      this.setToolTipText("Pomo\u010d : "+tip);
+      this.setToolTipText(java.util.ResourceBundle.getBundle("com/openitech/i18n/ResourceBundle").getString("HELP")+tip);
     } else
       this.setToolTipText(null);
   }
@@ -107,12 +136,14 @@ public class JDbPasswordField extends JPasswordField implements DocumentListener
     if (isSavePassword()) {
       activeRowChangeWeakListener.setEnabled(false);
       try {
-        if (isEncrypted())
-          dbFieldObserver.updateValue(Encoder.encrypt( (new String(this.getPassword())).getBytes()));
-        else
-          dbFieldObserver.updateValue(new String(this.getPassword()));
+        if ((validator==null)||(validator!=null&&validator.isValid(new String(this.getPassword())))) {
+          if (isEncrypted())
+            dbFieldObserver.updateValue(Encoder.encrypt( (new String(this.getPassword())).getBytes()));
+          else
+            dbFieldObserver.updateValue(new String(this.getPassword()));
+        }
       } catch (SQLException ex) {
-        Logger.getLogger(Settings.LOGGER).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
+        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.SEVERE, "Can't update the value in the dataSource.", ex);
       } finally {
         activeRowChangeWeakListener.setEnabled(true);
       }

@@ -1,12 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 package com.openitech.ref;
 
-import com.openitech.Settings;
+import java.awt.EventQueue;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.*;
 import java.lang.ref.Reference;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -16,10 +33,10 @@ import java.util.logging.Logger;
  *
  * <p>Copyright: Copyright (c) 2006</p>
  *
- * <p>Company: Odprte Informacijske Tehnologije Uro≈° Trojar s.p.</p>
+ * <p>Company: Odprte Informacijske Tehnologije Uroö Trojar s.p.</p>
  *
- * @author Uro≈° Trojar
- * @version $Revision: 1.1 $
+ * @author Uroö Trojar
+ * @version $Revision: 1.2 $
  */
 public final class WeakListenerList
     implements List<Object> {
@@ -167,7 +184,7 @@ public final class WeakListenerList
   public boolean add(Object o) {
     int csize = this.size();
     this.add(csize, o);
-    return this.size()==csize;
+    return this.size()!=csize;
   }
 
   /**
@@ -216,7 +233,7 @@ public final class WeakListenerList
     for (Iterator i=cl.iterator(); i.hasNext(); index++)
       this.add(index, i.next());
 
-    return this.size()==csize;
+    return this.size()!=csize;
   }
 
   /**
@@ -397,7 +414,7 @@ public final class WeakListenerList
       wr = (WeakReference) queue.poll();
     }
     if (count>0) {
-      Logger.getLogger(Settings.LOGGER).info(getClass().getName()+" "+Integer.toString(count)+" weak references removed");
+      Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass().getName()+" "+Integer.toString(count)+" weak references removed");
     }
   }
 
@@ -574,7 +591,7 @@ public final class WeakListenerList
           wr = (WeakReference) weakListenerQueue.poll();
         }
         if (count>0) {
-          Logger.getLogger(Settings.LOGGER).info(getClass().getName()+" "+Integer.toString(count)+" weak listener references removed");
+          Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).info(getClass().getName()+" "+Integer.toString(count)+" weak listener references removed");
         }
       } finally {
         lock.unlock();
@@ -589,17 +606,21 @@ public final class WeakListenerList
       try {
         while (true) {
           sleep(9000);
-          lock.lock();
-          try {
-            cleanUp();
-          for (WeakListenerListReference wr : weakListenerList) {
-            if (wr!=null && wr.get()!=null) {
-              ((WeakListenerList) wr.get()).cleanUp();
+          EventQueue.invokeLater(new Runnable() {
+            public void run() {
+              lock.lock();
+              try {
+                cleanUp();
+              for (WeakListenerListReference wr : weakListenerList) {
+                if (wr!=null && wr.get()!=null) {
+                  ((WeakListenerList) wr.get()).cleanUp();
+                  }
+                }
+              } finally {
+                lock.unlock();
               }
             }
-          } finally {
-            lock.unlock();
-          }
+          });
         }
       } catch (InterruptedException ex) {
         weakListenerList.clear();

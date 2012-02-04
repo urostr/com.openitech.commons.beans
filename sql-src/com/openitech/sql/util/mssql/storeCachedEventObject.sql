@@ -1,0 +1,18 @@
+INSERT
+INTO
+  <%MVIEWCACHE%>.[DBO].[CACHED:EVENT:OBJECTS]
+  (
+    [IdSifranta],
+    [IdSifre],
+    [Object],
+    [CacheOnUpdate],
+    [Valid]
+  )
+  VALUES
+  (
+    ?,
+    ?,
+    ?,
+    ?,
+    1
+  )

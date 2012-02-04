@@ -1,0 +1,16 @@
+INSERT 
+INTO 
+    <%ChangeLog%>.[dbo].[EventValues] 
+    (
+        [EventId], 
+        [IdPolja],
+        [FieldValueIndex], 
+        [ValueId]
+    ) 
+    VALUES 
+    (
+        ?, 
+        ?, 
+        ?, 
+        ?
+    )

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xml.openitech.com/schema/fieldlayout"
+            xmlns:tns="http://xml.openitech.com/schema/fieldlayout"
+            elementFormDefault="qualified" 
+            xmlns:ds="http://xml.openitech.com/schema/datasource">
+  <xsd:import schemaLocation="DataSource.xsd" 
+  namespace="http://xml.openitech.com/schema/datasource"/>
+  <xsd:element name="Field">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="Layout" type="ds:GridBagConstraints"></xsd:element>
+        <xsd:element name="PasswordField" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="ShowLabel" type="xsd:boolean" default="true"></xsd:element>
+        <xsd:element name="OpisNadVnosnoMasko" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="OpisVNaslovu" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="ShowBorder" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="OpisVBorderju" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="RazsiriCeZadnji" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="LookupAsComboBox" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="LookupShowAddButton" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="LookupAsPopup" type="xsd:boolean" default="true"></xsd:element>
+        <xsd:element name="UseValueLookup" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="AddFitPanel" type="xsd:boolean" default="true"></xsd:element>
+        <xsd:element name="PrikaziComboBox" type="xsd:boolean" default="true"></xsd:element>
+        <xsd:element name="LookupComboBox">
+          <xsd:complexType>
+            <xsd:all>
+              <xsd:element name="KeyColumnName" type="xsd:string"/>
+              <xsd:element name="ValueColumnNames">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ColumnName" type="xsd:string" maxOccurs="unbounded"></xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+              <xsd:element name="ExtendedValueColumnNames" minOccurs="0">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="ColumnName" type="xsd:string" maxOccurs="unbounded"></xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:all>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="KompleksenDogodek" type="xsd:boolean" default="true"></xsd:element>
+        <xsd:element name="ShowAllEditors" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="EditorsHorizontalLayout" type="xsd:boolean" default="false"></xsd:element>
+        <xsd:element name="Filter" minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="SeekParameter" type="ds:SeekParameters" minOccurs="0"></xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="Enabled" type="xsd:boolean" default="true"/>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
+
+
+
+
+
+

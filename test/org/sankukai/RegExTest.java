@@ -1,4 +1,22 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/*
  * RegExTest.java
  * JUnit based test
  *
@@ -17,6 +35,7 @@ import junit.framework.*;
  */
 public class RegExTest extends TestCase {
   private static final Pattern column = Pattern.compile("(\\$.\\{([^\\}]*)\\})");
+  private static final java.util.regex.Pattern formatter = java.util.regex.Pattern.compile("(([\\s\\p{Punct}]?([^\\s^\\p{Punct}]))([^\\s^\\p{Punct}]*))");
   
   public RegExTest(String testName) {
     super(testName);
@@ -28,8 +47,6 @@ public class RegExTest extends TestCase {
   protected void tearDown() throws Exception {
   }
   
-  // TODO add test methods here. The name must begin with 'test'. For example:
-  // public void testHello() {}
   public void testMatch() {
      Matcher match = column.matcher("$C{NAZIV}$S{-}$C{KRAJ}");
     assertTrue(match.find());
@@ -37,6 +54,25 @@ public class RegExTest extends TestCase {
     System.out.println(match.group(2));
     assertEquals("NAZIV", match.group(2));
     //assertTrue(match.hitEnd());
+  }
+
+  public void testProper() {
+     Matcher match = formatter.matcher("ALOJZ MIÈKaVEC-TONI");
+    assertTrue(match.find());
+    
+    System.out.println(match.group(2));
+    System.out.println(match.group(3));
+
+    assertTrue(match.find());
+    
+    System.out.println(match.group(2));
+    System.out.println(match.group(3));
+
+    assertTrue(match.find());
+    
+    System.out.println(match.group(2));
+    System.out.println(match.group(3));
+//assertTrue(match.hitEnd());
   }
 
 }

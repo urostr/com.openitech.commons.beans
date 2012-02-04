@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM <%VIEW_DB%>[sys].[views] WHERE object_id = OBJECT_ID(?)

@@ -1,0 +1,22 @@
+INSERT
+INTO
+    <%ChangeLog%>.[dbo].[EventLookupKeys]
+    (
+        [EventId],
+        [IdPolja],
+        [FieldValueIndex],
+        [VersionId],
+        [IdSifranta],
+        [IdSifre],
+        [PrimaryKey]
+    )
+    VALUES
+    (
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?
+    )

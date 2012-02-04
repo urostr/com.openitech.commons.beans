@@ -1,0 +1,12 @@
+INSERT
+INTO
+  <%MVIEWCACHE%>.[DBO].[CACHED:OBJECTS]
+  (
+    [Object],
+    [CachedObjectXML]
+  )
+  VALUES
+  (
+    ?,
+    ?
+  )

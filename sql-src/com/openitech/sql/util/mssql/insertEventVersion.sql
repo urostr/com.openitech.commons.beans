@@ -1,0 +1,12 @@
+INSERT
+INTO
+    <%ChangeLog%>.[dbo].[EventVersions]
+    (
+        [VersionId],
+        [EventId]
+    )
+    VALUES
+    (
+        ?,
+        ?
+    )

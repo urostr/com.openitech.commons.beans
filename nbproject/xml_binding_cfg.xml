@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<schemas xmlns='http://xml.netbeans.org/schema/JAXBWizConfig' destdir='build/generated-sources/jaxb' projectName='db_commons' version='1.0'>
+	<schema type='-xmlschema' package='com.openitech.xml' name='SECONDARY_ROWSET'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/SECONDARY_ROWSET/SecondaryRowSet.xsd' origLocation='src/com/openitech/xsd/SecondaryRowSet.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml' name='CREATE_SECODNARY_DATASOURCE'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/CREATE_SECODNARY_DATASOURCE/CreateSecondaryDataSource.xsd' origLocation='src/com/openitech/xsd/CreateSecondaryDataSource.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.wrs' name='WS_PARAMETERS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/WS_PARAMETERS/WSParameters.xsd' origLocation='src/com/openitech/xsd/WSParameters.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml' name='SECODNARY_PARAMETERS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/SECODNARY_PARAMETERS/SecondaryParameters.xsd' origLocation='src/com/openitech/xsd/SecondaryParameters.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.wrs' name='DB_WEBROWSET'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/DB_WEBROWSET/DbWebRowSet.xsd' origLocation='src/com/openitech/xsd/DbWebRowSet.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.sql.events.xml' name='EVENT'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/EVENT/Event.xsd' origLocation='src/com/openitech/xsd/Event.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.db.model.xml.config' name='DATASOURCE_CONFIG'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd' origLocation='src/com/openitech/xsd/DataSource.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.ws.entry' name='ENTRY_PARAMETERS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/ENTRY_PARAMETERS/EntryParameter.xsd' origLocation='src/com/openitech/xsd/EntryParameter.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.sifrant' name='SIFRANT_MODEL'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/SIFRANT_MODEL/SifrantModel.xsd' origLocation='src/com/openitech/xsd/SifrantModel.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.fieldactions' name='FIELD_ACTIONS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/FIELD_ACTIONS/FieldActions.xsd' origLocation='src/com/openitech/xsd/FieldActions.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.fieldlayout' name='FIELD_LAYOUT'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/FIELD_LAYOUT/FieldLayout.xsd' origLocation='src/com/openitech/xsd/FieldLayout.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.fieldmodel' name='FIELD_MODEL'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/FIELD_MODEL/FieldModel.xsd' origLocation='src/com/openitech/xsd/FieldModel.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.fieldoptions' name='FIELD_OPTIONS'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/FIELD_OPTIONS/FieldOptions.xsd' origLocation='src/com/openitech/xsd/FieldOptions.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+	<schema type='-xmlschema' package='com.openitech.xml.binarymodel' name='BINARY_MODEL'>
+		<xjc-options>
+		</xjc-options>
+		<schema-sources>
+			<schema-source location='xml-resources/jaxb/BINARY_MODEL/BinaryModel.xsd' origLocation='src/com/openitech/xsd/BinaryModel.xsd'/>
+		</schema-sources>
+		<bindings>
+		</bindings>
+		<catalog/>
+	</schema>
+</schemas>

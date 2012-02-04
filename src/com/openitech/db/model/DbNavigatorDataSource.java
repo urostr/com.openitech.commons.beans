@@ -1,4 +1,22 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/*
  * DbNavigatorDataSource.java
  *
  * Created on Torek, 22 maj 2007, 13:42
@@ -6,10 +24,11 @@
  * To change this template, choose Tools | Template Manager
  * and open the template in the editor.
  */
-
 package com.openitech.db.model;
 
 import com.openitech.db.events.ActiveRowChangeListener;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 
 /**
@@ -17,6 +36,7 @@ import java.sql.SQLException;
  * @author uros
  */
 public interface DbNavigatorDataSource {
+
   /**
    * Cancels the updates made to the current row in this
    * <code>ResultSet</code> object.
@@ -163,6 +183,8 @@ public interface DbNavigatorDataSource {
 
   boolean reload();
 
+  boolean reload(int row);
+
   /**
    * Retrieves whether the current row has had an insertion.
    * The value returned depends on whether or not this
@@ -201,18 +223,144 @@ public interface DbNavigatorDataSource {
    * @since 1.2
    */
   void updateRow() throws SQLException;
-  
+
   public void addActiveRowChangeListener(ActiveRowChangeListener l);
-  
+
   public void removeActiveRowChangeListener(ActiveRowChangeListener l);
-  
-  public void lock();
-  
+
+  public void addActionListener(ActionListener l);
+
+  public void removeActionListener(ActionListener l);
+
+  public boolean canLock();
+
+  public boolean lock();
+
+  public boolean lock(boolean fatal);
+
   public void unlock();
-  
+
   public boolean isDataLoaded();
 
   public boolean loadData();
-  
+
+  /**
+   * Retrieves the current row number.  The first row is number 1, the
+   * second number 2, and so on.
+   *
+   * @return the current row number; <code>0</code> if there is no current row
+   * @exception SQLException if a database access error occurs
+   * @since 1.2
+   */
+  public int getRow() throws SQLException;
+
   public int getRowCount();
+
+  public boolean hasCurrentRow();
+
+  /**
+   * Adds a PropertyChangeListener to the listener list. The listener is
+   * registered for all bound properties of this class, including the
+   * following:
+   * <ul>
+   *    <li>this Component's font ("font")</li>
+   *    <li>this Component's background color ("background")</li>
+   *    <li>this Component's foreground color ("foreground")</li>
+   *    <li>this Component's focusability ("focusable")</li>
+   *    <li>this Component's focus traversal keys enabled state
+   *        ("focusTraversalKeysEnabled")</li>
+   *    <li>this Component's Set of FORWARD_TRAVERSAL_KEYS
+   *        ("forwardFocusTraversalKeys")</li>
+   *    <li>this Component's Set of BACKWARD_TRAVERSAL_KEYS
+   *        ("backwardFocusTraversalKeys")</li>
+   *    <li>this Component's Set of UP_CYCLE_TRAVERSAL_KEYS
+   *        ("upCycleFocusTraversalKeys")</li>
+   *    <li>this Component's preferred size ("preferredSize")</li>
+   *    <li>this Component's minimum size ("minimumSize")</li>
+   *    <li>this Component's maximum size ("maximumSize")</li>
+   *    <li>this Component's name ("name")</li>
+   * </ul>
+   * Note that if this <code>Component</code> is inheriting a bound property, then no
+   * event will be fired in response to a change in the inherited property.
+   * <p>
+   * If <code>listener</code> is <code>null</code>,
+   * no exception is thrown and no action is performed.
+   *
+   * @param    listener  the property change listener to be added
+   *
+   * @see #removePropertyChangeListener
+   * @see #getPropertyChangeListeners
+   * @see #addPropertyChangeListener(java.lang.String, java.beans.PropertyChangeListener)
+   */
+  public void addPropertyChangeListener(PropertyChangeListener listener);
+
+  /**
+   * Removes a PropertyChangeListener from the listener list. This method
+   * should be used to remove PropertyChangeListeners that were registered
+   * for all bound properties of this class.
+   * <p>
+   * If listener is null, no exception is thrown and no action is performed.
+   *
+   * @param listener the PropertyChangeListener to be removed
+   *
+   * @see #addPropertyChangeListener
+   * @see #getPropertyChangeListeners
+   * @see #removePropertyChangeListener(java.lang.String,java.beans.PropertyChangeListener)
+   */
+  public void removePropertyChangeListener(PropertyChangeListener listener);
+
+  /**
+   * Adds a PropertyChangeListener to the listener list for a specific
+   * property. The specified property may be user-defined, or one of the
+   * following:
+   * <ul>
+   *    <li>this Component's font ("font")</li>
+   *    <li>this Component's background color ("background")</li>
+   *    <li>this Component's foreground color ("foreground")</li>
+   *    <li>this Component's focusability ("focusable")</li>
+   *    <li>this Component's focus traversal keys enabled state
+   *        ("focusTraversalKeysEnabled")</li>
+   *    <li>this Component's Set of FORWARD_TRAVERSAL_KEYS
+   *        ("forwardFocusTraversalKeys")</li>
+   *    <li>this Component's Set of BACKWARD_TRAVERSAL_KEYS
+   *        ("backwardFocusTraversalKeys")</li>
+   *    <li>this Component's Set of UP_CYCLE_TRAVERSAL_KEYS
+   *        ("upCycleFocusTraversalKeys")</li>
+   * </ul>
+   * Note that if this <code>Component</code> is inheriting a bound property, then no
+   * event will be fired in response to a change in the inherited property.
+   * <p>
+   * If <code>propertyName</code> or <code>listener</code> is <code>null</code>,
+   * no exception is thrown and no action is taken.
+   *
+   * @param propertyName one of the property names listed above
+   * @param listener the property change listener to be added
+   *
+   * @see #removePropertyChangeListener(java.lang.String, java.beans.PropertyChangeListener)
+   * @see #getPropertyChangeListeners(java.lang.String)
+   * @see #addPropertyChangeListener(java.lang.String, java.beans.PropertyChangeListener)
+   */
+  public void addPropertyChangeListener(String propertyName,
+          PropertyChangeListener listener);
+
+  /**
+   * Removes a <code>PropertyChangeListener</code> from the listener
+   * list for a specific property. This method should be used to remove
+   * <code>PropertyChangeListener</code>s
+   * that were registered for a specific bound property.
+   * <p>
+   * If <code>propertyName</code> or <code>listener</code> is <code>null</code>,
+   * no exception is thrown and no action is taken.
+   *
+   * @param propertyName a valid property name
+   * @param listener the PropertyChangeListener to be removed
+   *
+   * @see #addPropertyChangeListener(java.lang.String, java.beans.PropertyChangeListener)
+   * @see #getPropertyChangeListeners(java.lang.String)
+   * @see #removePropertyChangeListener(java.beans.PropertyChangeListener)
+   */
+  public void removePropertyChangeListener(String propertyName,
+          PropertyChangeListener listener);
+
+  public DbDataSource getDataSource();
 }

@@ -1,0 +1,14 @@
+INSERT
+INTO
+    <%ChangeLog%>.[dbo].[Versions]
+    (
+        IdSifranta,
+        IdSifre,
+        [Datum]
+    )
+    VALUES
+    (
+        ?,
+        ?,
+        GETDATE()
+    )

@@ -1,0 +1,5 @@
+other {
+   com.openitech.auth.jaas.LocalLoginModule requisite
+        storePass="true"
+        tryFirstPass="true";
+};

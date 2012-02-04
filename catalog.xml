@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <nextCatalog catalog="nbproject/private/cache/retriever/catalog.xml"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/db/model/xml/DataSourceConfig.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSourceConfig.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/db/model/xml/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE3_CONFIG/DataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/sql/events/Event.xsd" uri="xml-resources/jaxb/EVENT/Event.xsd"/>
+    <system systemId="http://java.sun.com/xml/ns/jdbc/webrowset.xsd" uri="xml-resources/jaxb/WEBROWSET/java.sun.com/xml/ns/jdbc/webrowset.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/db/model/xml/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/xml-resources/jaxb/ENTRY_PARAMETER/EntryParameter.xsd" uri="xml-resources/jaxb/ENTRY_PARAMETERS/EntryParameter.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/CreateSecondaryDataSource.xsd" uri="xml-resources/jaxb/CREATE_SECODNARY_DATASOURCE/CreateSecondaryDataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/DbWebRowSet.xsd" uri="xml-resources/jaxb/DB_WEBROWSET/DbWebRowSet.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/WSParameters.xsd" uri="xml-resources/jaxb/WS_PARAMETERS/WSParameters.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/EntryParameter.xsd" uri="xml-resources/jaxb/ENTRY_PARAMETERS/EntryParameter.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/SecondaryParameters.xsd" uri="xml-resources/jaxb/SECODNARY_PARAMETERS/SecondaryParameters.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/SecondaryRowSet.xsd" uri="xml-resources/jaxb/SECONDARY_ROWSET/SecondaryRowSet.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/Event.xsd" uri="xml-resources/jaxb/EVENT/Event.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/FieldOptions.xsd" uri="xml-resources/jaxb/FIELD_OPTIONS/FieldOptions.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/SecondaryParameters.xsd" uri="xml-resources/jaxb/SECODNARY_PARAMETERS/SecondaryParameters.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/EntryParameter.xsd" uri="xml-resources/jaxb/ENTRY_PARAMETERS/EntryParameter.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/SecondaryRowSet.xsd" uri="xml-resources/jaxb/SECONDARY_ROWSET/SecondaryRowSet.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/WSParameters.xsd" uri="xml-resources/jaxb/WS_PARAMETERS/WSParameters.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/SifrantModel.xsd" uri="xml-resources/jaxb/SIFRANT_MODEL/SifrantModel.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/Event.xsd" uri="xml-resources/jaxb/EVENT/Event.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/CreateSecondaryDataSource.xsd" uri="xml-resources/jaxb/CREATE_SECODNARY_DATASOURCE/CreateSecondaryDataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/DbWebRowSet.xsd" uri="xml-resources/jaxb/DB_WEBROWSET/DbWebRowSet.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/BinaryModel.xsd" uri="xml-resources/jaxb/BINARY_MODEL/BinaryModel.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/FieldModel.xsd" uri="xml-resources/jaxb/FIELD_MODEL/FieldModel.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/FieldActions.xsd" uri="xml-resources/jaxb/FIELD_ACTIONS/FieldActions.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/FieldLayout.xsd" uri="xml-resources/jaxb/FIELD_LAYOUT/FieldLayout.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/db%20commons/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/DATASOURCE_CONFIG/DataSource.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/Common_beans/src/com/openitech/xsd/FieldLayout.xsd" uri="xml-resources/jaxb/FIELD_LAYOUT/FieldLayout.xsd"/>
+    <system systemId="file:/D:/javaaplikacije/Common_beans/src/com/openitech/xsd/DataSource.xsd" uri="xml-resources/jaxb/FIELD_LAYOUT/DataSource.xsd"/>
+</catalog>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

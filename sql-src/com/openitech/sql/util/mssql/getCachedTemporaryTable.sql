@@ -1,0 +1,2 @@
+select * from <%MVIEWCACHE%>.dbo.[CACHED:OBJECTS] WITH (NOLOCK)
+WHERE [Object] = ?

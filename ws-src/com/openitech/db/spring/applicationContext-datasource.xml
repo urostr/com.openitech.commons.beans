@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  applicationContext-datasource.xml 
+  is referenced in the interface si.inisa.context.SpringApplicationContextPath.java.
+  
+  DO NOT RENAME, UNLESS FIXING THE JAVA REFERENCE
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xmlns:tx="http://www.springframework.org/schema/tx"  
+       xsi:schemaLocation="http://www.springframework.org/schema/beans    http://www.springframework.org/schema/beans/spring-beans.xsd    http://www.springframework.org/schema/tx    http://www.springframework.org/schema/tx/spring-tx.xsd" 
+       default-autowire="byName">
+
+  <bean id="dataSource" class="com.openitech.db.spring.DbConnectionDataSource" />
+  <bean id="sqlPropertyRetriever" class="com.openitech.sql.properties.SqlPropertyRetriever" />
+  <bean id="dataSource.connection" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+    <property name="targetObject" ref="dataSource"/>
+    <property name="targetField"  value="connection"/>
+  </bean>
+</beans>
